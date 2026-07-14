@@ -9,7 +9,18 @@
 	<arg name="extensions" value="php"/>
 	<arg value="ps"/>
 
-	<rule ref="WordPress-Core"/>
+	<rule ref="WordPress-Core">
+		<!--
+		This package is composer/PSR-4 autoloaded (see autoload.psr-4 in
+		composer.json), not classically included by WordPress. PSR-4 requires
+		the file name to match the class name exactly (VersionSelector.php for
+		class VersionSelector); WordPress's class-{name}.php / hyphenated-
+		lowercase file-naming convention would break autoloading. Excluded
+		deliberately, not an oversight.
+		-->
+		<exclude name="WordPress.Files.FileName.NotHyphenatedLowercase"/>
+		<exclude name="WordPress.Files.FileName.InvalidClassFileName"/>
+	</rule>
 	<rule ref="WordPress-Docs"/>
 
 	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
