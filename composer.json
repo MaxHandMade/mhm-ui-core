@@ -1,0 +1,44 @@
+{
+    "name": "mhm/ui-core",
+    "description": "Shared WordPress UI infrastructure for MHM plugins: component factory, React admin kit, free-core/Pro tier seam.",
+    "type": "library",
+    "license": "GPL-2.0-or-later",
+    "require": {
+        "php": ">=8.1"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.6",
+        "phpstan/phpstan": "^2.0",
+        "szepeviktor/phpstan-wordpress": "^2.0",
+        "php-stubs/wordpress-stubs": "^6.7",
+        "squizlabs/php_codesniffer": "^3.9",
+        "wp-coding-standards/wpcs": "^3.2",
+        "dealerdirect/phpcodesniffer-composer-installer": "^1.1",
+        "yoast/phpunit-polyfills": "^2.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "MHM\\UiCore\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "MHM\\UiCore\\Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        }
+    },
+    "scripts": {
+        "test": "@php ./vendor/bin/phpunit -c phpunit.xml",
+        "phpcs": "@php ./vendor/bin/phpcs --standard=phpcs.xml",
+        "phpstan": "@php ./vendor/bin/phpstan analyse --memory-limit=1G",
+        "check": [
+            "@phpcs",
+            "@phpstan",
+            "@test"
+        ]
+    }
+}
