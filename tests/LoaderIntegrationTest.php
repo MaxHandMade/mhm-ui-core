@@ -82,23 +82,82 @@ final class LoaderIntegrationTest extends TestCase {
 		$this->assertFalse( isset( $GLOBALS['loaded_old'] ), 'The lower version must NOT be loaded.' );
 	}
 
-	public function test_registry_agrees_with_canonical_selector(): void {
-		$candidates = array(
-			'1.9.0'  => '/old/bootstrap.php',
-			'1.10.0' => '/new/bootstrap.php',
-			'1.2.0'  => '/older/bootstrap.php',
+	/**
+	 * Version battles used to prove register.php's own winner-selection loop
+	 * agrees with the canonical VersionSelector::select() on the ACTUAL
+	 * winner it boots — not merely on re-running the same function twice.
+	 *
+	 * @return array<string, array<int, array<int, string>>>
+	 */
+	public static function version_battle_provider(): array {
+		return array(
+			'lexical trap: "1.10.0" must beat "1.9.0"'                  => array( array( '1.9.0', '1.10.0' ) ),
+			'prerelease loses to stable'                                => array( array( '2.0.0-beta.1', '2.0.0' ) ),
+			'differently-formatted version strings ("1.0" vs "1.0.0")' => array( array( '1.0.0', '1.0' ) ),
+			'single candidate'                                         => array( array( '1.0.0' ) ),
 		);
+	}
 
-		foreach ( $candidates as $version => $path ) {
+	/**
+	 * Proves that register.php's own foreach/version_compare loop — exercised
+	 * for real through mhm_ui_core_register()/mhm_ui_core_boot() and observed
+	 * via which fake bootstrap file actually ran — boots the same file that
+	 * the canonical VersionSelector::select() independently picks.
+	 *
+	 * The two sides of the comparison run genuinely different code:
+	 *  - left  (booted):    register.php's registry, driven for real by
+	 *                       mhm_ui_core_boot(); the winner is observed as a
+	 *                       side effect (which fake bootstrap set its marker),
+	 *                       not read back from the registry.
+	 *  - right (canonical): VersionSelector::select(), called directly on an
+	 *                       array the test built itself — never on
+	 *                       $mhm_ui_core_candidates, and never fed the other
+	 *                       side's output back into itself.
+	 *
+	 * @dataProvider version_battle_provider
+	 * @param array<int, string> $versions Versions to register, in this order.
+	 */
+	public function test_registry_boot_agrees_with_canonical_selector_on_the_actual_winner( array $versions ): void {
+		$path_by_version = array();
+		$marker_by_path  = array();
+
+		foreach ( $versions as $index => $version ) {
+			$marker = 'battle_' . $index . '_' . preg_replace( '/[^a-zA-Z0-9]/', '_', $version );
+			unset( $GLOBALS[ $marker ] );
+
+			$path                         = $this->make_bootstrap( (string) $marker );
+			$path_by_version[ $version ]  = $path;
+			$marker_by_path[ $path ]      = $marker;
+		}
+
+		// Left side: the REAL registry, populated and booted through
+		// register.php's own public functions. This runs register.php's
+		// foreach/version_compare loop — VersionSelector is not involved.
+		foreach ( $path_by_version as $version => $path ) {
 			mhm_ui_core_register( (string) $version, $path );
 		}
 
-		global $mhm_ui_core_candidates;
+		mhm_ui_core_boot();
 
+		$booted_path = null;
+		foreach ( $marker_by_path as $path => $marker ) {
+			if ( isset( $GLOBALS[ $marker ] ) ) {
+				$this->assertNull( $booted_path, 'At most one bootstrap file may load.' );
+				$booted_path = $path;
+			}
+		}
+
+		// Right side: the canonical selector, called directly on the same
+		// version=>path facts the test constructed above — not on
+		// $mhm_ui_core_candidates, so this is not a second call feeding the
+		// left side's own output back into itself.
+		$canonical_path = VersionSelector::select( $path_by_version );
+
+		$this->assertNotNull( $booted_path, 'register.php must boot exactly one candidate.' );
 		$this->assertSame(
-			VersionSelector::select( $candidates ),
-			VersionSelector::select( $mhm_ui_core_candidates ),
-			'register.php and VersionSelector must never disagree.'
+			$canonical_path,
+			$booted_path,
+			"register.php's own winner-selection loop must boot the same file VersionSelector::select() would pick."
 		);
 	}
 
