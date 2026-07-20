@@ -56,7 +56,9 @@ if ( ! function_exists( 'mhm_ui_core_register' ) ) {
 			}
 		}
 
-		if ( null !== $winner && file_exists( $mhm_ui_core_candidates[ $winner ] ) ) {
+		// $winner is guaranteed non-null here: the guard above rejects an empty
+		// registry, so the loop ran at least once and assigned a version string.
+		if ( file_exists( $mhm_ui_core_candidates[ $winner ] ) ) {
 			require_once $mhm_ui_core_candidates[ $winner ];
 		}
 	}
