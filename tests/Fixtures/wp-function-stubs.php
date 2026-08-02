@@ -8,7 +8,7 @@
  * stub must live there too, or the call in register.php would never
  * resolve to it.
  *
- * @package MHM\UiCore
+ * @package MHMUiCore
  */
 
 declare(strict_types=1);

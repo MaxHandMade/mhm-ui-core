@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace MHM\UiCore\Tests;
+namespace MHMUiCore\Tests;
 
-use MHM\UiCore\VersionSelector;
+use MHMUiCore\VersionSelector;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -34,8 +34,8 @@ final class LoaderIntegrationTest extends TestCase {
 
 		require_once __DIR__ . '/../register.php';
 
-		global $mhm_ui_core_candidates;
-		$mhm_ui_core_candidates = array();
+		global $mhmuicore_candidates;
+		$mhmuicore_candidates = array();
 	}
 
 	protected function tearDown(): void {
@@ -46,8 +46,8 @@ final class LoaderIntegrationTest extends TestCase {
 		}
 		$this->temp_files = array();
 
-		global $mhm_ui_core_candidates;
-		$mhm_ui_core_candidates = array();
+		global $mhmuicore_candidates;
+		$mhmuicore_candidates = array();
 
 		parent::tearDown();
 	}
@@ -73,10 +73,10 @@ final class LoaderIntegrationTest extends TestCase {
 		unset( $GLOBALS['loaded_old'], $GLOBALS['loaded_new'] );
 
 		// Register out of order, and with a version pair that lexical sorting gets wrong.
-		mhm_ui_core_register( '1.10.0', $new );
-		mhm_ui_core_register( '1.9.0', $old );
+		mhmuicore_register( '1.10.0', $new );
+		mhmuicore_register( '1.9.0', $old );
 
-		mhm_ui_core_boot();
+		mhmuicore_boot();
 
 		$this->assertTrue( isset( $GLOBALS['loaded_new'] ), 'The highest version must be loaded.' );
 		$this->assertFalse( isset( $GLOBALS['loaded_old'] ), 'The lower version must NOT be loaded.' );
@@ -100,18 +100,18 @@ final class LoaderIntegrationTest extends TestCase {
 
 	/**
 	 * Proves that register.php's own foreach/version_compare loop — exercised
-	 * for real through mhm_ui_core_register()/mhm_ui_core_boot() and observed
+	 * for real through mhmuicore_register()/mhmuicore_boot() and observed
 	 * via which fake bootstrap file actually ran — boots the same file that
 	 * the canonical VersionSelector::select() independently picks.
 	 *
 	 * The two sides of the comparison run genuinely different code:
 	 *  - left  (booted):    register.php's registry, driven for real by
-	 *                       mhm_ui_core_boot(); the winner is observed as a
+	 *                       mhmuicore_boot(); the winner is observed as a
 	 *                       side effect (which fake bootstrap set its marker),
 	 *                       not read back from the registry.
 	 *  - right (canonical): VersionSelector::select(), called directly on an
 	 *                       array the test built itself — never on
-	 *                       $mhm_ui_core_candidates, and never fed the other
+	 *                       $mhmuicore_candidates, and never fed the other
 	 *                       side's output back into itself.
 	 *
 	 * @dataProvider version_battle_provider
@@ -134,10 +134,10 @@ final class LoaderIntegrationTest extends TestCase {
 		// register.php's own public functions. This runs register.php's
 		// foreach/version_compare loop — VersionSelector is not involved.
 		foreach ( $path_by_version as $version => $path ) {
-			mhm_ui_core_register( (string) $version, $path );
+			mhmuicore_register( (string) $version, $path );
 		}
 
-		mhm_ui_core_boot();
+		mhmuicore_boot();
 
 		$booted_path = null;
 		foreach ( $marker_by_path as $path => $marker ) {
@@ -149,7 +149,7 @@ final class LoaderIntegrationTest extends TestCase {
 
 		// Right side: the canonical selector, called directly on the same
 		// version=>path facts the test constructed above — not on
-		// $mhm_ui_core_candidates, so this is not a second call feeding the
+		// $mhmuicore_candidates, so this is not a second call feeding the
 		// left side's own output back into itself.
 		$canonical_path = VersionSelector::select( $path_by_version );
 
@@ -162,7 +162,7 @@ final class LoaderIntegrationTest extends TestCase {
 	}
 
 	public function test_boot_is_a_no_op_when_nothing_registered(): void {
-		mhm_ui_core_boot();
+		mhmuicore_boot();
 
 		$this->addToAssertionCount( 1 ); // Reaching here without error is the assertion.
 	}
@@ -178,10 +178,10 @@ final class LoaderIntegrationTest extends TestCase {
 
 		unset( $GLOBALS['loaded_fallback_candidate'] );
 
-		mhm_ui_core_register( '1.9.0', $old );
-		mhm_ui_core_register( '1.10.0', $missing_candidate );
+		mhmuicore_register( '1.9.0', $old );
+		mhmuicore_register( '1.10.0', $missing_candidate );
 
-		mhm_ui_core_boot();
+		mhmuicore_boot();
 
 		$this->assertFalse(
 			isset( $GLOBALS['loaded_fallback_candidate'] ),
@@ -198,10 +198,10 @@ final class LoaderIntegrationTest extends TestCase {
 
 		unset( $GLOBALS['loaded_first_1_0_0'], $GLOBALS['loaded_second_1_0_0'] );
 
-		mhm_ui_core_register( '1.0.0', $first );
-		mhm_ui_core_register( '1.0.0', $second );
+		mhmuicore_register( '1.0.0', $first );
+		mhmuicore_register( '1.0.0', $second );
 
-		mhm_ui_core_boot();
+		mhmuicore_boot();
 
 		$this->assertFalse( isset( $GLOBALS['loaded_first_1_0_0'] ), 'The first registration for a duplicate version must be overwritten.' );
 		$this->assertTrue( isset( $GLOBALS['loaded_second_1_0_0'] ), 'The last registration for a duplicate version must win deterministically.' );

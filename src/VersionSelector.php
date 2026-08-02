@@ -2,19 +2,19 @@
 /**
  * Version-aware selection logic for competing bundled copies of ui-core.
  *
- * @package MHM\UiCore
+ * @package MHMUiCore
  */
 
 declare(strict_types=1);
 
-namespace MHM\UiCore;
+namespace MHMUiCore;
 
 /**
  * Picks the winning copy of ui-core when several plugins each bundle their own.
  *
  * Kept dependency-free and WordPress-free so it can be unit tested in isolation.
  *
- * @package MHM\UiCore
+ * @package MHMUiCore
  */
 final class VersionSelector {
 

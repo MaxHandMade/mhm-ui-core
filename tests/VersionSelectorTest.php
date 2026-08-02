@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace MHM\UiCore\Tests;
+namespace MHMUiCore\Tests;
 
-use MHM\UiCore\VersionSelector;
+use MHMUiCore\VersionSelector;
 use PHPUnit\Framework\TestCase;
 
 final class VersionSelectorTest extends TestCase {

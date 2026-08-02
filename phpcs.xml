@@ -2,7 +2,16 @@
 <ruleset name="MHM UI Core">
 	<description>WordPress Coding Standards for mhm/ui-core.</description>
 
+	<!--
+	register.php and bootstrap.php are listed explicitly, not just <file>src</file>:
+	they hold every global this package declares (both functions, the global
+	variable, both constants), so leaving them out made the PrefixAllGlobals rule
+	below blind to the only code it exists to check. src/ alone is namespaced,
+	and namespaced code is exempt from that sniff.
+	-->
 	<file>src</file>
+	<file>register.php</file>
+	<file>bootstrap.php</file>
 
 	<exclude-pattern>*/vendor/*</exclude-pattern>
 
@@ -26,8 +35,8 @@
 	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
 		<properties>
 			<property name="prefixes" type="array">
-				<element value="mhm_ui_core"/>
-				<element value="MHM\UiCore"/>
+				<element value="mhmuicore"/>
+				<element value="MHMUiCore"/>
 			</property>
 		</properties>
 	</rule>
