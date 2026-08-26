@@ -1,0 +1,9 @@
+# Keep LF in the working tree on every platform. Without this, git's autocrlf
+# rewrites PHP files to CRLF on Windows checkout and PHPCS fails locally
+# (Generic.Files.LineEndings.InvalidEOLChar) while CI on Linux stays green —
+# a local/CI divergence that costs a debugging round every time it resurfaces.
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary
