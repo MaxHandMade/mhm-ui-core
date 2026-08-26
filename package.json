@@ -1,0 +1,20 @@
+{
+	"name": "@mhm/ui-core",
+	"version": "0.3.0",
+	"description": "Shared WordPress admin React modules for MHM plugins.",
+	"license": "GPL-2.0-or-later",
+	"sideEffects": false,
+	"files": [
+		"src-react"
+	],
+	"scripts": {
+		"test": "wp-scripts test-unit-js",
+		"lint:js": "wp-scripts lint-js src-react"
+	},
+	"devDependencies": {
+		"@testing-library/react": "16.3.0",
+		"@wordpress/element": "6.46.0",
+		"@wordpress/scripts": "30.27.0",
+		"typescript": "^6.0.3"
+	}
+}
