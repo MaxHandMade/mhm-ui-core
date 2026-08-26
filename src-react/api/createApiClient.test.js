@@ -90,6 +90,26 @@ describe( 'createApiClient', () => {
 		} );
 	} );
 
+	it( 'omits the data key entirely on a bodyless POST', async () => {
+		const api = createApiClient( '/mhm-rentiva/v1', apiFetch );
+
+		await api.post( '/shortcode-pages/clear-cache' );
+
+		expect( calls[ 0 ] ).toEqual( {
+			path: '/mhm-rentiva/v1/shortcode-pages/clear-cache',
+			method: 'POST',
+		} );
+		expect( 'data' in calls[ 0 ] ).toBe( false );
+	} );
+
+	it( 'omits the data key entirely on a bodyless DELETE', async () => {
+		const api = createApiClient( '/mhm-rentiva/v1', apiFetch );
+
+		await api.del( '/shortcode-pages/home' );
+
+		expect( 'data' in calls[ 0 ] ).toBe( false );
+	} );
+
 	it( 'returns whatever the injected transport resolves to', async () => {
 		const api = createApiClient( '/mhm-rentiva/v1', apiFetch );
 
