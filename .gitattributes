@@ -7,3 +7,21 @@
 *.jpg binary
 *.gif binary
 *.ico binary
+
+# Keep development-only files out of the composer/npm archive. A consumer that
+# installs this package gets vendor/mhm/ui-core inside its own tree, and its
+# gates lint what they find there: Rentiva's check-js-correctness reported 95
+# no-undef findings from THIS package's *.test.js files, because jest globals
+# are undefined in the consumer's ESLint config. The package has no business
+# shipping its own test suite to a consumer's vendor directory.
+/tests/            export-ignore
+/.github/          export-ignore
+*.test.js          export-ignore
+*.test.jsx         export-ignore
+/jest.config.js    export-ignore
+/.eslintrc.js      export-ignore
+/phpcs.xml         export-ignore
+/phpstan.neon      export-ignore
+/phpunit.xml       export-ignore
+/package-lock.json export-ignore
+/.gitattributes    export-ignore
