@@ -35,12 +35,19 @@ export function createApiClient( namespace, apiFetch ) {
 			: `${ base }${ suffix }`;
 	};
 
+	// `data` is omitted rather than passed as undefined when the caller sends no
+	// body. A bodyless POST must reach the transport as { path, method }, exactly
+	// as a hand-written apiFetch call would: that keeps this client's request
+	// shape independent of how a given transport treats an undefined `data` key.
+	const send = ( method, path, data ) =>
+		data === undefined
+			? apiFetch( { path: buildPath( path ), method } )
+			: apiFetch( { path: buildPath( path ), method, data } );
+
 	return {
 		get: ( path, params ) =>
 			apiFetch( { path: buildPath( path, params ) } ),
-		post: ( path, data ) =>
-			apiFetch( { path: buildPath( path ), method: 'POST', data } ),
-		del: ( path, data ) =>
-			apiFetch( { path: buildPath( path ), method: 'DELETE', data } ),
+		post: ( path, data ) => send( 'POST', path, data ),
+		del: ( path, data ) => send( 'DELETE', path, data ),
 	};
 }
