@@ -17,7 +17,7 @@ if ( defined( 'MHMUICORE_VERSION' ) ) {
 	return;
 }
 
-define( 'MHMUICORE_VERSION', '0.4.0' );
+define( 'MHMUICORE_VERSION', '0.4.1' );
 define( 'MHMUICORE_DIR', __DIR__ );
 
 /*
@@ -168,10 +168,23 @@ if ( ! function_exists( 'mhmuicore_enqueue_react_page' ) ) {
 
 		foreach ( $required as $key ) {
 			if ( ! isset( $args[ $key ] ) || ! is_string( $args[ $key ] ) || '' === $args[ $key ] ) {
+				/*
+				 * esc_html() on an exception message is not ceremony: an uncaught
+				 * exception's message is printed, so WordPress treats a throw as
+				 * an output site (WordPress.Security.EscapeOutput.ExceptionNotEscaped).
+				 *
+				 * This package ships INSIDE consuming plugins, and their gates lint
+				 * what they find in vendor/ -- with rulesets wider than this
+				 * package's own. This exact line passed here and failed in a
+				 * consumer's CI. phpcs.xml now runs WordPress-Extra so the package
+				 * catches this class itself instead of exporting it.
+				 */
 				throw new InvalidArgumentException(
-					sprintf(
-						'mhmuicore_enqueue_react_page(): "%s" is required and must be a non-empty string.',
-						$key
+					esc_html(
+						sprintf(
+							'mhmuicore_enqueue_react_page(): "%s" is required and must be a non-empty string.',
+							$key
+						)
 					)
 				);
 			}

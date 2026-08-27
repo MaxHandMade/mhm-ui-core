@@ -310,6 +310,23 @@ final class ReactPageTest extends TestCase {
 	}
 
 	/**
+	 * The rejection message goes through escaping.
+	 *
+	 * An uncaught exception's message is printed, so WordPress counts a throw as
+	 * an output site. This package ships inside consuming plugins and their gates
+	 * lint vendor/ with wider rulesets than this package once ran: the v0.4.0
+	 * loader passed here and turned a consumer's security gate red. The stub
+	 * marks its input, so this fails if the esc_html() call is ever dropped --
+	 * asserting the message text alone could not tell the difference.
+	 */
+	public function test_rejection_message_is_escaped(): void {
+		$this->expectException( InvalidArgumentException::class );
+		$this->expectExceptionMessage( 'esc_html(' );
+
+		mhmuicore_enqueue_react_page( $this->args( array( 'page' => '' ) ) );
+	}
+
+	/**
 	 * A rejected call must not have enqueued anything on its way out.
 	 */
 	public function test_rejected_call_enqueues_nothing(): void {
