@@ -19,11 +19,61 @@ A consuming plugin `require_once`s `vendor/mhm/ui-core/register.php` from its
 main file and registers its own copy:
 
 ```php
-mhmuicore_register( '0.2.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.4.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 At `plugins_loaded` priority 0 the highest registered version boots; the rest
 stand down. The version string passed must match this package's own version.
+
+**Every plugin that bundles the package must register it**, not just one of a
+family. A plugin that vendors the package but never calls `mhmuicore_register()`
+does not enter the version arbitration at all: its own copy is inert and it
+silently depends on a sibling plugin having booted one. Deactivating the sibling
+then takes its React screens with it.
+
+## React admin pages
+
+`mhmuicore_enqueue_react_page()` performs the four steps every MHM React admin
+screen needs, in order: the `wp-api-fetch` REST nonce middleware (once per
+request, however many pages enqueue), the `wp-components` stylesheet, the bundle
+with the dependency list and version `@wordpress/scripts` generated, and its
+JSON translation catalogues.
+
+```php
+if ( function_exists( 'mhmuicore_enqueue_react_page' ) ) {
+	mhmuicore_enqueue_react_page(
+		array(
+			'page'          => 'dashboard',           // build/admin/dashboard.js
+			'base_dir'      => MY_PLUGIN_DIR,          // trailing slash
+			'base_url'      => MY_PLUGIN_URL,          // trailing slash
+			'handle_prefix' => 'my-plugin-react-',     // handle = prefix . page
+			'version'       => MY_PLUGIN_VERSION,      // fallback only
+			'text_domain'   => 'my-plugin',
+		)
+	);
+}
+```
+
+Optional keys: `deps` (extra script handles, merged **after** the generated
+ones), `languages_dir` (default `base_dir . 'languages/'`), `build_dir`
+(default `build/admin/`).
+
+Three things this deliberately does **not** do:
+
+- It has no defaults for the six required keys. The package has no text domain
+  and no plugin constants of its own; anything product-shaped is caller input,
+  and an empty string is rejected the same as a missing key, because that is the
+  shape an undefined plugin constant collapses to.
+- The caller's `version` never overrides the generated manifest — that value is
+  a content hash, and letting a plugin version win would ship new bytes under an
+  old cache key.
+- It is declared in `bootstrap.php`, not `src/`. `src/` is PSR-4 autoloaded from
+  each consumer's own `vendor/`, so the *first* autoloader wins; `bootstrap.php`
+  is loaded from the *highest registered version*. A loader must follow the same
+  rule as the assets it points at.
+
+🔴 **Guard the call with `function_exists()`.** A site may still be running an
+older ui-core as the arbitration winner, where this function does not exist.
 
 ## 0.2.0 — breaking prefix rename
 
