@@ -18,7 +18,23 @@
 	<arg name="extensions" value="php"/>
 	<arg value="ps"/>
 
-	<rule ref="WordPress-Core">
+	<!--
+	WordPress-Extra rather than WordPress-Core, and the reason is not taste.
+
+	This package ships INSIDE consuming plugins, under their vendor/mhm/, and
+	their gates lint what they find there. mhm-rentiva's security shape gate
+	scans vendor/mhm/ with a wider ruleset than this file used to run, so a
+	shape this package considered clean turned that consumer's CI red: an
+	un-escaped exception message (WordPress.Security.EscapeOutput), measured
+	2026-08-27 on the v0.4.0 loader.
+
+	A package cannot lint more loosely than the trees it ships into. The finding
+	does not disappear; it moves downstream, where it costs a release cycle
+	instead of a commit. Measured before widening: WordPress-Extra adds exactly
+	one real finding to this package, plus the two file-naming sniffs already
+	excluded below.
+	-->
+	<rule ref="WordPress-Extra">
 		<!--
 		This package is composer/PSR-4 autoloaded (see autoload.psr-4 in
 		composer.json), not classically included by WordPress. PSR-4 requires

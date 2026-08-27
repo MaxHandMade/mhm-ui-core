@@ -167,6 +167,22 @@ if ( ! function_exists( 'esc_js' ) ) {
 	}
 }
 
+if ( ! function_exists( 'esc_html' ) ) {
+	/**
+	 * Marking stub, for the same reason as esc_js above.
+	 *
+	 * An uncaught exception's message is printed, so WordPress treats a throw as
+	 * an output site. Marking rather than passing through lets a test prove the
+	 * message went through escaping instead of merely containing the right words.
+	 *
+	 * @param string $text Raw text.
+	 * @return string
+	 */
+	function esc_html( string $text ): string {
+		return 'esc_html(' . $text . ')';
+	}
+}
+
 if ( ! function_exists( 'plugins_url' ) ) {
 	/**
 	 * Stub mirroring the real plugins_url() shape closely enough to test ours.
