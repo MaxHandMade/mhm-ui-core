@@ -14,12 +14,40 @@ paketidir**: kendi başına kurulmaz, eklentilerin içine gömülür.
    toplar; paylaşılan JS modülleri (para biçimlendirme, REST istemci fabrikası, `useApi`
    hook'u, hata sınırı bileşeni).
 2. **Bileşen fabrikası** — tek bir bileşen sözleşmesinden shortcode, Gutenberg bloğu ve
-   Elementor widget'ı üretmek (Faz 2+, henüz yok).
+   Elementor widget'ı üretmek. 🔴 **Bu motor YAZILMIŞ durumda ama burada değil:**
+   `mhm-rentiva/src/Layout/` altında **16 dosya / ~2.100 satır** olarak yaşıyor
+   (`AdapterRegistry` · `CompositionBuilder` · `TokenMapper` · `BlueprintValidator` ·
+   `AtomicImporter` · `ContractRules` · adaptörler + CLI). Tasarım dokümanının **Faz 2**'si
+   tam olarak bunun pakete taşınmasıdır — yani eksik olan kod değil, **kodun yeri**.
 3. **Sürüm dikişi** — WordPress.org'a uygun ücretsiz çekirdeğin, lisanslı Pro eklentisine
    açtığı uzantı noktaları.
 
 İçinde **iş mantığı, lisans kodu ve dış HTTP çağrısı yoktur.** İçine gömüldüğü her WordPress
 eklentisi gibi GPL'dir.
+
+## Bitti mi? — Hayır: altı fazın ikisi
+
+Tasarım dokümanı (`rentiva-dev/docs/superpowers/specs/2026-07-14-mhm-ui-core-design.md`)
+altı faz tanımlıyor. 2026-08-27 itibarıyla ölçülen durum:
+
+| Faz | Ne | Durum |
+|---|---|---|
+| 0 | İskelet — depo, composer/npm, CI, kalite kapıları | ✅ **bitti** |
+| 1 | Token birleştirme — tek token kaynağı | ⬜ başlamadı |
+| 2 | **Layout motoru pakete** | ⬜ başlamadı — *kod var, Rentiva'da* |
+| 3 | **React kiti pakete** — `enqueue_react_page()` + paylaşılan JSX | ✅ **2026-08-27** (v0.4.x) |
+| 4 | Bileşen scaffold'u — `wp mhm-ui make:component` | ⬜ başlamadı |
+| 5 | İkinci ürün (greenfield pilot) — dikiş doğuştan | ⬜ başlamadı |
+
+📌 **Faz 3, 1 ve 2'den önce yapıldı.** Sıra bilerek bozuldu: canlı kusur oradaydı (Pro'nun
+beş yönetici ekranı, eklenti sınırını aşan bir çağrıya bağlıydı). Bu, 1 ve 2'yi kolaylaştırmaz —
+yalnız erteler.
+
+📌 Üçüncü sorumluluk (**katman dikişi**) için de pakette bugün **kod yok**; Lite↔Pro dikişi
+Rentiva'nın kendi içinde yaşıyor.
+
+**Kısacası:** ui-core bugün *çalışan ve sevk edilen* bir paket, ama **tamamlanmış değil**.
+Bitmiş olan, React yönetici hattı.
 
 ## Nerede kullanılıyor?
 
