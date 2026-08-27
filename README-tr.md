@@ -1,0 +1,121 @@
+# mhm/ui-core — Türkçe özet
+
+> Bu dosya hatırlatma amaçlıdır. Sözleşmenin resmi ve güncel hâli [README.md](README.md)
+> (İngilizce); ikisi çelişirse **İngilizce olan geçerlidir**.
+
+## Bu paket ne işe yarar?
+
+MHM WordPress eklentilerinin **ortak arayüz altyapısı**. Eklenti değildir, **Composer
+paketidir**: kendi başına kurulmaz, eklentilerin içine gömülür.
+
+Üç sorumluluğu var:
+
+1. **React yönetici kiti** — her yönetici ekranının ihtiyaç duyduğu enqueue işini tek yerde
+   toplar; paylaşılan JS modülleri (para biçimlendirme, REST istemci fabrikası, `useApi`
+   hook'u, hata sınırı bileşeni).
+2. **Bileşen fabrikası** — tek bir bileşen sözleşmesinden shortcode, Gutenberg bloğu ve
+   Elementor widget'ı üretmek (Faz 2+, henüz yok).
+3. **Sürüm dikişi** — WordPress.org'a uygun ücretsiz çekirdeğin, lisanslı Pro eklentisine
+   açtığı uzantı noktaları.
+
+İçinde **iş mantığı, lisans kodu ve dış HTTP çağrısı yoktur.** İçine gömüldüğü her WordPress
+eklentisi gibi GPL'dir.
+
+## Nerede kullanılıyor?
+
+| Eklenti | Nasıl geliyor |
+|---|---|
+| `mhm-rentiva` (ücretsiz, WP.org) | `composer.json` → `mhm/ui-core: ^0.4`, ZIP'e dahil |
+| `mhm-rentiva-pro` (lisanslı) | aynı sürüm zorunlu — `check-uicore-parity` kapısı bunu kilitler |
+
+🔴 **İki eklenti de kendi kopyasını taşır ve kendi kopyasını kaydeder.** Aynı sitede ikisi
+birden varsa, `plugins_loaded` önceliği 0'da **en yüksek sürüm** kazanır ve yalnız o boot eder.
+Kaydetmeyen eklenti bu yarışa hiç girmez — bu, 2026-08-27'ye kadar Pro'nun durumuydu ve Pro'yu
+sessizce Lite'ın boot etmesine bağımlı kılıyordu.
+
+## Nasıl kullanılır?
+
+**1. Kayıt** — tüketici eklentinin ana dosyasında, `plugins_loaded`'dan önce:
+
+```php
+require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
+mhmuicore_register( '0.4.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+```
+
+🔴 Sürüm dizesi **elle yazılır** (kayıt, herhangi bir bootstrap yüklenmeden önce koşar) ve
+kurulu paketle aynı olmak zorundadır. Düşük yazmak, eski bir kopyanın yarışı kazanmasına yol
+açar ve **sessizdir** — o yüzden her iki eklentide de `bin/check-uicore-version.php` kapısı var.
+Ölçüldü: bu literal üç sürüm boyunca sürüklenmiş ve hiçbir kapı görmemişti.
+
+**2. React yönetici sayfası** — dört adımı tek çağrı yapar (REST nonce middleware'i istek
+başına bir kez, `wp-components` stili, `@wordpress/scripts`'in ürettiği bağımlılık listesi ve
+sürümüyle bundle, ve JSON çeviri katalogları):
+
+```php
+if ( function_exists( 'mhmuicore_enqueue_react_page' ) ) {
+    mhmuicore_enqueue_react_page( array(
+        'page'          => 'dashboard',        // build/admin/dashboard.js
+        'base_dir'      => MY_PLUGIN_DIR,      // sonunda taksim
+        'base_url'      => MY_PLUGIN_URL,
+        'handle_prefix' => 'my-plugin-react-', // handle = önek + page
+        'version'       => MY_PLUGIN_VERSION,  // yalnız yedek
+        'text_domain'   => 'my-plugin',
+    ) );
+}
+```
+
+🔴 **`function_exists()` ile koru:** sitede kazanan kopya daha eski olabilir, o zaman bu
+fonksiyon yoktur. Üç şeyi bilerek yapmaz: altı zorunlu anahtarın **varsayılanı yoktur**
+(paketin text domain'i ve sabitleri yok, boş dize de reddedilir — tanımsız bir sabitin çöktüğü
+şekil budur) · çağıranın `version`'ı **manifest'i ezmez** (o bir içerik hash'idir; tersi, eski
+cache anahtarıyla yeni bayt sevk eder) · dizi argüman alır, çünkü paket API'sine **yalnız
+ekleme** yapabilir.
+
+**3. Varlık bulucular** — `mhmuicore_version()` · `mhmuicore_asset_path()` ·
+`mhmuicore_asset_url()`. Hepsi **boot eden kopyaya** göre çözülür.
+
+**4. Paylaşılan JS** (`src-react/`) — `createFormatter` · `createApiClient( ns, apiFetch )` ·
+`useApi` · `ErrorBoundary`. Göreli yolla import edilir:
+`../../vendor/mhm/ui-core/src-react/...` (çıplak `@mhm/ui-core` **kullanılamaz**).
+
+🔴 **Uç haritası pakete AİT DEĞİLDİR.** Paylaşılan olan **fabrikadır**; her eklenti kendi REST
+uç haritasını kendi taşır. Bu kural 2026-08-27'de pahalıya öğrenildi: Pro'nun beş yönetici
+ekranı Lite'ın haritasını okuyordu, WP.org ayrıştırması o haritadan ücretli bölümleri sildi ve
+beş ekran birden kırıldı.
+
+## Değişmez kurallar
+
+- **Sürüm yalnız EKLER.** Kaldırılan veya yeniden adlandırılan API, sahadaki eski tüketiciyi
+  kırar. `0.2.0` bilinçli olarak geriye uyumluluk takma adı bırakmadı (gerekçesi README.md'de).
+- **Locator'lar `bootstrap.php`'de, `register.php`'de değil.** İkisi **farklı kurallarla**
+  seçilir: `register.php` → `function_exists()`, yani **ilk yükleyen** kazanır; `bootstrap.php`
+  → **en yüksek sürüm** kazanır. Karıştırmak, varlık yolunun eski bir kopyadan gelmesi demektir.
+- **Tag = dağıtım, ama yalnız aralık içindeyse.** `^0.3`'e sabitlenmiş bir tüketiciye `v0.4.x`
+  **inmez**; ancak constraint bilerek yükseltilince gelir.
+- **Paket, içine gireceği ağaçtan daha gevşek denetlenemez.** PHPCS burada `WordPress-Extra`
+  koşar; daha dar bir setle "temiz" görünüp tüketicinin kapısını kırmıştı (v0.4.0 → v0.4.1).
+
+## Depo neden public? Riski var mı?
+
+**Public olması zorunlu sayılır, çünkü kod zaten dağıtılıyor.** Paket, `mhm-rentiva`'nın
+`.distignore`'unda bilerek ZIP'e dâhil edilir; WordPress.org'dan inen her kurulumda
+`wp-content/plugins/mhm-rentiva/vendor/mhm/ui-core/` altında kaynağıyla durur. Depoyu private
+yapmak **hiçbir şeyi gizlemez**, buna karşılık Lite'ın public CI'ının private bir bağımlılığı
+kurabilmesi için token dağıtımı gerekir — evin kanunu bunu hem kimlik hem lisans deliği sayar.
+Ayrıca paket GPL-2.0'dır ve kaynağın alıcıya ulaşması zaten gerekir.
+
+**"Kötü niyetli biri kodu değiştirebilir mi?" — Hayır.** Public olmak *okuma* verir, *yazma*
+değil. Ölçüldü (2026-08-27): depoda push/admin yetkisi olan **tek hesap var**, dış katkıcı yok,
+depoda tanımlı **secret yok**.
+
+Gerçek risk sırası şudur, ve hiçbiri "public" olmasından kaynaklanmaz:
+
+1. **Hesap ele geçirilmesi** — tek yetkili hesap; koruma 2FA'dır.
+2. **`main` dalında koruma yok** (ölçüldü). Bugün tek kişi push ettiği için pratik risk saldırgan
+   değil **kaza**: CI'ı atlayan doğrudan push veya force-push. Açılması önerilir.
+3. **Actions politikası "all"** — iş akışları bugün yalnız resmî action kullanıyor, ama ayar
+   ileride herhangi bir üçüncü taraf action'ın kopyala-yapıştır ile girmesine izin verir.
+4. **Geçmişe sır sızması** — bugün yok; her push öncesi `sir-kapisi.sh` koşar.
+
+📌 Kaynağın okunabilir olması açık aramayı kolaylaştırır — ama bu, WP eklenti modelinin
+kaçınılmaz sonucudur (ZIP zaten okunabilir). Buradaki savunma gizlilik değil, **kapılardır**.

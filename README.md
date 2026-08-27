@@ -2,6 +2,9 @@
 
 Shared WordPress UI infrastructure for MHM plugins.
 
+> 🇹🇷 Türkçe özet: **[README-tr.md](README-tr.md)** — ne işe yarar, nerede kullanılır, nasıl
+> kullanılır. Çelişki hâlinde bu İngilizce dosya geçerlidir.
+
 Three responsibilities:
 
 1. **Component factory** — one component contract produces a shortcode, a
