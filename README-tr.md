@@ -94,28 +94,3 @@ beş ekran birden kırıldı.
   **inmez**; ancak constraint bilerek yükseltilince gelir.
 - **Paket, içine gireceği ağaçtan daha gevşek denetlenemez.** PHPCS burada `WordPress-Extra`
   koşar; daha dar bir setle "temiz" görünüp tüketicinin kapısını kırmıştı (v0.4.0 → v0.4.1).
-
-## Depo neden public? Riski var mı?
-
-**Public olması zorunlu sayılır, çünkü kod zaten dağıtılıyor.** Paket, `mhm-rentiva`'nın
-`.distignore`'unda bilerek ZIP'e dâhil edilir; WordPress.org'dan inen her kurulumda
-`wp-content/plugins/mhm-rentiva/vendor/mhm/ui-core/` altında kaynağıyla durur. Depoyu private
-yapmak **hiçbir şeyi gizlemez**, buna karşılık Lite'ın public CI'ının private bir bağımlılığı
-kurabilmesi için token dağıtımı gerekir — evin kanunu bunu hem kimlik hem lisans deliği sayar.
-Ayrıca paket GPL-2.0'dır ve kaynağın alıcıya ulaşması zaten gerekir.
-
-**"Kötü niyetli biri kodu değiştirebilir mi?" — Hayır.** Public olmak *okuma* verir, *yazma*
-değil. Ölçüldü (2026-08-27): depoda push/admin yetkisi olan **tek hesap var**, dış katkıcı yok,
-depoda tanımlı **secret yok**.
-
-Gerçek risk sırası şudur, ve hiçbiri "public" olmasından kaynaklanmaz:
-
-1. **Hesap ele geçirilmesi** — tek yetkili hesap; koruma 2FA'dır.
-2. **`main` dalında koruma yok** (ölçüldü). Bugün tek kişi push ettiği için pratik risk saldırgan
-   değil **kaza**: CI'ı atlayan doğrudan push veya force-push. Açılması önerilir.
-3. **Actions politikası "all"** — iş akışları bugün yalnız resmî action kullanıyor, ama ayar
-   ileride herhangi bir üçüncü taraf action'ın kopyala-yapıştır ile girmesine izin verir.
-4. **Geçmişe sır sızması** — bugün yok; her push öncesi `sir-kapisi.sh` koşar.
-
-📌 Kaynağın okunabilir olması açık aramayı kolaylaştırır — ama bu, WP eklenti modelinin
-kaçınılmaz sonucudur (ZIP zaten okunabilir). Buradaki savunma gizlilik değil, **kapılardır**.
