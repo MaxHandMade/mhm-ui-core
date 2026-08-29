@@ -36,8 +36,8 @@ final class ShippedSurfaceTest extends TestCase {
 		$p1 = array_filter( $files, static fn( $p ) => (bool) preg_match( '/\.(css|js|jsx|php)$/', $p ) );
 		$p2 = array_filter( $files, static fn( $p ) => str_ends_with( $p, '.css' ) );
 
-		self::assertCount( 17, $files, 'shipped file count changed' );
-		self::assertCount( 10, $p1, 'P1 file set changed' );
+		self::assertCount( 20, $files, 'shipped file count changed' );
+		self::assertCount( 13, $p1, 'P1 file set changed' );
 		self::assertCount( 1, $p2, 'P2 file set changed' );
 	}
 }
