@@ -43,20 +43,22 @@ function runGate( repo, gate = CSS_GATE ) {
 }
 
 /**
- * Like runGate(), but also returns the gate's stdout so a test can assert on
- * WHICH predicate fired (via its VIOLATION line), not just the exit code. A
- * fixture that trips more than one predicate can produce the same exit code
- * whether or not the predicate under test still fires at all — asserting the
- * exit code alone would then pass for the wrong reason.
+ * Like runGate(), but also returns the gate's stdout (and stderr) so a test
+ * can assert on WHICH predicate fired (via its VIOLATION line, or — for a
+ * MEASURE-FAILED path that never reaches stdout — its stderr message), not
+ * just the exit code. A fixture that trips more than one predicate can
+ * produce the same exit code whether or not the predicate under test still
+ * fires at all — asserting the exit code alone would then pass for the
+ * wrong reason.
  *
- * @return {{ code: number, out: string }}
+ * @return {{ code: number, out: string, err: string }}
  */
 function runGateOut( repo, gate = CSS_GATE ) {
 	const bin = gate === PHP_GATE ? 'php' : 'node';
 	try {
-		return { code: 0, out: execFileSync( bin, [ gate, repo ], { encoding: 'utf8' } ) };
+		return { code: 0, out: execFileSync( bin, [ gate, repo ], { encoding: 'utf8' } ), err: '' };
 	} catch ( e ) {
-		return { code: e.status, out: String( e.stdout ?? '' ) };
+		return { code: e.status, out: String( e.stdout ?? '' ), err: String( e.stderr ?? '' ) };
 	}
 }
 
