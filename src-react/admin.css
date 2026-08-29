@@ -1,28 +1,26 @@
 /* =============================================================================
-   MHM Rentiva — Shared Admin Styles
-   Used by: dashboard, reports
+   MHM UI Core — Shared Admin Styles
+   Scope: .mhmui-admin mount nodes
    ============================================================================= */
 
 /* Custom properties — WP admin color palette */
-#mhm-rentiva-dashboard,
-#mhm-reports-root,
-#mhm-customers-root,
+.mhmui-admin,
 .mhm-stats-grid {
-	--mhm-blue:         #2271b1;
-	--mhm-blue-dark:    #135e96;
-	--mhm-green:        #00a32a;
-	--mhm-green-dark:   #007a1f;
-	--mhm-amber:        #dba617;
-	--mhm-amber-dark:   #b08000;
-	--mhm-grey:         #646970;
-	--mhm-grey-dark:    #3c3f44;
-	--mhm-border:       #c3c4c7;
-	--mhm-border-light: #f0f0f1;
-	--mhm-text:         #1d2327;
-	--mhm-text-light:   #646970;
-	--mhm-bg:           #f0f0f1;
-	--mhm-card-bg:      #ffffff;
-	--mhm-gap:          12px;
+	--mhmui-blue:         #2271b1;
+	--mhmui-blue-dark:    #135e96;
+	--mhmui-green:        #00a32a;
+	--mhmui-green-dark:   #007a1f;
+	--mhmui-amber:        #dba617;
+	--mhmui-amber-dark:   #b08000;
+	--mhmui-grey:         #646970;
+	--mhmui-grey-dark:    #3c3f44;
+	--mhmui-border:       #c3c4c7;
+	--mhmui-border-light: #f0f0f1;
+	--mhmui-text:         #1d2327;
+	--mhmui-text-light:   #646970;
+	--mhmui-bg:           #f0f0f1;
+	--mhmui-card-bg:      #ffffff;
+	--mhmui-gap:          12px;
 }
 
 /* -----------------------------------------------------------------------------
@@ -31,7 +29,7 @@
 .mhm-stats-grid {
 	display: grid;
 	grid-template-columns: repeat( 4, 1fr );
-	gap: var( --mhm-gap );
+	gap: var( --mhmui-gap );
 	margin-top: 16px; /* Breathing room below WP .wrap H1/notice area on PHP list-table pages. */
 }
 
@@ -61,10 +59,10 @@
 	gap: 12px;
 }
 
-.mhm-stat-card:nth-child(1) { background: linear-gradient( 135deg, var( --mhm-blue ),  var( --mhm-blue-dark )  ); box-shadow: 0 2px 8px rgba( 34, 113, 177, .25 ); }
-.mhm-stat-card:nth-child(2) { background: linear-gradient( 135deg, var( --mhm-green ), var( --mhm-green-dark ) ); box-shadow: 0 2px 8px rgba( 0, 163, 42, .25 ); }
-.mhm-stat-card:nth-child(3) { background: linear-gradient( 135deg, var( --mhm-amber ), var( --mhm-amber-dark ) ); box-shadow: 0 2px 8px rgba( 219, 166, 23, .25 ); }
-.mhm-stat-card:nth-child(4) { background: linear-gradient( 135deg, var( --mhm-grey ),  var( --mhm-grey-dark )  ); box-shadow: 0 2px 8px rgba( 100, 105, 112, .25 ); }
+.mhm-stat-card:nth-child(1) { background: linear-gradient( 135deg, var( --mhmui-blue ),  var( --mhmui-blue-dark )  ); box-shadow: 0 2px 8px rgba( 34, 113, 177, .25 ); }
+.mhm-stat-card:nth-child(2) { background: linear-gradient( 135deg, var( --mhmui-green ), var( --mhmui-green-dark ) ); box-shadow: 0 2px 8px rgba( 0, 163, 42, .25 ); }
+.mhm-stat-card:nth-child(3) { background: linear-gradient( 135deg, var( --mhmui-amber ), var( --mhmui-amber-dark ) ); box-shadow: 0 2px 8px rgba( 219, 166, 23, .25 ); }
+.mhm-stat-card:nth-child(4) { background: linear-gradient( 135deg, var( --mhmui-grey ),  var( --mhmui-grey-dark )  ); box-shadow: 0 2px 8px rgba( 100, 105, 112, .25 ); }
 
 .mhm-stat-card .dashicons {
 	font-size: 28px;
@@ -102,8 +100,8 @@
    Widget card — shared base used as chart container + dashboard widgets
    ----------------------------------------------------------------------------- */
 .mhm-widget {
-	background: var( --mhm-card-bg );
-	border: 1px solid var( --mhm-border );
+	background: var( --mhmui-card-bg );
+	border: 1px solid var( --mhmui-border );
 	border-radius: 6px;
 	padding: 16px;
 	box-shadow: 0 1px 3px rgba( 0, 0, 0, .06 );
@@ -114,10 +112,10 @@
 .mhm-widget h3 {
 	margin: 0 0 10px;
 	padding-bottom: 8px;
-	border-bottom: 1px solid var( --mhm-border-light );
+	border-bottom: 1px solid var( --mhmui-border-light );
 	font-size: 13px;
 	font-weight: 600;
-	color: var( --mhm-text );
+	color: var( --mhmui-text );
 	display: flex;
 	align-items: center;
 	gap: 6px;
@@ -127,7 +125,7 @@
 	font-size: 16px;
 	width: 16px;
 	height: 16px;
-	color: var( --mhm-blue );
+	color: var( --mhmui-blue );
 	flex-shrink: 0;
 	opacity: .85;
 }
@@ -135,14 +133,14 @@
 .mhm-widget h3 .mhm-widget__subtitle {
 	font-size: 10px;
 	font-weight: 400;
-	color: var( --mhm-text-light );
+	color: var( --mhmui-text-light );
 	margin-left: 4px;
 }
 
 /* Empty / error states */
 .mhm-empty,
 .mhm-error {
-	color: var( --mhm-text-light );
+	color: var( --mhmui-text-light );
 	font-size: 12px;
 	margin: 8px 0 0;
 }
@@ -174,14 +172,14 @@
 	line-height: 1.2;
 }
 
-.mhm-kpi-box--blue  .mhm-kpi-box__value { color: var( --mhm-blue ); }
-.mhm-kpi-box--green .mhm-kpi-box__value { color: var( --mhm-green ); }
-.mhm-kpi-box--amber .mhm-kpi-box__value { color: var( --mhm-amber-dark ); }
-.mhm-kpi-box--grey  .mhm-kpi-box__value { color: var( --mhm-grey ); }
+.mhm-kpi-box--blue  .mhm-kpi-box__value { color: var( --mhmui-blue ); }
+.mhm-kpi-box--green .mhm-kpi-box__value { color: var( --mhmui-green ); }
+.mhm-kpi-box--amber .mhm-kpi-box__value { color: var( --mhmui-amber-dark ); }
+.mhm-kpi-box--grey  .mhm-kpi-box__value { color: var( --mhmui-grey ); }
 
 .mhm-kpi-box__label {
 	font-size: 9px;
-	color: var( --mhm-text-light );
+	color: var( --mhmui-text-light );
 	margin-top: 2px;
 }
 
@@ -214,27 +212,27 @@
 	align-items: center;
 	margin-top: 10px;
 	padding-top: 8px;
-	border-top: 1px solid var( --mhm-border-light );
+	border-top: 1px solid var( --mhmui-border-light );
 }
 
 .mhm-pagination__btn {
 	background: #f6f7f7;
-	border: 1px solid var( --mhm-border );
+	border: 1px solid var( --mhmui-border );
 	border-radius: 3px;
 	padding: 4px 10px;
 	font-size: 10px;
-	color: var( --mhm-text );
+	color: var( --mhmui-text );
 	cursor: pointer;
 	line-height: 1.4;
 }
 
 .mhm-pagination__btn:disabled {
-	color: var( --mhm-text-light );
+	color: var( --mhmui-text-light );
 	cursor: default;
 	opacity: .7;
 }
 
 .mhm-pagination__info {
 	font-size: 10px;
-	color: var( --mhm-text-light );
+	color: var( --mhmui-text-light );
 }

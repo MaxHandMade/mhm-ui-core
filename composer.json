@@ -35,10 +35,12 @@
         "test": "@php ./vendor/bin/phpunit -c phpunit.xml",
         "phpcs": "@php ./vendor/bin/phpcs --standard=phpcs.xml",
         "phpstan": "@php ./vendor/bin/phpstan analyse --memory-limit=1G",
+        "check:php-namespace": "@php ./bin/check-php-namespace.php",
         "check": [
             "@phpcs",
             "@phpstan",
-            "@test"
+            "@test",
+            "@check:php-namespace"
         ]
     }
 }

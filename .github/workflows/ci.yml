@@ -42,6 +42,9 @@ jobs:
       - name: PHPUnit
         run: composer test
 
+      - name: CSS namespace (PHP surface)
+        run: composer check:php-namespace
+
   js:
     name: JS checks
     runs-on: ubuntu-latest
@@ -65,3 +68,6 @@ jobs:
 
       - name: Jest
         run: npm test
+
+      - name: CSS namespace (shipped surface)
+        run: npm run check:css-namespace
