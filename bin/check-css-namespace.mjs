@@ -7,6 +7,7 @@ import { tmpdir } from 'node:os';
 import { join, relative, extname, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import stylelint from 'stylelint';
+import { parse } from '@babel/parser';
 
 const P1_EXT = new Set( [ '.css', '.js', '.jsx', '.php' ] );
 const DOC_EXT = new Set( [ '.md', '.json', '' ] );
@@ -102,6 +103,44 @@ for ( const r of result.results ) {
 			name: offendingName( r.source, w ),
 		} );
 	}
+}
+
+// P1a-js / P1b: the shipped JS/JSX half of the surface. A foreign custom-property
+// name (or one assembled at runtime, which can never be verified statically) is
+// found by walking the Babel AST — never by matching raw text — so a docblock
+// example showing `--mhm-primary:#000;` is indistinguishable from a comment to
+// this scanner, exactly because it never reaches a StringLiteral node.
+const isForeignName = ( v ) => typeof v === 'string' && v.startsWith( '--' ) && ! v.startsWith( '--mhmui-' );
+
+for ( const f of js ) {
+	const ast = parse( readFileSync( f, 'utf8' ), { sourceType: 'module', plugins: [ 'jsx' ] } );
+	// Comments are a separate AST channel (CommentLine/CommentBlock nodes), so
+	// walking for StringLiteral/BinaryExpression/TemplateLiteral nodes never
+	// sees them, however they attach to the tree.
+	JSON.stringify( ast, ( key, node ) => {
+		if ( ! node || typeof node !== 'object' || ! node.type ) return node;
+
+		if ( node.type === 'StringLiteral' && isForeignName( node.value ) ) {
+			violations.push( {
+				text: `VIOLATION: ${ rel( f ) }:${ node.loc.start.line } foreign-custom-property — ${ node.value }`,
+				name: node.value,
+			} );
+		}
+		// P1b: a name assembled at runtime can never be verified statically, so the
+		// assembly itself is the violation — there is no single name to de-duplicate
+		// against, so (as with the EMPTY-SET guards above) the text doubles as the name.
+		if ( node.type === 'BinaryExpression' && node.operator === '+'
+			&& node.left?.type === 'StringLiteral' && node.left.value.startsWith( '--' ) ) {
+			const text = `VIOLATION: ${ rel( f ) }:${ node.loc.start.line } dynamic-custom-property-name`;
+			violations.push( { text, name: text } );
+		}
+		if ( node.type === 'TemplateLiteral' && node.expressions.length > 0
+			&& node.quasis[ 0 ]?.value.raw.startsWith( '--' ) ) {
+			const text = `VIOLATION: ${ rel( f ) }:${ node.loc.start.line } dynamic-custom-property-name`;
+			violations.push( { text, name: text } );
+		}
+		return node;
+	} );
 }
 
 rmSync( dir, { recursive: true, force: true } );
