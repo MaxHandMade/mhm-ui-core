@@ -63,31 +63,96 @@ foreach ( $php as $path ) {
 	$tokens = token_get_all( (string) $source );
 
 	foreach ( $tokens as $i => $token ) {
-		if ( ! is_array( $token ) || T_CONSTANT_ENCAPSED_STRING !== $token[0] ) {
-			continue; // comments and doc comments are their own token types: never reached.
+		if ( ! is_array( $token ) ) {
+			continue; // single-char tokens ('.', '"', '{', '}', ...) carry no name.
 		}
 
-		$value = trim( $token[1], "'\"" );
+		if ( T_CONSTANT_ENCAPSED_STRING === $token[0] ) {
+			$value = trim( $token[1], "'\"" );
 
-		if ( str_starts_with( $value, '--' ) && ! str_starts_with( $value, '--mhmui-' ) ) {
-			$violations[] = array(
-				'text' => "VIOLATION: {$path}:{$token[2]} foreign-custom-property — {$value}",
-				'name' => $value,
-			);
+			if ( str_starts_with( $value, '--' ) && ! str_starts_with( $value, '--mhmui-' ) ) {
+				$violations[] = array(
+					'text' => "VIOLATION: {$path}:{$token[2]} foreign-custom-property — {$value}",
+					'name' => $value,
+				);
+			}
+
+			// P1b: '--mhmui-x' . $suffix builds a name the gate can never verify.
+			//
+			// The next ARRAY INDEX is not the next significant token: token_get_all()
+			// puts T_WHITESPACE between them, so `'--' . $x` lands the string at $i,
+			// whitespace at $i+1 and the '.' at $i+2. Measured on this codebase's PHP;
+			// an $i+1 comparison never fires on normally-spaced code.
+			if ( str_starts_with( $value, '--' ) && '.' === mhmuicore_next_significant( $tokens, $i ) ) {
+				$text = "VIOLATION: {$path}:{$token[2]} dynamic-custom-property-name";
+				$violations[] = array(
+					'text' => $text,
+					'name' => $text,
+				);
+			}
+			continue;
 		}
 
-		// P1b: '--mhmui-x' . $suffix builds a name the gate can never verify.
-		//
-		// The next ARRAY INDEX is not the next significant token: token_get_all()
-		// puts T_WHITESPACE between them, so `'--' . $x` lands the string at $i,
-		// whitespace at $i+1 and the '.' at $i+2. Measured on this codebase's PHP;
-		// an $i+1 comparison never fires on normally-spaced code.
-		if ( str_starts_with( $value, '--' ) && '.' === mhmuicore_next_significant( $tokens, $i ) ) {
-			$text = "VIOLATION: {$path}:{$token[2]} dynamic-custom-property-name";
-			$violations[] = array(
-				'text' => $text,
-				'name' => $text,
-			);
+		// A double-quoted string or heredoc/nowdoc that contains a variable never
+		// tokenizes as T_CONSTANT_ENCAPSED_STRING: its static portion is
+		// T_ENCAPSED_AND_WHITESPACE instead, a token type the check above never
+		// looks at — so "--mhm-forbidden-{$n}" reached the shipped surface
+		// unflagged (review round 1 finding). Confirmed empirically: a NOWDOC
+		// body (<<<'EOT' ... EOT, no interpolation at all) also tokenizes as
+		// T_ENCAPSED_AND_WHITESPACE, as a single token with no variable token
+		// beside it — token_get_all() reuses the same token type for "possibly
+		// interpolated" text regardless of whether interpolation actually
+		// occurs, so heredoc-without-variables and nowdoc are indistinguishable
+		// from each other here and are treated identically below.
+		if ( T_ENCAPSED_AND_WHITESPACE === $token[0] && str_starts_with( $token[1], '--' ) ) {
+			// Only the LEADING fragment of the string/heredoc is checked — the
+			// one immediately after the opening delimiter ('"' or
+			// T_START_HEREDOC). A fragment that instead follows a closed
+			// interpolation ("{$a}--mhm-x") is not leading: no T_WHITESPACE is
+			// ever interleaved inside an encapsed string body, so direct index
+			// adjacency (not mhmuicore_next_significant()) is exactly right
+			// here, unlike the '.'-concatenation check above. This mirrors the
+			// JS gate, which only inspects quasis[0] of an interpolated
+			// TemplateLiteral: a trailing static tail after a variable is
+			// exactly as unverifiable as the variable itself, and is the same
+			// documented boundary as a name assembled from a variable or an
+			// import — not chased here either.
+			$prev        = $tokens[ $i - 1 ] ?? null;
+			$is_leading  = ( '"' === $prev ) || ( is_array( $prev ) && T_START_HEREDOC === $prev[0] );
+
+			if ( $is_leading ) {
+				$next        = $tokens[ $i + 1 ] ?? null;
+				$closes_here = ( '"' === $next ) || ( is_array( $next ) && T_END_HEREDOC === $next[0] );
+
+				if ( $closes_here ) {
+					// No interpolation occurs in this string/heredoc at all —
+					// this is every nowdoc, and a heredoc/double-quoted string
+					// with no variable in it either. The value is fully known
+					// at parse time, exactly like a T_CONSTANT_ENCAPSED_STRING,
+					// so it is judged the same way: P1a.
+					if ( ! str_starts_with( $token[1], '--mhmui-' ) ) {
+						$violations[] = array(
+							'text' => "VIOLATION: {$path}:{$token[2]} foreign-custom-property — {$token[1]}",
+							'name' => $token[1],
+						);
+					}
+				} else {
+					// The leading fragment is immediately followed by real
+					// interpolation (T_CURLY_OPEN / T_VARIABLE /
+					// T_DOLLAR_OPEN_CURLY_BRACES): the assembled value can
+					// never be verified statically — same violation as the
+					// '.'-concatenation case above, and on the same terms as
+					// the sibling JS gate: an interpolated leading quasi is
+					// flagged regardless of whether its own text looks
+					// compliant, because "--mhmui-{$name}" is exactly as
+					// unverifiable as "--mhm-x-{$n}".
+					$text = "VIOLATION: {$path}:{$token[2]} dynamic-custom-property-name";
+					$violations[] = array(
+						'text' => $text,
+						'name' => $text,
+					);
+				}
+			}
 		}
 	}
 }
