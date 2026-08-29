@@ -109,31 +109,67 @@ for ( const r of result.results ) {
 // name (or one assembled at runtime, which can never be verified statically) is
 // found by walking the Babel AST — never by matching raw text — so a docblock
 // example showing `--mhm-primary:#000;` is indistinguishable from a comment to
-// this scanner, exactly because it never reaches a StringLiteral node.
+// this scanner, exactly because it never reaches a StringLiteral/TemplateLiteral
+// node in the first place.
 const isForeignName = ( v ) => typeof v === 'string' && v.startsWith( '--' ) && ! v.startsWith( '--mhmui-' );
+
+// A "static text node" is a StringLiteral, or a TemplateLiteral with no
+// interpolation (`` `--mhm-x` ``, a computed object key, the literal quasi
+// behind `String.raw` — all fully known at parse time, same as an ordinary
+// string). Returns undefined for anything else, including an *interpolated*
+// template literal, which is handled separately below because it is only
+// partially static.
+const staticTextValue = ( node ) => {
+	if ( node?.type === 'StringLiteral' ) return node.value;
+	if ( node?.type === 'TemplateLiteral' && node.expressions.length === 0 ) {
+		const q = node.quasis[ 0 ]?.value;
+		return q?.cooked ?? q?.raw;
+	}
+	return undefined;
+};
+const isDashPrefixedStatic = ( node ) => {
+	const v = staticTextValue( node );
+	return typeof v === 'string' && v.startsWith( '--' );
+};
 
 for ( const f of js ) {
 	const ast = parse( readFileSync( f, 'utf8' ), { sourceType: 'module', plugins: [ 'jsx' ] } );
 	// Comments are a separate AST channel (CommentLine/CommentBlock nodes), so
-	// walking for StringLiteral/BinaryExpression/TemplateLiteral nodes never
-	// sees them, however they attach to the tree.
+	// walking for StringLiteral/TemplateLiteral/BinaryExpression/CallExpression
+	// nodes never sees them, however they attach to the tree.
 	JSON.stringify( ast, ( key, node ) => {
 		if ( ! node || typeof node !== 'object' || ! node.type ) return node;
 
-		if ( node.type === 'StringLiteral' && isForeignName( node.value ) ) {
+		if ( ( node.type === 'StringLiteral' || node.type === 'TemplateLiteral' ) && isForeignName( staticTextValue( node ) ) ) {
+			const v = staticTextValue( node );
 			violations.push( {
-				text: `VIOLATION: ${ rel( f ) }:${ node.loc.start.line } foreign-custom-property — ${ node.value }`,
-				name: node.value,
+				text: `VIOLATION: ${ rel( f ) }:${ node.loc.start.line } foreign-custom-property — ${ v }`,
+				name: v,
 			} );
 		}
 		// P1b: a name assembled at runtime can never be verified statically, so the
 		// assembly itself is the violation — there is no single name to de-duplicate
 		// against, so (as with the EMPTY-SET guards above) the text doubles as the name.
+		// This is deliberately shape-general rather than one hand-picked example:
+		// either side of a `+` concatenation, or the receiver of a `.concat()` call,
+		// can carry the static `--` fragment, and it can be written as a plain
+		// string or a template literal. What it can NOT be made to catch is a name
+		// assembled entirely from non-literal parts (a variable, an import,
+		// String.fromCharCode) — that is not statically detectable by any check of
+		// this kind, and is not attempted here.
 		if ( node.type === 'BinaryExpression' && node.operator === '+'
-			&& node.left?.type === 'StringLiteral' && node.left.value.startsWith( '--' ) ) {
+			&& ( isDashPrefixedStatic( node.left ) || isDashPrefixedStatic( node.right ) ) ) {
 			const text = `VIOLATION: ${ rel( f ) }:${ node.loc.start.line } dynamic-custom-property-name`;
 			violations.push( { text, name: text } );
 		}
+		if ( node.type === 'CallExpression' && node.callee?.type === 'MemberExpression'
+			&& node.callee.property?.name === 'concat' && isDashPrefixedStatic( node.callee.object ) ) {
+			const text = `VIOLATION: ${ rel( f ) }:${ node.loc.start.line } dynamic-custom-property-name`;
+			violations.push( { text, name: text } );
+		}
+		// An interpolated template whose static prefix already carries the `--`
+		// boundary (`` `--${ns}-x` ``) is exactly as unverifiable once assembled,
+		// even though no `+` or `.concat()` is involved.
 		if ( node.type === 'TemplateLiteral' && node.expressions.length > 0
 			&& node.quasis[ 0 ]?.value.raw.startsWith( '--' ) ) {
 			const text = `VIOLATION: ${ rel( f ) }:${ node.loc.start.line } dynamic-custom-property-name`;
