@@ -21,6 +21,40 @@ define( 'MHMUICORE_VERSION', '0.5.0' );
 define( 'MHMUICORE_DIR', __DIR__ );
 
 /*
+ * ─── Class loading ───────────────────────────────────────────────────────────
+ *
+ * WHY THIS EXISTS AT ALL
+ *
+ * composer.json declares a PSR-4 map, and this file used to claim src/ was
+ * "PSR-4 autoloaded out of each consumer's own vendor/ directory". Measured
+ * 2026-08-30: FALSE. Neither consumer requires vendor/autoload.php; each
+ * registers an autoloader for its OWN namespace only. Nothing could load a
+ * MHMUiCore class in production -- VersionSelector included.
+ *
+ * WHY IT BINDS __DIR__ AND NOT A PSR-4 LOOKUP
+ *
+ * mhmuicore_boot() loads exactly one bootstrap.php: the highest registered
+ * version. Binding that copy's own src/ makes the facade and the classes it
+ * hands out the SAME copy by construction, so facade/engine version skew
+ * cannot happen and needs no runtime check. A shared PSR-4 registration would
+ * reintroduce "whichever autoloader answers first wins".
+ */
+spl_autoload_register(
+	static function ( string $class_name ): void {
+		if ( 0 !== strpos( $class_name, 'MHMUiCore\\' ) ) {
+			return;
+		}
+
+		$relative = substr( $class_name, strlen( 'MHMUiCore\\' ) );
+		$path     = MHMUICORE_DIR . '/src/' . str_replace( '\\', '/', $relative ) . '.php';
+
+		if ( is_readable( $path ) ) {
+			require_once $path;
+		}
+	}
+);
+
+/*
  * ─── Asset locators ──────────────────────────────────────────────────────────
  *
  * WHY THESE LIVE HERE AND NOT IN register.php
@@ -114,11 +148,12 @@ if ( ! function_exists( 'mhmuicore_asset_url' ) ) {
  *
  * WHY IT IS A FUNCTION HERE AND NOT A CLASS IN src/
  *
- * src/ is PSR-4 autoloaded out of each consumer's own vendor/ directory, so the
- * FIRST autoloader to resolve a class name wins -- possibly an older copy whose
- * enqueue contract no longer matches the bundles being enqueued. bootstrap.php
- * is loaded by mhmuicore_boot() from the HIGHEST registered version. The loader
- * has to follow the same rule as the assets it points at.
+ * src/ is loaded by the autoloader this same file registers, bound to this
+ * copy's own __DIR__. Functions and classes therefore always come from the
+ * winning copy together. (Before 0.6.0 this comment claimed PSR-4 loading out
+ * of the consumer's vendor/; that was never true here -- no consumer loads
+ * vendor/autoload.php -- and a whole version-skew gate was designed against
+ * the phantom risk it described.)
  *
  * Callers MUST guard with function_exists(): a site may still be running an
  * older ui-core (0.3.x or earlier) as the winner, where this does not exist.
