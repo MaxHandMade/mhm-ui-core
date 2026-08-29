@@ -1,0 +1,111 @@
+#!/usr/bin/env node
+// Measures the SHIPPED SURFACE, never the working tree: an uncommitted edit is
+// invisible here on purpose. See the spec, section 4.
+import { execFileSync } from 'node:child_process';
+import { mkdtempSync, rmSync, readdirSync, statSync, readFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, relative, extname, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import stylelint from 'stylelint';
+
+const P1_EXT = new Set( [ '.css', '.js', '.jsx', '.php' ] );
+const DOC_EXT = new Set( [ '.md', '.json', '' ] );
+
+const HERE = dirname( fileURLToPath( import.meta.url ) );
+// The repo to measure. Defaults to this package; the regression suite points it
+// at throwaway fixture repos so the archive itself can be shaped (empty sets,
+// extra files, a broken archive) without touching this tree.
+const REPO = process.argv[ 2 ] ?? join( HERE, '..' );
+// Resolved against the script, never the caller's cwd: a gate that reads its own
+// config relative to cwd silently changes meaning when invoked from elsewhere.
+// Also deliberately read from OUTSIDE the archive: .stylelintrc.json is
+// export-ignore'd (Task 1), so it never lands inside the shipped surface this
+// gate extracts below — it has to come from the real checkout instead.
+const CONFIG = join( HERE, '..', '.stylelintrc.json' );
+
+let dir;
+try {
+	dir = mkdtempSync( join( tmpdir(), 'uicore-gate-' ) );
+	execFileSync( 'sh', [ '-c', `git -C "${ REPO }" archive HEAD | tar -x -C "${ dir }"` ], { stdio: 'pipe' } );
+} catch ( e ) {
+	console.error( `MEASURE-FAILED: could not extract the shipped surface: ${ e.message }` );
+	process.exit( 2 ); // skipping is not passing
+}
+
+const walk = ( d ) => readdirSync( d ).flatMap( ( n ) => {
+	const p = join( d, n );
+	return statSync( p ).isDirectory() ? walk( p ) : [ p ];
+} );
+
+const all = walk( dir );
+const css = all.filter( ( f ) => extname( f ) === '.css' );
+const js  = all.filter( ( f ) => [ '.js', '.jsx' ].includes( extname( f ) ) );
+
+const violations = [];
+const rel = ( f ) => relative( dir, f ).replace( /\\/g, '/' );
+
+// G-b: record the measurement itself, by name — and ONLY what this gate actually
+// reads. The .php share of the P1 set belongs to bin/check-php-namespace.php;
+// listing it here would file a scan that never happened.
+console.log( `SCANNED-CSS: ${ css.map( rel ).sort().join( ' ' ) }` );
+console.log( `SCANNED-JS: ${ js.map( rel ).sort().join( ' ' ) }` );
+
+// G-e: shipped files that belong to no subject are printed, not failed.
+for ( const f of all ) {
+	if ( ! P1_EXT.has( extname( f ) ) && ! DOC_EXT.has( extname( f ) ) ) {
+		console.log( `UNCLAIMED: ${ rel( f ) } (no predicate owns this extension)` );
+	}
+}
+
+// Each recorded violation is { text, name }: `text` is the line printed below —
+// one per location, so the gate always says WHERE (G-b) — while `name` is the
+// offending identifier used only to de-duplicate the SUMMARY count further
+// down. A structural guard such as the empty-set check below has no
+// property/selector name to de-duplicate against, so its own text doubles as
+// its name: it is inherently unique.
+
+// G-a: an empty subject is a broken gate, not a clean one. Each set is checked
+// separately: one can go empty while the other stays full, and a single combined
+// check would mask exactly that.
+if ( css.length === 0 ) violations.push( { text: 'EMPTY-SET: no shipped CSS file matched', name: 'EMPTY-SET:css' } );
+if ( js.length === 0 ) violations.push( { text: 'EMPTY-SET: no shipped JS/JSX file matched', name: 'EMPTY-SET:js' } );
+
+// The `custom-property-pattern` message configured in .stylelintrc.json is a
+// fixed string (no {property}/{pattern} interpolation), so `warning.text` never
+// carries the offending property name — only rule metadata does. Slicing the
+// source at [column, endColumn) recovers the exact token for either rule
+// instead: it works whether or not a rule's message happens to interpolate the
+// name, so it doesn't have to change if a message wording changes later.
+const sourceLines = new Map();
+const lineOf = ( file, n ) => {
+	if ( ! sourceLines.has( file ) ) {
+		sourceLines.set( file, readFileSync( file, 'utf8' ).split( /\r?\n/ ) );
+	}
+	return sourceLines.get( file )[ n - 1 ] ?? '';
+};
+const offendingName = ( file, w ) => {
+	const token = lineOf( file, w.line ).slice( w.column - 1, ( w.endColumn ?? w.column ) - 1 );
+	return token || `${ rel( file ) }:${ w.line }:${ w.column }`;
+};
+
+const result = await stylelint.lint( { files: css, configFile: CONFIG } );
+for ( const r of result.results ) {
+	for ( const w of r.warnings ) {
+		violations.push( {
+			text: `VIOLATION: ${ rel( r.source ) }:${ w.line } ${ w.rule } — ${ w.text }`,
+			name: offendingName( r.source, w ),
+		} );
+	}
+}
+
+rmSync( dir, { recursive: true, force: true } );
+violations.forEach( ( v ) => console.log( v.text ) );
+
+// The spec counts DISTINCT offending names, not raw occurrences: a single
+// property referenced from fifty places is one name, not fifty (this is why
+// Task 4's read-side var()/JSX detection can push into the same `violations`
+// array without restructuring anything here). The VIOLATION lines above stay
+// one per location on purpose — this count is the only thing that collapses.
+const distinctNames = new Set( violations.map( ( v ) => v.name ) );
+console.log( `SUMMARY: ${ distinctNames.size } violation(s)` );
+process.exit( violations.length > 0 ? 1 : 0 );

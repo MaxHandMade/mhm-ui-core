@@ -9,12 +9,14 @@
 	],
 	"scripts": {
 		"test": "wp-scripts test-unit-js",
-		"lint:js": "wp-scripts lint-js src-react"
+		"lint:js": "wp-scripts lint-js src-react",
+		"check:css-namespace": "node bin/check-css-namespace.mjs"
 	},
 	"devDependencies": {
 		"@testing-library/react": "16.3.0",
 		"@wordpress/element": "6.46.0",
 		"@wordpress/scripts": "30.27.0",
+		"stylelint": "^16.26.1",
 		"typescript": "^6.0.3"
 	}
 }
