@@ -26,4 +26,5 @@
 /package-lock.json export-ignore
 /.gitattributes    export-ignore
 /bin/              export-ignore
+/bin/check-error-prefix.php export-ignore
 /.stylelintrc.json export-ignore
