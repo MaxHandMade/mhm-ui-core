@@ -117,7 +117,7 @@ final class BlueprintValidator {
 		}
 
 		foreach ( $manifest['pages'] as $index => $page ) {
-			$error = $this->validate_page( $page, (int) $index );
+			$error = $this->validate_page( $page, $index );
 			if ( is_wp_error( $error ) ) {
 				return $error;
 			}
@@ -139,10 +139,13 @@ final class BlueprintValidator {
 	 * Validates a single page entry.
 	 *
 	 * @param array<string,mixed> $page  Page data.
-	 * @param int                 $index Index for error reporting.
+	 * @param int|string          $index The page's manifest array key, reported into
+	 *                                   $data exactly as received -- not cast to int --
+	 *                                   so a malformed non-numeric key surfaces honestly
+	 *                                   instead of being fabricated as page 0.
 	 * @return WP_Error|null
 	 */
-	private function validate_page( array $page, int $index ): ?WP_Error {
+	private function validate_page( array $page, $index ): ?WP_Error {
 		$required_keys = array( 'slug', 'layout', 'composition' );
 		foreach ( $required_keys as $key ) {
 			if ( ! isset( $page[ $key ] ) ) {
@@ -160,7 +163,7 @@ final class BlueprintValidator {
 		// Validate composition components against allowlist.
 		if ( is_array( $page['composition'] ) ) {
 			foreach ( $page['composition'] as $comp_idx => $instance ) {
-				$component_id = is_array( $instance ) ? ( $instance['component_id'] ?? '' ) : '';
+				$component_id = $instance['component_id'] ?? '';
 				if ( ! $component_id ) {
 					continue;
 				}
