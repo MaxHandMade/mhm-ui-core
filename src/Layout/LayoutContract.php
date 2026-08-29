@@ -76,6 +76,11 @@ final class LayoutContract {
 
 		foreach ( $adapters as $type => $adapter ) {
 			if ( ! $adapter instanceof LayoutComponentAdapter ) {
+				/*
+				 * esc_html() on an exception message is not ceremony: an uncaught
+				 * exception's message is printed, so WordPress treats a throw as
+				 * an output site (WordPress.Security.EscapeOutput.ExceptionNotEscaped).
+				 */
 				throw new InvalidArgumentException(
 					esc_html(
 						sprintf( 'LayoutContract: adapter "%s" must implement LayoutComponentAdapter.', (string) $type )
@@ -143,6 +148,11 @@ final class LayoutContract {
 		$value = $config[ $key ] ?? null;
 
 		if ( ! is_string( $value ) || 1 !== preg_match( self::PREFIX_PATTERN, $value ) ) {
+			/*
+			 * esc_html() on an exception message is not ceremony: an uncaught
+			 * exception's message is printed, so WordPress treats a throw as
+			 * an output site (WordPress.Security.EscapeOutput.ExceptionNotEscaped).
+			 */
 			throw new InvalidArgumentException(
 				esc_html(
 					sprintf( 'LayoutContract: "%s" must match %s.', $key, self::PREFIX_PATTERN )

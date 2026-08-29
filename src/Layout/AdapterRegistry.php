@@ -12,7 +12,11 @@ namespace MHMUiCore\Layout;
 /**
  * Instance registry for component adapters.
  *
- * The registry is now instance state on the engine, not a static table.
+ * The registry is instance state, not a static table. Static state survives
+ * between test cases: a mutation stayed alive in this codebase because a shared
+ * static table persisted through a test teardown, and reflection had to reset
+ * it manually. Instance state cannot leak.
+ *
  * The consumer's boot_defaults() ritual disappears with it: production called
  * it from exactly two places, both inside the WP-CLI command, so the "when does
  * registration happen" question the design doc left open answers itself.
