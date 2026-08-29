@@ -88,7 +88,13 @@ const offendingName = ( file, w ) => {
 	return token || `${ rel( file ) }:${ w.line }:${ w.column }`;
 };
 
-const result = await stylelint.lint( { files: css, configFile: CONFIG } );
+// An empty `files` array makes stylelint reject with NoFilesFoundError instead
+// of returning an empty result — skip the call entirely when there is nothing
+// to lint. The EMPTY-SET violation above already covers this case; crashing
+// here would turn a reported violation into an uncaught exception instead.
+const result = css.length > 0
+	? await stylelint.lint( { files: css, configFile: CONFIG } )
+	: { results: [] };
 for ( const r of result.results ) {
 	for ( const w of r.warnings ) {
 		violations.push( {
