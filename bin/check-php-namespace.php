@@ -130,10 +130,18 @@ foreach ( $php as $path ) {
 					// with no variable in it either. The value is fully known
 					// at parse time, exactly like a T_CONSTANT_ENCAPSED_STRING,
 					// so it is judged the same way: P1a.
-					if ( ! str_starts_with( $token[1], '--mhmui-' ) ) {
+					//
+					// A heredoc/nowdoc body's last line always carries its
+					// trailing newline as PART of this token's text (the
+					// closing identifier must start its own line) — rtrim it
+					// so a single-line violation never prints an embedded
+					// newline, which would otherwise split one VIOLATION into
+					// two physical lines.
+					$static_value = rtrim( $token[1], "\r\n" );
+					if ( ! str_starts_with( $static_value, '--mhmui-' ) ) {
 						$violations[] = array(
-							'text' => "VIOLATION: {$path}:{$token[2]} foreign-custom-property — {$token[1]}",
-							'name' => $token[1],
+							'text' => "VIOLATION: {$path}:{$token[2]} foreign-custom-property — {$static_value}",
+							'name' => $static_value,
 						);
 					}
 				} else {
