@@ -28,12 +28,12 @@ eklentisi gibi GPL'dir.
 ## Bitti mi? — Hayır: altı fazın ikisi
 
 Tasarım dokümanı (`rentiva-dev/docs/superpowers/specs/2026-07-14-mhm-ui-core-design.md`)
-altı faz tanımlıyor. 2026-08-27 itibarıyla ölçülen durum:
+altı faz tanımlıyor. **2026-08-29** itibarıyla ölçülen durum:
 
 | Faz | Ne | Durum |
 |---|---|---|
 | 0 | İskelet — depo, composer/npm, CI, kalite kapıları | ✅ **bitti** |
-| 1 | Token birleştirme — tek token kaynağı | ⬜ başlamadı |
+| 1 | Token birleştirme — tek token kaynağı | 🟡 **iki yarısı da yapıldı, tanımı değişti** (aşağı bak) |
 | 2 | **Layout motoru pakete** | ⬜ başlamadı — *kod var, Rentiva'da* |
 | 3 | **React kiti pakete** — `enqueue_react_page()` + paylaşılan JSX | ✅ **2026-08-27** (v0.4.x) |
 | 4 | Bileşen scaffold'u — `wp mhm-ui make:component` | ⬜ başlamadı |
@@ -46,8 +46,25 @@ yalnız erteler.
 📌 Üçüncü sorumluluk (**katman dikişi**) için de pakette bugün **kod yok**; Lite↔Pro dikişi
 Rentiva'nın kendi içinde yaşıyor.
 
+### Faz 1 neden 🟡 — iki yarısı yapıldı ama sorusu değişti
+
+Faz 1'in iki yarısı vardı ve **ikisi de kapandı**: ürün tarafındaki birleştirme (Rentiva'nın
+**101 kanonik token**'ı) daha önce, paketin kendi 15 tokenli React paleti **2026-08-29**'da.
+
+Ama tasarım dokümanı Faz 1'i *"tek token kaynağı — hem `TokenMapper`'ı hem admin React'i besler"*
+diye tanımlıyordu. Yapılan şey bu **değil**: paket `--mhmui-*`, ürünler `--mhm-*` — yani tek kaynak
+değil, **bilerek ayrılmış iki isim uzayı**. Çakışma böylece yasak olduğu için değil **yapısal
+olarak imkânsız** olduğu için bitti. Bu, Faz 1'i tamamlamak mı yoksa sorusunu değiştirmek mi —
+henüz karara bağlanmadı, o yüzden ✅ değil 🟡.
+
+Kararı sabitleyen şey belge değil **kapı**: `bin/check-css-namespace.mjs` (stylelint + Babel AST)
+ve `bin/check-php-namespace.php` (`token_get_all()`) paketin sevk yüzeyini ölçer ve `--mhmui-*`
+dışında bir custom property tanımlamasını ya da okumasını, bir de ID seçicisi kullanmasını
+imkânsız kılar. İkisi de CI'da; `tests/gate/` altında 78 koşumluk regresyon bataryası var.
+🔴 Kapıların kendisi `export-ignore`'lu — tüketicinin `vendor/`'una **inmezler**.
+
 **Kısacası:** ui-core bugün *çalışan ve sevk edilen* bir paket, ama **tamamlanmış değil**.
-Bitmiş olan, React yönetici hattı.
+Bitmiş olan: React yönetici hattı ve isim uzayı sınırı.
 
 ## Nerede kullanılıyor?
 
@@ -67,7 +84,7 @@ sessizce Lite'ın boot etmesine bağımlı kılıyordu.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.4.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.5.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 🔴 Sürüm dizesi **elle yazılır** (kayıt, herhangi bir bootstrap yüklenmeden önce koşar) ve
