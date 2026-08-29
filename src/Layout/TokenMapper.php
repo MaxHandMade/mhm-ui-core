@@ -86,7 +86,7 @@ final class TokenMapper {
 		$current = $tokens;
 
 		foreach ( $keys as $key ) {
-			if ( ! is_array( $current ) || ! isset( $current[ $key ] ) ) {
+			if ( ! isset( $current[ $key ] ) ) {
 				return null;
 			}
 			$current = $current[ $key ];
