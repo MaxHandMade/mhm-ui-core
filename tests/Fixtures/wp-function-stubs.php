@@ -224,3 +224,74 @@ if ( ! function_exists( 'plugins_url' ) ) {
 		return $url;
 	}
 }
+
+if ( ! class_exists( 'WP_Error' ) ) {
+	/**
+	 * Minimal WP_Error replica.
+	 *
+	 * Core's constructor keeps an empty message when a code is given
+	 * ("the message parameter is used even if empty"), which is precisely the
+	 * semantic the message-free engine depends on. Do not "improve" this by
+	 * defaulting the message to the code.
+	 */
+	class WP_Error {
+
+		/** @var string */
+		private $code;
+
+		/** @var string */
+		private $message;
+
+		/** @var mixed */
+		private $data;
+
+		/**
+		 * @param string $code    Machine code.
+		 * @param string $message Human text -- empty for engine-produced errors.
+		 * @param mixed  $data    Structured payload.
+		 */
+		public function __construct( string $code = '', string $message = '', $data = '' ) {
+			$this->code    = $code;
+			$this->message = $message;
+			$this->data    = $data;
+		}
+
+		public function get_error_code(): string {
+			return $this->code;
+		}
+
+		public function get_error_message(): string {
+			return $this->message;
+		}
+
+		/** @return mixed */
+		public function get_error_data() {
+			return $this->data;
+		}
+	}
+}
+
+if ( ! function_exists( 'is_wp_error' ) ) {
+	/**
+	 * @param mixed $thing Value to test.
+	 */
+	function is_wp_error( $thing ): bool {
+		return $thing instanceof WP_Error;
+	}
+}
+
+if ( ! function_exists( 'esc_attr' ) ) {
+	function esc_attr( string $text ): string {
+		return htmlspecialchars( $text, ENT_QUOTES, 'UTF-8' );
+	}
+}
+
+if ( ! function_exists( 'wp_json_encode' ) ) {
+	/**
+	 * @param mixed $data Value to encode.
+	 * @return string|false
+	 */
+	function wp_json_encode( $data ) {
+		return json_encode( $data );
+	}
+}
