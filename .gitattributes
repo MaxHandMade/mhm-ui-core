@@ -25,3 +25,5 @@
 /phpunit.xml       export-ignore
 /package-lock.json export-ignore
 /.gitattributes    export-ignore
+/bin/              export-ignore
+/.stylelintrc.json export-ignore
