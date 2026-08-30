@@ -248,12 +248,17 @@ if ( ! class_exists( 'WP_Error' ) ) {
 		/**
 		 * @param string $code    Machine code.
 		 * @param string $message Human text -- empty for engine-produced errors.
-		 * @param mixed  $data    Structured payload.
+		 * @param mixed  $data    Structured payload. Core drops an empty payload
+		 *                        rather than storing it (`if ( ! empty( $data ) )`),
+		 *                        so get_error_data() returns null, not `array()`,
+		 *                        for a code constructed with `array()` -- matched
+		 *                        here so this stub cannot disagree with production
+		 *                        about what NO_PAGES/INVALID_COMPONENTS return.
 		 */
 		public function __construct( string $code = '', string $message = '', $data = '' ) {
 			$this->code    = $code;
 			$this->message = $message;
-			$this->data    = $data;
+			$this->data    = empty( $data ) ? null : $data;
 		}
 
 		public function get_error_code(): string {

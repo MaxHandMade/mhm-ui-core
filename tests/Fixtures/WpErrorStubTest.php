@@ -27,6 +27,17 @@ final class WpErrorStubTest extends TestCase {
 		$this->assertSame( array( 'component_id' => 'hero' ), $error->get_error_data() );
 	}
 
+	public function test_empty_data_is_dropped_like_core_drops_it(): void {
+		// Core's real WP_Error stores $data only `if ( ! empty( $data ) )`, so
+		// get_error_data() returns null for a code built with array() as its
+		// payload (NO_PAGES, INVALID_COMPONENTS) -- not array(). A stub that kept
+		// array() here would disagree with production about what those two codes
+		// actually return.
+		$error = new WP_Error( 'zzz_no_pages', '', array() );
+
+		$this->assertNull( $error->get_error_data() );
+	}
+
 	public function test_is_wp_error_distinguishes_error_from_string(): void {
 		$this->assertTrue( is_wp_error( new WP_Error( 'zzz_x', '' ) ) );
 		$this->assertFalse( is_wp_error( '<div></div>' ) );
