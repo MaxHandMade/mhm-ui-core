@@ -24,23 +24,6 @@ use WP_Error;
 final class BlueprintValidator {
 
 	/**
-	 * Forbidden markup/token substrings (Tailwind / utility-framework leakage).
-	 *
-	 * Staged here as a private class constant for this task, ported verbatim
-	 * from the consumer's ContractRules::FORBIDDEN_PATTERNS. Task 8 extracts it
-	 * into a shared ForbiddenPatterns class used by both this validator and
-	 * CompositionBuilder, and rewires this file to reference it.
-	 *
-	 * @var list<string>
-	 */
-	private const FORBIDDEN_PATTERNS = array(
-		'tw-',
-		'tailwind',
-		'antialiased',
-		'flex-1',
-	);
-
-	/**
 	 * The consumer identity used to build machine-readable error codes.
 	 *
 	 * @var LayoutContract
@@ -97,7 +80,7 @@ final class BlueprintValidator {
 		);
 		$json_to_scan   = (string) wp_json_encode( $scannable_data );
 
-		foreach ( self::FORBIDDEN_PATTERNS as $pattern ) {
+		foreach ( ForbiddenPatterns::FRAMEWORK as $pattern ) {
 			if ( false !== stripos( $json_to_scan, $pattern ) ) {
 				return new WP_Error(
 					$this->contract->error_code( ErrorCodes::FORBIDDEN_PATTERN ),

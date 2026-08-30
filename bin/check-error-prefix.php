@@ -11,24 +11,15 @@
  * code plus $data, and a message that sneaks back in is exactly the defect
  * this port exists to close (see BlueprintValidator's class docblock).
  *
- * COVERAGE IS STAGED, ON PURPOSE (Controller ruling R11)
+ * COVERAGE IS COMPLETE (Controller ruling R11, finished)
  *
- * ErrorCodes::ALL ships complete -- all eleven suffixes -- because a canonical
- * inventory that grows piecemeal is not one. But BlueprintValidator (the only
- * engine class that exists in this package so far) raises only seven of them;
- * the other four belong to CompositionBuilder, which Task 8 has not written
- * yet. So this gate does not demand "every suffix in ErrorCodes::ALL has a
- * sample" -- that would be unsatisfiable today and someone would suppress it.
- * Instead it demands two things that ARE satisfiable and still catch drift:
- *   - the sample set is EXACTLY the seven validator suffixes, no more, no
- *     fewer -- named literally below, not inferred from whatever the fixture
- *     happens to return;
- *   - covered (7) + staged-uncovered (4, also named literally below) is
- *     EXACTLY ErrorCodes::ALL -- so a twelfth code added anywhere (to the
- *     inventory, to a sample, or to neither) fails this gate immediately
- *     instead of silently falling into an open-ended "not yet covered"
- *     bucket. Task 8 deletes the staged-uncovered list and folds those four
- *     into the sample set.
+ * ErrorCodes::ALL ships all eleven suffixes, and this gate now demands a
+ * sample for every one of them: the sample set returned by
+ * mhmuicore_gate_error_samples() must be EXACTLY ErrorCodes::ALL, no more, no
+ * fewer. Coverage was staged while CompositionBuilder did not exist yet
+ * (BlueprintValidator raises seven suffixes, CompositionBuilder the other
+ * four); that split, and its "staged-uncovered" list, is gone now that both
+ * engine classes exist and mhmuicore_gate_error_samples() covers all eleven.
  *
  * @package MHMUiCore
  */
@@ -47,59 +38,33 @@ $contract = new LayoutContract(
 	array(
 		'error_prefix'  => 'zzz',
 		'markup_prefix' => 'fixture',
-		'adapters'      => array( 'hero' => new FixtureAdapter() ),
+		'adapters'      => array(
+			'hero'           => new FixtureAdapter(),
+			// Rendered markup crafted to trip exactly one CompositionBuilder
+			// check each, the same one-field-per-sample discipline
+			// mhmuicore_gate_error_samples() applies to its manifests.
+			'tailwind_probe' => new FixtureAdapter( '<div class="tw-flex"></div>' ),
+			'utility_probe'  => new FixtureAdapter( '<div class="bg-red-500"></div>' ),
+		),
 	)
 );
 
 $failures = array();
 
-// ─── Staged inventory check (R11) ──────────────────────────────────────────
+// ─── Inventory check (R11) ─────────────────────────────────────────────────
 
 $samples = mhmuicore_gate_error_samples( $contract );
 
 $covered_suffixes = array_keys( $samples );
 sort( $covered_suffixes );
 
-$expected_covered = array(
-	ErrorCodes::FORBIDDEN_PATTERN,
-	ErrorCodes::INVALID_BLUEPRINT,
-	ErrorCodes::INVALID_COMPONENTS,
-	ErrorCodes::INVALID_INSTANCE,
-	ErrorCodes::INVALID_PAGE,
-	ErrorCodes::NO_PAGES,
-	ErrorCodes::UNSUPPORTED_VERSION,
-);
-sort( $expected_covered );
-
-if ( $covered_suffixes !== $expected_covered ) {
-	$failures[] = sprintf(
-		'coverage: sample set is {%s}, expected exactly the seven BlueprintValidator suffixes {%s}',
-		implode( ', ', $covered_suffixes ),
-		implode( ', ', $expected_covered )
-	);
-}
-
-// Staged (Controller ruling R11): CompositionBuilder does not exist in this
-// package yet (Task 8). These four are deliberately unsampled today; Task 8
-// extends mhmuicore_gate_error_samples() to cover them and deletes this list.
-$staged_uncovered = array(
-	ErrorCodes::MISSING_ADAPTER,
-	ErrorCodes::TAILWIND_LEAKAGE,
-	ErrorCodes::UNKNOWN_COMPONENT,
-	ErrorCodes::UTILITY_LEAKAGE,
-);
-sort( $staged_uncovered );
-
 $all_suffixes = ErrorCodes::ALL;
 sort( $all_suffixes );
 
-$reconstructed = array_merge( $expected_covered, $staged_uncovered );
-sort( $reconstructed );
-
-if ( $reconstructed !== $all_suffixes ) {
+if ( $covered_suffixes !== $all_suffixes ) {
 	$failures[] = sprintf(
-		'inventory: covered + staged-uncovered is {%s}, ErrorCodes::ALL is {%s} -- a suffix was added or removed without updating this gate',
-		implode( ', ', $reconstructed ),
+		'coverage: sample set is {%s}, expected exactly ErrorCodes::ALL {%s}',
+		implode( ', ', $covered_suffixes ),
 		implode( ', ', $all_suffixes )
 	);
 }
