@@ -126,6 +126,31 @@ final class AssetLocatorTest extends TestCase {
 	}
 
 	/**
+	 * The missing half: the helper must reach a file that EXISTS.
+	 *
+	 * Every other assertion in this class checks string construction, and they
+	 * all passed while assets/ held nothing but a README -- so the documented
+	 * call in bootstrap.php's own docblock,
+	 * mhmuicore_asset_url( 'react/admin.css' ), resolved to a 404 for the first
+	 * consumer who copied it. A path assertion that never touches the disk
+	 * measures concatenation, not reachability.
+	 *
+	 * This is deliberately not a fixture: it names the file the package's
+	 * documentation tells consumers to load, so deleting or relocating that
+	 * stylesheet without updating the docs turns this red.
+	 */
+	public function test_the_documented_asset_actually_exists_on_disk(): void {
+		$path = mhmuicore_asset_path( 'react/admin.css' );
+
+		$this->assertFileExists(
+			$path,
+			"bootstrap.php documents mhmuicore_asset_url( 'react/admin.css' ) as the way to "
+			. 'enqueue this package stylesheet. If it is not on disk, every consumer that '
+			. 'follows the documented example ships a 404.'
+		);
+	}
+
+	/**
 	 * The path locator anchors on the booting copy's own directory.
 	 */
 	public function test_asset_path_is_rooted_in_the_booted_copy(): void {
