@@ -19,14 +19,60 @@ describe( 'useApi', () => {
 		expect( result.current.data ).toEqual( { rows: [] } );
 	} );
 
-	// KNOWN DEFECT, carried over from Lite on purpose: this move must not change what the
-	// screens do. useState() starts loading at false when initialData was supplied, but the
-	// mount effect calls setLoading( true ) unconditionally, so the "avoid first-paint
-	// spinner" promise in the doc block stops holding one frame in. Fixing it is a
-	// behaviour change across 4 Lite screens and Pro, and belongs to its own round.
-	it( 'still flips to loading after mount even with initial data (known defect)', () => {
+	// This assertion used to say the opposite, and said so on purpose: the defect was
+	// carried over from Lite unchanged so that moving the hook into this package could
+	// not be blamed for a behaviour change. That was the deal, and this is the round
+	// that pays it off.
+	//
+	// useState() already started loading at false when initialData was supplied; the
+	// mount effect then raised it unconditionally, so the "avoid first-paint spinner"
+	// promise in the doc block stopped holding one frame in.
+	it( 'keeps the spinner down on first paint when initial data was supplied', () => {
 		const { result } = renderHook( () =>
 			useApi( () => new Promise( () => {} ), { rows: [] } )
+		);
+
+		expect( result.current.loading ).toBe( false );
+		expect( result.current.data ).toEqual( { rows: [] } );
+	} );
+
+	// The control that stops the cheap fix. "Never raise loading" would satisfy the
+	// assertion above and quietly remove every spinner in the product: a refetch has
+	// nothing on screen to keep showing, so it must raise loading like any other run.
+	it( 'raises loading on a refetch, even when it started primed', async () => {
+		let calls = 0;
+		let releaseSecond;
+		const { result } = renderHook( () =>
+			useApi(
+				() => {
+					calls += 1;
+					return calls === 1
+						? Promise.resolve( 'first' )
+						: new Promise( ( resolve ) => {
+								releaseSecond = resolve;
+						  } );
+				},
+				{ rows: [] }
+			)
+		);
+
+		await waitFor( () => expect( result.current.data ).toBe( 'first' ) );
+		expect( result.current.loading ).toBe( false );
+
+		act( () => result.current.refetch() );
+
+		expect( result.current.loading ).toBe( true );
+
+		releaseSecond( 'second' );
+		await waitFor( () => expect( result.current.loading ).toBe( false ) );
+		expect( result.current.data ).toBe( 'second' );
+	} );
+
+	// The other control: with no initial data there is nothing to show, so the spinner
+	// must still come up on the very first run.
+	it( 'still raises loading on first paint when nothing was pre-populated', () => {
+		const { result } = renderHook( () =>
+			useApi( () => new Promise( () => {} ), null )
 		);
 
 		expect( result.current.loading ).toBe( true );
