@@ -299,3 +299,48 @@ if ( ! function_exists( 'mhmuicore_enqueue_react_page' ) ) {
 		wp_set_script_translations( $handle, $values['text_domain'], $languages_dir );
 	}
 }
+
+/*
+ * ─── Layout engine facade ────────────────────────────────────────────────────
+ *
+ * WHY THIS IS HERE AND NOT IN register.php
+ *
+ * Same rule as the asset locators and the React page loader above, and the
+ * stakes are higher here: LayoutEngine wires LayoutContract into
+ * BlueprintValidator and CompositionBuilder, both loaded through the
+ * autoloader THIS file registers, bound to THIS copy's own __DIR__. Defining
+ * the facade in register.php -- first-plugin-to-load-wins -- could hand a
+ * consumer an engine built from an OLDER copy than the classes it now hands
+ * out elsewhere, a version-skew bug this file's own binding design (see the
+ * "Class loading" section above) exists specifically to make impossible.
+ * Defined here, the facade and the engine it returns are always the same
+ * winning copy by construction.
+ *
+ * Callers MUST guard with function_exists(): a site may still be running an
+ * older ui-core as the winner, where this does not exist.
+ *
+ *     if ( function_exists( 'mhmuicore_layout_engine' ) ) {
+ *         $engine = mhmuicore_layout_engine( array( ... ) );
+ *     }
+ */
+
+if ( ! function_exists( 'mhmuicore_layout_engine' ) ) {
+	/**
+	 * Builds a Layout engine from a consumer contract.
+	 *
+	 * @param array<string,mixed> $config Contract configuration: error_prefix,
+	 *                                    markup_prefix, adapters.
+	 * @return \MHMUiCore\Layout\LayoutEngine
+	 *
+	 * @throws \InvalidArgumentException When the contract is malformed. This
+	 *                                   propagates out of LayoutContract's own
+	 *                                   constructor and is deliberately NOT
+	 *                                   caught and converted to a WP_Error: a
+	 *                                   malformed contract is a programmer
+	 *                                   error, not a domain error, and no
+	 *                                   runtime path can recover from it.
+	 */
+	function mhmuicore_layout_engine( array $config ): \MHMUiCore\Layout\LayoutEngine {
+		return new \MHMUiCore\Layout\LayoutEngine( new \MHMUiCore\Layout\LayoutContract( $config ) );
+	}
+}
