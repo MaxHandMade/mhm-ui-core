@@ -65,20 +65,16 @@ final class CompositionBuilder {
 	 */
 	public function build( array $manifest, array $page ) {
 		$markup         = '';
-		$composition    = is_array( $page['composition'] ?? null ) ? $page['composition'] : array();
-		$components_map = is_array( $manifest['components'] ?? null ) ? $manifest['components'] : array();
+		$composition    = $page['composition'] ?? array();
+		$components_map = $manifest['components'] ?? array();
 
 		foreach ( $composition as $instance ) {
-			if ( ! is_array( $instance ) ) {
-				continue;
-			}
-
-			$component_id = isset( $instance['component_id'] ) ? (string) $instance['component_id'] : '';
-			$instance_id  = isset( $instance['instance_id'] ) ? (string) $instance['instance_id'] : '';
-			$attributes   = is_array( $instance['attributes'] ?? null ) ? $instance['attributes'] : array();
+			$component_id = $instance['component_id'] ?? '';
+			$instance_id  = $instance['instance_id'] ?? '';
+			$attributes   = $instance['attributes'] ?? array();
 
 			$component_config = $components_map[ $component_id ] ?? null;
-			if ( ! is_array( $component_config ) ) {
+			if ( ! $component_config ) {
 				return new WP_Error(
 					$this->contract->error_code( ErrorCodes::UNKNOWN_COMPONENT ),
 					'',
@@ -86,7 +82,7 @@ final class CompositionBuilder {
 				);
 			}
 
-			$type = isset( $component_config['type'] ) ? (string) $component_config['type'] : '';
+			$type = $component_config['type'] ?? '';
 
 			// 1. Get adapter from the registry.
 			$adapter = $this->registry->get_adapter( $type );
@@ -118,7 +114,7 @@ final class CompositionBuilder {
 		}
 
 		// 5. Apply Design Tokens (Phase 2).
-		$tokens       = is_array( $manifest['tokens'] ?? null ) ? $manifest['tokens'] : array();
+		$tokens       = $manifest['tokens'] ?? array();
 		$token_styles = $this->token_mapper->map_to_style_string( $tokens );
 
 		// Wrap in a root layout container that carries the design tokens.
