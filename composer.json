@@ -37,12 +37,14 @@
         "phpstan": "@php ./vendor/bin/phpstan analyse --memory-limit=1G",
         "check:php-namespace": "@php ./bin/check-php-namespace.php",
         "check:error-prefix": "@php ./bin/check-error-prefix.php",
+        "check:no-i18n": "@php ./bin/check-no-i18n.php",
         "check": [
             "@phpcs",
             "@phpstan",
             "@test",
             "@check:php-namespace",
-            "@check:error-prefix"
+            "@check:error-prefix",
+            "@check:no-i18n"
         ]
     }
 }

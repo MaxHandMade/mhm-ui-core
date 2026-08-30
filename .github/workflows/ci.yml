@@ -45,6 +45,12 @@ jobs:
       - name: CSS namespace (PHP surface)
         run: composer check:php-namespace
 
+      - name: Error prefix belongs to the consumer
+        run: composer check:error-prefix
+
+      - name: No gettext in the engine
+        run: composer check:no-i18n
+
   js:
     name: JS checks
     runs-on: ubuntu-latest
