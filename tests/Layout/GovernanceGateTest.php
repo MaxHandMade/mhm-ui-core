@@ -100,4 +100,27 @@ final class GovernanceGateTest extends TestCase {
 		$this->assertTrue( is_wp_error( $result ) );
 		$this->assertSame( 'zzz_' . ErrorCodes::UNKNOWN_COMPONENT, $result->get_error_code() );
 	}
+
+	public function test_a_url_path_that_looks_like_a_utility_fragment_passes(): void {
+		// "/uploads/hero-w-1200.jpg" contains "-w-1200": a word-boundary "w-"
+		// followed by digits, structurally identical to the utility-class shape
+		// the UTILITY_FRAGMENTS scan looks for, but sitting inside a src URL.
+		// A URL cannot carry a CSS class, so this must pass, not be reported as
+		// utility_leakage.
+		list( $manifest, $page ) = $this->manifest();
+		$result                  = $this->builder( '<img src="/uploads/hero-w-1200.jpg">' )->build( $manifest, $page );
+
+		$this->assertIsString( $result );
+	}
+
+	public function test_a_framework_hit_inside_href_is_still_blocked(): void {
+		// Proves narrowing the utility-fragment scan to class-only did not
+		// accidentally narrow the framework scan too: src/href must still be
+		// covered there, because a Tailwind CDN reference IS a URL.
+		list( $manifest, $page ) = $this->manifest();
+		$result                  = $this->builder( '<a href="https://cdn.tailwindcss.com/docs">docs</a>' )->build( $manifest, $page );
+
+		$this->assertTrue( is_wp_error( $result ) );
+		$this->assertSame( 'zzz_' . ErrorCodes::TAILWIND_LEAKAGE, $result->get_error_code() );
+	}
 }

@@ -136,13 +136,27 @@ final class CompositionBuilder {
 		// and resource URLs. The previous scan was a stripos over the entire
 		// rendered markup, so a second product whose legitimate copy contains the
 		// word "tailwind" was rejected outright.
-		$surfaces = array();
+		//
+		// The two checks below do NOT share one surface set. A Tailwind CDN
+		// reference is a URL, so the framework check must cover class/src/href.
+		// A CSS class cannot be a URL, so widening the utility-fragment check the
+		// same way only invites false positives: "/uploads/hero-w-1200.jpg" and
+		// "/blog/m-12/" are ordinary asset paths that happen to contain a
+		// word-boundary "w-"/"m-", not a leaked utility class.
+		$framework_surfaces = array();
+		$class_surfaces     = array();
 
-		if ( preg_match_all( '/(?:class|src|href)\s*=\s*(["\'])(.*?)\1/is', $markup, $matches ) > 0 ) {
-			$surfaces = $matches[2];
+		if ( preg_match_all( '/(class|src|href)\s*=\s*(["\'])(.*?)\2/is', $markup, $matches, PREG_SET_ORDER ) > 0 ) {
+			foreach ( $matches as $match ) {
+				$framework_surfaces[] = $match[3];
+
+				if ( 'class' === strtolower( $match[1] ) ) {
+					$class_surfaces[] = $match[3];
+				}
+			}
 		}
 
-		$haystack = implode( ' ', $surfaces );
+		$haystack = implode( ' ', $framework_surfaces );
 
 		foreach ( ForbiddenPatterns::FRAMEWORK as $pattern ) {
 			if ( stripos( $haystack, $pattern ) !== false ) {
@@ -159,7 +173,7 @@ final class CompositionBuilder {
 		$prefix    = preg_quote( $this->contract->markup_prefix(), '/' );
 		$fragments = implode( '|', array_map( static fn( string $f ): string => preg_quote( $f, '/' ), ForbiddenPatterns::UTILITY_FRAGMENTS ) );
 
-		foreach ( $surfaces as $surface ) {
+		foreach ( $class_surfaces as $surface ) {
 			if ( preg_match( '/(?<!' . $prefix . '-)\b(' . $fragments . ')([a-z0-9-]+)/i', $surface, $hit ) === 1 ) {
 				return new WP_Error(
 					$this->contract->error_code( ErrorCodes::UTILITY_LEAKAGE ),
