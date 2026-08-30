@@ -183,4 +183,4 @@ or `adapters`) is the one exception: `mhmuicore_layout_engine()` lets
 `InvalidArgumentException` propagate uncaught, because that is a programmer
 error, not a domain error — no runtime path can recover from it.
 
-Design: `rentiva-dev/docs/superpowers/specs/2026-07-14-mhm-ui-core-design.md`
+Design: the six-phase design document lives in MHM's internal development repo, not here.
