@@ -1,6 +1,7 @@
 <?php
 /**
- * G2 -- no gettext call may exist under src/Layout.
+ * G2 -- no gettext call may exist anywhere this package ships PHP: src/
+ * (all of it, not just src/Layout), bootstrap.php, register.php.
  *
  * This package owns no consumer slug and therefore no text domain. WordPress's
  * string extractor reads code WITHOUT executing it, so a domain passed as a
@@ -48,15 +49,35 @@ function mhmuicore_i18n_is_call( array $tokens, int $i ): bool {
 	return false;
 }
 
-$root   = $argv[1] ?? dirname( __DIR__ );
-$target = $root . '/src/Layout';
+$root = $argv[1] ?? dirname( __DIR__ );
+$src  = $root . '/src';
 
-if ( ! is_dir( $target ) ) {
+if ( ! is_dir( $src ) ) {
 	// No SUMMARY line here on purpose: "I could not measure" must never look
 	// like "I measured zero" (SUMMARY: 0), which is what a caller would see if
 	// this exit code were mistaken for a clean run.
-	fwrite( STDERR, "check-no-i18n: src/Layout not found under {$root}" . PHP_EOL );
+	fwrite( STDERR, "check-no-i18n: src not found under {$root}" . PHP_EOL );
 	exit( 2 );
+}
+
+/*
+ * The docblock above makes a package-wide claim ("no gettext call may exist
+ * anywhere this package ships PHP"), but this gate used to scan only
+ * src/Layout -- the rest of src/ (and bootstrap.php/register.php, which also
+ * ship to every consumer) went unchecked. bootstrap.php and register.php are
+ * included only if present, so a caller pointing $root at a directory that
+ * has neither (e.g. NoI18nGateTest's synthetic fixtures) does not fail on
+ * their absence -- the is_dir( $src ) check above is the only hard
+ * precondition.
+ */
+$scan_targets = array( $src );
+
+foreach ( array( 'bootstrap.php', 'register.php' ) as $standalone_file ) {
+	$path = $root . '/' . $standalone_file;
+
+	if ( is_file( $path ) ) {
+		$scan_targets[] = $path;
+	}
 }
 
 $banned = array(
@@ -89,15 +110,38 @@ $banned = array(
 // without having to special-case any one call spelling.
 $name_token_types = array( T_STRING, T_NAME_FULLY_QUALIFIED, T_NAME_QUALIFIED, T_NAME_RELATIVE );
 
-$failures = array();
-$files    = new RecursiveIteratorIterator( new RecursiveDirectoryIterator( $target, FilesystemIterator::SKIP_DOTS ) );
-
-foreach ( $files as $file ) {
-	if ( ! $file->isFile() || 'php' !== $file->getExtension() ) {
-		continue;
+/**
+ * Every .php file under one scan target: the target itself if it is a single
+ * file, or every .php file found recursively if it is a directory.
+ *
+ * @return list<string> Absolute file paths.
+ */
+function mhmuicore_i18n_php_files_under( string $target ): array {
+	if ( is_file( $target ) ) {
+		return array( $target );
 	}
 
-	$tokens = token_get_all( (string) file_get_contents( $file->getPathname() ) );
+	$paths    = array();
+	$iterator = new RecursiveIteratorIterator( new RecursiveDirectoryIterator( $target, FilesystemIterator::SKIP_DOTS ) );
+
+	foreach ( $iterator as $file ) {
+		if ( $file->isFile() && 'php' === $file->getExtension() ) {
+			$paths[] = $file->getPathname();
+		}
+	}
+
+	return $paths;
+}
+
+$failures = array();
+$files    = array();
+
+foreach ( $scan_targets as $scan_target ) {
+	$files = array_merge( $files, mhmuicore_i18n_php_files_under( $scan_target ) );
+}
+
+foreach ( $files as $path ) {
+	$tokens = token_get_all( (string) file_get_contents( $path ) );
 	$count  = count( $tokens );
 
 	for ( $i = 0; $i < $count; $i++ ) {
@@ -115,7 +159,7 @@ foreach ( $files as $file ) {
 		}
 
 		if ( mhmuicore_i18n_is_call( $tokens, $i ) ) {
-			$failures[] = sprintf( '%s:%d %s()', $file->getPathname(), (int) $token[2], $name );
+			$failures[] = sprintf( '%s:%d %s()', $path, (int) $token[2], $name );
 		}
 	}
 }
