@@ -17,11 +17,11 @@ namespace MHMUiCore\Layout;
  * reached a caller. Making the code the only currency means it must be pinned --
  * a port that renames or drops four of them would otherwise pass every gate.
  *
- * Seven are raised by BlueprintValidator (this task); the other four are raised
- * by CompositionBuilder, which does not exist in this package yet (Task 8).
- * This inventory ships complete regardless, because a suffix list that grows
- * piecemeal is not a canonical one -- see G1 (bin/check-error-prefix.php) for
- * how the gap between "declared" and "sampled" is asserted rather than hidden.
+ * Seven are raised by BlueprintValidator; the other four are raised by
+ * CompositionBuilder. This inventory shipped complete before CompositionBuilder
+ * existed, because a suffix list that grows piecemeal is not a canonical one --
+ * see G1 (bin/check-error-prefix.php) for how coverage is asserted rather than
+ * assumed.
  */
 final class ErrorCodes {
 
