@@ -36,7 +36,7 @@ değil. **2026-08-30** itibarıyla ölçülen durum:
 |---|---|---|
 | 0 | İskelet — depo, composer/npm, CI, kalite kapıları | ✅ **bitti** |
 | 1 | Token birleştirme — tek token kaynağı | 🟡 **iki yarısı da yapıldı, tanımı değişti** (aşağı bak) |
-| 2 | **Layout motoru pakete** | 🟡 **paket tarafı bitti** (v0.6.0) — saf çekirdek burada; kalıcı katman + tüketici göçü sırada |
+| 2 | **Layout motoru pakete** | 🟡 **saf çekirdek burada ve tüketiciler göç etti** (v0.6.0) — kalan yalnız kalıcı katman, aşağı bak |
 | 3 | **React kiti pakete** — `enqueue_react_page()` + paylaşılan JSX | ✅ **2026-08-27** (v0.4.x) |
 | 4 | Bileşen scaffold'u — `wp mhm-ui make:component` | ⬜ başlamadı |
 | 5 | İkinci ürün (greenfield pilot) — dikiş doğuştan | ⬜ başlamadı |
@@ -86,7 +86,7 @@ sessizce Lite'ın boot etmesine bağımlı kılıyordu.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.6.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.7.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 🔴 Sürüm dizesi **elle yazılır** (kayıt, herhangi bir bootstrap yüklenmeden önce koşar) ve
