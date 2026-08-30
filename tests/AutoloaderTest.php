@@ -28,9 +28,12 @@ use PHPUnit\Framework\TestCase;
  * a bare `php` process, started fresh, with only the copied bootstrap.php
  * required and no composer autoload anywhere on its include path.
  *
- * The probe class (MHMUiCore\Probe) is used instead of a real src/ class
- * because none exists yet -- Task 3 adds the first one -- and this gate must
- * hold before that class exists, not after.
+ * The probe class is MHMUiCore\Layout\LayoutEngine, the package's own facade
+ * target -- not a synthetic stand-in. Twelve classes now live under src/, so
+ * setUp() copies the real src/ tree into the temp copy instead of writing a
+ * single fabricated class file: the spec's predicate is "the winning bootstrap
+ * resolves ITS OWN src/", and a synthetic probe class proves only that the
+ * loader can find A file, not that it resolves the package's actual classes.
  */
 final class AutoloaderTest extends TestCase {
 
@@ -48,14 +51,10 @@ final class AutoloaderTest extends TestCase {
 		$this->copy_dir = sys_get_temp_dir() . '/uicore-autoloader-' . uniqid( '', true );
 
 		mkdir( $this->copy_dir, 0777, true );
-		mkdir( $this->copy_dir . '/src', 0777, true );
 
 		copy( dirname( __DIR__ ) . '/bootstrap.php', $this->copy_dir . '/bootstrap.php' );
 
-		file_put_contents(
-			$this->copy_dir . '/src/Probe.php',
-			"<?php\nnamespace MHMUiCore;\nclass Probe {}\n"
-		);
+		self::copy_directory( dirname( __DIR__ ) . '/src', $this->copy_dir . '/src' );
 	}
 
 	protected function tearDown(): void {
@@ -66,7 +65,7 @@ final class AutoloaderTest extends TestCase {
 	}
 
 	public function test_the_registered_loader_resolves_the_booted_copys_own_class(): void {
-		$result = self::boot_copy_and_probe( $this->copy_dir, 'MHMUiCore\\Probe' );
+		$result = self::boot_copy_and_probe( $this->copy_dir, 'MHMUiCore\\Layout\\LayoutEngine' );
 
 		$this->assertSame(
 			0,
@@ -81,7 +80,7 @@ final class AutoloaderTest extends TestCase {
 		$this->assertSame(
 			'true',
 			trim( $result['stdout'] ),
-			'MHMUiCore\\Probe must resolve through the loader bootstrap.php registers, ' .
+			'MHMUiCore\\Layout\\LayoutEngine must resolve through the loader bootstrap.php registers, ' .
 			'with no Composer autoloader in scope: the winning copy must bind its own src/.'
 		);
 	}
@@ -148,6 +147,38 @@ final class AutoloaderTest extends TestCase {
 			'stderr'    => false === $stderr ? '' : $stderr,
 			'exit_code' => $exit_code,
 		);
+	}
+
+	/**
+	 * Recursively copy the package's real src/ tree into the temp copy, so the
+	 * subprocess resolves the same classes production does -- not a synthetic
+	 * stand-in.
+	 *
+	 * @param string $source Absolute path to the real src/ directory.
+	 * @param string $dest   Absolute path to create and populate.
+	 */
+	private static function copy_directory( string $source, string $dest ): void {
+		mkdir( $dest, 0777, true );
+
+		$items = scandir( $source );
+		if ( false === $items ) {
+			return;
+		}
+
+		foreach ( $items as $item ) {
+			if ( '.' === $item || '..' === $item ) {
+				continue;
+			}
+
+			$source_path = $source . '/' . $item;
+			$dest_path   = $dest . '/' . $item;
+
+			if ( is_dir( $source_path ) ) {
+				self::copy_directory( $source_path, $dest_path );
+			} else {
+				copy( $source_path, $dest_path );
+			}
+		}
 	}
 
 	/**

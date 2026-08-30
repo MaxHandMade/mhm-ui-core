@@ -38,6 +38,18 @@ define( 'MHMUICORE_DIR', __DIR__ );
  * hands out the SAME copy by construction, so facade/engine version skew
  * cannot happen and needs no runtime check. A shared PSR-4 registration would
  * reintroduce "whichever autoloader answers first wins".
+ *
+ * WHY $prepend IS true, NOT JUST "no consumer loads Composer's autoloader"
+ *
+ * spl_autoload_register()'s third parameter defaults to false, which APPENDS
+ * to the autoload queue. "Skew is impossible by construction" would otherwise
+ * rest on a MEASUREMENT (no consumer happens to load vendor/autoload.php
+ * today) rather than a mechanism -- a future consumer that does load Composer's
+ * autoloader for some unrelated reason could have its map answer for
+ * MHMUiCore\ first, resolving classes from a DIFFERENT copy than the one this
+ * bootstrap bound. Prepending costs nothing here: the closure below returns
+ * silently for every foreign namespace, so it is a no-op for any class this
+ * copy does not own, checked first or last.
  */
 spl_autoload_register(
 	static function ( string $class_name ): void {
@@ -51,7 +63,9 @@ spl_autoload_register(
 		if ( is_readable( $path ) ) {
 			require_once $path;
 		}
-	}
+	},
+	true,
+	true
 );
 
 /*
