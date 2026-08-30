@@ -29,7 +29,7 @@ final class TokenMapperTest extends TestCase {
 	}
 
 	public function test_maps_a_known_token_to_an_inline_declaration(): void {
-		// Controller ruling R6: the real code builds each declaration with
+		// The real code builds each declaration with
 		// sprintf( '%s: %s;', $target_var, $sanitized_value ) -- a space after
 		// the colon, not "--mhmui-bp-primary:#ff0000;".
 		$mapper = new TokenMapper();
@@ -100,6 +100,14 @@ final class TokenMapperTest extends TestCase {
 			'brace injection'    => array( '0} .a{color:red' ),
 			'import injection'   => array( '0;@import url(//evil.example/x.css)' ),
 			'whitespace before url paren' => array( 'url  (//evil.example/x.png)' ),
+			// 'import injection' above trips the ";" alternative first, so the
+			// "@import" branch of the pattern is never exercised in isolation.
+			// This row has no ";", "{", "}" or "url(" at all -- only "@import"
+			// itself can reject it.
+			'@import isolated'   => array( '@import "evil.css"' ),
+			// The pattern's "/i" flag is otherwise untested: nothing here proves
+			// the url( check is case-insensitive.
+			'uppercase url'      => array( 'URL(//evil.example/x.png)' ),
 		);
 	}
 
