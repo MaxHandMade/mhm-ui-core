@@ -68,6 +68,37 @@ final class LayoutContract {
 		$this->error_prefix  = $this->read_prefix( $config, 'error_prefix' );
 		$this->markup_prefix = $this->read_prefix( $config, 'markup_prefix' );
 
+		/*
+		 * REJECTED HERE, NOT WORKED AROUND IN THE SCAN: CompositionBuilder's leak
+		 * scan exempts a class carrying markup_prefix via a lookbehind, but a
+		 * lookbehind has no text to examine at position 0 of a surface string. A
+		 * markup_prefix that IS a utility-fragment root ("bg", "p", "m", "flex",
+		 * "grid", "w" -- see ForbiddenPatterns::UTILITY_FRAGMENTS) makes every one
+		 * of the consumer's OWN prefixed classes indistinguishable, at the start
+		 * of a class attribute, from the forbidden fragment itself: e.g. under
+		 * markup_prefix "bg", the consumer's own "bg-hero-card" cannot be told
+		 * apart from a leaked Tailwind "bg-*" utility, and the package would flag
+		 * its own wrapper ("bg-layout-component") as leakage. Excluding just the
+		 * wrapper classes from the scan would only patch that one instance; a
+		 * consumer's adapters can render arbitrarily many other prefixed classes
+		 * that would still collide. Rejecting the collision here closes the whole
+		 * class at the one place that knows both values, and fails fast at
+		 * contract construction instead of as an intermittent runtime false
+		 * positive.
+		 */
+		foreach ( ForbiddenPatterns::UTILITY_FRAGMENTS as $fragment ) {
+			if ( rtrim( $fragment, '-' ) === $this->markup_prefix ) {
+				throw new InvalidArgumentException(
+					esc_html(
+						sprintf(
+							'LayoutContract: "markup_prefix" (%s) collides with a reserved utility-class fragment.',
+							$this->markup_prefix
+						)
+					)
+				);
+			}
+		}
+
 		$adapters = $config['adapters'] ?? null;
 
 		if ( ! is_array( $adapters ) || array() === $adapters ) {
@@ -124,15 +155,6 @@ final class LayoutContract {
 	 */
 	public function adapter( string $type ): ?LayoutComponentAdapter {
 		return $this->adapters[ $type ] ?? null;
-	}
-
-	/**
-	 * All registered component types.
-	 *
-	 * @return list<string>
-	 */
-	public function types(): array {
-		return array_map( 'strval', array_keys( $this->adapters ) );
 	}
 
 	/**

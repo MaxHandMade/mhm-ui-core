@@ -27,12 +27,12 @@ final class CompositionBuilderTest extends TestCase {
 		require_once __DIR__ . '/../Fixtures/wp-function-stubs.php';
 	}
 
-	private function builder( string $markup = '<p>{id}</p>' ): CompositionBuilder {
+	private function builder( string $markup = '<p>{id}</p>', string $markup_prefix = 'fixture' ): CompositionBuilder {
 		return new CompositionBuilder(
 			new LayoutContract(
 				array(
 					'error_prefix'  => 'zzz',
-					'markup_prefix' => 'fixture',
+					'markup_prefix' => $markup_prefix,
 					'adapters'      => array( 'hero' => new FixtureAdapter( $markup ) ),
 				)
 			)
@@ -115,5 +115,57 @@ final class CompositionBuilderTest extends TestCase {
 		$this->assertSame( 'zzz_' . ErrorCodes::UTILITY_LEAKAGE, $result->get_error_code() );
 		$this->assertSame( '', $result->get_error_message() );
 		$this->assertSame( array( 'fragment' => 'bg-red-500' ), $result->get_error_data() );
+	}
+
+	public function test_wrapper_markup_uses_the_contracts_markup_prefix(): void {
+		// Behaviour-neutral for the current consumer: markup_prefix "mhm" must
+		// reproduce today's hardcoded "mhm-layout-component"/"mhm-layout-root"
+		// classes byte-for-byte, so published post_content and existing CSS keep
+		// working.
+		list( $manifest, $page ) = $this->manifest();
+
+		$result = $this->builder( '<p>{id}</p>', 'mhm' )->build( $manifest, $page );
+
+		$this->assertIsString( $result );
+		$this->assertStringContainsString( 'class="mhm-layout-component"', $result );
+		$this->assertStringContainsString( 'class="mhm-layout-root"', $result );
+	}
+
+	public function test_wrapper_markup_carries_a_second_products_own_prefix(): void {
+		list( $manifest, $page ) = $this->manifest();
+
+		$result = $this->builder( '<p>{id}</p>', 'evimora' )->build( $manifest, $page );
+
+		$this->assertIsString( $result );
+		$this->assertStringContainsString( 'class="evimora-layout-component"', $result );
+		$this->assertStringContainsString( 'class="evimora-layout-root"', $result );
+		$this->assertStringNotContainsString( 'mhm-layout', $result );
+	}
+
+	public function test_a_non_string_instance_id_is_reported_as_invalid_instance(): void {
+		// The validator's own guard (BlueprintValidatorTest) rejects this shape
+		// too, but build() is independently reachable through the facade and
+		// must not fatal when validate() was skipped.
+		list( $manifest ) = $this->manifest();
+		$page              = array( 'composition' => array( array( 'component_id' => 'c1', 'instance_id' => 123 ) ) );
+
+		$result = $this->builder()->build( $manifest, $page );
+
+		$this->assertTrue( is_wp_error( $result ) );
+		$this->assertSame( 'zzz_' . ErrorCodes::INVALID_INSTANCE, $result->get_error_code() );
+		$this->assertSame( '', $result->get_error_message() );
+		$this->assertSame( array( 'instance_id' => 123 ), $result->get_error_data() );
+	}
+
+	public function test_a_non_string_type_is_reported_as_missing_adapter(): void {
+		list( $manifest, $page ) = $this->manifest();
+		$manifest['components']  = array( 'c1' => array( 'type' => 42 ) );
+
+		$result = $this->builder()->build( $manifest, $page );
+
+		$this->assertTrue( is_wp_error( $result ) );
+		$this->assertSame( 'zzz_' . ErrorCodes::MISSING_ADAPTER, $result->get_error_code() );
+		$this->assertSame( '', $result->get_error_message() );
+		$this->assertSame( array( 'type' => 42 ), $result->get_error_data() );
 	}
 }

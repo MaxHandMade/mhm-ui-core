@@ -123,4 +123,37 @@ final class GovernanceGateTest extends TestCase {
 		$this->assertTrue( is_wp_error( $result ) );
 		$this->assertSame( 'zzz_' . ErrorCodes::TAILWIND_LEAKAGE, $result->get_error_code() );
 	}
+
+	public function test_a_class_merely_ending_in_the_prefix_is_still_blocked(): void {
+		// A fixed-length lookbehind matches trailing TEXT, not a whole token:
+		// "xfixture-bg-card" ends in "fixture-" without CARRYING the consumer's
+		// prefix as its own leading token -- it is a different word ("xfixture")
+		// that happens to end the same way. Before the \b was added inside the
+		// lookbehind, this passed unflagged.
+		list( $manifest, $page ) = $this->manifest();
+		$result                  = $this->builder( '<div class="xfixture-bg-card"></div>' )->build( $manifest, $page );
+
+		$this->assertTrue( is_wp_error( $result ) );
+		$this->assertSame( 'zzz_' . ErrorCodes::UTILITY_LEAKAGE, $result->get_error_code() );
+	}
+
+	public function test_a_style_block_importing_tailwind_is_blocked(): void {
+		// Tailwind v4's documented entry point is a bare
+		// "@import 'tailwindcss';" inside a stylesheet -- a shape the
+		// class/src/href scan never sees, since it is not an attribute value.
+		list( $manifest, $page ) = $this->manifest();
+		$result                  = $this->builder( '<style>@import "tailwindcss";</style>' )->build( $manifest, $page );
+
+		$this->assertTrue( is_wp_error( $result ) );
+		$this->assertSame( 'zzz_' . ErrorCodes::TAILWIND_LEAKAGE, $result->get_error_code() );
+	}
+
+	public function test_an_ordinary_style_block_still_passes(): void {
+		// The <style>-body widening must not turn legitimate CSS into a false
+		// positive -- prose (here, plain declarations) must still pass.
+		list( $manifest, $page ) = $this->manifest();
+		$result                  = $this->builder( '<style>.card { color: red; padding: 4px; }</style>' )->build( $manifest, $page );
+
+		$this->assertIsString( $result );
+	}
 }

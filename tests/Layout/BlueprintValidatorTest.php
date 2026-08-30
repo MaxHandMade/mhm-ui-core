@@ -166,4 +166,53 @@ final class BlueprintValidatorTest extends TestCase {
 		$this->assertSame( 'zzz_' . ErrorCodes::INVALID_COMPONENTS, $result->get_error_code() );
 		$this->assertSame( '', $result->get_error_message() );
 	}
+
+	public function test_a_non_array_page_is_reported_by_code_not_prose(): void {
+		// Measured: "pages": ["a", "b"] used to TypeError out of
+		// validate_page()'s `array $page` parameter instead of returning a
+		// WP_Error. This is an ordinary shape a hand-written or generated
+		// manifest can produce, not a programmer error.
+		$manifest          = $this->valid_manifest();
+		$manifest['pages'] = array( 'a', 'b' );
+
+		$result = $this->validator()->validate( $manifest );
+
+		$this->assertTrue( is_wp_error( $result ) );
+		$this->assertSame( 'zzz_' . ErrorCodes::INVALID_PAGE, $result->get_error_code() );
+		$this->assertSame( '', $result->get_error_message() );
+		$this->assertSame( array( 'page_index' => 0 ), $result->get_error_data() );
+	}
+
+	public function test_a_non_string_instance_id_is_reported_by_code_not_prose(): void {
+		// Measured: "instance_id": 123 used to make validate() return true, and
+		// CompositionBuilder::build() would then TypeError out of the adapter's
+		// `string $instance_id` render() parameter -- the validator approved
+		// what the builder could not render.
+		$manifest          = $this->valid_manifest();
+		$manifest['pages'] = array(
+			array(
+				'slug'        => 'home',
+				'layout'      => 'default',
+				'composition' => array(
+					array(
+						'component_id' => 'hero',
+						'instance_id'  => 123,
+					),
+				),
+			),
+		);
+
+		$result = $this->validator()->validate( $manifest );
+
+		$this->assertTrue( is_wp_error( $result ) );
+		$this->assertSame( 'zzz_' . ErrorCodes::INVALID_INSTANCE, $result->get_error_code() );
+		$this->assertSame( '', $result->get_error_message() );
+		$this->assertSame(
+			array(
+				'instance_index' => 0,
+				'page_index'     => 0,
+			),
+			$result->get_error_data()
+		);
+	}
 }

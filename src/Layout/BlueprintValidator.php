@@ -100,6 +100,18 @@ final class BlueprintValidator {
 		}
 
 		foreach ( $manifest['pages'] as $index => $page ) {
+			// A non-array page (e.g. "pages": ["a", "b"]) is an ordinary shape for
+			// a hand-written or generated manifest, not a programmer error: it
+			// must return a WP_Error, not TypeError out of validate_page()'s own
+			// `array $page` parameter type.
+			if ( ! is_array( $page ) ) {
+				return new WP_Error(
+					$this->contract->error_code( ErrorCodes::INVALID_PAGE ),
+					'',
+					array( 'page_index' => $index )
+				);
+			}
+
 			$error = $this->validate_page( $page, $index );
 			if ( is_wp_error( $error ) ) {
 				return $error;
@@ -152,8 +164,14 @@ final class BlueprintValidator {
 				}
 
 				// Note: Actual component type check happens during import phase against Registry.
-				// Here we just ensure basic instance metadata exists.
-				if ( ! isset( $instance['instance_id'] ) ) {
+				// Here we just ensure basic instance metadata exists. A present but
+				// non-string instance_id (e.g. 123) is rejected here too: it is an
+				// ordinary shape a generated manifest can produce, and letting it
+				// through would let CompositionBuilder::build() TypeError out of
+				// render()'s `string $instance_id` parameter instead of returning a
+				// WP_Error -- the validator must not approve what the builder cannot
+				// render.
+				if ( ! isset( $instance['instance_id'] ) || ! is_string( $instance['instance_id'] ) ) {
 					return new WP_Error(
 						$this->contract->error_code( ErrorCodes::INVALID_INSTANCE ),
 						'',

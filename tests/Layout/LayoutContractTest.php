@@ -60,6 +60,10 @@ final class LayoutContractTest extends TestCase {
 			'missing markup_prefix' => array( array( 'error_prefix' => 'zzz', 'adapters' => $adapters ), 'markup_prefix' ),
 			'no adapters'           => array( array( 'error_prefix' => 'zzz', 'markup_prefix' => 'fixture', 'adapters' => array() ), 'adapters' ),
 			'wrong adapter type'    => array( array( 'error_prefix' => 'zzz', 'markup_prefix' => 'fixture', 'adapters' => array( 'hero' => 'nope' ) ), 'LayoutComponentAdapter' ),
+			'markup_prefix collides with a utility fragment' => array(
+				array( 'error_prefix' => 'zzz', 'markup_prefix' => 'bg', 'adapters' => $adapters ),
+				'markup_prefix',
+			),
 		);
 	}
 }
