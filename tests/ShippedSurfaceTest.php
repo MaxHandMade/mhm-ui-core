@@ -8,9 +8,16 @@ use PHPUnit\Framework\TestCase;
 /**
  * The shipped surface is a contract, not an accident.
  *
- * This package installs into consumers' vendor/mhm/ui-core and their .distignore
- * forwards the whole directory into a WordPress.org ZIP. Anything that lands in
- * `git archive` therefore ships to end users. Development tooling must not.
+ * This package installs into consumers' vendor/mhm/ui-core. What `git archive`
+ * produces is an upper bound on what ships, not the shipped set itself.
+ * Measured 2026-08-30 against v0.4.1: the consumer's tree holds 16 files, of
+ * which 12 appear in the canonical `build-release.py --list-shipped` output.
+ * The consumer-side build filters out .gitignore, README.md, assets/README.md,
+ * and package.json.
+ *
+ * Keeping development tooling out of the archive is still the right guarantee —
+ * it is the only half this package controls. The consumer-side half is measured
+ * against the staged ZIP tree in the consumer's own plan.
  */
 final class ShippedSurfaceTest extends TestCase {
 
