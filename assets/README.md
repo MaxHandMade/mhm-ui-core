@@ -44,8 +44,22 @@ işaret ettiği dosyalarla **aynı kopyadan** gelir (`MHMUICORE_DIR` o kopyanın
 
 ```
 assets/
-  react/      paylaşılan React kaynakları + admin.css   (Aşama 2'de dolacak)
+  react/
+    admin.css   paketin kendi --mhmui-* yönetici paleti
 ```
+
+🔴 **Buraya ne girer, `src-react/`'e ne girer.** Ayrım kaynak/çıktı değil, **nasıl tüketildiği**:
+
+| | `assets/` | `src-react/` |
+|---|---|---|
+| Nasıl kullanılır | doğrudan servis edilir (`wp_enqueue_*`) | tüketicinin derlemesine `import` edilir |
+| Adreslenmesi | `mhmuicore_asset_url()` / `_path()` | göreli yol (`../../vendor/mhm/ui-core/src-react/…`) |
+| Taşınabilir mi | evet, kimse yola bağlı değil | **hayır** — Lite'ta 4, Pro'da 5 `import` yola çakılı |
+
+`admin.css` 2026-08-30'a kadar `src-react/` altındaydı ve bu yüzden **yüklenemiyordu**: yardımcı
+`assets/` altına bakıyor, dosya orada değildi. Üç belge (bu dosya, `bootstrap.php`'nin docblock'u,
+`AssetLocatorTest`) doğru düzeni tarif ediyordu; yalnız ağaç uymuyordu. Testler de bunu göremedi,
+çünkü hepsi dize kurulumunu ölçüyordu, diske hiç dokunmuyordu — artık bir varlık iddiası var.
 
 ## Sevkiyat
 
