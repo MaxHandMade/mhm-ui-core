@@ -124,6 +124,23 @@ final class GovernanceGateTest extends TestCase {
 		$this->assertSame( 'zzz_' . ErrorCodes::TAILWIND_LEAKAGE, $result->get_error_code() );
 	}
 
+	public function test_the_framework_scan_is_case_insensitive(): void {
+		// "TailwindCSS" is the project's OWN capitalisation -- the form a
+		// designer copies off the vendor's site and pastes into a manifest --
+		// so this is the likelier real-world spelling, not an exotic one.
+		// ForbiddenPatterns documents the scan as case-insensitive and
+		// CompositionBuilder implements it with stripos(), but nothing pinned
+		// it: changing that single stripos() to strpos() left all 153 tests in
+		// this suite green while letting this exact string ship. The case came
+		// from the consumer's GovernanceGateTest data provider, which had it as
+		// 'CDN.TailwindCSS.com/3.4' and was deleted when the engine moved here.
+		list( $manifest, $page ) = $this->manifest();
+		$result                  = $this->builder( '<script src="https://CDN.TailwindCSS.com/3.4"></script>' )->build( $manifest, $page );
+
+		$this->assertTrue( is_wp_error( $result ) );
+		$this->assertSame( 'zzz_' . ErrorCodes::TAILWIND_LEAKAGE, $result->get_error_code() );
+	}
+
 	public function test_a_class_merely_ending_in_the_prefix_is_still_blocked(): void {
 		// A fixed-length lookbehind matches trailing TEXT, not a whole token:
 		// "xfixture-bg-card" ends in "fixture-" without CARRYING the consumer's
