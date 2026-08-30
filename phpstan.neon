@@ -7,3 +7,20 @@ parameters:
         - src
         - register.php
         - bootstrap.php
+        - bin
+    # bin/check-error-prefix.php require_once's this directly (it is a test
+    # fixture, outside composer.json's autoload map, so PHPStan cannot
+    # otherwise see mhmuicore_gate_error_samples() -- "Function ... not found").
+    # scanFiles, not paths: it must be known for symbol resolution without
+    # itself being reported on, since tests/ has its own analysis surface.
+    #
+    # wp-function-stubs.php is deliberately NOT here: it declares its own
+    # global WP_Error class/is_wp_error() as a runtime-only fallback (guarded
+    # by class_exists()/function_exists(), so it is a no-op wherever the real
+    # WordPress stubs already answer). Scanning it too makes PHPStan see two
+    # conflicting WP_Error definitions and lose phpstan-wordpress's is_wp_error()
+    # narrowing -- confirmed by reverting this line and watching BOTH
+    # BlueprintValidator::validate() and CompositionBuilder::build() fail with
+    # "should return WP_Error|true/string but returns WP_Error|null/true".
+    scanFiles:
+        - tests/Fixtures/error-samples.php

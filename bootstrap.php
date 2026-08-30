@@ -17,8 +17,56 @@ if ( defined( 'MHMUICORE_VERSION' ) ) {
 	return;
 }
 
-define( 'MHMUICORE_VERSION', '0.5.0' );
+define( 'MHMUICORE_VERSION', '0.6.0' );
 define( 'MHMUICORE_DIR', __DIR__ );
+
+/*
+ * ─── Class loading ───────────────────────────────────────────────────────────
+ *
+ * WHY THIS EXISTS AT ALL
+ *
+ * composer.json declares a PSR-4 map, and this file used to claim src/ was
+ * "PSR-4 autoloaded out of each consumer's own vendor/ directory". Measured
+ * 2026-08-30: FALSE. Neither consumer requires vendor/autoload.php; each
+ * registers an autoloader for its OWN namespace only. Nothing could load a
+ * MHMUiCore class in production -- VersionSelector included.
+ *
+ * WHY IT BINDS __DIR__ AND NOT A PSR-4 LOOKUP
+ *
+ * mhmuicore_boot() loads exactly one bootstrap.php: the highest registered
+ * version. Binding that copy's own src/ makes the facade and the classes it
+ * hands out the SAME copy by construction, so facade/engine version skew
+ * cannot happen and needs no runtime check. A shared PSR-4 registration would
+ * reintroduce "whichever autoloader answers first wins".
+ *
+ * WHY $prepend IS true, NOT JUST "no consumer loads Composer's autoloader"
+ *
+ * spl_autoload_register()'s third parameter defaults to false, which APPENDS
+ * to the autoload queue. "Skew is impossible by construction" would otherwise
+ * rest on a MEASUREMENT (no consumer happens to load vendor/autoload.php
+ * today) rather than a mechanism -- a future consumer that does load Composer's
+ * autoloader for some unrelated reason could have its map answer for
+ * MHMUiCore\ first, resolving classes from a DIFFERENT copy than the one this
+ * bootstrap bound. Prepending costs nothing here: the closure below returns
+ * silently for every foreign namespace, so it is a no-op for any class this
+ * copy does not own, checked first or last.
+ */
+spl_autoload_register(
+	static function ( string $class_name ): void {
+		if ( 0 !== strpos( $class_name, 'MHMUiCore\\' ) ) {
+			return;
+		}
+
+		$relative = substr( $class_name, strlen( 'MHMUiCore\\' ) );
+		$path     = MHMUICORE_DIR . '/src/' . str_replace( '\\', '/', $relative ) . '.php';
+
+		if ( is_readable( $path ) ) {
+			require_once $path;
+		}
+	},
+	true,
+	true
+);
 
 /*
  * ─── Asset locators ──────────────────────────────────────────────────────────
@@ -114,11 +162,12 @@ if ( ! function_exists( 'mhmuicore_asset_url' ) ) {
  *
  * WHY IT IS A FUNCTION HERE AND NOT A CLASS IN src/
  *
- * src/ is PSR-4 autoloaded out of each consumer's own vendor/ directory, so the
- * FIRST autoloader to resolve a class name wins -- possibly an older copy whose
- * enqueue contract no longer matches the bundles being enqueued. bootstrap.php
- * is loaded by mhmuicore_boot() from the HIGHEST registered version. The loader
- * has to follow the same rule as the assets it points at.
+ * src/ is loaded by the autoloader this same file registers, bound to this
+ * copy's own __DIR__. Functions and classes therefore always come from the
+ * winning copy together. (Before 0.6.0 this comment claimed PSR-4 loading out
+ * of the consumer's vendor/; that was never true here -- no consumer loads
+ * vendor/autoload.php -- and a whole version-skew gate was designed against
+ * the phantom risk it described.)
  *
  * Callers MUST guard with function_exists(): a site may still be running an
  * older ui-core (0.3.x or earlier) as the winner, where this does not exist.
@@ -262,5 +311,50 @@ if ( ! function_exists( 'mhmuicore_enqueue_react_page' ) ) {
 		);
 
 		wp_set_script_translations( $handle, $values['text_domain'], $languages_dir );
+	}
+}
+
+/*
+ * ─── Layout engine facade ────────────────────────────────────────────────────
+ *
+ * WHY THIS IS HERE AND NOT IN register.php
+ *
+ * Same rule as the asset locators and the React page loader above, and the
+ * stakes are higher here: LayoutEngine wires LayoutContract into
+ * BlueprintValidator and CompositionBuilder, both loaded through the
+ * autoloader THIS file registers, bound to THIS copy's own __DIR__. Defining
+ * the facade in register.php -- first-plugin-to-load-wins -- could hand a
+ * consumer an engine built from an OLDER copy than the classes it now hands
+ * out elsewhere, a version-skew bug this file's own binding design (see the
+ * "Class loading" section above) exists specifically to make impossible.
+ * Defined here, the facade and the engine it returns are always the same
+ * winning copy by construction.
+ *
+ * Callers MUST guard with function_exists(): a site may still be running an
+ * older ui-core as the winner, where this does not exist.
+ *
+ *     if ( function_exists( 'mhmuicore_layout_engine' ) ) {
+ *         $engine = mhmuicore_layout_engine( array( ... ) );
+ *     }
+ */
+
+if ( ! function_exists( 'mhmuicore_layout_engine' ) ) {
+	/**
+	 * Builds a Layout engine from a consumer contract.
+	 *
+	 * @param array<string,mixed> $config Contract configuration: error_prefix,
+	 *                                    markup_prefix, adapters.
+	 * @return \MHMUiCore\Layout\LayoutEngine
+	 *
+	 * @throws \InvalidArgumentException When the contract is malformed. This
+	 *                                   propagates out of LayoutContract's own
+	 *                                   constructor and is deliberately NOT
+	 *                                   caught and converted to a WP_Error: a
+	 *                                   malformed contract is a programmer
+	 *                                   error, not a domain error, and no
+	 *                                   runtime path can recover from it.
+	 */
+	function mhmuicore_layout_engine( array $config ): \MHMUiCore\Layout\LayoutEngine {
+		return new \MHMUiCore\Layout\LayoutEngine( new \MHMUiCore\Layout\LayoutContract( $config ) );
 	}
 }
