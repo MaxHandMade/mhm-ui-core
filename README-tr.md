@@ -60,7 +60,7 @@ henüz karara bağlanmadı, o yüzden ✅ değil 🟡.
 Kararı sabitleyen şey belge değil **kapı**: `bin/check-css-namespace.mjs` (stylelint + Babel AST)
 ve `bin/check-php-namespace.php` (`token_get_all()`) paketin sevk yüzeyini ölçer ve `--mhmui-*`
 dışında bir custom property tanımlamasını ya da okumasını, bir de ID seçicisi kullanmasını
-imkânsız kılar. İkisi de CI'da; `tests/gate/` altında 78 koşumluk regresyon bataryası var.
+imkânsız kılar. İkisi de CI'da; `tests/Gate/` altında 78 koşumluk regresyon bataryası var.
 🔴 Kapıların kendisi `export-ignore`'lu — tüketicinin `vendor/`'una **inmezler**.
 
 **Kısacası:** ui-core bugün *çalışan ve sevk edilen* bir paket, ama **tamamlanmış değil**.
