@@ -10,7 +10,7 @@
         "phpunit/phpunit": "^9.6",
         "phpstan/phpstan": "^2.0",
         "szepeviktor/phpstan-wordpress": "^2.0",
-        "php-stubs/wordpress-stubs": "^6.7",
+        "php-stubs/wordpress-stubs": "^7.1",
         "squizlabs/php_codesniffer": "^3.9",
         "wp-coding-standards/wpcs": "^3.2",
         "dealerdirect/phpcodesniffer-composer-installer": "^1.1",
@@ -33,6 +33,7 @@
     },
     "scripts": {
         "test": "@php ./vendor/bin/phpunit -c phpunit.xml",
+        "test:wp": "@php ./vendor/bin/phpunit -c phpunit-integration.xml",
         "phpcs": "@php ./vendor/bin/phpcs --standard=phpcs.xml",
         "phpstan": "@php ./vendor/bin/phpstan analyse --memory-limit=1G",
         "check:php-namespace": "@php ./bin/check-php-namespace.php",

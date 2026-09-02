@@ -29,3 +29,5 @@
 /bin/check-error-prefix.php export-ignore
 /bin/check-no-i18n.php export-ignore
 /.stylelintrc.json export-ignore
+/docker/           export-ignore
+/phpunit-integration.xml export-ignore

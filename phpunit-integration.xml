@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.6/phpunit.xsd"
+    bootstrap="tests/bootstrap-wp.php"
+    backupGlobals="false"
+    colors="false"
+    cacheResult="false"
+    failOnEmptyTestSuite="true"
+>
+    <!--
+    A second configuration file, not a second testsuite: PHPUnit 9 takes
+    `bootstrap` as an attribute of the root <phpunit> element, so one file
+    cannot carry two bootstraps. The unit suite must keep booting without
+    WordPress.
+    -->
+    <testsuites>
+        <testsuite name="MHM UI Core (WordPress)">
+            <directory suffix="Test.php">./tests/Integration/</directory>
+        </testsuite>
+    </testsuites>
+</phpunit>

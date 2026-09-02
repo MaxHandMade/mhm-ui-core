@@ -242,7 +242,15 @@ if ( ! function_exists( 'mhmuicore_enqueue_react_page' ) ) {
 
 		$extra_deps = array();
 		if ( isset( $args['deps'] ) && is_array( $args['deps'] ) ) {
-			$extra_deps = array_values( array_filter( $args['deps'], 'is_string' ) );
+			// Empty strings survive is_string() and would be enqueued as a
+			// dependency on the handle "", which never resolves. The caller is
+			// another plugin, so this is filtered here rather than assumed.
+			$extra_deps = array_values(
+				array_filter(
+					$args['deps'],
+					static fn( $dep ): bool => is_string( $dep ) && '' !== $dep
+				)
+			);
 		}
 
 		$build_dir = ( isset( $args['build_dir'] ) && is_string( $args['build_dir'] ) && '' !== $args['build_dir'] )
@@ -292,7 +300,12 @@ if ( ! function_exists( 'mhmuicore_enqueue_react_page' ) ) {
 
 			if ( is_array( $asset ) ) {
 				if ( isset( $asset['dependencies'] ) && is_array( $asset['dependencies'] ) ) {
-					$dependencies = array_values( array_filter( $asset['dependencies'], 'is_string' ) );
+					$dependencies = array_values(
+						array_filter(
+							$asset['dependencies'],
+							static fn( $dep ): bool => is_string( $dep ) && '' !== $dep
+						)
+					);
 				}
 				if ( isset( $asset['version'] ) && is_string( $asset['version'] ) && '' !== $asset['version'] ) {
 					$version = $asset['version'];
