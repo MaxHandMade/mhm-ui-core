@@ -29,6 +29,8 @@ final class LoaderWiringTest extends WP_UnitTestCase {
 	 */
 	private $registry_backup;
 
+	// public, not protected: WP_UnitTestCase_Base declares these public, and
+	// narrowing the access level is a fatal error before any test runs.
 	public function set_up(): void {
 		parent::set_up();
 		$this->registry_backup = $GLOBALS['mhmuicore_candidates'] ?? null;
@@ -62,12 +64,28 @@ final class LoaderWiringTest extends WP_UnitTestCase {
 	 * test would skip the dispatch that is the whole subject.
 	 */
 	public function test_only_the_highest_registered_copy_boots(): void {
-		self::assertSame( array( '9.9.9' ), $GLOBALS['mhmuicore_test_booted'] ?? array() );
+		self::assertTrue( defined( 'MHMUICORE_VERSION' ), 'the winning bootstrap did not run' );
+		self::assertSame( array(), $GLOBALS['mhmuicore_test_booted'] ?? array(), 'a losing copy booted' );
 	}
 
 	/**
-	 * Control for the test above. An empty registry and a hook that never fired
-	 * produce the same empty global, so without this the assertion could be
+	 * The winner is the package's own bootstrap, so this suite is also the only
+	 * place where that file runs against real WordPress rather than against
+	 * tests/Fixtures/wp-function-stubs.php.
+	 *
+	 * mhmuicore_asset_url() is the assertion worth making: it calls core's
+	 * plugins_url(), so a shipped bootstrap that disagrees with the WordPress it
+	 * is installed into fails here instead of on a user's site.
+	 */
+	public function test_the_shipped_bootstrap_runs_against_real_wordpress(): void {
+		self::assertTrue( function_exists( 'mhmuicore_enqueue_react_page' ) );
+		self::assertSame( MHMUICORE_VERSION, mhmuicore_version() );
+		self::assertStringStartsWith( 'http', mhmuicore_asset_url( 'react/admin.css' ) );
+	}
+
+	/**
+	 * Control for the arbitration test. An empty registry and a hook that never
+	 * fired produce the same absence, so without this the assertion could be
 	 * satisfied for a reason that has nothing to do with the loader.
 	 *
 	 * This one is deliberately vacuous with respect to this package: it would

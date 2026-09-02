@@ -5,6 +5,7 @@
     backupGlobals="false"
     colors="false"
     cacheResult="false"
+    failOnEmptyTestSuite="true"
 >
     <!--
     A second configuration file, not a second testsuite: PHPUnit 9 takes

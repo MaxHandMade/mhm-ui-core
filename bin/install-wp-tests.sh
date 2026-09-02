@@ -1,18 +1,32 @@
 #!/usr/bin/env bash
 # Installs the WordPress test suite for the integration suite.
 #
-# Copied from mhm-rentiva with three deliberate deviations, all recorded in the
-# design spec for this harness:
+# Copied from mhm-rentiva. The deviations are listed here because this comment
+# is what the claim "CI and the local container run the same script" rests on.
 #
-#  1. download() uses -sSL --fail. The reference used a bare `curl -s`, which
-#     writes the body of an error page to disk and still reports success.
+# What it FETCHES, changed:
+#  1. download() fails loudly and leaves no artefact. The reference used a bare
+#     `curl -s` writing straight to the target, so a failure wrote an empty file
+#     and reported success -- and the re-run guards below then treated that
+#     empty file as a finished install.
 #  2. WP_VERSION=latest resolves to the current STABLE tag. The reference maps
 #     it to `trunk` while downloading a stable core tarball, so the test
-#     framework and the core it exercises come from different trees, and a
+#     framework and the core it exercises come from different trees and a
 #     WordPress commit can turn a plugin's CI red with no change to the plugin.
 #  3. No wp-mysqli db.php drop-in. raw.github.com answers 301, the reference's
 #     bare curl wrote a zero-byte file, and the constant that file would define
 #     (WP_USE_EXT_MYSQL) has no readers left in core.
+#
+# What it DOES, changed:
+#  4. `set -euo pipefail`. The reference tolerated a failing step and carried on;
+#     here a half-finished install stops instead of pretending.
+#  5. The re-run guards test for a file the step actually produces, not for the
+#     directory it created before it started (see 1).
+#  6. The wp-tests-config.php guard is anchored to $WP_TESTS_DIR. The reference
+#     tested a bare relative path, so it re-downloaded and re-sed the config on
+#     every run from a different working directory.
+#  7. Portable shell for the host split and the numeric test (`IFS`/`read -ra`,
+#     `grep -qE`) instead of the reference's word-splitting form.
 
 set -euo pipefail
 
@@ -30,8 +44,20 @@ WP_VERSION=${5-latest}
 WP_TESTS_DIR=${WP_TESTS_DIR-/tmp/wordpress-tests-lib}
 WP_CORE_DIR=${WP_CORE_DIR-/tmp/wordpress/}
 
+# Downloads to a scratch name and renames on success, so a failed transfer
+# cannot leave a file that a later run mistakes for a finished one.
 download() {
-	curl -sSL --fail "$1" > "$2"
+	local target=$2
+	local scratch="${target}.download"
+
+	if curl -sSL --fail "$1" > "$scratch"; then
+		mv "$scratch" "$target"
+		return 0
+	fi
+
+	rm -f "$scratch"
+	echo "download failed: $1" >&2
+	return 1
 }
 
 if [ "$WP_VERSION" = 'latest' ]; then
@@ -46,16 +72,19 @@ fi
 WP_TESTS_TAG="tags/$WP_VERSION"
 
 install_wp() {
-	if [ -d "$WP_CORE_DIR" ]; then
+	# wp-settings.php, not the directory: the directory exists as soon as this
+	# function starts, so guarding on it would skip a re-run after a failure.
+	if [ -f "${WP_CORE_DIR}wp-settings.php" ]; then
 		return
 	fi
+
 	mkdir -p "$WP_CORE_DIR"
 	download "https://wordpress.org/wordpress-${WP_VERSION}.tar.gz" /tmp/wordpress.tar.gz
 	tar --strip-components=1 -zxmf /tmp/wordpress.tar.gz -C "$WP_CORE_DIR"
 }
 
 install_test_suite() {
-	if [ ! -d "$WP_TESTS_DIR" ]; then
+	if [ ! -f "$WP_TESTS_DIR/includes/functions.php" ]; then
 		mkdir -p "$WP_TESTS_DIR"
 		svn co --quiet "https://develop.svn.wordpress.org/${WP_TESTS_TAG}/tests/phpunit/includes/" "$WP_TESTS_DIR/includes"
 		svn co --quiet "https://develop.svn.wordpress.org/${WP_TESTS_TAG}/tests/phpunit/data/" "$WP_TESTS_DIR/data"
@@ -87,6 +116,13 @@ install_db() {
 		else
 			EXTRA=" --host=$DB_HOSTNAME --protocol=tcp"
 		fi
+	fi
+
+	# Re-running the installer against a database that already exists is a
+	# normal thing to do, and mysqladmin treats it as an error. Under `set -e`
+	# that would abort a run whose only remaining work was already done.
+	if mysql --user="$DB_USER" --password="$DB_PASS"$EXTRA -N -e "SHOW DATABASES LIKE '${DB_NAME}';" | grep -q "$DB_NAME"; then
+		return
 	fi
 
 	mysqladmin create "$DB_NAME" --user="$DB_USER" --password="$DB_PASS"$EXTRA

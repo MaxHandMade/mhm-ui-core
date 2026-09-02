@@ -5,6 +5,7 @@
     backupGlobals="false"
     colors="false"
     cacheResult="false"
+    failOnEmptyTestSuite="true"
 >
     <testsuites>
         <testsuite name="MHM UI Core">
