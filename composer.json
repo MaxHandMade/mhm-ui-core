@@ -33,6 +33,7 @@
     },
     "scripts": {
         "test": "@php ./vendor/bin/phpunit -c phpunit.xml",
+        "test:wp": "@php ./vendor/bin/phpunit -c phpunit-integration.xml",
         "phpcs": "@php ./vendor/bin/phpcs --standard=phpcs.xml",
         "phpstan": "@php ./vendor/bin/phpstan analyse --memory-limit=1G",
         "check:php-namespace": "@php ./bin/check-php-namespace.php",

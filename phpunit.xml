@@ -9,6 +9,13 @@
     <testsuites>
         <testsuite name="MHM UI Core">
             <directory suffix="Test.php">./tests/</directory>
+            <!--
+            tests/Integration needs a running WordPress and a database. It has
+            its own configuration file (phpunit-integration.xml) and its own
+            bootstrap; leaving it in here would make `composer test` fail on any
+            machine that has PHP and nothing else.
+            -->
+            <exclude>./tests/Integration</exclude>
         </testsuite>
     </testsuites>
 </phpunit>
