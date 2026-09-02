@@ -1,0 +1,23 @@
+# Keeps the SHA-pinned actions in ci.yml moving.
+#
+# Pinning to a commit SHA is the only way to use an action as an immutable
+# release -- a tag can be moved or deleted by anyone who gains write access to
+# the action's repository. The cost of that immutability is that a pin never
+# updates itself, and a pin nobody updates is how a workflow ends up running
+# three-year-old code. This file pays that cost by turning each update into a
+# pull request that can be read before it is trusted.
+#
+# Only github-actions is watched here. Composer and npm dependencies in this
+# package are dev-only and already move under the version constraints in
+# composer.json and package.json.
+
+version: 2
+
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "ci"
