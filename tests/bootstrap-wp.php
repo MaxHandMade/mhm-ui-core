@@ -39,6 +39,12 @@ tests_add_filter(
 		// with real WordPress. tests_add_filter() reaches $wp_filter directly,
 		// which is the only way to be registered before plugins_loaded fires.
 		require dirname( __DIR__ ) . '/register.php';
+
+		// Two copies, registered through the package's own public API. Which of
+		// them boots is decided by mhmuicore_boot() when WordPress dispatches
+		// plugins_loaded -- nothing in this file or in the test makes that call.
+		mhmuicore_register( '0.0.1', __DIR__ . '/Integration/fixtures/low/bootstrap.php' );
+		mhmuicore_register( '9.9.9', __DIR__ . '/Integration/fixtures/high/bootstrap.php' );
 	}
 );
 
