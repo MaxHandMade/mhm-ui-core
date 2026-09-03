@@ -24,3 +24,5 @@ parameters:
     # "should return WP_Error|true/string but returns WP_Error|null/true".
     scanFiles:
         - tests/Fixtures/error-samples.php
+        - tests/Fixtures/elementor-stubs.php
+        - tests/Fixtures/wp-cli-stubs.php

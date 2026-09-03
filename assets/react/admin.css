@@ -3,7 +3,7 @@
    Scope: .mhmui-admin mount nodes
    ============================================================================= */
 
-/* Custom properties — WP admin color palette */
+/* mhmui:tokens:start -- generated from src-react/tokens.json by bin/build-tokens.js; do not edit by hand */
 .mhmui-admin,
 .mhm-stats-grid {
 	--mhmui-blue:         #2271b1;
@@ -12,6 +12,8 @@
 	--mhmui-green-dark:   #007a1f;
 	--mhmui-amber:        #dba617;
 	--mhmui-amber-dark:   #b08000;
+	--mhmui-red:          #d63638;
+	--mhmui-red-dark:     #a02224;
 	--mhmui-grey:         #646970;
 	--mhmui-grey-dark:    #3c3f44;
 	--mhmui-border:       #c3c4c7;
@@ -21,7 +23,9 @@
 	--mhmui-bg:           #f0f0f1;
 	--mhmui-card-bg:      #ffffff;
 	--mhmui-gap:          12px;
+	--mhmui-radius:       4px;
 }
+/* mhmui:tokens:end */
 
 /* -----------------------------------------------------------------------------
    Stats cards — StatsCards component (dashboard Row 1 + reports header)
@@ -236,3 +240,97 @@
 	font-size: 10px;
 	color: var( --mhmui-text-light );
 }
+
+/* =============================================================================
+   Visual kit — StatCard · StatsGrid · KpiBox · StatusBadge · Pagination ·
+   ProLock · Notice · Widget (src-react/components). Extracted from Rentiva's
+   admin.css on 2026-09-03 and renamed into the package namespace; the product
+   keeps its .mhm-* rules until it migrates. Only --mhmui-* tokens below.
+   ============================================================================= */
+
+.mhmui-stats-grid {
+	display: grid;
+	gap: var( --mhmui-gap );
+	margin-top: 16px;
+}
+
+.mhmui-stat-card {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	padding: 18px 20px;
+	border-radius: var( --mhmui-radius );
+	color: #fff;
+}
+.mhmui-stat-card--blue  { background: linear-gradient( 135deg, var( --mhmui-blue ),  var( --mhmui-blue-dark )  ); }
+.mhmui-stat-card--green { background: linear-gradient( 135deg, var( --mhmui-green ), var( --mhmui-green-dark ) ); }
+.mhmui-stat-card--amber { background: linear-gradient( 135deg, var( --mhmui-amber ), var( --mhmui-amber-dark ) ); }
+.mhmui-stat-card--grey  { background: linear-gradient( 135deg, var( --mhmui-grey ),  var( --mhmui-grey-dark )  ); }
+.mhmui-stat-card--red   { background: linear-gradient( 135deg, var( --mhmui-red ),   var( --mhmui-red-dark )   ); }
+.mhmui-stat-card .dashicons { font-size: 28px; width: 28px; height: 28px; opacity: .9; }
+.mhmui-stat-card__body { flex: 1; min-width: 0; }
+.mhmui-stat-card__label { margin: 0; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; opacity: .9; }
+.mhmui-stat-card__value { margin: 2px 0 0; font-size: 24px; font-weight: 600; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.mhmui-stat-card__sub,
+.mhmui-stat-card__delta { margin: 4px 0 0; font-size: 12px; opacity: .9; }
+.mhmui-stat-card__delta--down { opacity: 1; text-decoration: underline; }
+
+.mhmui-kpi-box {
+	padding: 12px 14px;
+	border-radius: var( --mhmui-radius );
+	border: 1px solid var( --mhmui-border );
+	background: var( --mhmui-card-bg );
+}
+.mhmui-kpi-box__value { margin: 0; font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; color: var( --mhmui-text ); }
+.mhmui-kpi-box__label { margin: 2px 0 0; font-size: 12px; color: var( --mhmui-text-light ); }
+.mhmui-kpi-box--blue  .mhmui-kpi-box__value { color: var( --mhmui-blue ); }
+.mhmui-kpi-box--green .mhmui-kpi-box__value { color: var( --mhmui-green ); }
+.mhmui-kpi-box--amber .mhmui-kpi-box__value { color: var( --mhmui-amber-dark ); }
+.mhmui-kpi-box--red   .mhmui-kpi-box__value { color: var( --mhmui-red ); }
+.mhmui-kpi-box--grey  .mhmui-kpi-box__value { color: var( --mhmui-grey ); }
+
+.mhmui-status {
+	display: inline-block;
+	padding: 2px 8px;
+	border-radius: 999px;
+	font-size: 12px;
+	font-weight: 500;
+	line-height: 1.6;
+	background: var( --mhmui-border-light );
+	color: var( --mhmui-text );
+}
+.mhmui-status--success { background: #dcf7dc; color: var( --mhmui-green-dark ); }
+.mhmui-status--warning { background: #fff3cd; color: var( --mhmui-amber-dark ); }
+.mhmui-status--danger  { background: #fbe0e0; color: var( --mhmui-red-dark ); }
+.mhmui-status--info    { background: #e5f0fa; color: var( --mhmui-blue-dark ); }
+
+.mhmui-pagination { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+.mhmui-pagination__status { color: var( --mhmui-text-light ); font-variant-numeric: tabular-nums; }
+
+.mhmui-pro-lock {
+	padding: 14px 16px;
+	border: 1px dashed var( --mhmui-border );
+	border-radius: var( --mhmui-radius );
+	color: var( --mhmui-text-light );
+	background: var( --mhmui-bg );
+}
+
+.mhmui-notice { margin: 12px 0; }
+
+.mhmui-widget {
+	background: var( --mhmui-card-bg );
+	border: 1px solid var( --mhmui-border );
+	border-radius: var( --mhmui-radius );
+	margin-top: var( --mhmui-gap );
+}
+.mhmui-widget__header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 12px 16px;
+	border-bottom: 1px solid var( --mhmui-border-light );
+}
+.mhmui-widget__title { margin: 0; font-size: 14px; display: flex; align-items: center; gap: 8px; color: var( --mhmui-text ); }
+.mhmui-widget__subtitle { font-weight: 400; color: var( --mhmui-text-light ); font-size: 12px; }
+.mhmui-widget__body { padding: 16px; }

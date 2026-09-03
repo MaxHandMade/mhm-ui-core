@@ -72,6 +72,9 @@ jobs:
       - name: ESLint
         run: npm run lint:js
 
+      - name: Token source in sync (tokens:check)
+        run: npm run tokens:check
+
       - name: Jest
         run: npm test
 

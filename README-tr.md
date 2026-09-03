@@ -6,84 +6,129 @@
 ## Bu paket ne işe yarar?
 
 MHM WordPress eklentilerinin **ortak arayüz altyapısı**. Eklenti değildir, **Composer
-paketidir**: kendi başına kurulmaz, eklentilerin içine gömülür.
+paketidir**: kendi başına kurulmaz, eklentilerin içine gömülür. Tek cümleyle: **bir sonraki
+eklenti sıfırdan başlamasın diye.**
 
-Üç sorumluluğu var:
+Üç sorumluluğu var ve üçü de v0.8.0'dan itibaren pakette:
 
-1. **React yönetici kiti** — her yönetici ekranının ihtiyaç duyduğu enqueue işini tek yerde
-   toplar; paylaşılan JS modülleri (para biçimlendirme, REST istemci fabrikası, `useApi`
-   hook'u, hata sınırı bileşeni).
-2. **Bileşen fabrikası** — tek bir bileşen sözleşmesinden shortcode, Gutenberg bloğu ve
-   Elementor widget'ı üretmek. **v0.6.0'dan beri motorun saf çekirdeği burada:**
-   `src/Layout/` altında **12 dosya / 1.381 satır** (`LayoutEngine` · `CompositionBuilder` ·
-   `TokenMapper` · `BlueprintValidator` · `AdapterRegistry` · `Normalization` · `DiffService`
-   + sözleşme ve hata kodları). 🔴 **Kalıcı katman bilerek üründe kaldı** — veritabanına yazan
-   içe-aktarma/geri-alma, ürüne özel adaptörler ve WP-CLI komutu. Sebep ölçülmüş bir sınırdır:
-   paketin WordPress test koşumu yok, `wp_insert_post`'u stub'layıp atomik geri almayı "test
-   etmek" mock'u test etmek olurdu.
-3. **Sürüm dikişi** — WordPress.org'a uygun ücretsiz çekirdeğin, lisanslı Pro eklentisine
-   açtığı uzantı noktaları.
+1. **Bileşen fabrikası** — bir bileşen **bir kez** tanımlanır (her parça Sabit / Veri / Ayar),
+   paket ondan **dört yüzey** türetir: shortcode, Gutenberg bloğu, Elementor widget'ı ve Layout
+   adapter'ı. Elle yazılan tek şey renderer'dır. `wp mhm-ui make:component` iskeleti açar.
+2. **React yönetici kiti** — her yönetici ekranının enqueue işi tek çağrıda; paylaşılan JS
+   modülleri (REST istemci fabrikası, `useApi`, para biçimlendirme, hata sınırı) ve görsel
+   bileşenler (istatistik kartı, KPI kutusu, durum rozeti, sayfalama, Pro kilidi, bildirim,
+   panel); tek token kaynağından üretilen `--mhmui-*` paleti.
+3. **Lite/Pro dikişi** — ücretsiz çekirdek boş **yuvalar** ilan eder ve **yetenekler** tanımlar,
+   Pro eklentisi doldurur; `wp mhm-ui check:purity` çekirdekte dış HTTP, lisans kodu ve yapay
+   limit **olmadığını** kanıtlar. WordPress.org'un crippleware yasağına uyum, sonradan kazı
+   değil doğuştan.
+
+Altında duran tesisat: **sürüm farkındalıklı yükleyici** (bir sitede kaç eklenti taşırsa taşısın
+en yüksek sürüm boot eder) ve **Layout motorunun saf çekirdeği** (`src/Layout/`, manifest →
+markup; veritabanına yazan kalıcı katman bilerek üründe).
 
 İçinde **iş mantığı, lisans kodu ve dış HTTP çağrısı yoktur.** İçine gömüldüğü her WordPress
 eklentisi gibi GPL'dir.
 
-## Kapsam — ne yapıyor, neyi bilerek yapmıyor
+## Kapsam — üç sorumluluk, üçü de pakette
 
-Paketi tanımlayan şey bir faz sayacı değil, **sözleşmesi**: yükleyici hakemliği, React yönetici
-hattı, Layout motorunun saf çekirdeği ve `--mhmui-*` isim uzayı sınırı. Bunların dördü de
-sevk ediliyor, iki üründe çalışıyor ve kapı altında. Altı fazlı tasarım dokümanı MHM'nin iç
-geliştirme deposunda yaşıyor; **2026-09-03**'te kapatılan hâli şudur:
+Paketi tanımlayan şey faz sayacı değil **sözleşmesi**. Tasarım dokümanı (2026-07-14) üç
+sorumluluk tanımlıyor; **2026-09-03**'te (v0.8.0) üçü de koda döküldü ve gerçek WordPress'e
+karşı ölçüldü:
 
-| Faz | Ne | Sonuç |
-|---|---|---|
-| 0 | İskelet — depo, composer/npm, CI, kalite kapıları | ✅ |
-| 1 | Token birleştirme | ✅ **tanımı değişerek** — aşağı bak |
-| 2 | Layout motoru pakete | ✅ **saf çekirdek + tüketici göçü** (v0.6.0); kalıcı katman **rafta**, aşağı bak |
-| 3 | React kiti pakete — `enqueue_react_page()` + paylaşılan JSX | ✅ (v0.4.x) |
-| 4 | Bileşen scaffold'u — `wp mhm-ui make:component` | ⛔ **düşürüldü** — aşağı bak |
-| 5 | İkinci ürün pilotu | ⏳ **ikinci ürün bağlandığında kendiliğinden olur**, ayrı iş değil |
+| # | Sorumluluk | Pakette | Kanıt |
+|---|---|---|---|
+| 1 | **Bileşen fabrikası** — bir sözleşme (Sabit/Veri/Ayar), dört yüzey: shortcode · Gutenberg bloğu · Elementor widget'ı · Layout adapter'ı | `src/Component/` · `wp mhm-ui make:component` | Rentiva'nın `featured-vehicles` bloğu sözleşmeye geri çevrilip **bayt bayt yeniden üretildi** (`FeaturedVehiclesReproductionTest`) · dört yüzey aynı girdiye **aynı** tipli ayarları veriyor (`SurfacesTest`) |
+| 2 | **React yönetici kiti** — sayfa yükleyici + REST istemcisi + görsel bileşenler + tek token kaynağı | `bootstrap.php` · `src-react/` · `src-react/tokens.json` → `npm run tokens:build` | `kit.test.jsx` · `tokens.test.js` (kaynak ile CSS arasında sürüklenme kapısı, mutasyonla sınandı) |
+| 3 | **Lite/Pro dikişi** — çekirdek boş **yuva** ilan eder, Pro doldurur; **yetenek** verir; **saflık kapısı** çekirdekte HTTP/lisans/yapay limit olmadığını kanıtlar | `src/Seam/` · `wp mhm-ui check:purity` | `PilotSeamTest` — gerçek WP'de iki fixture eklenti (çekirdek + Pro): shortcode ve blok Pro'nun dolgusunu yuvadan alıyor, tarayıcı çekirdeği **temiz**, Pro'yu **kirli** buluyor (negatif kontrol) |
 
-### Faz 1 — iki yarısı yapıldı, sorusu değişti, ve bu artık cevap
+Bunların altındaki tesisat (yükleyici hakemliği · Layout motorunun saf çekirdeği · `--mhmui-*`
+isim uzayı kapıları) daha önce vardı ve olduğu gibi duruyor.
 
-Ürün tarafındaki birleştirme (Rentiva'nın **101 kanonik token**'ı) ve paketin kendi 15 tokenli
-React paleti (**2026-08-29**) — ikisi de kapandı. Tasarım dokümanı *"tek token kaynağı"* istiyordu;
-ortaya çıkan şey **bilerek ayrılmış iki isim uzayı** (`--mhmui-*` paket / `--mhm-*` ürün).
-Çakışma yasak olduğu için değil **yapısal olarak imkânsız** olduğu için bitti. Bu, Faz 1'in
-tamamlanması değil sorusunun düzeltilmesidir — ve düzeltilmiş soru cevaplanmış olduğundan ✅.
+### Bileşen fabrikası nasıl çalışır
 
-Kararı sabitleyen şey belge değil **kapı**: `bin/check-css-namespace.mjs` (stylelint + Babel AST)
-ve `bin/check-php-namespace.php` (`token_get_all()`) paketin sevk yüzeyini ölçer ve `--mhmui-*`
-dışında bir custom property tanımlamasını ya da okumasını, bir de ID seçicisi kullanmasını
-imkânsız kılar. İkisi de CI'da; `tests/Gate/` altında 78 koşumluk regresyon bataryası var.
-🔴 Kapıların kendisi `export-ignore`'lu — tüketicinin `vendor/`'una **inmezler**.
+```php
+// contracts/hero.php — tek tasarım kararı: her parça Sabit / Veri / Ayar
+return array(
+    'slug'     => 'hero',
+    'title'    => __( 'Hero', 'my-plugin' ),        // ürün çevirir, paket değil
+    'settings' => array(                            // AYAR → shortcode attr + block attr + Elementor kontrolü
+        'title'      => array( 'type' => 'string',  'default' => '' ),
+        'showButton' => array( 'type' => 'boolean', 'default' => true ),
+        'columns'    => array( 'type' => 'integer', 'default' => 3 ),
+        'layout'     => array( 'type' => 'enum',    'enum' => array( 'grid', 'slider' ), 'default' => 'grid' ),
+    ),
+    'data'     => array( 'items' ),                 // VERİ → renderer sorgular
+);
 
-### Faz 2 — kalıcı katman neden rafta
+// Elle yazılan TEK şey: renderer (SABİT parçalar burada yaşar)
+final class HeroRenderer implements \MHMUiCore\Component\ComponentRenderer {
+    public function render( array $settings, array $context ): string { /* … */ }
+}
 
-Ön koşulu (gerçek WordPress'e karşı entegrasyon koşumu) kurulmuş, taşınacak koddaki sekiz kusur
-bulunup **yaşadığı yerde** düzeltilmişti. Durduran şey karşılığın olmamasıydı: o kod bugün
-yayınlanmış bir eklentide çalışıyor ve testle korunuyor; taşımanın getirisi ancak **ikinci bir
-tüketiciyle** doğar ve bugün hiçbir ürünün layout kalıcılığına ihtiyacı yok (ölçüldü). Rafı
-kaldıracak şart adıyla yazılı: ikinci bir ürün buna gerçekten ihtiyaç duyduğunda.
+// Ürün kimliği bir kez, sonra her bileşen tek satır
+$factory = mhmuicore_component_factory( array(
+    'prefix' => 'myplugin', 'block_namespace' => 'my-plugin', 'text_domain' => 'my-plugin',
+) );
+$hero = $factory->register( new ComponentContract( require 'contracts/hero.php' ), new HeroRenderer() );
+// → [myplugin_hero …] · <!-- wp:my-plugin/hero --> · Elementor widget (Elementor yüklüyse) · $hero->layout_adapter()
+```
 
-### Faz 4 — neden düşürüldü
+🔴 **Ayar allowlist'i sözleşmenin kendisidir:** bildirilmemiş bir attribute renderer'a hiç ulaşmaz,
+bildirilen her biri **tipli** gelir — `'1'`/`'0'` (shortcode), `true`/`false` (blok), `'yes'`/`''`
+(Elementor) hepsi aynı `bool`'a iner. Dört yüzey bu yüzden asla ayrışamaz.
 
-Scaffold CLI'ın karşılığı *çok bileşen × çok ürün*. Tek tüketicili bir pakette bu, Faz 2'yi rafa
-kaldıran sınıfın aynısıdır: getirisi ileride, maliyeti anında, doğrulaması tek örneğe karşı.
-"Yapılmadı" diye taşımak bitmemişlik hissini sonsuza yayar; bilerek düşürüldü. İkinci ürün üç
-dört bileşen sonra aynı şablonu elle yazmaktan yorulursa, o gün gerçek bir talep olur.
+**Scaffold:** `wp mhm-ui make:component hero --prefix=myplugin --block-namespace=my-plugin
+--text-domain=my-plugin --php-namespace='MyPlugin\Components'` → sözleşme dosyası, renderer
+iskeleti, `block.json`, test iskeleti. Var olan dosyanın üstüne **yazmaz**.
 
-### Faz 5 — ayrı bir iş değil
+### Dikiş nasıl çalışır
 
-Gerçek yanlışlama başka bir ürünün tüketmesidir; aynı üründe pilot yapmak Rentiva'nın
-varsayımlarını Rentiva'yla sınamaktır. Aday belli ve bağlanma anı kendi belgesinde yazılı —
-"Yeni bir eklentiye nasıl eklenir?" bölümü tam olarak o gün için var.
+```php
+// Ücretsiz çekirdek: yuvaları ADIYLA ilan eder, yetenekleri tanımlar
+$seam = mhmuicore_slot_registry( 'myplugin' );
+$seam->declare_slot( 'hero_after', 'Hero markup sonrasına eklenecek şey.' );
+$caps = mhmuicore_capabilities( 'myplugin' );
+// … renderer içinde:
+$html = $seam->apply( 'hero_after', $html, $settings );
+if ( $caps->has( 'pro_badge' ) ) { /* daha fazlasını yap — asla daha azını */ }
 
-📌 Üçüncü sorumluluk (**katman dikişi**) için pakette **kod yok**; Lite↔Pro dikişi Rentiva'nın
-kendi içinde yaşıyor. Bu bir eksik değil, ölçülmüş bir sınır: ikinci bir Lite/Pro çifti gelene
-kadar dikişin genel biçimi bilinemez.
+// Pro eklentisi: doldurur ve verir
+$seam->fill( 'hero_after', fn( $html ) => $html . '<div class="upsell">…</div>' );
+$caps->grant( 'pro_badge' );
+```
 
-**Kısacası:** ui-core, bugün istenen işi yapan, iki üründe sevk edilen, kapı altında bir
-pakettir. Açık kalem yok; kalan hayatı bakım ve gerçek bir tüketicinin isteyeceği şeydir.
+İlan edilmemiş bir yuvayı doldurmak **fırlatır** — sessizce boşa düşmez. Her yuva ayrıca
+`{prefix}_seam_{slot}` WordPress kancasına köprülenir; üçüncü taraf sınıfı bilmeden takılabilir.
+
+🔴 **Yetenek bir "yapabilir"dir, "yapmasın" değil.** `if ( ! $caps->has('x') ) { çekirdeğin
+yapabildiği şeyi reddet }` crippleware'dir; `if ( $caps->has('x') ) { fazlasını yap }` dikiştir.
+
+**Saflık kapısı:** `wp mhm-ui check:purity <çekirdek-dizini>` — dışarıya HTTP (`wp_remote_*`,
+`curl_*`, `fsockopen`…), lisans sözcüğü (`license_key`, `activate_license`…), yapay limit sözcüğü
+(`free_limit`, `upgrade_to_pro`…) bulursa kırmızı. Her koşumda **önce kendi kör noktasını sınar**:
+bilinen-kirli fixture'ı görmezse "temiz" demek yerine kendini bozuk ilan eder.
+
+### React kiti ve token kaynağı
+
+`src-react/index.js`: `StatCard` · `StatsGrid` · `KpiBox` · `StatusBadge` · `Pagination` ·
+`ProLock` · `Notice` · `Widget` (+ önceki `ErrorBoundary`, `createApiClient`, `useApi`,
+`createFormatter`). **Her dize prop'tur** — paketin text domain'i yok, çeviriyi ürün yapar.
+
+Tek token kaynağı `src-react/tokens.json`: `npm run tokens:build` `assets/react/admin.css`'teki
+`--mhmui-*` bloğunu yeniden üretir, `npm run tokens:check` CI'da sürüklenmeyi kırmızı yapar.
+JS tarafında `import { tokens } from '…/src-react'` ile aynı değerler.
+
+### Bilerek yapılmayanlar
+
+- **Rentiva göç etmedi.** Paket ikinci bir tüketicinin sınamasından geçmeden Rentiva'nın 16 bloğunu
+  ve widget'larını fabrikaya taşımak, tek örneğe karşı yeniden yazım olurdu. Fabrika Rentiva'nın en
+  büyük bloğunu **yeniden üretebildiğini** test olarak kanıtladı; taşıma, Rentiva'nın kendi
+  penceresinde ve kendi sırasında.
+- **Layout kalıcılığı (AtomicImporter, rollback, audit) üründe.** Hiçbir ürünün ikinci bir kopyaya
+  ihtiyacı yok; ihtiyaç doğduğunda taşınır.
+- **npm registry'ye yayın yok.** `package.json` artefakt olarak hazır (`main`, `exports`,
+  `peerDependencies`); tüketiciler bugün `vendor/mhm/ui-core/src-react` yolundan import ediyor.
 
 ## Nerede kullanılıyor?
 
@@ -100,7 +145,7 @@ sessizce Lite'ın boot etmesine bağımlı kılıyordu.
 ## Yeni bir eklentiye nasıl eklenir?
 
 🔴 **Paket yeni bir ürüne kendiliğinden girmez.** Dört elle adım ister ve her adımın kayıtlı bir
-kırılma biçimi vardır. Aşağıdaki değerler 2026-09-03'te v0.7.1'e karşı ölçüldü.
+kırılma biçimi vardır. Aşağıdaki değerler 2026-09-03'te v0.8.0'a karşı ölçüldü.
 
 **1. Composer — depo + require.** Paket Packagist'te **değil**, o yüzden `require` tek başına
 yetmez; VCS deposu da tanıtılır:
@@ -156,7 +201,7 @@ parite kapısı eşitlik arar, uyumluluk değil.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.7.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.8.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 🔴 Sürüm dizesi **elle yazılır** (kayıt, herhangi bir bootstrap yüklenmeden önce koşar) ve

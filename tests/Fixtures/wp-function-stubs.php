@@ -22,7 +22,12 @@ if ( ! function_exists( 'add_action' ) ) {
 	 * @param int      $priority Priority.
 	 */
 	function add_action( string $hook, $callback, int $priority = 10 ): void {
-		unset( $hook, $callback, $priority );
+		// Recorded when the recorder exists (it is declared later in this file,
+		// so it does at every call time except register.php's include-time one).
+		if ( function_exists( 'mhmuicore_test_record' ) ) {
+			mhmuicore_test_record( 'add_action', array( $hook, $priority ) );
+		}
+		unset( $callback );
 	}
 }
 
@@ -298,5 +303,80 @@ if ( ! function_exists( 'wp_json_encode' ) ) {
 	 */
 	function wp_json_encode( $data ) {
 		return json_encode( $data );
+	}
+}
+
+/*
+ * ─── Component factory + seam stubs (2026-09-03) ───────────────────────────
+ * The four surfaces and the seam call these. Each records its call so a test
+ * can assert what was registered, exactly like the enqueue stubs above.
+ */
+
+if ( ! function_exists( 'add_shortcode' ) ) {
+	/**
+	 * Records the tag and keeps the callback so a test can invoke it.
+	 *
+	 * @param string   $tag      Tag.
+	 * @param callable $callback Callback.
+	 * @return void
+	 */
+	function add_shortcode( string $tag, callable $callback ): void {
+		$GLOBALS['mhmuicore_test_shortcodes'][ $tag ] = $callback;
+		mhmuicore_test_record( 'add_shortcode', array( $tag ) );
+	}
+}
+
+if ( ! function_exists( 'register_block_type' ) ) {
+	/**
+	 * Records the block name and args so a test can invoke render_callback.
+	 *
+	 * @param string               $name Block name.
+	 * @param array<string, mixed> $args Args.
+	 * @return bool
+	 */
+	function register_block_type( string $name, array $args = array() ): bool {
+		$GLOBALS['mhmuicore_test_blocks'][ $name ] = $args;
+		mhmuicore_test_record( 'register_block_type', array( $name ) );
+		return true;
+	}
+}
+
+if ( ! function_exists( 'sanitize_text_field' ) ) {
+	/**
+	 * Enough of core's sanitizer for the contract's string path.
+	 *
+	 * @param string $str Raw.
+	 * @return string
+	 */
+	function sanitize_text_field( string $str ): string {
+		return trim( (string) preg_replace( '/<[^>]*>/', '', $str ) );
+	}
+}
+
+if ( ! function_exists( 'apply_filters' ) ) {
+	/**
+	 * Pass-through that records the hook name.
+	 *
+	 * @param string $hook_name Hook.
+	 * @param mixed  $value     Value.
+	 * @param mixed  ...$args   Extra args.
+	 * @return mixed
+	 */
+	function apply_filters( string $hook_name, $value, ...$args ) {
+		mhmuicore_test_record( 'apply_filters', array( $hook_name ) );
+		return $value;
+	}
+}
+
+if ( ! function_exists( 'do_action' ) ) {
+	/**
+	 * Records the hook name.
+	 *
+	 * @param string $hook_name Hook.
+	 * @param mixed  ...$args   Args.
+	 * @return void
+	 */
+	function do_action( string $hook_name, ...$args ): void {
+		mhmuicore_test_record( 'do_action', array( $hook_name ) );
 	}
 }

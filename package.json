@@ -1,6 +1,6 @@
 {
 	"name": "@mhm/ui-core",
-	"version": "0.7.1",
+	"version": "0.8.0",
 	"description": "Shared WordPress admin React modules for MHM plugins.",
 	"license": "GPL-2.0-or-later",
 	"sideEffects": false,
@@ -10,7 +10,9 @@
 	"scripts": {
 		"test": "wp-scripts test-unit-js",
 		"lint:js": "wp-scripts lint-js src-react",
-		"check:css-namespace": "node bin/check-css-namespace.mjs"
+		"check:css-namespace": "node bin/check-css-namespace.mjs",
+		"tokens:build": "node bin/build-tokens.js",
+		"tokens:check": "node bin/build-tokens.js --check"
 	},
 	"devDependencies": {
 		"@babel/parser": "^7.29.8",
@@ -19,5 +21,14 @@
 		"@wordpress/scripts": "30.27.0",
 		"stylelint": "^16.26.1",
 		"typescript": "^6.0.3"
+	},
+	"main": "src-react/index.js",
+	"exports": {
+		".": "./src-react/index.js",
+		"./tokens.json": "./src-react/tokens.json",
+		"./src-react/*": "./src-react/*"
+	},
+	"peerDependencies": {
+		"@wordpress/element": ">=6"
 	}
 }

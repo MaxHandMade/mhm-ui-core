@@ -17,7 +17,7 @@ if ( defined( 'MHMUICORE_VERSION' ) ) {
 	return;
 }
 
-define( 'MHMUICORE_VERSION', '0.7.1' );
+define( 'MHMUICORE_VERSION', '0.8.0' );
 define( 'MHMUICORE_DIR', __DIR__ );
 
 /*
@@ -370,4 +370,78 @@ if ( ! function_exists( 'mhmuicore_layout_engine' ) ) {
 	function mhmuicore_layout_engine( array $config ): \MHMUiCore\Layout\LayoutEngine {
 		return new \MHMUiCore\Layout\LayoutEngine( new \MHMUiCore\Layout\LayoutContract( $config ) );
 	}
+}
+
+/*
+ * ─── Component factory and tier seam facades ─────────────────────────────────
+ *
+ * The design document's responsibilities 1 and 3, reachable the same way as the
+ * Layout facade above: functions declared in the WINNING copy's bootstrap, so
+ * the factory and the classes it hands out are always the same copy.
+ *
+ * Callers MUST guard with function_exists(): a site may still be running an
+ * older ui-core as the winner, where these do not exist.
+ *
+ *     if ( function_exists( 'mhmuicore_component_factory' ) ) {
+ *         $factory = mhmuicore_component_factory( array(
+ *             'prefix'          => 'rentiva',
+ *             'block_namespace' => 'mhm-rentiva',
+ *             'text_domain'     => 'mhm-rentiva',
+ *         ) );
+ *         $factory->register( new ComponentContract( require 'contracts/hero.php' ), new HeroRenderer() );
+ *     }
+ */
+
+if ( ! function_exists( 'mhmuicore_component_factory' ) ) {
+	/**
+	 * Build a component factory for one product.
+	 *
+	 * @param array<string,mixed> $config prefix, block_namespace, text_domain.
+	 * @return \MHMUiCore\Component\ComponentFactory
+	 *
+	 * @throws \InvalidArgumentException When the identity is malformed --
+	 *                                   deliberately not converted to WP_Error,
+	 *                                   for the same reason as the Layout facade.
+	 */
+	function mhmuicore_component_factory( array $config ): \MHMUiCore\Component\ComponentFactory {
+		return new \MHMUiCore\Component\ComponentFactory( $config );
+	}
+}
+
+if ( ! function_exists( 'mhmuicore_slot_registry' ) ) {
+	/**
+	 * Build the seam's slot registry for one product.
+	 *
+	 * @param string $prefix Product prefix.
+	 * @return \MHMUiCore\Seam\SlotRegistry
+	 */
+	function mhmuicore_slot_registry( string $prefix ): \MHMUiCore\Seam\SlotRegistry {
+		return new \MHMUiCore\Seam\SlotRegistry( $prefix );
+	}
+}
+
+if ( ! function_exists( 'mhmuicore_capabilities' ) ) {
+	/**
+	 * Build the seam's capability set for one product.
+	 *
+	 * @param string $prefix Product prefix.
+	 * @return \MHMUiCore\Seam\Capabilities
+	 */
+	function mhmuicore_capabilities( string $prefix ): \MHMUiCore\Seam\Capabilities {
+		return new \MHMUiCore\Seam\Capabilities( $prefix );
+	}
+}
+
+/*
+ * ─── WP-CLI commands ─────────────────────────────────────────────────────────
+ *
+ *   wp mhm-ui make:component <slug> --prefix= --block-namespace= --text-domain= --php-namespace=
+ *   wp mhm-ui check:purity <dir>
+ *
+ * Registered only under WP-CLI; the classes exist regardless, so a product's
+ * own tooling can call them without the CLI.
+ */
+if ( defined( 'WP_CLI' ) && WP_CLI && class_exists( 'WP_CLI' ) ) {
+	\WP_CLI::add_command( 'mhm-ui make:component', \MHMUiCore\Cli\MakeComponentCommand::class );
+	\WP_CLI::add_command( 'mhm-ui check:purity', \MHMUiCore\Cli\CheckPurityCommand::class );
 }
