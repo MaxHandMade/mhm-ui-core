@@ -10,7 +10,7 @@ use PHPUnit\Framework\TestCase;
  *
  * This package installs into consumers' vendor/mhm/ui-core. What `git archive`
  * produces is an upper bound on what ships, not the shipped set itself.
- * Measured 2026-09-03 against v0.7.0: `git archive HEAD` yields 29 files and
+ * Measured 2026-09-03 against v0.7.1: `git archive HEAD` yields 29 files and
  * the consumer's vendor/mhm/ui-core tree holds exactly those 29 -- export-ignore
  * survives a Composer VCS install, so tests/, bin/, docker/ and .github/ never
  * reach a consumer at all. The consumer-side build then filters README.md,

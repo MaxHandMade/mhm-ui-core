@@ -27,44 +27,29 @@ paketidir**: kendi başına kurulmaz, eklentilerin içine gömülür.
 İçinde **iş mantığı, lisans kodu ve dış HTTP çağrısı yoktur.** İçine gömüldüğü her WordPress
 eklentisi gibi GPL'dir.
 
-## Bitti mi? — Hayır: altı fazın ikisi
+## Kapsam — ne yapıyor, neyi bilerek yapmıyor
 
-Altı fazı tanımlayan tasarım dokümanı MHM'nin **iç geliştirme deposunda** yaşıyor, bu depoda
-değil. **2026-09-03** itibarıyla ölçülen durum:
+Paketi tanımlayan şey bir faz sayacı değil, **sözleşmesi**: yükleyici hakemliği, React yönetici
+hattı, Layout motorunun saf çekirdeği ve `--mhmui-*` isim uzayı sınırı. Bunların dördü de
+sevk ediliyor, iki üründe çalışıyor ve kapı altında. Altı fazlı tasarım dokümanı MHM'nin iç
+geliştirme deposunda yaşıyor; **2026-09-03**'te kapatılan hâli şudur:
 
-| Faz | Ne | Durum |
+| Faz | Ne | Sonuç |
 |---|---|---|
-| 0 | İskelet — depo, composer/npm, CI, kalite kapıları | ✅ **bitti** |
-| 1 | Token birleştirme — tek token kaynağı | 🟡 **iki yarısı da yapıldı, tanımı değişti** (aşağı bak) |
-| 2 | **Layout motoru pakete** | 🟡 **saf çekirdek burada ve tüketiciler göç etti** (v0.6.0); kalıcı katman **rafta**, aşağı bak |
-| 3 | **React kiti pakete** — `enqueue_react_page()` + paylaşılan JSX | ✅ **2026-08-27** (v0.4.x) |
-| 4 | Bileşen scaffold'u — `wp mhm-ui make:component` | ⬜ başlamadı |
-| 5 | İkinci ürün (greenfield pilot) — dikiş doğuştan | ⬜ başlamadı |
+| 0 | İskelet — depo, composer/npm, CI, kalite kapıları | ✅ |
+| 1 | Token birleştirme | ✅ **tanımı değişerek** — aşağı bak |
+| 2 | Layout motoru pakete | ✅ **saf çekirdek + tüketici göçü** (v0.6.0); kalıcı katman **rafta**, aşağı bak |
+| 3 | React kiti pakete — `enqueue_react_page()` + paylaşılan JSX | ✅ (v0.4.x) |
+| 4 | Bileşen scaffold'u — `wp mhm-ui make:component` | ⛔ **düşürüldü** — aşağı bak |
+| 5 | İkinci ürün pilotu | ⏳ **ikinci ürün bağlandığında kendiliğinden olur**, ayrı iş değil |
 
-📌 **Faz 3, 1 ve 2'den önce yapıldı.** Sıra bilerek bozuldu: canlı kusur oradaydı (Pro'nun
-beş yönetici ekranı, eklenti sınırını aşan bir çağrıya bağlıydı). Bu, 1 ve 2'yi kolaylaştırmaz —
-yalnız erteler.
+### Faz 1 — iki yarısı yapıldı, sorusu değişti, ve bu artık cevap
 
-📌 **Faz 2'nin kalıcı katmanı 2026-09-03'te bilerek rafa kaldırıldı.** Yapılamadığı için
-değil: ön koşulu (gerçek WordPress'e karşı entegrasyon koşumu) kurulmuş, taşınacak koddaki sekiz
-kusur bulunup düzeltilmişti. Durduran şey karşılığın olmamasıydı — o kod bugün yayınlanmış bir
-eklentide çalışıyor ve testle korunuyor, taşımanın getirisi ise ancak **ikinci bir tüketiciyle**
-doğar. Rafı kaldıracak şart adıyla yazılıdır: ikinci bir ürün layout kalıcılığına gerçekten
-ihtiyaç duyduğunda.
-
-📌 Üçüncü sorumluluk (**katman dikişi**) için de pakette bugün **kod yok**; Lite↔Pro dikişi
-Rentiva'nın kendi içinde yaşıyor.
-
-### Faz 1 neden 🟡 — iki yarısı yapıldı ama sorusu değişti
-
-Faz 1'in iki yarısı vardı ve **ikisi de kapandı**: ürün tarafındaki birleştirme (Rentiva'nın
-**101 kanonik token**'ı) daha önce, paketin kendi 15 tokenli React paleti **2026-08-29**'da.
-
-Ama tasarım dokümanı Faz 1'i *"tek token kaynağı — hem `TokenMapper`'ı hem admin React'i besler"*
-diye tanımlıyordu. Yapılan şey bu **değil**: paket `--mhmui-*`, ürünler `--mhm-*` — yani tek kaynak
-değil, **bilerek ayrılmış iki isim uzayı**. Çakışma böylece yasak olduğu için değil **yapısal
-olarak imkânsız** olduğu için bitti. Bu, Faz 1'i tamamlamak mı yoksa sorusunu değiştirmek mi —
-henüz karara bağlanmadı, o yüzden ✅ değil 🟡.
+Ürün tarafındaki birleştirme (Rentiva'nın **101 kanonik token**'ı) ve paketin kendi 15 tokenli
+React paleti (**2026-08-29**) — ikisi de kapandı. Tasarım dokümanı *"tek token kaynağı"* istiyordu;
+ortaya çıkan şey **bilerek ayrılmış iki isim uzayı** (`--mhmui-*` paket / `--mhm-*` ürün).
+Çakışma yasak olduğu için değil **yapısal olarak imkânsız** olduğu için bitti. Bu, Faz 1'in
+tamamlanması değil sorusunun düzeltilmesidir — ve düzeltilmiş soru cevaplanmış olduğundan ✅.
 
 Kararı sabitleyen şey belge değil **kapı**: `bin/check-css-namespace.mjs` (stylelint + Babel AST)
 ve `bin/check-php-namespace.php` (`token_get_all()`) paketin sevk yüzeyini ölçer ve `--mhmui-*`
@@ -72,8 +57,33 @@ dışında bir custom property tanımlamasını ya da okumasını, bir de ID se�
 imkânsız kılar. İkisi de CI'da; `tests/Gate/` altında 78 koşumluk regresyon bataryası var.
 🔴 Kapıların kendisi `export-ignore`'lu — tüketicinin `vendor/`'una **inmezler**.
 
-**Kısacası:** ui-core bugün *çalışan ve sevk edilen* bir paket, ama **tamamlanmış değil**.
-Bitmiş olan: React yönetici hattı, isim uzayı sınırı ve Layout motorunun saf çekirdeği.
+### Faz 2 — kalıcı katman neden rafta
+
+Ön koşulu (gerçek WordPress'e karşı entegrasyon koşumu) kurulmuş, taşınacak koddaki sekiz kusur
+bulunup **yaşadığı yerde** düzeltilmişti. Durduran şey karşılığın olmamasıydı: o kod bugün
+yayınlanmış bir eklentide çalışıyor ve testle korunuyor; taşımanın getirisi ancak **ikinci bir
+tüketiciyle** doğar ve bugün hiçbir ürünün layout kalıcılığına ihtiyacı yok (ölçüldü). Rafı
+kaldıracak şart adıyla yazılı: ikinci bir ürün buna gerçekten ihtiyaç duyduğunda.
+
+### Faz 4 — neden düşürüldü
+
+Scaffold CLI'ın karşılığı *çok bileşen × çok ürün*. Tek tüketicili bir pakette bu, Faz 2'yi rafa
+kaldıran sınıfın aynısıdır: getirisi ileride, maliyeti anında, doğrulaması tek örneğe karşı.
+"Yapılmadı" diye taşımak bitmemişlik hissini sonsuza yayar; bilerek düşürüldü. İkinci ürün üç
+dört bileşen sonra aynı şablonu elle yazmaktan yorulursa, o gün gerçek bir talep olur.
+
+### Faz 5 — ayrı bir iş değil
+
+Gerçek yanlışlama başka bir ürünün tüketmesidir; aynı üründe pilot yapmak Rentiva'nın
+varsayımlarını Rentiva'yla sınamaktır. Aday belli ve bağlanma anı kendi belgesinde yazılı —
+"Yeni bir eklentiye nasıl eklenir?" bölümü tam olarak o gün için var.
+
+📌 Üçüncü sorumluluk (**katman dikişi**) için pakette **kod yok**; Lite↔Pro dikişi Rentiva'nın
+kendi içinde yaşıyor. Bu bir eksik değil, ölçülmüş bir sınır: ikinci bir Lite/Pro çifti gelene
+kadar dikişin genel biçimi bilinemez.
+
+**Kısacası:** ui-core, bugün istenen işi yapan, iki üründe sevk edilen, kapı altında bir
+pakettir. Açık kalem yok; kalan hayatı bakım ve gerçek bir tüketicinin isteyeceği şeydir.
 
 ## Nerede kullanılıyor?
 
@@ -90,7 +100,7 @@ sessizce Lite'ın boot etmesine bağımlı kılıyordu.
 ## Yeni bir eklentiye nasıl eklenir?
 
 🔴 **Paket yeni bir ürüne kendiliğinden girmez.** Dört elle adım ister ve her adımın kayıtlı bir
-kırılma biçimi vardır. Aşağıdaki değerler 2026-09-03'te v0.7.0'a karşı ölçüldü.
+kırılma biçimi vardır. Aşağıdaki değerler 2026-09-03'te v0.7.1'e karşı ölçüldü.
 
 **1. Composer — depo + require.** Paket Packagist'te **değil**, o yüzden `require` tek başına
 yetmez; VCS deposu da tanıtılır:
@@ -146,7 +156,7 @@ parite kapısı eşitlik arar, uyumluluk değil.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.7.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.7.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 🔴 Sürüm dizesi **elle yazılır** (kayıt, herhangi bir bootstrap yüklenmeden önce koşar) ve
