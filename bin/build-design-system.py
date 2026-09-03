@@ -2,7 +2,10 @@
 # Builds the Claude Design design-system bundle for mhm-ui-core.
 #
 #   python bin/build-design-system.py   ->  build/design-system/
-#   then: DesignSync finalize_plan(localDir=build/design-system) + write_files
+#   then: DesignSync finalize_plan(projectId, localDir=build/design-system,
+#         writes=[README.md, foundations/tokens.html, components/*.html], deletes=[])
+#         + write_files(localPath=...)
+#   Claude Design project: mhm-ui-core (54e0bee9-f818-4621-824d-799907c264ec), created 2026-09-03.
 #
 # Station 4 of the house pipeline (SENKRON): run after every change to
 # src-react/components or tokens.json, then push with DesignSync, or Claude
