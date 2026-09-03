@@ -30,13 +30,13 @@ eklentisi gibi GPL'dir.
 ## Bitti mi? — Hayır: altı fazın ikisi
 
 Altı fazı tanımlayan tasarım dokümanı MHM'nin **iç geliştirme deposunda** yaşıyor, bu depoda
-değil. **2026-08-30** itibarıyla ölçülen durum:
+değil. **2026-09-03** itibarıyla ölçülen durum:
 
 | Faz | Ne | Durum |
 |---|---|---|
 | 0 | İskelet — depo, composer/npm, CI, kalite kapıları | ✅ **bitti** |
 | 1 | Token birleştirme — tek token kaynağı | 🟡 **iki yarısı da yapıldı, tanımı değişti** (aşağı bak) |
-| 2 | **Layout motoru pakete** | 🟡 **saf çekirdek burada ve tüketiciler göç etti** (v0.6.0) — kalan yalnız kalıcı katman, aşağı bak |
+| 2 | **Layout motoru pakete** | 🟡 **saf çekirdek burada ve tüketiciler göç etti** (v0.6.0); kalıcı katman **rafta**, aşağı bak |
 | 3 | **React kiti pakete** — `enqueue_react_page()` + paylaşılan JSX | ✅ **2026-08-27** (v0.4.x) |
 | 4 | Bileşen scaffold'u — `wp mhm-ui make:component` | ⬜ başlamadı |
 | 5 | İkinci ürün (greenfield pilot) — dikiş doğuştan | ⬜ başlamadı |
@@ -44,6 +44,13 @@ değil. **2026-08-30** itibarıyla ölçülen durum:
 📌 **Faz 3, 1 ve 2'den önce yapıldı.** Sıra bilerek bozuldu: canlı kusur oradaydı (Pro'nun
 beş yönetici ekranı, eklenti sınırını aşan bir çağrıya bağlıydı). Bu, 1 ve 2'yi kolaylaştırmaz —
 yalnız erteler.
+
+📌 **Faz 2'nin kalıcı katmanı 2026-09-03'te bilerek rafa kaldırıldı.** Yapılamadığı için
+değil: ön koşulu (gerçek WordPress'e karşı entegrasyon koşumu) kurulmuş, taşınacak koddaki sekiz
+kusur bulunup düzeltilmişti. Durduran şey karşılığın olmamasıydı — o kod bugün yayınlanmış bir
+eklentide çalışıyor ve testle korunuyor, taşımanın getirisi ise ancak **ikinci bir tüketiciyle**
+doğar. Rafı kaldıracak şart adıyla yazılıdır: ikinci bir ürün layout kalıcılığına gerçekten
+ihtiyaç duyduğunda.
 
 📌 Üçüncü sorumluluk (**katman dikişi**) için de pakette bugün **kod yok**; Lite↔Pro dikişi
 Rentiva'nın kendi içinde yaşıyor.
@@ -79,6 +86,59 @@ Bitmiş olan: React yönetici hattı, isim uzayı sınırı ve Layout motorunun 
 birden varsa, `plugins_loaded` önceliği 0'da **en yüksek sürüm** kazanır ve yalnız o boot eder.
 Kaydetmeyen eklenti bu yarışa hiç girmez — bu, 2026-08-27'ye kadar Pro'nun durumuydu ve Pro'yu
 sessizce Lite'ın boot etmesine bağımlı kılıyordu.
+
+## Yeni bir eklentiye nasıl eklenir?
+
+🔴 **Paket yeni bir ürüne kendiliğinden girmez.** Dört elle adım ister ve her adımın kayıtlı bir
+kırılma biçimi vardır. Aşağıdaki değerler 2026-09-03'te v0.7.0'a karşı ölçüldü.
+
+**1. Composer — depo + require.** Paket Packagist'te **değil**, o yüzden `require` tek başına
+yetmez; VCS deposu da tanıtılır:
+
+```jsonc
+"repositories": [
+    { "type": "vcs", "url": "https://github.com/MaxHandMade/mhm-ui-core" }
+],
+"require": { "mhm/ui-core": "^0.7" }
+```
+
+🔴 `^0.x` **yamayı** kendiliğinden alır, **minörü almaz**. Bu bilinçlidir: sevk yüzeyi değişince
+minör bump edilir ve alım kararı tüketicinin olur.
+
+**2. Kayıt + sürüm literali.** `## Nasıl kullanılır?` bölümündeki iki satır. Sürüm dizesi elle
+yazılır ve kurulu paketle aynı olmak zorundadır — düşük yazmak eski bir kopyanın yarışı
+kazanmasına yol açar ve **sessizdir**. Bu yüzden `bin/check-uicore-version.php` kapısı da
+kopyalanır; ölçüldü ki bu literal üç sürüm boyunca sürüklenmiş ve hiçbir kapı görmemişti.
+
+**3. `.distignore` — altı satır, yirmi sekiz değil.** Composer kurulumu paketin `export-ignore`
+kurallarına uyar: `tests/` · `bin/` · `docker/` · `.github/` ve linter yapılandırmaları
+tüketicinin ağacına **hiç inmez** (ölçüldü: `vendor/mhm/ui-core` 28 dosya taşıyor, hepsi sevk
+yüzeyi). Dolayısıyla onları tek tek dışlayan satırlar ölü koddur. Gereken yalnız bu:
+
+```gitignore
+/vendor/*
+!/vendor/mhm/
+/vendor/mhm/ui-core/README.md
+/vendor/mhm/ui-core/README-tr.md
+/vendor/mhm/ui-core/assets/README.md
+/vendor/mhm/ui-core/package.json
+```
+
+🔴 **Sıra anlamlıdır:** `/vendor/*` + negation bilinçli — `/vendor/` dizini toptan dışlanırsa
+içindeki hiçbir şey geri alınamaz. Ve üç dışlama satırı `!/vendor/mhm/`'den **sonra** gelmek
+zorundadır; son eşleşen kazanır.
+
+🔴 **`package.json` neden vendor'da kalıp ZIP'ten çıkıyor:** içinde `"sideEffects": false` var
+ve webpack `src-react/` modüllerini bundle ederken onu okur. Paketten `export-ignore` ile
+atılsaydı tree shaking sessizce kapanırdı. ZIP'e girmemesinin sebebi ayrı: o noktada derleme
+çoktan bitmiştir. İki mekanizma birbirinin yedeği değil, iki farklı ana ait.
+
+📌 README'ler ZIP'e girmez ama vendor'da kalır; birçok eklentinin kendi `.distignore`'unda
+çapasız bir `README.md` deseni vardır ve ui-core'unkini de tesadüfen yakalar. Yukarıdaki satırlar
+o tesadüfe güvenmez.
+
+**4. Pro'su olan üründe beşinci adım.** Lite ve Pro **aynı** ui-core sürümünü istemek zorundadır;
+parite kapısı eşitlik arar, uyumluluk değil.
 
 ## Nasıl kullanılır?
 

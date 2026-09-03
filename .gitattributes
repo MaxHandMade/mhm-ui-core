@@ -31,3 +31,17 @@
 /.stylelintrc.json export-ignore
 /docker/           export-ignore
 /phpunit-integration.xml export-ignore
+
+# .gitignore has no role in a consumer's tree: it is git metadata for THIS
+# repository, and a consumer installs this package as files, not as a clone.
+# It was the last dev-only file still landing in vendor/mhm/ui-core, which
+# meant every consumer's .distignore had to name it to keep it out of the ZIP.
+# Excluding it here fixes that once, at the source, instead of once per product.
+/.gitignore        export-ignore
+
+# package.json deliberately does NOT get export-ignore. It looks like tooling,
+# but webpack reads the nearest package.json for "sideEffects": false when it
+# bundles src-react/ — the consumer imports those modules by relative path into
+# its own build. Dropping it from the archive would silently disable tree
+# shaking for this package's modules. The consumer's .distignore is the right
+# place to keep it out of the shipped ZIP: by then the bundle is already built.
