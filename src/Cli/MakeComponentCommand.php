@@ -76,7 +76,7 @@ final class MakeComponentCommand {
 
 			if ( isset( $assoc_args['dry-run'] ) ) {
 				foreach ( $scaffolder->files( $contract ) as $path => $contents ) {
-					WP_CLI::log( '--- ' . $path );
+					WP_CLI::log( '>>> ' . $path );
 					WP_CLI::log( $contents );
 				}
 				return;
