@@ -39,6 +39,15 @@
 # Excluding it here fixes that once, at the source, instead of once per product.
 /.gitignore        export-ignore
 
+# The window cards are harness metadata for THIS repository -- CLAUDE.md for
+# Claude Code, AGENTS.md for Codex. A consumer installs this package as files
+# into vendor/mhm/ui-core, where a card pointing at this repo's memory notebook
+# means nothing. CLAUDE.md landing in the archive is what pushed the shipped
+# surface from 52 to 53 and turned CI red on 2026-09-04; AGENTS.md is named
+# here too so the same break cannot happen the day that card gets tracked.
+/CLAUDE.md         export-ignore
+/AGENTS.md         export-ignore
+
 # package.json deliberately does NOT get export-ignore. It looks like tooling,
 # but webpack reads the nearest package.json for "sideEffects": false when it
 # bundles src-react/ — the consumer imports those modules by relative path into
