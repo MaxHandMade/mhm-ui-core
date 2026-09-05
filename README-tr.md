@@ -19,9 +19,9 @@ eklenti sıfırdan başlamasın diye.**
    bileşenler (istatistik kartı, KPI kutusu, durum rozeti, sayfalama, Pro kilidi, bildirim,
    panel); tek token kaynağından üretilen `--mhmui-*` paleti.
 3. **Lite/Pro dikişi** — ücretsiz çekirdek boş **yuvalar** ilan eder ve **yetenekler** tanımlar,
-   Pro eklentisi doldurur; `wp mhm-ui check:purity` çekirdekte dış HTTP, lisans kodu ve yapay
-   limit **olmadığını** kanıtlar. WordPress.org'un crippleware yasağına uyum, sonradan kazı
-   değil doğuştan.
+   Pro eklentisi doldurur; `wp mhm-ui check:purity` çekirdeğin PHP ve JS yüzeyini okur ve üç
+   cevaptan biriyle biter: temiz · bulgu · **karar veremediği yerler** — kapsamı ve sınırı aşağıda
+   yazılı. WordPress.org'un crippleware yasağına uyum, sonradan kazı değil doğuştan.
 
 Altında duran tesisat: **sürüm farkındalıklı yükleyici** (bir sitede kaç eklenti taşırsa taşısın
 en yüksek sürüm boot eder) ve **Layout motorunun saf çekirdeği** (`src/Layout/`, manifest →
@@ -104,10 +104,44 @@ $caps->grant( 'pro_badge' );
 🔴 **Yetenek bir "yapabilir"dir, "yapmasın" değil.** `if ( ! $caps->has('x') ) { çekirdeğin
 yapabildiği şeyi reddet }` crippleware'dir; `if ( $caps->has('x') ) { fazlasını yap }` dikiştir.
 
-**Saflık kapısı:** `wp mhm-ui check:purity <çekirdek-dizini>` — dışarıya HTTP (`wp_remote_*`,
-`curl_*`, `fsockopen`…), lisans sözcüğü (`license_key`, `activate_license`…), yapay limit sözcüğü
-(`free_limit`, `upgrade_to_pro`…) bulursa kırmızı. Her koşumda **önce kendi kör noktasını sınar**:
-bilinen-kirli fixture'ı görmezse "temiz" demek yerine kendini bozuk ilan eder.
+**Saflık kapısı:** `wp mhm-ui check:purity <çekirdek-dizini>` — çekirdeğin PHP ve JavaScript
+yüzeyini okur; PHP'nin tarayıcıya verdiği JavaScript de dahil (`wp_add_inline_script`, heredoc,
+`<script>`). **Üç** cevaptan biriyle biter: **temiz** · **bulgu** · **karar veremediği yerler**.
+🔴 Üçüncüsü geçiş değildir; okuyacak dosya bulamadığı ağaç da, açamadığı dosya da öyle. Sonda her
+koşumdan önce iki dilde fixture koşar ve yarısı koşmamışsa kendini bozuk ilan eder.
+
+**PHP tarafı:** `wp_remote_get/post/request/head` + `wp_safe_` biçimleri · `curl_init` · `curl_exec` ·
+`fsockopen` · `stream_socket_client` — düz ya da tam nitelikli (`\wp_remote_get`) yazılsın. İkinci bir
+liste yalnız **kanıtla** konuşur: `wp_enqueue_script/style` · `wp_register_script/style` ·
+`download_url` · `wp_remote_fopen` · `file_get_contents` · `fopen` · `get_headers` ·
+`simplexml_load_file` — bunlara **mutlak URL** verildiğinde bulgu, verilmediğinde sessizdir; CDN'den
+font çekmek WP.org'un reddettiği şekildir, yerel dosya okumak ise bu fonksiyonların işi. Lisans ve
+yapay limit sözcükleri tanımlayıcı, değişken ve katar literallerinde (interpolasyonlu olanlar dahil),
+`snake_case`/`camelCase` ayrımı gözetilmeden aranır.
+
+**JS tarafı:** karar **çağrının kendi hedef argümanında** verilir — çevresindeki blokta değil, argüman
+listesinin geri kalanında da değil: `fetch` · `sendBeacon` · `XMLHttpRequest.open` · `axios` ·
+`jQuery.ajax/get/post/getJSON` · `WebSocket` · `EventSource` · `importScripts` · `import()` ·
+`window.open`, ayrıca `location`/`src`/`action`'a atanan ve `setAttribute`'a verilen URL'ler. Hedef
+argüman bir seçenek nesnesiyse hedef onun `url`/`path`/`src` özelliğidir; yükün geri kalanı başkasının
+işidir. Mutlak URL'ye çözülen hedef — doğrudan ya da dosyanın **tam bir kez** bağladığı bir ad
+üzerinden — bulgudur; aynı siteye çözülen temizdir, `ajaxurl` ve `wpApiSettings` de öyle (WordPress'in
+kendisinin doldurduğu iki global). Gerisi **karar verilemedi**'dir: yüksek sesle söylenir, yutulmaz.
+
+🔴 **Kapının sınırları iddianın parçasıdır.** Değişken fonksiyon adıyla yapılan PHP çağrısı ve iki
+listede adı geçmeyen bir kütüphanenin isteği görülmez. Çalışma anında kurulan JS hedefi temiz değil,
+karar verilemedi sayılır — ve REST kökünü `wp_localize_script` ile tarayıcıya veren bir eklenti her
+istek için bir "karar verilemedi" toplar, çünkü bu kapı bir değeri PHP'den localize yüküne kadar
+**izlemez**. Verbi çalışma anında olan `xhr.open( method, url )` sink olarak okunur: yalnız literal URL
+varken konuşur. jQuery'nin `.attr( 'src', … )`'i, `axios.create({ baseURL })` ve `$.getScript`
+yukarıdaki biçimler arasında **değildir**. Üretilmiş paket — satırı 2000 karakteri aşan dosya —
+okunmaz, karar verilemedi olur; kapıyı paketin üretildiği **kaynaklara** doğrult. `vendor/`,
+`node_modules/`, `tests/`, `.git/` hiç okunmaz — ZIP'e giren vendor'lanmış lisans istemcisi bu koşumun
+dışındadır. PHP'nin içinde kapı kodu düzyazıdan ayıramaz; oradaki JavaScript yalnız kanıtla raporlanır.
+
+Gerçek bir 475 dosyalık Lite çekirdeğinde ölçüldü: **3 bulgu, 29 dosyada 58 karar verilemedi** —
+50'si yükü PHP'den gelen tek bir `$.ajax({ url: vars.ajax_url })` deyimi, 4'ü üretilmiş paket, 4'ü
+gerçek çalışma-anı hedefi. Cevabın dürüst şekli budur: **okunacak kısa bir liste**, temiz kâğıdı değil.
 
 ### React kiti ve token kaynağı
 

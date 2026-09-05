@@ -231,10 +231,57 @@ $seam->fill( 'hero_after', fn( $h ) => $h . '…' ); // Pro add-on
 $caps->grant( 'pro_badge' );
 ```
 
-Filling an undeclared slot throws. `wp mhm-ui check:purity <dir>` proves a
-free core contains no outbound HTTP, licence code or artificial limit, and
-self-tests its own blind spot before every scan (`\MHMUiCore\Seam\PurityScanner`
-ships in `src/`, so a consumer's CI can call it directly).
+Filling an undeclared slot throws. `wp mhm-ui check:purity <dir>` reads a free
+core's PHP and JavaScript -- including JavaScript a PHP file hands to the browser
+in `wp_add_inline_script`, a heredoc or a `<script>` block -- and ends on one of
+**three** answers: clean, findings, or **places it could not decide**. The third
+is not a pass. Neither is a tree it found no readable file in, nor a file it
+could not open (`\MHMUiCore\Seam\PurityScanner` ships in `src/`, so a consumer's
+CI can call it directly). Its self-test runs fixtures in both languages before
+every scan and fails if either half did not run.
+
+**PHP.** An outbound call is one of `wp_remote_get/post/request/head`, their
+`wp_safe_` forms, `curl_init`, `curl_exec`, `fsockopen` or `stream_socket_client`
+-- written plainly or fully qualified. A second list speaks only on evidence:
+`wp_enqueue_script/style`, `wp_register_script/style`, `download_url`,
+`wp_remote_fopen`, `file_get_contents`, `fopen`, `get_headers` and
+`simplexml_load_file` are reported when an absolute URL is handed to them, and
+never on its absence -- pulling a font from a CDN is the shape WP.org rejects,
+while reading a local file is what these functions are for. Licence and
+artificial-limit vocabulary is matched in identifiers, variables and string
+literals, interpolated ones included, in `snake_case` and `camelCase` alike.
+
+**JavaScript.** A call is decided inside **its own target argument** -- never the
+block around it, and never the rest of its own argument list: `fetch`,
+`sendBeacon`, `XMLHttpRequest.open`, `axios`, `jQuery.ajax/get/post/getJSON`,
+`WebSocket`, `EventSource`, `importScripts`, `import()`, `window.open`, plus URLs
+assigned to `location`, `src` or `action` and handed to `setAttribute`. When the
+target argument is an option object, its `url`/`path`/`src` property is the
+target and the rest of the payload is somebody else's business. A target that
+resolves to an absolute URL -- directly, or through a name the file binds exactly
+once -- is a finding; one that resolves to this site is clean, as are `ajaxurl`
+and `wpApiSettings`, the two globals WordPress itself fills. Anything else is
+**undecided**: said out loud, never swallowed.
+
+**The bounds are part of the claim.** A PHP call made through a variable function
+name, or by a library neither list names, is not seen. A JavaScript target
+assembled at run time is undecided, not clean -- and a plugin that hands its own
+REST root to the browser through `wp_localize_script` will collect one undecided
+call per request, because this gate does not follow a value from PHP into a
+localised payload. `xhr.open( method, url )` with a run-time verb is read as a
+sink, so it speaks only when a literal URL is present. jQuery's `.attr( 'src', … )`,
+`axios.create({ baseURL })` and `$.getScript` are not among the shapes above. A
+generated bundle -- any file with a line over 2000 characters -- is undecided
+rather than read, because one line of minified code puts every call and every URL
+in the same window; point the gate at the sources it was built from. `vendor/`,
+`node_modules/`, `tests/` and `.git/` are not read at all, so a licence client
+vendored into the shipped ZIP is outside this run. Inside PHP the gate cannot tell
+script from prose, so JavaScript found there is reported on evidence only.
+
+Measured against a real 475-file Lite core: 3 findings and 58 undecided calls in
+29 files -- 50 of them one `$.ajax({ url: vars.ajax_url })` idiom whose payload
+comes from PHP, 4 generated bundles, 4 genuine run-time targets. That is the
+honest shape of the answer: a short list to read, not a clean bill.
 
 ## Admin React kit
 

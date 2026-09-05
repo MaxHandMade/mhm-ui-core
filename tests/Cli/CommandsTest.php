@@ -66,14 +66,27 @@ final class CommandsTest extends TestCase {
 	public function test_make_component_dry_run_writes_nothing(): void {
 		( new MakeComponentCommand() )(
 			array( 'hero' ),
-			array( 'prefix' => 'pilot', 'block-namespace' => 'pilot', 'text-domain' => 'pilot-td', 'php-namespace' => 'P', 'dir' => $this->root, 'dry-run' => true )
+			array(
+				'prefix'          => 'pilot',
+				'block-namespace' => 'pilot',
+				'text-domain'     => 'pilot-td',
+				'php-namespace'   => 'P',
+				'dir'             => $this->root,
+				'dry-run'         => true,
+			)
 		);
 		self::assertFileDoesNotExist( $this->root . '/contracts/hero.php' );
 		self::assertNotContains( 'error', $this->levels() );
 	}
 
 	public function test_make_component_with_a_bad_identity_errors_instead_of_writing(): void {
-		( new MakeComponentCommand() )( array( 'hero' ), array( 'prefix' => 'Bad', 'dir' => $this->root ) );
+		( new MakeComponentCommand() )(
+			array( 'hero' ),
+			array(
+				'prefix' => 'Bad',
+				'dir'    => $this->root,
+			)
+		);
 		self::assertContains( 'error', $this->levels() );
 		self::assertFileDoesNotExist( $this->root . '/contracts/hero.php' );
 	}
@@ -96,6 +109,58 @@ final class CommandsTest extends TestCase {
 
 		self::assertContains( 'success', $this->levels() );
 		self::assertNotContains( 'error', $this->levels() );
+	}
+
+	public function test_check_purity_refuses_a_tree_it_could_not_read_a_single_file_of(): void {
+		/*
+		 * "No findings" over an empty file set is not a clean core, it is an
+		 * unread one -- the same failure the other gates report as EMPTY-SET
+		 * rather than as a pass.
+		 */
+		mkdir( $this->root . '/src' );
+		file_put_contents( $this->root . '/src/README.txt', "nothing to scan here\n" );
+
+		( new CheckPurityCommand() )( array( $this->root ) );
+
+		self::assertContains( 'error', $this->levels() );
+		self::assertNotContains( 'success', $this->levels() );
+	}
+
+	public function test_check_purity_states_how_far_its_self_test_reaches(): void {
+		mkdir( $this->root . '/src' );
+		file_put_contents( $this->root . '/src/C.php', "<?php\nfunction ok() { return 1; }\n" );
+
+		( new CheckPurityCommand() )( array( $this->root ) );
+
+		$log = implode( "\n", array_column( WP_CLI::$output, 1 ) );
+		self::assertStringContainsString( 'php', $log );
+		self::assertStringContainsString( 'js', $log );
+	}
+
+	public function test_check_purity_scans_javascript_too(): void {
+		mkdir( $this->root . '/src' );
+		file_put_contents( $this->root . '/src/t.js', "fetch( 'https://api.example.com/x' );\n" );
+
+		( new CheckPurityCommand() )( array( $this->root ) );
+
+		self::assertContains( 'error', $this->levels() );
+		self::assertStringContainsString( 'outbound_http', implode( "\n", array_column( WP_CLI::$output, 1 ) ) );
+	}
+
+	public function test_check_purity_will_not_call_a_tree_clean_when_it_could_not_decide(): void {
+		/*
+		 * An undecided call is not a passing one. The run may end on "clean" or on
+		 * "here is what I could not decide" -- never on the first while meaning
+		 * the second.
+		 */
+		mkdir( $this->root . '/src' );
+		file_put_contents( $this->root . '/src/api.js', "fetch( buildEndpoint( site ) );\n" );
+
+		( new CheckPurityCommand() )( array( $this->root ) );
+
+		self::assertNotContains( 'success', $this->levels() );
+		self::assertContains( 'error', $this->levels() );
+		self::assertStringContainsString( 'unmeasurable', implode( "\n", array_column( WP_CLI::$output, 1 ) ) );
 	}
 
 	public function test_check_purity_refuses_a_missing_directory(): void {
