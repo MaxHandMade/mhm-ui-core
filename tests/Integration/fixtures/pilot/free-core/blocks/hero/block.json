@@ -1,0 +1,38 @@
+{
+    "$schema": "https://schemas.wp.org/trunk/block.json",
+    "apiVersion": 3,
+    "name": "pilot/hero",
+    "title": "Hero",
+    "category": "widgets",
+    "icon": "star-filled",
+    "description": "A hero.",
+    "textdomain": "pilot",
+    "supports": {
+        "html": false,
+        "anchor": true,
+        "className": true,
+        "customClassName": true
+    },
+    "attributes": {
+        "title": {
+            "type": "string",
+            "default": ""
+        },
+        "showButton": {
+            "type": "boolean",
+            "default": true
+        },
+        "columns": {
+            "type": "integer",
+            "default": 3
+        },
+        "layout": {
+            "type": "string",
+            "default": "grid",
+            "enum": [
+                "grid",
+                "slider"
+            ]
+        }
+    }
+}

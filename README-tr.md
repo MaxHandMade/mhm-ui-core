@@ -69,6 +69,10 @@ final class HeroRenderer implements \MHMUiCore\Component\ComponentRenderer {
 // Ürün kimliği bir kez, sonra her bileşen tek satır
 $factory = mhmuicore_component_factory( array(
     'prefix' => 'myplugin', 'block_namespace' => 'my-plugin', 'text_domain' => 'my-plugin',
+    // 🔴 Bunu geç: WordPress block.json'u yalnız register_block_type()'a bir YOL
+    // verildiğinde açar. Yoksa iskeletin yazdığı dosya hiç okunmaz ve kaydedilen
+    // blok, dosyanın tarif ettiği blok olmaz.
+    'blocks_dir' => __DIR__ . '/' . \MHMUiCore\Component\ComponentFactory::BLOCKS_DIRNAME,
 ) );
 $hero = $factory->register( new ComponentContract( require 'contracts/hero.php' ), new HeroRenderer() );
 // → [myplugin_hero …] · <!-- wp:my-plugin/hero --> · Elementor widget (Elementor yüklüyse) · $hero->layout_adapter()
@@ -81,6 +85,17 @@ bildirilen her biri **tipli** gelir — `'1'`/`'0'` (shortcode), `true`/`false` 
 **Scaffold:** `wp mhm-ui make:component hero --prefix=myplugin --block-namespace=my-plugin
 --text-domain=my-plugin --php-namespace='MyPlugin\Components'` → sözleşme dosyası, renderer
 iskeleti, `block.json`, test iskeleti. Var olan dosyanın üstüne **yazmaz**.
+
+🔴 **`blocks_dir` geçilirse dosya bloğun kendisi olur:** kayıt `block.json` üzerinden yapılır ve
+geriye tek argüman kalır — render callback. Sebebi çekirdeğin `array_merge( $settings, $args )`
+yapması: her argüman dosyanın o anahtardaki cevabını **ezer**, birleştirmez. Bu yüzden sözleşmenin
+başlığını/desteklerini dosyanın yanına koymak iki tarif bırakırdı ve argüman kazanırdı. Artık
+`block.json`'u açıp geniş hizalamayı açmak **işe yarar**; dosya fabrikadan farklı bir blok adı
+taşıyorsa kayıt sessizce başkasını kaydetmez, **yüksek sesle reddeder**. `blocks_dir` geçilmezse blok
+yine kaydolur (başlık, destekler, attribute'lar, asset handle'ları, renderer — hepsi sözleşmeden),
+ama metadata dosyası olmadığı için beyan edecek bir `apiVersion`'ı da olmaz. Kanıt: `PilotSeamTest`
+**gerçek WordPress'e** ne kaydettiğini sorar; `ComponentScaffolderTest` de o fixture'ı fabrikanın
+ürettiğine eşit tutar.
 
 ### Dikiş nasıl çalışır
 

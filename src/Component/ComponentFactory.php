@@ -30,6 +30,17 @@ final class ComponentFactory {
 	private const NS_PATTERN     = '/^[a-z][a-z0-9-]*$/';
 
 	/**
+	 * Where ComponentScaffolder writes block metadata, under the product root.
+	 *
+	 * Named here because both halves have to agree: the scaffolder writes
+	 * `blocks/<kebab>/block.json` and this factory registers from a blocks
+	 * directory. If the two conventions drift, the written file is decoration --
+	 * WordPress quietly falls back to the PHP arguments and nobody finds out
+	 * until a block behaves like a different block.
+	 */
+	public const BLOCKS_DIRNAME = 'blocks';
+
+	/**
 	 * Shortcode / Elementor prefix, e.g. "rentiva".
 	 *
 	 * @var string
@@ -51,6 +62,13 @@ final class ComponentFactory {
 	private $text_domain;
 
 	/**
+	 * Directory holding <kebab>/block.json, or null when the product has none.
+	 *
+	 * @var string|null
+	 */
+	private $blocks_dir;
+
+	/**
 	 * Registered components, by slug.
 	 *
 	 * @var array<string, RegisteredComponent>
@@ -61,7 +79,10 @@ final class ComponentFactory {
 	 * Build a factory for one product.
 	 *
 	 * Keys, all required: 'prefix' (^[a-z][a-z0-9_]*$) · 'block_namespace'
-	 * (^[a-z][a-z0-9-]*$) · 'text_domain'.
+	 * (^[a-z][a-z0-9-]*$) · 'text_domain'. One optional: 'blocks_dir', the
+	 * directory the scaffolder wrote `<kebab>/block.json` into -- usually
+	 * `__DIR__ . '/' . ComponentFactory::BLOCKS_DIRNAME`. Given it, blocks are
+	 * registered FROM their metadata, which is the only way core reads the file.
 	 *
 	 * @param array<string, mixed> $config Product identity; keys described above.
 	 *
@@ -86,9 +107,15 @@ final class ComponentFactory {
 			throw new InvalidArgumentException( 'ComponentFactory: "text_domain" must be a non-empty string.' );
 		}
 
+		$blocks_dir = $config['blocks_dir'] ?? null;
+		if ( null !== $blocks_dir && ( ! is_string( $blocks_dir ) || '' === $blocks_dir ) ) {
+			throw new InvalidArgumentException( 'ComponentFactory: "blocks_dir" must be a non-empty string when given.' );
+		}
+
 		$this->prefix          = $prefix;
 		$this->block_namespace = $block_namespace;
 		$this->text_domain     = $text_domain;
+		$this->blocks_dir      = $blocks_dir;
 	}
 
 	/**
@@ -114,7 +141,7 @@ final class ComponentFactory {
 		}
 
 		$tag   = ShortcodeSurface::register( $contract, $renderer, $this->prefix );
-		$block = BlockSurface::register( $contract, $renderer, $this->block_namespace, $this->text_domain );
+		$block = BlockSurface::register( $contract, $renderer, $this->block_namespace, $this->text_domain, $this->blocks_dir );
 
 		$prefix = $this->prefix;
 		if ( function_exists( 'add_action' ) ) {

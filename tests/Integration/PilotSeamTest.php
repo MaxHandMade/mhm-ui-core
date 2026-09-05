@@ -77,6 +77,41 @@ final class PilotSeamTest extends WP_UnitTestCase {
 		self::assertStringContainsString( 'pilot-pro-upsell', $html, 'the add-on fill still runs first' );
 	}
 
+	public function test_the_block_wordpress_registered_is_the_block_the_metadata_describes(): void {
+		/*
+		 * The gap an audit found: `register_block_type()` opens block.json only when
+		 * its first argument is an existing path. Handed a block NAME it registers
+		 * the PHP arguments and nothing else, so the scaffolded metadata sat on disk
+		 * unread and the editor loaded an apiVersion 1 block from an apiVersion 3
+		 * file. The unit tests could not see it -- they compared the generated JSON
+		 * against itself. This asks WordPress.
+		 */
+		$block = WP_Block_Type_Registry::get_instance()->get_registered( 'pilot/hero' );
+
+		self::assertNotNull( $block );
+		self::assertSame( 3, $block->api_version, 'the registered block must carry the metadata api version' );
+		self::assertSame( 'Hero', $block->title );
+		self::assertArrayHasKey( 'layout', (array) $block->attributes );
+		self::assertSame( 'grid', $block->attributes['layout']['default'] );
+		self::assertTrue( $block->is_dynamic(), 'the renderer stays the render_callback' );
+
+		/*
+		 * Every one of those answers now comes from block.json: with metadata on
+		 * disk the only argument passed is the render callback, because core merges
+		 * `array_merge( $settings, $args )` and anything else would replace the
+		 * file rather than agree with it. ComponentScaffolderTest keeps that file
+		 * equal to what the factory generates, so this is not a test about a stale
+		 * artefact.
+		 */
+
+		/*
+		 * `textdomain` is deliberately not asserted: block.json carries it for
+		 * translation tooling and WP_Block_Type does not keep it, so a test on it
+		 * would pin a guess rather than a contract. That the FILE is what core was
+		 * handed is proven one level down, in SurfacesTest.
+		 */
+	}
+
 	public function test_the_free_core_is_pure_and_the_add_on_is_not(): void {
 		$scanner = new PurityScanner();
 		self::assertSame( array(), $scanner->self_test(), 'scanner failed its own self-test' );

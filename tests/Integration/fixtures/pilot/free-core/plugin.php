@@ -14,6 +14,7 @@
 declare(strict_types=1);
 
 use MHMUiCore\Component\ComponentContract;
+use MHMUiCore\Component\ComponentFactory;
 use MHMUiCore\Component\ComponentRenderer;
 
 /**
@@ -57,6 +58,10 @@ $GLOBALS['pilot_factory'] = mhmuicore_component_factory(
 		'prefix'          => 'pilot',
 		'block_namespace' => 'pilot',
 		'text_domain'     => 'pilot',
+		// What a real product passes: the directory the scaffolder wrote into.
+		// Without it WordPress never opens block.json, and the block it registers
+		// is not the block the file describes.
+		'blocks_dir'      => __DIR__ . '/' . ComponentFactory::BLOCKS_DIRNAME,
 	)
 );
 

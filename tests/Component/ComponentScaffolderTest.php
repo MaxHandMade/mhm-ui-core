@@ -63,6 +63,46 @@ final class ComponentScaffolderTest extends TestCase {
 		$this->scaffolder()->write( $this->hero(), $this->root );
 	}
 
+	public function test_the_pilot_fixtures_metadata_is_what_the_factory_generates(): void {
+		/*
+		 * The integration test asks real WordPress what it registered, and since
+		 * the metadata file now OWNS the block, every answer it gives comes from
+		 * that committed file. A file that quietly drifts from the contract would
+		 * turn those assertions into assertions about a stale artefact -- green,
+		 * and about nothing.
+		 */
+		$factory  = new ComponentFactory(
+			array(
+				'prefix'          => 'pilot',
+				'block_namespace' => 'pilot',
+				'text_domain'     => 'pilot',
+			)
+		);
+		$contract = new ComponentContract( require __DIR__ . '/../Fixtures/hero-contract.php' );
+		$path     = __DIR__ . '/../Integration/fixtures/pilot/free-core/blocks/hero/block.json';
+
+		self::assertFileExists( $path );
+		self::assertSame(
+			$factory->block_json( $contract ),
+			json_decode( (string) file_get_contents( $path ), true ),
+			'regenerate the pilot fixture: wp mhm-ui make:component writes this file'
+		);
+	}
+
+	public function test_the_factory_reads_metadata_where_the_scaffolder_writes_it(): void {
+		/*
+		 * The scaffolder writes blocks/<kebab>/block.json and the factory registers
+		 * from a blocks directory. If those two conventions ever drift, the written
+		 * file is decoration: WordPress falls back to the PHP arguments and nobody
+		 * finds out until a block behaves like a different block.
+		 */
+		$contract = $this->hero();
+		$files    = $this->scaffolder()->files( $contract );
+
+		self::assertArrayHasKey( 'blocks/' . $contract->kebab() . '/block.json', $files );
+		self::assertSame( 'blocks', ComponentFactory::BLOCKS_DIRNAME );
+	}
+
 	public function test_the_written_contract_round_trips_and_the_block_json_matches_the_factory(): void {
 		$this->scaffolder()->write( $this->hero(), $this->root );
 

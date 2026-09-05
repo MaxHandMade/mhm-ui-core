@@ -11,6 +11,7 @@ namespace MHMUiCore\Component\Surfaces;
 
 use MHMUiCore\Component\ComponentContract;
 use MHMUiCore\Component\ComponentRenderer;
+use RuntimeException;
 
 /**
  * The block.json file and a server-rendered block, both from a contract.
@@ -36,6 +37,84 @@ final class BlockSurface {
 		'className'       => true,
 		'customClassName' => true,
 	);
+
+	/**
+	 * Asset fields in block.json, and the register_block_type() argument each fills.
+	 *
+	 * The plural `*_handles` form, which is what core has taken since 6.1 and what
+	 * its own type declaration accepts; the singular names are the deprecated ones.
+	 *
+	 * @var array<string, string>
+	 */
+	private const ASSET_KEYS = array(
+		'editorScript' => 'editor_script_handles',
+		'viewScript'   => 'view_script_handles',
+		'style'        => 'style_handles',
+		'editorStyle'  => 'editor_style_handles',
+	);
+
+	/**
+	 * Refuse metadata that names a different block than the factory does.
+	 *
+	 * `name` is the one key the arguments never carry, so the file always wins it.
+	 * A stale file therefore registered `other/hero` while this method's caller
+	 * returned `pilot/hero`, and the shortcode, the Layout adapter and every
+	 * `<!-- wp:pilot/hero -->` pointed at a block nobody had registered. Two
+	 * answers to "what is this block called" is a product error, and a loud one at
+	 * boot beats a silent one in the editor.
+	 *
+	 * @param string $metadata Directory holding block.json.
+	 * @param string $name     The name the factory registers under.
+	 * @return void
+	 *
+	 * @throws RuntimeException When the file cannot be read, carries no name, or
+	 *                          carries a different one.
+	 */
+	private static function assert_metadata_agrees( string $metadata, string $name ): void {
+		$raw = file_get_contents( $metadata . '/block.json' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- reading the package's own metadata from disk, not a remote fetch.
+		if ( false === $raw ) {
+			throw new RuntimeException(
+				esc_html( sprintf( 'BlockSurface: %s/block.json could not be read.', $metadata ) )
+			);
+		}
+
+		$declared = json_decode( $raw, true );
+		if ( ! is_array( $declared ) || ! isset( $declared['name'] ) || ! is_string( $declared['name'] ) ) {
+			throw new RuntimeException(
+				esc_html( sprintf( 'BlockSurface: %s/block.json is not readable metadata: it declares no block name.', $metadata ) )
+			);
+		}
+
+		if ( $declared['name'] !== $name ) {
+			throw new RuntimeException(
+				esc_html(
+					sprintf(
+						'BlockSurface: %1$s/block.json names "%2$s" but the factory registers "%3$s". Regenerate the metadata.',
+						$metadata,
+						$declared['name'],
+						$name
+					)
+				)
+			);
+		}
+	}
+
+	/**
+	 * The directory holding this contract's block.json, or null when there is none.
+	 *
+	 * @param ComponentContract $contract   Contract.
+	 * @param string|null       $blocks_dir Directory the product scaffolds into.
+	 * @return string|null
+	 */
+	private static function metadata_dir( ComponentContract $contract, ?string $blocks_dir ): ?string {
+		if ( null === $blocks_dir || '' === $blocks_dir ) {
+			return null;
+		}
+
+		$dir = rtrim( str_replace( '\\', '/', $blocks_dir ), '/' ) . '/' . $contract->kebab();
+
+		return is_file( $dir . '/block.json' ) ? $dir : null;
+	}
 
 	/**
 	 * The block name a contract registers under.
@@ -129,20 +208,55 @@ final class BlockSurface {
 	/**
 	 * Register the block with WordPress, server-rendered through the renderer.
 	 *
-	 * @param ComponentContract $contract    Contract.
-	 * @param ComponentRenderer $renderer    Renderer.
+	 * @param ComponentContract $contract        Contract.
+	 * @param ComponentRenderer $renderer        Renderer.
 	 * @param string            $block_namespace Block namespace.
 	 * @param string            $text_domain     Product text domain.
+	 * @param string|null       $blocks_dir      Directory holding <kebab>/block.json,
+	 *                                           as written by the scaffolder.
 	 * @return string The registered block name.
+	 *
+	 * @throws RuntimeException When metadata is present but names a different
+	 *                          block, cannot be read, or WordPress refuses it.
 	 */
-	public static function register( ComponentContract $contract, ComponentRenderer $renderer, string $block_namespace, string $text_domain ): string {
+	public static function register( ComponentContract $contract, ComponentRenderer $renderer, string $block_namespace, string $text_domain, ?string $blocks_dir = null ): string {
 		$json = self::block_json( $contract, $block_namespace, $text_domain );
 		$name = self::name( $contract, $block_namespace );
 
+		$render = static function ( $attributes, $content = '' ) use ( $contract, $renderer, $name ): string {
+			return self::render( $contract, $renderer, $name, is_array( $attributes ) ? $attributes : array(), (string) $content );
+		};
+
 		/*
-		 * api_version is deliberately absent: core reads it from block.json when
-		 * the editor loads the block, and the php-stubs type it as a string while
-		 * WP_Block_Type stores an int. Passing it buys nothing and fights the types.
+		 * When the scaffolded metadata is on disk it IS the block, and the only
+		 * argument left is the render callback -- a PHP closure no JSON can carry.
+		 *
+		 * Passing the contract's own title, supports and attributes beside the file
+		 * looked like belt and braces and was the defect wearing a new coat: core
+		 * merges `$settings = array_merge( $settings, $args )`, so every argument
+		 * REPLACES the file's answer. A product that opened block.json to switch
+		 * wide alignment on would have watched nothing happen, and which half won
+		 * varied key by key. An audit measured it.
+		 */
+		$metadata = self::metadata_dir( $contract, $blocks_dir );
+
+		if ( null !== $metadata ) {
+			self::assert_metadata_agrees( $metadata, $name );
+
+			if ( false === register_block_type( $metadata, array( 'render_callback' => $render ) ) ) {
+				throw new RuntimeException(
+					esc_html( sprintf( 'BlockSurface: WordPress refused the metadata in %s.', $metadata ) )
+				);
+			}
+
+			return $name;
+		}
+
+		/*
+		 * No file: the contract answers for the block, and apiVersion is simply not
+		 * among the answers it can give. Core documents that argument as a string
+		 * while storing an int, and a block with no metadata has no apiVersion to
+		 * declare -- pass `blocks_dir` to have one.
 		 */
 		$args = array(
 			'title'           => (string) $json['title'],
@@ -151,10 +265,14 @@ final class BlockSurface {
 			'description'     => (string) $json['description'],
 			'supports'        => (array) $json['supports'],
 			'attributes'      => (array) $json['attributes'],
-			'render_callback' => static function ( $attributes, $content = '' ) use ( $contract, $renderer, $name ): string {
-				return self::render( $contract, $renderer, $name, is_array( $attributes ) ? $attributes : array(), (string) $content );
-			},
+			'render_callback' => $render,
 		);
+
+		foreach ( self::ASSET_KEYS as $json_key => $arg_key ) {
+			if ( isset( $json[ $json_key ] ) ) {
+				$args[ $arg_key ] = array( (string) $json[ $json_key ] );
+			}
+		}
 
 		register_block_type( $name, $args );
 
