@@ -103,6 +103,21 @@ describe( 'E — the predicates later review rounds added, and the gates plumbin
 		expect( err ).toContain( 'MEASURE-FAILED' );
 	} );
 
+	test( "E-9b the PHP gate reports git's own exit code, not the pipe's", () => {
+		// `git archive HEAD | tar -t` reports TAR's status, so git failing is only
+		// noticed because GNU tar also chokes on the empty stream. An audit on a
+		// host whose tar exits 0 there watched the gate take the EMPTY-SET path and
+		// exit 1 -- a measurement failure reported as a finding. Naming git's own
+		// code is what makes the two distinguishable.
+		const repo = mkdtempSync( join( tmpdir(), 'uicore-nocommit-' ) );
+		execFileSync( 'git', [ 'init', '-q' ], { cwd: repo } );
+
+		const { code, err } = runGateOut( repo, PHP_GATE );
+
+		expect( code ).toBe( 2 );
+		expect( err ).toMatch( /MEASURE-FAILED: git archive exited [1-9][0-9]*/ );
+	} );
+
 	test( "E-10 the Node gate's JS/JSX set has its own G-a, independent of the CSS set", () => {
 		const repo = fixtureRepo( {} );
 		execFileSync( 'git', [ 'rm', '-q', 'src-react/index.js' ], { cwd: repo } );

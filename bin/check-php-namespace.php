@@ -33,9 +33,39 @@ function mhmuicore_next_significant( array $tokens, int $i ): ?string {
 // The repo to measure. Defaults to this package; the regression suite points it at
 // throwaway fixture repos so the archive itself can be shaped without touching this tree.
 $root = $argv[1] ?? dirname( __DIR__ );
-exec( 'git -C ' . escapeshellarg( $root ) . ' archive HEAD | tar -t', $listing, $code );
+
+/*
+ * git and tar are asked separately on purpose. `git archive HEAD | tar -t`
+ * reports the LAST command's status, so a failing git is noticed only because
+ * GNU tar also chokes on the empty stream -- an audit on a host whose tar exits
+ * 0 there watched this gate take the EMPTY-SET path and exit 1, reporting a
+ * measurement failure as a finding. A gate that cannot measure must say so, and
+ * it can only say so if it looked.
+ */
+$archive = tempnam( sys_get_temp_dir(), 'uicore-archive-' );
+if ( false === $archive ) {
+	fwrite( STDERR, "MEASURE-FAILED: no temporary file for the archive\n" );
+	exit( 2 );
+}
+
+$ignored = array();
+exec( 'git -C ' . escapeshellarg( $root ) . ' archive HEAD > ' . escapeshellarg( $archive ), $ignored, $code );
 if ( 0 !== $code ) {
-	fwrite( STDERR, "MEASURE-FAILED: git archive did not run\n" );
+	unlink( $archive );
+	fwrite( STDERR, "MEASURE-FAILED: git archive exited {$code}\n" );
+	exit( 2 );
+}
+
+$listing = array();
+/*
+ * The archive arrives on stdin, not as a path: GNU tar reads "C:\x" as a
+ * REMOTE host spec and answers "Cannot connect to C: resolve failed", which
+ * would make every Windows run an unmeasurable one.
+ */
+exec( 'tar -tf - < ' . escapeshellarg( $archive ), $listing, $code );
+unlink( $archive );
+if ( 0 !== $code ) {
+	fwrite( STDERR, "MEASURE-FAILED: the archive could not be listed (tar exited {$code})\n" );
 	exit( 2 );
 }
 
