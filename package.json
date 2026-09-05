@@ -5,7 +5,9 @@
 	"license": "GPL-2.0-or-later",
 	"sideEffects": false,
 	"files": [
-		"src-react"
+		"src-react",
+		"!src-react/**/*.test.js",
+		"!src-react/**/*.test.jsx"
 	],
 	"scripts": {
 		"test": "wp-scripts test-unit-js",
