@@ -10,11 +10,14 @@ use PHPUnit\Framework\TestCase;
  *
  * This package installs into consumers' vendor/mhm/ui-core. What `git archive`
  * produces is an upper bound on what ships, not the shipped set itself.
- * Measured 2026-09-03 against v0.8.0: `git archive HEAD` yields 52 files and
- * the consumer's vendor/mhm/ui-core tree holds exactly those 52 -- export-ignore
+ * Measured 2026-09-05 against v0.8.1: `git archive HEAD` yields 53 files and
+ * the consumer's vendor/mhm/ui-core tree holds exactly those 53 -- export-ignore
  * survives a Composer VCS install, so tests/, bin/, docker/ and .github/ never
  * reach a consumer at all. The consumer-side build then filters README.md,
- * assets/README.md and package.json out of the ZIP.
+ * assets/README.md and package.json out of the ZIP. A free core targeting
+ * WordPress.org keeps more than that out, and README.md lists it by name: this
+ * package ships a purity scanner whose vocabulary is the very words a reviewer
+ * greps for, and a Pro-facing stylesheet.
  *
  * Keeping development tooling out of the archive is still the right guarantee --
  * it is the only half this package controls. The consumer-side half is measured
@@ -78,8 +81,8 @@ final class ShippedSurfaceTest extends TestCase {
 		$p1 = array_filter( $files, static fn( $p ) => (bool) preg_match( '/\.(css|js|jsx|php)$/', $p ) );
 		$p2 = array_filter( $files, static fn( $p ) => str_ends_with( $p, '.css' ) );
 
-		self::assertCount( 52, $files, 'shipped file count changed' );
-		self::assertCount( 45, $p1, 'P1 file set changed' );
-		self::assertCount( 1, $p2, 'P2 file set changed' );
+		self::assertCount( 53, $files, 'shipped file count changed' );
+		self::assertCount( 46, $p1, 'P1 file set changed' );
+		self::assertCount( 2, $p2, 'P2 file set changed' );
 	}
 }

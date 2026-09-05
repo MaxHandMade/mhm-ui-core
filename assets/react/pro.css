@@ -1,0 +1,25 @@
+/* =============================================================================
+ * mhm-ui-core -- the Pro-facing half of the kit's styling.
+ *
+ * A free core enqueues react/admin.css and nothing else. This file carries the
+ * rules that only mean something once a paid tier exists, and it is kept apart
+ * for one reason: a WordPress.org reviewer greps the shipped ZIP, and a
+ * "hide this unless Pro" rule inside the free core's own stylesheet reads as
+ * crippleware however innocent its plugin's behaviour is. A compliance audit
+ * of the first product that tried to bundle this package found it there.
+ *
+ * A Pro product enqueues both:
+ *
+ *   wp_enqueue_style( 'x-admin', mhmuicore_asset_url( 'react/admin.css' ), array(), mhmuicore_version() );
+ *   wp_enqueue_style( 'x-pro',   mhmuicore_asset_url( 'react/pro.css' ), array( 'x-admin' ), mhmuicore_version() );
+ *
+ * The tokens live in admin.css, so this file is only ever loaded beside it.
+ * ========================================================================== */
+
+.mhmui-pro-lock {
+	padding: 14px 16px;
+	border: 1px dashed var( --mhmui-border );
+	border-radius: var( --mhmui-radius );
+	color: var( --mhmui-text-light );
+	background: var( --mhmui-bg );
+}

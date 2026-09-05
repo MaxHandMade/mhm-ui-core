@@ -307,14 +307,6 @@
 .mhmui-pagination { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
 .mhmui-pagination__status { color: var( --mhmui-text-light ); font-variant-numeric: tabular-nums; }
 
-.mhmui-pro-lock {
-	padding: 14px 16px;
-	border: 1px dashed var( --mhmui-border );
-	border-radius: var( --mhmui-radius );
-	color: var( --mhmui-text-light );
-	background: var( --mhmui-bg );
-}
-
 .mhmui-notice { margin: 12px 0; }
 
 .mhmui-widget {

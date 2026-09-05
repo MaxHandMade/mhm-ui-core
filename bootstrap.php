@@ -17,7 +17,7 @@ if ( defined( 'MHMUICORE_VERSION' ) ) {
 	return;
 }
 
-define( 'MHMUICORE_VERSION', '0.8.0' );
+define( 'MHMUICORE_VERSION', '0.8.1' );
 define( 'MHMUICORE_DIR', __DIR__ );
 
 /*
@@ -442,6 +442,27 @@ if ( ! function_exists( 'mhmuicore_capabilities' ) ) {
  * own tooling can call them without the CLI.
  */
 if ( defined( 'WP_CLI' ) && WP_CLI && class_exists( 'WP_CLI' ) ) {
-	\WP_CLI::add_command( 'mhm-ui make:component', \MHMUiCore\Cli\MakeComponentCommand::class );
-	\WP_CLI::add_command( 'mhm-ui check:purity', \MHMUiCore\Cli\CheckPurityCommand::class );
+	/*
+	 * Each command is offered only if its class is actually here.
+	 *
+	 * WP_CLI::add_command() refuses a class name it cannot find and calls
+	 * WP_CLI::error(), which ABORTS the whole command -- so a consumer that
+	 * leaves src/Cli/ out of its ZIP does not lose two commands, it loses `wp`.
+	 * A compliance audit measured that on a real WP-CLI 2.12.0: every `wp`
+	 * invocation on the site died, `wp plugin check` included, which is the
+	 * tool the WordPress.org submission checklist requires.
+	 *
+	 * Guarding on WP_CLI's existence answered "is there a CLI to register
+	 * with"; it never answered "is there anything to register".
+	 */
+	foreach (
+		array(
+			'mhm-ui make:component' => \MHMUiCore\Cli\MakeComponentCommand::class,
+			'mhm-ui check:purity'   => \MHMUiCore\Cli\CheckPurityCommand::class,
+		) as $mhmuicore_command => $mhmuicore_class
+	) {
+		if ( class_exists( $mhmuicore_class ) ) {
+			\WP_CLI::add_command( $mhmuicore_command, $mhmuicore_class );
+		}
+	}
 }

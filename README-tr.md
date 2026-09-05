@@ -158,6 +158,45 @@ Gerçek bir 475 dosyalık Lite çekirdeğinde ölçüldü: **3 bulgu, 29 dosyada
 50'si yükü PHP'den gelen tek bir `$.ajax({ url: vars.ajax_url })` deyimi, 4'ü üretilmiş paket, 4'ü
 gerçek çalışma-anı hedefi. Cevabın dürüst şekli budur: **okunacak kısa bir liste**, temiz kâğıdı değil.
 
+## Ücretsiz çekirdek ZIP'inden neyi çıkarmalı
+
+Bu paket `vendor/mhm/ui-core`'a **bütün** kurulur ve orada bütün kalmalıdır:
+loader sürüm hakemliği yapar, yani paketi bundle eden iki eklentinin bulunduğu
+bir sitede **tek kopya ikisine birden hizmet eder**. Kendi kopyasından PHP sınıfı
+silen bir tüketici, kazanan kopya kendisi olduğunda **öteki eklentiyi kırar** —
+teori değil, ölçüldü: `^0.8` taşıyan bir Lite, `^0.7` taşıyan kardeşinden hem
+alfabetik olarak önce yüklenir hem daha yüksek sürümdür, ve kardeşin silinmiş
+sınıfa yaptığı çağrı **fatal**dir.
+
+🔴 **Bu yüzden `vendor/`den hiçbir şey budanmaz.** WordPress.org'a giden bir
+ücretsiz çekirdeğin buduyacağı yer kendi **ZIP'idir** ve yalnız şunlar — hiçbirine
+çalışma zamanında dokunulmaz:
+
+| ZIP'ten çıkar | Neden |
+|---|---|
+| `src/Cli/` | `wp mhm-ui` komutları geliştirme aracıdır. Kayıt, komut sınıfının varlığına bağlıdır; dışarıda bırakmak yalnız komutlara mal olur. |
+| `src/Seam/PurityScanner.php` | Saflık kapısı. Sözlüğü, incelemecinin **grep'lediği listenin ta kendisidir** — `license_key`, `activate_license`, `upgrade_to_pro`, `pro_only` — yani önlemek için var olduğu şey gibi okunur. CI onu `vendor/`den çağırır, orada kalır; çalışma zamanı yolu yoktur. |
+| `src-react/components/ProLock.jsx` | Pro'ya dönük: bir kontrolü ücretli katman açmadıkça gizler. Build adımıyla bundle edilir, çalışma zamanında yüklenmez. |
+| `assets/react/pro.css` | Aynı şeyin stil yarısı. Ücretsiz çekirdek yalnız `react/admin.css` enqueue eder. |
+| `README.md` · `README-tr.md` · `assets/README.md` · `package.json` | Geliştirici dokümanı ve build meta verisi. |
+
+Gerisi sevk edilir. `bootstrap.php`, `register.php`, `src/VersionSelector.php`,
+`src/Seam/SlotRegistry.php`, `src/Seam/Capabilities.php` ve ürünün gerçekten
+import ettiği React modülleri çalışma zamanı kodudur; yukarıdaki hakemlik de
+zaten bu yüzden birlikte yolculuk etmelerini gerektirir.
+
+🔴 **Loader'ı registry üzerinden bağla, bootstrap'ı doğrudan require ederek değil:**
+
+```php
+require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
+mhmuicore_register( '0.8.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+```
+
+`bootstrap.php`'yi doğrudan require etmek `MHMUICORE_VERSION`'ı anında tanımlar
+ve başka her kopyanın bootstrap'ını no-op yapar: **en yüksek sürüm değil, ilk
+yüklenen eklenti kazanır.** Literal, paketin kendi sürümüyle aynı olmalı — mevcut
+tüketicinin yaptığı gibi kendi kapınla kilitle.
+
 ### React kiti ve token kaynağı
 
 `src-react/index.js`: `StatCard` · `StatsGrid` · `KpiBox` · `StatusBadge` · `Pagination` ·
@@ -250,7 +289,7 @@ parite kapısı eşitlik arar, uyumluluk değil.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.8.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.8.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 🔴 Sürüm dizesi **elle yazılır** (kayıt, herhangi bir bootstrap yüklenmeden önce koşar) ve

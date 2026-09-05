@@ -88,16 +88,27 @@ final class VersionLiteralsAgreeTest extends TestCase {
 	public function test_every_register_example_in_the_docs_agrees( string $file ): void {
 		$src = (string) file_get_contents( self::ROOT . '/' . $file );
 
-		self::assertSame(
+		$found = preg_match_all( "/mhmuicore_register\(\s*'([^']+)'/", $src, $m );
+
+		/*
+		 * At least one, and every one of them current. The earlier shape demanded
+		 * EXACTLY one, which made the gate a cap on documentation: adding a second
+		 * example -- the free-core shipping section needs its own -- failed a test
+		 * whose whole point is that the literals AGREE. Scarcity was never the
+		 * property worth pinning.
+		 */
+		self::assertGreaterThanOrEqual(
 			1,
-			preg_match_all( "/mhmuicore_register\(\s*'([^']+)'/", $src, $m ),
-			"{$file} must carry exactly one mhmuicore_register() example"
+			$found,
+			"{$file} must show a new consumer how to register this package"
 		);
 
-		self::assertSame(
-			$this->canonical_version(),
-			$m[1][0],
-			"{$file}'s register() example would make a new consumer write a stale literal"
-		);
+		foreach ( $m[1] as $literal ) {
+			self::assertSame(
+				$this->canonical_version(),
+				$literal,
+				"{$file}'s register() example would make a new consumer write a stale literal"
+			);
+		}
 	}
 }

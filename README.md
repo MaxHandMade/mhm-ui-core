@@ -22,7 +22,7 @@ A consuming plugin `require_once`s `vendor/mhm/ui-core/register.php` from its
 main file and registers its own copy:
 
 ```php
-mhmuicore_register( '0.8.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.8.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 At `plugins_loaded` priority 0 the highest registered version boots; the rest
@@ -300,6 +300,43 @@ Measured against a real 475-file Lite core: 3 findings and 58 undecided calls in
 29 files -- 50 of them one `$.ajax({ url: vars.ajax_url })` idiom whose payload
 comes from PHP, 4 generated bundles, 4 genuine run-time targets. That is the
 honest shape of the answer: a short list to read, not a clean bill.
+
+## What a free core must keep out of its ZIP
+
+This package installs whole into `vendor/mhm/ui-core`, and it must stay whole
+there: the loader arbitrates versions, so on a site carrying two plugins that
+bundle it, ONE copy serves both. A consumer that deletes PHP classes from its
+copy therefore breaks the other plugin when its copy is the one that wins --
+measured, not theorised: a Lite plugin at `^0.8` sorts before and outranks a
+sibling at `^0.7`, and the sibling's call into a deleted class is a fatal.
+
+**So prune nothing from `vendor/`.** What a WordPress.org free core prunes is its
+own **ZIP**, and only these, none of which any runtime path reaches:
+
+| Keep out of the ZIP | Why |
+|---|---|
+| `src/Cli/` | `wp mhm-ui` commands are development tooling. Registration is guarded on the command class existing, so leaving them out costs the commands and nothing else. |
+| `src/Seam/PurityScanner.php` | The free-core purity gate. Its vocabulary IS the list a reviewer greps for — `license_key`, `activate_license`, `upgrade_to_pro`, `pro_only` — so it reads as the thing it exists to prevent. CI calls it from `vendor/`, where it stays; no runtime path touches it. |
+| `src-react/components/ProLock.jsx` | Pro-facing: it hides a control unless a paid tier unlocked it. Bundled by a build step, never loaded at runtime. |
+| `assets/react/pro.css` | The stylesheet half of the same thing. A free core enqueues `react/admin.css` only. |
+| `README.md` · `README-tr.md` · `assets/README.md` · `package.json` | Developer documentation and build metadata. |
+
+The rest ships. `bootstrap.php`, `register.php`, `src/VersionSelector.php`,
+`src/Seam/SlotRegistry.php`, `src/Seam/Capabilities.php` and the React modules a
+product actually imports are runtime code, and the arbitration above is why they
+travel together.
+
+**Wire the loader through the registry, never by requiring the bootstrap:**
+
+```php
+require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
+mhmuicore_register( '0.8.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+```
+
+Requiring `bootstrap.php` directly defines `MHMUICORE_VERSION` immediately, which
+makes every other copy's bootstrap a no-op: the first plugin loaded wins instead
+of the highest version. The literal must match this package's own version --
+pin it with a check in your own gates, as the existing consumer does.
 
 ## Admin React kit
 
