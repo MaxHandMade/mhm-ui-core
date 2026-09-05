@@ -5,3 +5,4 @@
 build/
 .claude/memory/
 .claude/settings.json
+.claude/settings.local.json
