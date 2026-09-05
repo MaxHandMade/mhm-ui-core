@@ -68,7 +68,7 @@ final class PilotSeamTest extends WP_UnitTestCase {
 
 	public function test_the_wordpress_hook_bridge_of_the_seam_is_live(): void {
 		add_filter(
-			'pilot_seam_hero_after',
+			'pilot_hero_after',
 			static fn( string $html ): string => $html . '<i class="third-party"></i>'
 		);
 

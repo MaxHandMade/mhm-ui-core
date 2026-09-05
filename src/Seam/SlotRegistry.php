@@ -39,6 +39,13 @@ final class SlotRegistry {
 	private $prefix;
 
 	/**
+	 * Optional segment between prefix and slot in bridged hook names.
+	 *
+	 * @var string
+	 */
+	private $infix = '';
+
+	/**
 	 * Declared slots: name => description.
 	 *
 	 * @var array<string, string>
@@ -56,14 +63,20 @@ final class SlotRegistry {
 	 * Build a registry for one product.
 	 *
 	 * @param string $prefix Product prefix, ^[a-z][a-z0-9_]*$.
+	 * @param string $infix  Optional segment between the prefix and the slot in
+	 *                       bridged hook names. Empty by default; see hook_name().
 	 *
-	 * @throws InvalidArgumentException When the prefix is malformed.
+	 * @throws InvalidArgumentException When the prefix or infix is malformed.
 	 */
-	public function __construct( string $prefix ) {
+	public function __construct( string $prefix, string $infix = '' ) {
 		if ( 1 !== preg_match( self::NAME_PATTERN, $prefix ) ) {
 			throw new InvalidArgumentException( 'SlotRegistry: prefix must match ^[a-z][a-z0-9_]*$.' );
 		}
+		if ( '' !== $infix && 1 !== preg_match( self::NAME_PATTERN, $infix ) ) {
+			throw new InvalidArgumentException( 'SlotRegistry: infix must match ^[a-z][a-z0-9_]*$ when given.' );
+		}
 		$this->prefix = $prefix;
+		$this->infix  = $infix;
 	}
 
 	/**
@@ -144,11 +157,30 @@ final class SlotRegistry {
 	/**
 	 * The WordPress hook name a slot bridges to.
 	 *
+	 * NO INFIX BY DEFAULT, and that default is the point.
+	 *
+	 * This name is the consuming product's PUBLIC extension surface: it is what a
+	 * third party writes in add_filter(), what goes in that product's
+	 * documentation, and what a WordPress.org reviewer greps for. It used to read
+	 * "<prefix>_seam_<slot>", which planted a word from THIS package's vocabulary
+	 * into every consumer's public API -- and specifically the word the house's
+	 * WordPress.org record attaches to a rejection, where `pro_seam` markers and
+	 * `allowsSeam()` edition checks were read as crippleware. The hooks bridged
+	 * here gate nothing and are neutral infrastructure, but the word buys the
+	 * consumer nothing and costs it an argument with a human reviewer.
+	 *
+	 * The shape the submission standard endorses has no infix at all:
+	 * `apply_filters( 'mhm_rentiva_blocks_registry', $blocks )`.
+	 *
+	 * A product with its own convention passes an infix to the constructor.
+	 *
 	 * @param string $slot Slot name.
-	 * @return non-empty-string e.g. "rentiva_seam_hero_after".
+	 * @return non-empty-string e.g. "rentiva_hero_after", or "rentiva_ext_hero_after" with an infix.
 	 */
 	public function hook_name( string $slot ): string {
-		return $this->prefix . '_seam_' . $slot;
+		$infix = '' === $this->infix ? '' : $this->infix . '_';
+
+		return $this->prefix . '_' . $infix . $slot;
 	}
 
 	/**

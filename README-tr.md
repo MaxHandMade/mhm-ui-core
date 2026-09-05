@@ -114,7 +114,11 @@ $caps->grant( 'pro_badge' );
 ```
 
 İlan edilmemiş bir yuvayı doldurmak **fırlatır** — sessizce boşa düşmez. Her yuva ayrıca
-`{prefix}_seam_{slot}` WordPress kancasına köprülenir; üçüncü taraf sınıfı bilmeden takılabilir.
+`{prefix}_{slot}` WordPress kancasına köprülenir; üçüncü taraf sınıfı bilmeden takılabilir.
+🔴 **Köprü adında infix yoktur ve varsayılanı budur:** o ad tüketicinin *kamu* yüzeyidir ve
+WP.org incelemecisinin grep'lediği şeydir. Eskiden `_seam_` taşıyordu — bu paketin sözlüğünden
+bir kelimeyi her tüketicinin kamu API'sine ekiyordu, üstelik evin WP.org kaydında bir redde
+bağlanan kelimeyi. Kendi konvansiyonu olan ürün yapıcıya infix geçer.
 
 🔴 **Yetenek bir "yapabilir"dir, "yapmasın" değil.** `if ( ! $caps->has('x') ) { çekirdeğin
 yapabildiği şeyi reddet }` crippleware'dir; `if ( $caps->has('x') ) { fazlasını yap }` dikiştir.
@@ -189,7 +193,7 @@ zaten bu yüzden birlikte yolculuk etmelerini gerektirir.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.8.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.9.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 `bootstrap.php`'yi doğrudan require etmek `MHMUICORE_VERSION`'ı anında tanımlar
@@ -289,7 +293,7 @@ parite kapısı eşitlik arar, uyumluluk değil.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.8.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.9.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 🔴 Sürüm dizesi **elle yazılır** (kayıt, herhangi bir bootstrap yüklenmeden önce koşar) ve

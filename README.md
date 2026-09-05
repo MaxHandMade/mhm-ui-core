@@ -22,7 +22,7 @@ A consuming plugin `require_once`s `vendor/mhm/ui-core/register.php` from its
 main file and registers its own copy:
 
 ```php
-mhmuicore_register( '0.8.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.9.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 At `plugins_loaded` priority 0 the highest registered version boots; the rest
@@ -242,7 +242,7 @@ $seam->declare_slot( 'hero_after' );             // free core declares, by name
 $caps = mhmuicore_capabilities( 'myplugin' );
 
 $html = $seam->apply( 'hero_after', $html );     // fills run, then the
-                                                 // myplugin_seam_hero_after filter
+                                                 // myplugin_hero_after filter
 if ( $caps->has( 'pro_badge' ) ) { /* do MORE, never less */ }
 
 $seam->fill( 'hero_after', fn( $h ) => $h . '…' ); // Pro add-on
@@ -330,7 +330,7 @@ travel together.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.8.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.9.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 Requiring `bootstrap.php` directly defines `MHMUICORE_VERSION` immediately, which
