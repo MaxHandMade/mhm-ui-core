@@ -112,6 +112,22 @@ final class CompositionBuilder {
 				);
 			}
 
+			/*
+			 * Same reasoning as instance_id and type above, and the same audit
+			 * finding: the adapter's render() takes `array $attributes`, so a
+			 * string here leaves the engine as a TypeError instead of a code.
+			 * build() is reachable through LayoutEngine without validate() having
+			 * run, so this check is not a duplicate of the validator's -- it is the
+			 * half that holds when the validator was skipped.
+			 */
+			if ( ! is_array( $attributes ) ) {
+				return new WP_Error(
+					$this->contract->error_code( ErrorCodes::INVALID_INSTANCE ),
+					'',
+					array( 'attributes' => $attributes )
+				);
+			}
+
 			// 1. Get adapter from the registry.
 			$adapter = $this->registry->get_adapter( $type );
 			if ( ! $adapter ) {

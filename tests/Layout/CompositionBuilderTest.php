@@ -50,6 +50,26 @@ final class CompositionBuilderTest extends TestCase {
 		);
 	}
 
+	public function test_attributes_that_are_not_an_array_return_a_code_not_a_type_error(): void {
+		/*
+		 * build() is independently reachable through LayoutEngine::build(), so it
+		 * cannot rely on validate() having run -- the class already says so for
+		 * instance_id and type. An audit handed it a string `attributes` and got
+		 * `TypeError: Argument #1 ($attributes) must be of type array, string
+		 * given` out of the adapter, breaking the one promise the README makes
+		 * about this engine: domain errors come back as WP_Error.
+		 */
+		list( $manifest, $page ) = $this->manifest();
+		$page['composition'][0]['attributes'] = 'not-an-array';
+
+		$result = $this->builder()->build( $manifest, $page );
+
+		self::assertInstanceOf( \WP_Error::class, $result );
+		self::assertSame( 'zzz_' . ErrorCodes::INVALID_INSTANCE, $result->get_error_code() );
+		self::assertSame( '', $result->get_error_message() );
+		self::assertSame( 'not-an-array', $result->get_error_data()['attributes'] );
+	}
+
 	public function test_a_valid_composition_builds_markup_with_the_rendered_component(): void {
 		list( $manifest, $page ) = $this->manifest();
 

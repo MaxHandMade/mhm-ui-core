@@ -37,6 +37,101 @@ final class BlueprintValidatorTest extends TestCase {
 	}
 
 	/**
+	 * Shapes a generated manifest produces that the builder cannot render.
+	 *
+	 * Each case is a path into the valid manifest and the wrong value to put
+	 * there, with the code the validator owes the caller. The class already
+	 * argues this for instance_id and type: "the validator must not approve what
+	 * the builder cannot render". These are the rest of that argument -- an audit
+	 * ran `validate()` over a manifest whose `attributes` was a string, got
+	 * `true`, and then watched `build()` throw a TypeError out of the adapter,
+	 * which is exactly the contract this engine advertises it does not break.
+	 *
+	 * @return array<string, array{0:list<string|int>, 1:mixed, 2:string}>
+	 */
+	public function unrenderableShapes(): array {
+		return array(
+			'attributes that are not an array' => array(
+				array( 'pages', 0, 'composition', 0, 'attributes' ),
+				'not-an-array',
+				ErrorCodes::INVALID_INSTANCE,
+			),
+			'a component_id that is not a string' => array(
+				array( 'pages', 0, 'composition', 0, 'component_id' ),
+				array( 'hero' ),
+				ErrorCodes::INVALID_INSTANCE,
+			),
+			'an instance that is not an array' => array(
+				array( 'pages', 0, 'composition', 0 ),
+				'hero',
+				ErrorCodes::INVALID_INSTANCE,
+			),
+			'a composition that is not an array' => array(
+				array( 'pages', 0, 'composition' ),
+				'hero',
+				ErrorCodes::INVALID_PAGE,
+			),
+			'a slug that is not a string' => array(
+				array( 'pages', 0, 'slug' ),
+				array( 'home' ),
+				ErrorCodes::INVALID_PAGE,
+			),
+			'a layout that is not a string' => array(
+				array( 'pages', 0, 'layout' ),
+				42,
+				ErrorCodes::INVALID_PAGE,
+			),
+			'tokens that are not an array' => array(
+				array( 'tokens' ),
+				'primary:#fff',
+				ErrorCodes::INVALID_BLUEPRINT,
+			),
+			'constraints that are not an array' => array(
+				array( 'constraints' ),
+				'none',
+				ErrorCodes::INVALID_BLUEPRINT,
+			),
+		);
+	}
+
+	/**
+	 * @dataProvider unrenderableShapes
+	 * @param list<string|int> $path  Where to put the wrong value.
+	 * @param mixed            $value The wrong value.
+	 * @param string           $code  The code the validator owes.
+	 */
+	public function test_a_shape_the_builder_cannot_render_is_rejected_by_the_validator( array $path, $value, string $code ): void {
+		$manifest = $this->with( $this->valid_manifest(), $path, $value );
+
+		$result = $this->validator()->validate( $manifest );
+
+		self::assertInstanceOf( \WP_Error::class, $result );
+		self::assertSame( 'zzz_' . $code, $result->get_error_code() );
+		self::assertSame( '', $result->get_error_message(), 'the engine speaks in codes, not prose' );
+	}
+
+	/**
+	 * Set one value at a path inside a manifest.
+	 *
+	 * @param array<string,mixed> $manifest Manifest.
+	 * @param list<string|int>    $path     Path.
+	 * @param mixed               $value    Value.
+	 * @return array<string,mixed>
+	 */
+	private function with( array $manifest, array $path, $value ): array {
+		$cursor = &$manifest;
+		foreach ( $path as $depth => $key ) {
+			if ( $depth === count( $path ) - 1 ) {
+				$cursor[ $key ] = $value;
+				break;
+			}
+			$cursor = &$cursor[ $key ];
+		}
+
+		return $manifest;
+	}
+
+	/**
 	 * A manifest that satisfies every check: used as the base for the negative
 	 * cases below so that each one fails on exactly the check it targets.
 	 *

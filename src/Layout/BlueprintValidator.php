@@ -118,6 +118,24 @@ final class BlueprintValidator {
 			}
 		}
 
+		/*
+		 * 3.5 The shapes the ENGINE reads but never looked at.
+		 *
+		 * tokens is JSON-encoded above and handed to TokenMapper; constraints is
+		 * read by the consumer's own contract. A string in either place passes
+		 * every check up to here and fails somewhere further downstream, which is
+		 * the failure mode this validator exists to prevent.
+		 */
+		foreach ( array( 'tokens', 'constraints' ) as $key ) {
+			if ( ! is_array( $manifest[ $key ] ) ) {
+				return new WP_Error(
+					$this->contract->error_code( ErrorCodes::INVALID_BLUEPRINT ),
+					'',
+					array( 'key' => $key )
+				);
+			}
+		}
+
 		// 4. Components validation.
 		if ( ! is_array( $manifest['components'] ) ) {
 			return new WP_Error(
@@ -155,33 +173,102 @@ final class BlueprintValidator {
 			}
 		}
 
-		// Validate composition components against allowlist.
-		if ( is_array( $page['composition'] ) ) {
-			foreach ( $page['composition'] as $comp_idx => $instance ) {
-				$component_id = $instance['component_id'] ?? '';
-				if ( ! $component_id ) {
-					continue;
-				}
-
-				// Note: Actual component type check happens during import phase against Registry.
-				// Here we just ensure basic instance metadata exists. A present but
-				// non-string instance_id (e.g. 123) is rejected here too: it is an
-				// ordinary shape a generated manifest can produce, and letting it
-				// through would let CompositionBuilder::build() TypeError out of
-				// render()'s `string $instance_id` parameter instead of returning a
-				// WP_Error -- the validator must not approve what the builder cannot
-				// render.
-				if ( ! isset( $instance['instance_id'] ) || ! is_string( $instance['instance_id'] ) ) {
-					return new WP_Error(
-						$this->contract->error_code( ErrorCodes::INVALID_INSTANCE ),
-						'',
-						array(
-							'instance_index' => $comp_idx,
-							'page_index'     => $index,
-						)
-					);
-				}
+		/*
+		 * slug and layout are strings the importer builds a post and a template
+		 * name from. An array or an int there passes "isset" and breaks later,
+		 * away from the manifest that caused it.
+		 */
+		foreach ( array( 'slug', 'layout' ) as $key ) {
+			if ( ! is_string( $page[ $key ] ) ) {
+				return new WP_Error(
+					$this->contract->error_code( ErrorCodes::INVALID_PAGE ),
+					'',
+					array(
+						'page_index' => $index,
+						'key'        => $key,
+					)
+				);
 			}
+		}
+
+		/*
+		 * A composition that is not a list was SILENTLY approved: the old check
+		 * was `if ( is_array( … ) )`, so every non-array simply skipped the loop
+		 * and the page validated. Skipping a check is not passing it.
+		 */
+		if ( ! is_array( $page['composition'] ) ) {
+			return new WP_Error(
+				$this->contract->error_code( ErrorCodes::INVALID_PAGE ),
+				'',
+				array(
+					'page_index' => $index,
+					'key'        => 'composition',
+				)
+			);
+		}
+
+		foreach ( $page['composition'] as $comp_idx => $instance ) {
+			$error = $this->validate_instance( $instance, $comp_idx, $index );
+			if ( is_wp_error( $error ) ) {
+				return $error;
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Validates one composition instance.
+	 *
+	 * Every shape CompositionBuilder::build() would hand straight to an adapter is
+	 * checked here, because the class's own rule is that the validator must not
+	 * approve what the builder cannot render. An audit found the rule half applied:
+	 * instance_id and type were checked, `attributes` was not, and a string there
+	 * made validate() return true and build() throw a TypeError out of the
+	 * adapter -- breaking the engine's one promise, that domain errors come back
+	 * as WP_Error.
+	 *
+	 * @param mixed      $instance   Instance as the manifest carried it.
+	 * @param int|string $comp_idx   Its key in the composition.
+	 * @param int|string $page_index The page's key.
+	 * @return WP_Error|null
+	 */
+	private function validate_instance( $instance, $comp_idx, $page_index ): ?WP_Error {
+		$fail = function ( array $extra ) use ( $comp_idx, $page_index ): WP_Error {
+			return new WP_Error(
+				$this->contract->error_code( ErrorCodes::INVALID_INSTANCE ),
+				'',
+				array_merge(
+					array(
+						'instance_index' => $comp_idx,
+						'page_index'     => $page_index,
+					),
+					$extra
+				)
+			);
+		};
+
+		if ( ! is_array( $instance ) ) {
+			return $fail( array( 'instance' => $instance ) );
+		}
+
+		$component_id = $instance['component_id'] ?? '';
+		if ( ! is_string( $component_id ) ) {
+			return $fail( array( 'component_id' => $component_id ) );
+		}
+
+		if ( '' === $component_id ) {
+			return null;
+		}
+
+		// Note: the actual component type is checked during import against the
+		// registry. Here the instance's own metadata must be renderable.
+		if ( ! isset( $instance['instance_id'] ) || ! is_string( $instance['instance_id'] ) ) {
+			return $fail( array() );
+		}
+
+		if ( isset( $instance['attributes'] ) && ! is_array( $instance['attributes'] ) ) {
+			return $fail( array( 'attributes' => $instance['attributes'] ) );
 		}
 
 		return null;
