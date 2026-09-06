@@ -76,11 +76,6 @@ final class BlueprintValidatorTest extends TestCase {
 				array( 'home' ),
 				ErrorCodes::INVALID_PAGE,
 			),
-			'a layout that is not a string' => array(
-				array( 'pages', 0, 'layout' ),
-				42,
-				ErrorCodes::INVALID_PAGE,
-			),
 			'tokens that are not an array' => array(
 				array( 'tokens' ),
 				'primary:#fff',
@@ -137,6 +132,39 @@ final class BlueprintValidatorTest extends TestCase {
 	 *
 	 * @return array<string,mixed>
 	 */
+	/**
+	 * A page's `layout` is the CONSUMER's payload, and this package does not read it.
+	 *
+	 * Until 0.9.3 the validator demanded a string here, justified in a comment that
+	 * described what "the importer builds a template name from". That importer is a
+	 * consumer's, and the description was wrong about the only real one: Rentiva's
+	 * manifests carry `layout` as a list of page sections, with component instances
+	 * under `composition`. Measured 2026-09-06: nothing in src/Layout reads
+	 * $page['layout'] -- CompositionBuilder consumes $page['composition'] and
+	 * nothing else -- so the rule constrained a key the package never interprets,
+	 * and its first real second consumer failed validation on a manifest that had
+	 * always worked.
+	 *
+	 * Turns red if: a type constraint returns to a key this package does not consume.
+	 */
+	public function test_a_page_layout_may_be_any_shape_the_consumer_needs(): void {
+		$shapes = array(
+			'a template name'   => 'default',
+			'a list of sections' => array( array( 'section_id' => 'sec_hero', 'type' => 'hero' ) ),
+			'a keyed structure' => array( 'columns' => 2 ),
+		);
+
+		foreach ( $shapes as $label => $layout ) {
+			$manifest                       = $this->valid_manifest();
+			$manifest['pages'][0]['layout'] = $layout;
+
+			self::assertTrue(
+				$this->validator()->validate( $manifest ),
+				"a layout given as {$label} was rejected"
+			);
+		}
+	}
+
 	private function valid_manifest(): array {
 		return array(
 			'version'     => '1.0.0',

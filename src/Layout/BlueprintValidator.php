@@ -174,11 +174,21 @@ final class BlueprintValidator {
 		}
 
 		/*
-		 * slug and layout are strings the importer builds a post and a template
-		 * name from. An array or an int there passes "isset" and breaks later,
-		 * away from the manifest that caused it.
+		 * A slug names a thing, so it is a string; an array or an int there passes
+		 * "isset" and breaks later, away from the manifest that caused it.
+		 *
+		 * `layout` is deliberately NOT checked, and the omission is the rule. This
+		 * comment used to say slug and layout were both "strings the importer
+		 * builds a post and a template name from" -- a claim about a CONSUMER's
+		 * importer, and wrong about the only real one: Rentiva carries `layout` as
+		 * a list of page sections and its component instances under `composition`.
+		 * Measured 2026-09-06: nothing in this package reads $page['layout'];
+		 * CompositionBuilder consumes $page['composition'] and nothing else. A
+		 * validator may demand the keys it builds from. It may not invent a meaning
+		 * for a key it never opens -- that is the consumer's payload, and the first
+		 * real second consumer failed on a manifest that had always worked.
 		 */
-		foreach ( array( 'slug', 'layout' ) as $key ) {
+		foreach ( array( 'slug' ) as $key ) {
 			if ( ! is_string( $page[ $key ] ) ) {
 				return new WP_Error(
 					$this->contract->error_code( ErrorCodes::INVALID_PAGE ),
