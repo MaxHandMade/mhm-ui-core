@@ -1250,6 +1250,25 @@ final class PurityScanner {
 					break;
 				}
 			}
+
+			/*
+			 * 🔴 The scanner never scans itself.
+			 *
+			 * This file IS the forbidden-word list, so scanning any tree that
+			 * contains it produces a wall of findings that are all the scanner
+			 * describing its own source. Measured on this package before the
+			 * exclusion: 23 findings, every single one from this file and none
+			 * from anywhere else.
+			 *
+			 * That is why this package never ran the gate on its own tree, and
+			 * why a consumer cannot point it at the vendor copy it ships. A
+			 * gate whose output has to be hand-filtered before it can be read
+			 * is a gate nobody runs - and an unrun gate is the same as none.
+			 */
+			if ( ! $skip && realpath( $entry->getPathname() ) === realpath( __FILE__ ) ) {
+				$skip = true;
+			}
+
 			if ( ! $skip ) {
 				$files[] = $entry->getPathname();
 			}

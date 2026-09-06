@@ -797,4 +797,81 @@ namespace X;
 	public function test_a_missing_directory_yields_no_findings_not_a_crash(): void {
 		self::assertSame( array(), ( new PurityScanner() )->scan( $this->root . '/does-not-exist' ) );
 	}
+
+	/**
+	 * 🔴 The scanner must not report its own vocabulary.
+	 *
+	 * Its forbidden-word list is, unavoidably, a file full of forbidden words.
+	 * Scanning any tree that contains the scanner therefore produces a wall of
+	 * findings that are all the scanner describing itself - measured on this
+	 * package: 23 findings, every one of them from PurityScanner.php.
+	 *
+	 * This is not cosmetic. It is why this package never ran the gate on its
+	 * own tree, and why a CONSUMER cannot point the gate at the vendor copy it
+	 * ships either. A gate whose output must be hand-filtered before it can be
+	 * read is a gate nobody runs.
+	 *
+	 * Turns red if: the self-exclusion is removed.
+	 */
+	public function test_the_scanner_never_reports_its_own_source(): void {
+		$package = dirname( __DIR__, 2 );
+
+		$own = array_values(
+			array_filter(
+				( new PurityScanner() )->scan( $package ),
+				static function ( array $finding ): bool {
+					return false !== strpos(
+						str_replace( '\\', '/', $finding['file'] ),
+						'src/Seam/PurityScanner.php'
+					);
+				}
+			)
+		);
+
+		self::assertSame( array(), $own, 'The scanner reported its own word list as findings.' );
+	}
+
+	/**
+	 * 🔴 THE PACKAGE IS ITSELF PURE, and this is the gate that says so.
+	 *
+	 * ui-core offers PurityScanner to consumers as proof their free core
+	 * carries no licence code, no artificial limit and no outbound HTTP. Until
+	 * 2026-09-06 it never pointed that tool at itself - no composer script, no
+	 * CI step - so the package made a promise it did not measure. A consumer
+	 * shipping this package whole inherits whatever is in it.
+	 *
+	 * Turns red if: any of the three forbidden things enters this package.
+	 * When it does, the answer is to remove the thing, not to widen this test.
+	 */
+	public function test_this_package_carries_none_of_the_three_forbidden_things(): void {
+		$package  = dirname( __DIR__, 2 );
+		$findings = ( new PurityScanner() )->scan( $package );
+
+		// Positive control: a scan that reached nothing would also be silent.
+		self::assertGreaterThan(
+			20,
+			count( ( new PurityScanner() )->scannable_files( $package ) ),
+			'The scan covered almost nothing; a clean verdict would be vacuous.'
+		);
+
+		self::assertSame(
+			array(),
+			$findings,
+			"This package is not pure:\n" . implode(
+				"\n",
+				array_map(
+					static function ( array $f ) use ( $package ): string {
+						return sprintf(
+							'  [%s] %s:%d  %s',
+							$f['class'],
+							str_replace( str_replace( '\\', '/', $package ) . '/', '', str_replace( '\\', '/', $f['file'] ) ),
+							$f['line'],
+							$f['name']
+						);
+					},
+					$findings
+				)
+			)
+		);
+	}
 }

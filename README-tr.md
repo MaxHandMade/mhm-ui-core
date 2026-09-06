@@ -193,13 +193,41 @@ zaten bu yüzden birlikte yolculuk etmelerini gerektirir.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.9.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.9.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 `bootstrap.php`'yi doğrudan require etmek `MHMUICORE_VERSION`'ı anında tanımlar
 ve başka her kopyanın bootstrap'ını no-op yapar: **en yüksek sürüm değil, ilk
 yüklenen eklenti kazanır.** Literal, paketin kendi sürümüyle aynı olmalı — mevcut
 tüketicinin yaptığı gibi kendi kapınla kilitle.
+
+#### 🔴 `plugins_loaded` önceliği **0**'da bu pakete DOKUNMA
+
+Boot önceliği 0'dır, dolayısıyla **senin kodun orada olmamalı.** Bu paketin bir
+sınıfına uzanan her şey — `new SlotRegistry(...)`, bir `Capabilities` sorgusu,
+bir enqueue yardımcısı — **öncelik 1 veya sonrasına** aittir.
+
+Eşit öncelikte WordPress geri çağrıları **kayıt sırasına** göre çağırır ve kayıt
+sırası *dosya yükleme* sırasını izler; o da ne açıktır ne de senin kontrolünde.
+WordPress etkinleştirmede `active_plugins`'i **sıralar**, bu yüzden
+`urun-pro/urun-pro.php`, `urun/urun.php`'den **önce** gelir — `-` `0x2D`, `/`
+`0x2F`. Eklentinin dosyası önce yüklenir, `plugins_loaded` geri çağrısı önce
+kaydolur ve öncelik 0'da ücretsiz çekirdek henüz hiçbir şey ilan etmemişken koşar.
+
+🔴 **Bu hayal edilmedi, gerçek bir tüketicide ölçüldü:** öncelik 0'da yuva
+dolduran bir Pro eklentisi, ücretsiz çekirdeğin henüz açmadığı registry'ye çarptı
+ve `InvalidArgumentException` fırlattı — ödeyen müşterinin sitesinde beyaz ekran.
+Eklenti `is_declared()` ile korunsaydı **sessizce ölürdü**, ki o daha kötüdür.
+
+İki sonuç ayrı ayrı yazılmayı hak ediyor:
+
+- **Ücretsiz çekirdek yuvalarını tembel ilan etmeli** — registry'yi veren
+  erişimciden, bir kancadan değil. O zaman ilk soran açık bir registry bulur ve
+  kanca sırası sözleşmeden çıkar.
+- **Kendi kopyasını paketlemeyen bir eklenti** sınıflara ancak paketi *paketleyen*
+  eklentinin `register.php`'si koştuktan sonra ulaşır. Öncelik 0'da, eklentinin
+  dosyası önce yüklenmişken bu olmamıştır — oradaki hata `Class not found`'dur ve
+  hiçbir şey açıklamaz. Öncelik 1 veya sonrasında doldur, sorun doğmaz.
 
 ### React kiti ve token kaynağı
 
@@ -293,7 +321,7 @@ parite kapısı eşitlik arar, uyumluluk değil.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.9.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.9.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 🔴 Sürüm dizesi **elle yazılır** (kayıt, herhangi bir bootstrap yüklenmeden önce koşar) ve

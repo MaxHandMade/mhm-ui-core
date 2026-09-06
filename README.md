@@ -22,7 +22,7 @@ A consuming plugin `require_once`s `vendor/mhm/ui-core/register.php` from its
 main file and registers its own copy:
 
 ```php
-mhmuicore_register( '0.9.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.9.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 At `plugins_loaded` priority 0 the highest registered version boots; the rest
@@ -33,6 +33,37 @@ family. A plugin that vendors the package but never calls `mhmuicore_register()`
 does not enter the version arbitration at all: its own copy is inert and it
 silently depends on a sibling plugin having booted one. Deactivating the sibling
 then takes its React screens with it.
+
+### Do not touch this package at `plugins_loaded` priority 0
+
+The boot runs at priority 0, so **your own code must not**. Anything that
+reaches a class from this package — `new SlotRegistry(...)`, a `Capabilities`
+lookup, an enqueue helper — belongs at **priority 1 or later**.
+
+At equal priority WordPress calls callbacks in registration order, and
+registration order follows *file load* order, which is neither obvious nor
+under your control. WordPress sorts `active_plugins` on activation, so
+`my-plugin-pro/my-plugin-pro.php` sorts **before** `my-plugin/my-plugin.php` —
+`-` is `0x2D`, `/` is `0x2F`. The add-on's file loads first, its
+`plugins_loaded` callback registers first, and at priority 0 it runs before the
+free plugin has declared anything.
+
+This was measured in a real consumer, not imagined: a Pro add-on filling a seam
+slot at priority 0 hit a registry the free plugin had not opened yet and threw
+`InvalidArgumentException` — a white screen on a paying customer's site. Had the
+add-on guarded with `is_declared()` instead, it would have gone silently dead,
+which is worse.
+
+Two consequences worth stating separately:
+
+- **A free plugin should declare its slots lazily**, from the accessor that
+  hands out the registry, rather than from a hook. Then whoever asks first gets
+  an open registry and hook order stops being part of the contract.
+- **An add-on that does not bundle its own copy** of this package only gets the
+  classes once the plugin that *does* bundle it has run its `register.php`. At
+  priority 0, with the add-on's file loaded first, that has not happened — the
+  failure there is `Class not found`, which explains nothing. Fill at priority
+  1 or later and it cannot arise.
 
 ## React admin pages
 
@@ -330,7 +361,7 @@ travel together.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.9.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.9.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 Requiring `bootstrap.php` directly defines `MHMUICORE_VERSION` immediately, which
