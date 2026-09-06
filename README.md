@@ -22,7 +22,7 @@ A consuming plugin `require_once`s `vendor/mhm/ui-core/register.php` from its
 main file and registers its own copy:
 
 ```php
-mhmuicore_register( '0.9.4', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.9.5', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 At `plugins_loaded` priority 0 the highest registered version boots; the rest
@@ -360,20 +360,36 @@ own **ZIP**, and only these, none of which any runtime path reaches:
 |---|---|
 | `src/Cli/` | `wp mhm-ui` commands are development tooling. Registration is guarded on the command class existing, so leaving them out costs the commands and nothing else. |
 | `src/Seam/PurityScanner.php` | The free-core purity gate. Its vocabulary IS the list a reviewer greps for — `license_key`, `activate_license`, `upgrade_to_pro`, `pro_only` — so it reads as the thing it exists to prevent. CI calls it from `vendor/`, where it stays; no runtime path touches it. |
-| `src-react/components/ProLock.jsx` | Pro-facing: it hides a control unless a paid tier unlocked it. Bundled by a build step, never loaded at runtime. |
+| `src-react/` (the whole directory) | The package's JSX and token SOURCE. It is build-time input, and nothing on a user's site reads it -- WordPress does not execute JSX, and what loads is the bundle your build produced. It also holds the tier-lock component, whose class a reviewer reads as a paid-feature lock. |
 | `assets/react/pro.css` | The stylesheet half of the same thing. A free core enqueues `react/admin.css` only. |
 | `README.md` · `README-tr.md` · `assets/README.md` · `package.json` | Developer documentation and build metadata. |
 
-The rest ships. `bootstrap.php`, `register.php`, `src/VersionSelector.php`,
-`src/Seam/SlotRegistry.php`, `src/Seam/Capabilities.php` and the React modules a
-product actually imports are runtime code, and the arbitration above is why they
-travel together.
+🔴 **Take `src-react/` as a unit, and take yours with it.** Excluding only the lock
+component was tried on a real consumer and was wrong twice over: `src-react/index.js`
+re-exports it, so the ZIP kept the name in the reviewer's grep AND gained a dangling
+import. Then, with the directory gone, that consumer's own shipped sources still
+imported from it -- importers without their modules. If your plugin ships its React
+sources, they belong out of the ZIP for the same reason this package's do: keep the
+stylesheets your PHP enqueues, drop the `.js` and `.jsx` your webpack merely reads.
+Measured on that consumer, both mistakes cost a release round each.
+
+The rest ships, and it is PHP: `bootstrap.php`, `register.php`,
+`src/VersionSelector.php`, `src/Layout/`, `src/Component/`,
+`src/Seam/SlotRegistry.php`, `src/Seam/Capabilities.php`. Those are runtime code
+and the arbitration above is why they travel together.
+
+The React modules are NOT in that list, and an earlier version of this page said
+they were -- "the React modules a product actually imports are runtime code".
+They are not. A product imports them at BUILD time; what reaches a browser is the
+bundle its webpack emitted, which lives under the product's own `assets/`. That
+one wrong sentence is what sent a consumer's ZIP out carrying JSX it could not
+build from.
 
 **Wire the loader through the registry, never by requiring the bootstrap:**
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.9.4', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.9.5', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 Requiring `bootstrap.php` directly defines `MHMUICORE_VERSION` immediately, which

@@ -182,6 +182,41 @@ final class FreeCoreShippingTest extends TestCase {
 		}
 	}
 
+	/**
+	 * The READMEs tell a consumer to take src-react OUT AS A DIRECTORY.
+	 *
+	 * This asserts documentation, which a test normally has no business doing --
+	 * the same reason VersionLiteralsAgreeTest does it. These tables are the
+	 * instructions a new product follows on the day it wires this package up, so
+	 * a stale table does not merely describe the past: it MANUFACTURES the defect,
+	 * one consumer at a time.
+	 *
+	 * Both tables used to name a single file, the lock component. Following that
+	 * produced a ZIP that still carried the component NAME (src-react/index.js
+	 * re-exports it) and now also carried a dangling import. Measured 2026-09-06
+	 * on the one real consumer; it cost two release rounds to unwind.
+	 *
+	 * Turns red if: either table goes back to naming a single file under
+	 * src-react instead of the directory.
+	 */
+	public function test_the_readmes_prune_src_react_as_a_directory(): void {
+		foreach ( array( 'README.md', 'README-tr.md' ) as $doc ) {
+			$text = (string) file_get_contents( dirname( __DIR__ ) . '/' . $doc );
+
+			self::assertStringContainsString(
+				'`src-react/`',
+				$text,
+				$doc . ' must tell a consumer to exclude the src-react directory'
+			);
+
+			self::assertStringNotContainsString(
+				'`src-react/components/ProLock.jsx`',
+				$text,
+				$doc . ' names a single file under src-react as the thing to exclude; the barrel re-exports it, so that advice ships the name and a dangling import'
+			);
+		}
+	}
+
 	public function test_the_pro_lock_rule_still_exists_for_the_products_that_want_it(): void {
 		$path = dirname( __DIR__ ) . '/assets/react/pro.css';
 

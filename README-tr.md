@@ -187,20 +187,35 @@ sınıfa yaptığı çağrı **fatal**dir.
 |---|---|
 | `src/Cli/` | `wp mhm-ui` komutları geliştirme aracıdır. Kayıt, komut sınıfının varlığına bağlıdır; dışarıda bırakmak yalnız komutlara mal olur. |
 | `src/Seam/PurityScanner.php` | Saflık kapısı. Sözlüğü, incelemecinin **grep'lediği listenin ta kendisidir** — `license_key`, `activate_license`, `upgrade_to_pro`, `pro_only` — yani önlemek için var olduğu şey gibi okunur. CI onu `vendor/`den çağırır, orada kalır; çalışma zamanı yolu yoktur. |
-| `src-react/components/ProLock.jsx` | Pro'ya dönük: bir kontrolü ücretli katman açmadıkça gizler. Build adımıyla bundle edilir, çalışma zamanında yüklenmez. |
+| `src-react/` (**dizinin tamamı**) | Paketin JSX ve token **kaynağı**. Build girdisidir; kullanıcının sitesinde onu okuyan hiçbir şey yoktur — WordPress JSX çalıştırmaz, yüklenen şey senin build'inin ürettiği bundle'dır. Ayrıca katman kilidi bileşenini de barındırır; incelemeci onun sınıfını ücretli-özellik kilidi olarak okur. |
 | `assets/react/pro.css` | Aynı şeyin stil yarısı. Ücretsiz çekirdek yalnız `react/admin.css` enqueue eder. |
 | `README.md` · `README-tr.md` · `assets/README.md` · `package.json` | Geliştirici dokümanı ve build meta verisi. |
 
-Gerisi sevk edilir. `bootstrap.php`, `register.php`, `src/VersionSelector.php`,
-`src/Seam/SlotRegistry.php`, `src/Seam/Capabilities.php` ve ürünün gerçekten
-import ettiği React modülleri çalışma zamanı kodudur; yukarıdaki hakemlik de
-zaten bu yüzden birlikte yolculuk etmelerini gerektirir.
+🔴 **`src-react/`'i bir bütün olarak çıkar — ve kendi kaynaklarını da onunla birlikte.**
+Yalnız kilit bileşenini çıkarmak gerçek bir tüketicide denendi ve **iki kere** yanlıştı:
+`src-react/index.js` onu yeniden ihraç ediyor, yani ZIP hem adı incelemecinin grep'inde
+tuttu hem **kırık bir import** kazandı. Sonra dizin gidince, o tüketicinin **kendi** sevk
+ettiği kaynakları hâlâ oradan import ediyordu — modülsüz importer'lar. Eklentin kendi React
+kaynaklarını sevk ediyorsa onlar da ZIP'ten çıkmalı, aynı gerekçeyle: **PHP'nin enqueue
+ettiği stil dosyalarını tut, webpack'in yalnız okuduğu `.js`/`.jsx`'i çıkar.** O tüketicide
+ölçüldü; iki hatanın her biri birer sürüm turuna mal oldu.
+
+Gerisi sevk edilir ve gerisi **PHP'dir**: `bootstrap.php`, `register.php`,
+`src/VersionSelector.php`, `src/Layout/`, `src/Component/`,
+`src/Seam/SlotRegistry.php`, `src/Seam/Capabilities.php`. Bunlar çalışma zamanı
+kodudur; yukarıdaki hakemlik de zaten bu yüzden birlikte yolculuk etmelerini gerektirir.
+
+🔴 **React modülleri bu listede DEĞİL** — bu sayfanın önceki sürümü *"ürünün gerçekten
+import ettiği React modülleri çalışma zamanı kodudur"* diyordu ve bu **yanlıştı**. Ürün
+onları **build** zamanında import eder; tarayıcıya ulaşan şey webpack'in ürettiği ve ürünün
+kendi `assets/`i altında duran bundle'dır. Bir tüketicinin ZIP'i, derleyemeyeceği JSX'i tam
+da bu tek yanlış cümle yüzünden taşıdı.
 
 🔴 **Loader'ı registry üzerinden bağla, bootstrap'ı doğrudan require ederek değil:**
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.9.4', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.9.5', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 `bootstrap.php`'yi doğrudan require etmek `MHMUICORE_VERSION`'ı anında tanımlar
@@ -328,7 +343,7 @@ parite kapısı eşitlik arar, uyumluluk değil.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.9.4', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.9.5', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 🔴 Sürüm dizesi **elle yazılır** (kayıt, herhangi bir bootstrap yüklenmeden önce koşar) ve
