@@ -164,10 +164,20 @@ final class SlotRegistry {
 	 * documentation, and what a WordPress.org reviewer greps for. It used to read
 	 * "<prefix>_seam_<slot>", which planted a word from THIS package's vocabulary
 	 * into every consumer's public API -- and specifically the word the house's
-	 * WordPress.org record attaches to a rejection, where `pro_seam` markers and
-	 * `allowsSeam()` edition checks were read as crippleware. The hooks bridged
-	 * here gate nothing and are neutral infrastructure, but the word buys the
-	 * consumer nothing and costs it an argument with a human reviewer.
+	 * WordPress.org record attaches to a rejection, where tier-marked hook names
+	 * and the edition-check helper built on that same word were read as
+	 * crippleware. The hooks bridged here gate nothing and are neutral
+	 * infrastructure, but the word buys the consumer nothing and costs it an
+	 * argument with a human reviewer.
+	 *
+	 * The two identifiers from that rejection are deliberately NOT spelled here.
+	 * This file ships inside consumers' free-core ZIPs, and a reviewer grepping
+	 * one reads a paid-feature token the same whether it sits in code or in the
+	 * comment explaining why the code stopped using it. Rentiva's
+	 * check-no-pro-refs gate caught exactly that on 2026-09-06 -- a consumer's
+	 * gate, not this package's. PurityScanner cannot catch this class: it reads
+	 * the token stream, where a docblock is whitespace, while a reviewer greps
+	 * raw text. So this is a rule the author keeps, not one a gate keeps here.
 	 *
 	 * The shape the submission standard endorses has no infix at all:
 	 * `apply_filters( 'mhm_rentiva_blocks_registry', $blocks )`.
