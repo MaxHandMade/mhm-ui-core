@@ -22,6 +22,14 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "build", "design-system")
 
 css = io.open(ROOT + "/assets/react/admin.css", encoding="utf-8").read()
+# pro.css is inlined too, and the reason is a defect this file once shipped.
+# 0.8.1 moved .mhmui-pro-lock out of admin.css (a free core enqueues that one,
+# and a lock rule in it reads as crippleware to a reviewer). This builder kept
+# inlining admin.css alone, so from that release on the pro-lock card rendered an
+# UNSTYLED box: a card demonstrating a component whose rule was no longer in the
+# page. Nobody saw it because the sync was never re-run after 0.8.0. The check at
+# the bottom of this file exists so the next split fails loudly instead.
+pro_css = io.open(ROOT + "/assets/react/pro.css", encoding="utf-8").read()
 tokens = json.loads(io.open(ROOT + "/src-react/tokens.json", encoding="utf-8").read())
 version = json.loads(io.open(ROOT + "/package.json", encoding="utf-8").read())["version"]
 
@@ -49,7 +57,10 @@ def page(group, title, note, body, width=760):
     return (
         '<!-- @dsCard group="%s" name="%s" viewport="%d" -->\n' % (group, title, width)
         + "<!doctype html>\n<html lang=\"tr\"><head><meta charset=\"utf-8\"><title>%s — mhm-ui-core %s</title>\n" % (title, version)
-        + "<style>\n" + WP_CHROME + "\n/* ---- assets/react/admin.css (v%s), inlined verbatim ---- */\n" % version + css + "\n</style></head>\n"
+        + "<style>\n" + WP_CHROME
+        + "\n/* ---- assets/react/admin.css (v%s), inlined verbatim ---- */\n" % version + css
+        + "\n/* ---- assets/react/pro.css (v%s), inlined verbatim ---- */\n" % version + pro_css
+        + "\n</style></head>\n"
         + "<body class=\"mhmui-admin\">\n<p class=\"ds-note\">%s</p>\n%s\n</body></html>\n" % (note, body)
     )
 
@@ -194,6 +205,48 @@ StatCard · StatsGrid · KpiBox · StatusBadge · Pagination · ProLock · Notic
 `DesignSync` ile bileşen bileşen; kaynak `mhm-ui-core` deposu. Bu paket değişince burası
 yeniden eşitlenir; aksi hâlde Claude Design bizim olmayan bileşenlerle çizmeye başlar.
 """ % version
+
+# ---- Self-check: every class a card SHOWS must have a rule in the page -------
+#
+# The card is a promise that this is what WordPress renders. A card whose class
+# has no rule in the inlined stylesheet renders an unstyled box and still looks
+# like a finished card in the Design System pane -- which is exactly what
+# happened between 0.8.1 and 0.9.5: the lock rule moved to pro.css, this builder
+# inlined admin.css alone, and the pro-lock card lost its styling for five
+# releases without a single failure anywhere. Nothing was broken; something
+# simply stopped being true, quietly.
+#
+# Modifiers (--suffix) are exempt on purpose: several lean on WordPress's own
+# .notice-* classes and legitimately have no rule of their own here.
+# Extension points: classes the kit emits for consumers to target, with no rule
+# of their own here and none in any consumer today (measured 2026-09-06). They
+# are not the lock case: nothing about the component's appearance depends on
+# them. .mhmui-pagination__button rides alongside WordPress's own .button, which
+# does the styling; .mhmui-widget__actions is a container inside a header that
+# already lays its children out. Listed BY NAME so the exemption is a decision on
+# the record, not an inference the check quietly makes.
+STYLE_HOOKS = {"mhmui-pagination__button", "mhmui-widget__actions"}
+
+missing = []
+for rel, content in files.items():
+    body = content.split("</head>", 1)[-1]
+    styles = content.split("<style>", 1)[-1].split("</style>", 1)[0]
+    used = set()
+    for attr in re.findall(r'class="([^"]+)"', body):
+        for cls in attr.split():
+            if cls.startswith("mhmui-") and "--" not in cls and cls not in STYLE_HOOKS:
+                used.add(cls)
+    for cls in sorted(used):
+        if not re.search(r"\." + re.escape(cls) + r"\s*[,{]", styles):
+            missing.append("%s -> .%s" % (rel, cls))
+
+if missing:
+    print("DESIGN SYSTEM: a card shows a class the page has no rule for")
+    for row in missing:
+        print("  " + row)
+    print("Fix the stylesheet or the inlining, not this check.")
+    raise SystemExit(1)
+print("CHECKED: %d card(s), every mhmui-* base class has a rule" % len(files))
 
 os.makedirs(OUT, exist_ok=True)
 for rel, content in files.items():

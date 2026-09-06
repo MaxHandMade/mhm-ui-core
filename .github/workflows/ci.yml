@@ -75,6 +75,14 @@ jobs:
       - name: Token source in sync (tokens:check)
         run: npm run tokens:check
 
+      # Builds the Design System bundle and fails if a card shows a class the
+      # page has no rule for. Ran nowhere until 2026-09-06, which is how the
+      # pro-lock card stayed unstyled for five releases after 0.8.1 moved its
+      # rule into pro.css: the sync was manual, so the only thing that could
+      # have noticed only ran when somebody remembered to look.
+      - name: Design system cards carry the rules they demonstrate
+        run: python3 bin/build-design-system.py
+
       - name: Jest
         run: npm test
 
