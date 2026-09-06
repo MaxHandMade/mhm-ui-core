@@ -764,9 +764,18 @@ namespace X;
 			'a script enqueued from a CDN'   => array( "wp_enqueue_script( 'x', 'https://cdn.example.com/x.js' );" ),
 			'a font enqueued from a CDN'     => array( "wp_enqueue_style( 'f', 'https://fonts.googleapis.com/css2' );" ),
 			'a script registered from a CDN' => array( "wp_register_script( 'x', 'https://cdn.example.com/x.js' );" ),
-			'a file read over http'          => array( "$body = file_get_contents( 'https://api.example.com/x' );" ),
-			'a download helper'              => array( "$tmp = download_url( 'https://api.example.com/x.zip' );" ),
-			'headers fetched over http'      => array( "$h = get_headers( 'https://api.example.com/x' );" ),
+			/*
+			 * Escaped, because these are PHP source fixtures inside a
+			 * double-quoted string. Unescaped, "$body" interpolated to the
+			 * empty string: PHP warned about an undefined variable on every
+			 * run and the fixture the scanner actually saw was " = file_get_
+			 * contents(...)" rather than the assignment written here. The
+			 * tests still passed - the call survived the mangling - so the
+			 * only visible symptom was three warnings in the CI log.
+			 */
+			'a file read over http'          => array( "\$body = file_get_contents( 'https://api.example.com/x' );" ),
+			'a download helper'              => array( "\$tmp = download_url( 'https://api.example.com/x.zip' );" ),
+			'headers fetched over http'      => array( "\$h = get_headers( 'https://api.example.com/x' );" ),
 		);
 	}
 
