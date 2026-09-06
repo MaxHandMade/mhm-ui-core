@@ -100,17 +100,15 @@ ama metadata dosyası olmadığı için beyan edecek bir `apiVersion`'ı da olma
 ### Dikiş nasıl çalışır
 
 ```php
-// Ücretsiz çekirdek: yuvaları ADIYLA ilan eder, yetenekleri tanımlar
+// Ücretsiz çekirdek: yuvayı ADIYLA ilan eder, sonra render eder
 $seam = mhmuicore_slot_registry( 'myplugin' );
 $seam->declare_slot( 'hero_after', 'Hero markup sonrasına eklenecek şey.' );
-$caps = mhmuicore_capabilities( 'myplugin' );
 // … renderer içinde:
 $html = $seam->apply( 'hero_after', $html, $settings );
-if ( $caps->has( 'pro_badge' ) ) { /* daha fazlasını yap — asla daha azını */ }
 
-// Pro eklentisi: doldurur ve verir
+// Pro eklentisi: doldurur ve ne eklediğini söyler
 $seam->fill( 'hero_after', fn( $html ) => $html . '<div class="upsell">…</div>' );
-$caps->grant( 'pro_badge' );
+mhmuicore_capabilities( 'myplugin' )->grant( 'pro_badge' );
 ```
 
 İlan edilmemiş bir yuvayı doldurmak **fırlatır** — sessizce boşa düşmez. Her yuva ayrıca
@@ -120,8 +118,17 @@ WP.org incelemecisinin grep'lediği şeydir. Eskiden `_seam_` taşıyordu — bu
 bir kelimeyi her tüketicinin kamu API'sine ekiyordu, üstelik evin WP.org kaydında bir redde
 bağlanan kelimeyi. Kendi konvansiyonu olan ürün yapıcıya infix geçer.
 
-🔴 **Yetenek bir "yapabilir"dir, "yapmasın" değil.** `if ( ! $caps->has('x') ) { çekirdeğin
-yapabildiği şeyi reddet }` crippleware'dir; `if ( $caps->has('x') ) { fazlasını yap }` dikiştir.
+🔴 **Ücretsiz çekirdek HİÇ SORMAZ.** `Capabilities` ücretli katmanın ve onunla eşgüdüm kuran
+uzantıların aletidir: `grant()` Pro eklentisinde, `has()` ücretsiz çekirdek OLMAYAN kodda. Ücretsiz
+çekirdekteki bir `mhmuicore_capabilities()` çağrısı gömleğini değiştirmiş `Mode::isPro()`'dur —
+grep'lenebilir, ve WP.org incelemecisi dalın ne yaptığından bağımsız olarak **edition check** okur.
+Bu evin kaydı tam da o şekilde bir redde bağlandı. Yani kural "yetenek bir yapabilirdir" değil:
+**ücretsiz çekirdeğin soracağı bir şey yoktur.** Yuvayı ilan eder ve render eder; ücretli katman
+doldurur.
+
+📌 Ayrım ücretli tarafta hâlâ geçerli: `if ( $caps->has('x') ) { fazlasını yap }` dikiştir,
+`if ( ! $caps->has('x') ) { çekirdeğin yapabildiğini reddet }` nerede yazılırsa yazılsın
+crippleware'dir.
 
 **Saflık kapısı:** `wp mhm-ui check:purity <çekirdek-dizini>` — çekirdeğin PHP ve JavaScript
 yüzeyini okur; PHP'nin tarayıcıya verdiği JavaScript de dahil (`wp_add_inline_script`, heredoc,

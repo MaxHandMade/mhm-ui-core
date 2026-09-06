@@ -268,17 +268,29 @@ registered: `api_version` 3, straight out of the file.
 ## Tier seam (free core / Pro add-on)
 
 ```php
+// Free core: declares the slot by name, then renders.
 $seam = mhmuicore_slot_registry( 'myplugin' );
-$seam->declare_slot( 'hero_after' );             // free core declares, by name
-$caps = mhmuicore_capabilities( 'myplugin' );
+$seam->declare_slot( 'hero_after' );
 
 $html = $seam->apply( 'hero_after', $html );     // fills run, then the
                                                  // myplugin_hero_after filter
-if ( $caps->has( 'pro_badge' ) ) { /* do MORE, never less */ }
 
-$seam->fill( 'hero_after', fn( $h ) => $h . '…' ); // Pro add-on
-$caps->grant( 'pro_badge' );
+// Pro add-on: fills the slot, and says what it added.
+$seam->fill( 'hero_after', fn( $h ) => $h . '…' );
+mhmuicore_capabilities( 'myplugin' )->grant( 'pro_badge' );
 ```
+
+🔴 **The free core never asks.** `Capabilities` belongs to the paid layer
+and to the extensions that coordinate with it -- `grant()` in a Pro add-on,
+`has()` in code that is not the free core. A `mhmuicore_capabilities()` call
+inside a free core is `Mode::isPro()` in a new shirt: it is grep-able, and a
+WP.org reviewer reads an edition check regardless of what the branch does with
+it. This house has already had a submission turn on exactly that shape. So the
+rule is not "a capability is a may, not a must-not" -- it is that a free core
+has nothing to ask. It declares slots and renders; the paid layer fills them.
+The distinction still holds for the paid side: `if ( $caps->has('x') ) { do MORE }`
+is a seam, `if ( ! $caps->has('x') ) { refuse what the core can already do }` is
+crippleware wherever it is written.
 
 Filling an undeclared slot throws. `wp mhm-ui check:purity <dir>` reads a free
 core's PHP and JavaScript -- including JavaScript a PHP file hands to the browser
