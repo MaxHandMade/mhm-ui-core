@@ -243,9 +243,17 @@
 
 /* =============================================================================
    Visual kit — StatCard · StatsGrid · KpiBox · StatusBadge · Pagination ·
-   ProLock · Notice · Widget (src-react/components). Extracted from Rentiva's
-   admin.css on 2026-09-03 and renamed into the package namespace; the product
-   keeps its .mhm-* rules until it migrates. Only --mhmui-* tokens below.
+   Notice · Widget (src-react/components). Extracted from Rentiva's admin.css on
+   2026-09-03 and renamed into the package namespace; the product keeps its
+   .mhm-* rules until it migrates. Only --mhmui-* tokens below.
+
+   The kit's tier-lock component is deliberately absent from this list, and from
+   this file. Its styles moved to pro.css in 0.8.1 because this stylesheet is the
+   one a free core enqueues, and a reviewer greps the ZIP: a lock class in the
+   free core's own CSS reads as crippleware whatever it is used for. Naming the
+   component here put the word back into that same grep for one comment's sake --
+   measured 2026-09-06 while a consumer moved to ^0.9. The list is now also
+   simply accurate: nothing below styles that component.
    ============================================================================= */
 
 .mhmui-stats-grid {

@@ -157,14 +157,29 @@ final class FreeCoreShippingTest extends TestCase {
 		}
 	}
 
+	/**
+	 * The free core's stylesheet names the tier lock NOWHERE -- not as a class,
+	 * and not as a word.
+	 *
+	 * This test existed and was GREEN while admin.css still listed the lock
+	 * component by name in a section comment: it looked for the hyphenated CLASS
+	 * and the comment used the camelCase NAME. A reviewer greps the ZIP for a
+	 * word, so the gate has to grep for that word in every shape it takes, or it
+	 * is checking something narrower than what it claims to check. Measured
+	 * 2026-09-06, while a consumer moving to ^0.9 caught what this gate missed.
+	 *
+	 * Turns red if: either spelling comes back, in a rule or in prose.
+	 */
 	public function test_the_stylesheet_a_free_core_enqueues_carries_no_pro_lock(): void {
-		$css = (string) file_get_contents( dirname( __DIR__ ) . '/assets/react/admin.css' );
+		$css = strtolower( (string) file_get_contents( dirname( __DIR__ ) . '/assets/react/admin.css' ) );
 
-		self::assertStringNotContainsString(
-			'pro-lock',
-			$css,
-			'a WordPress.org reviewer greps the ZIP; a "hide this unless Pro" rule in the free core\'s stylesheet reads as crippleware'
-		);
+		foreach ( array( 'pro-lock', 'prolock' ) as $shape ) {
+			self::assertStringNotContainsString(
+				$shape,
+				$css,
+				'a WordPress.org reviewer greps the ZIP; a "hide this unless Pro" rule -- or its name in a comment -- reads as crippleware in the free core stylesheet'
+			);
+		}
 	}
 
 	public function test_the_pro_lock_rule_still_exists_for_the_products_that_want_it(): void {
