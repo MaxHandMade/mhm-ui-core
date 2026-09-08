@@ -1,4 +1,4 @@
-const { readFileSync } = require( 'node:fs' );
+const { readFileSync, existsSync } = require( 'node:fs' );
 const { join } = require( 'node:path' );
 const { renderTokensBlock, replaceBlock, flatTokens, START, END } = require( '../../bin/build-tokens.js' );
 
@@ -73,5 +73,28 @@ describe( 'tokens.json kapsam şeması', () => {
 		const block = renderTokensBlock( skewed, '.mhmui-admin' );
 		expect( block ).not.toContain( '--mhmui-only' );
 		expect( block ).toContain( '--mhmui-blue' );
+	} );
+} );
+
+describe( 'iki hedef, iki blok', () => {
+	const doc = JSON.parse( readFileSync( join( ROOT, 'src-react', 'tokens.json' ), 'utf8' ) );
+
+	test( 'her kapsamin bir hedef dosyasi vardir ve dosya diskte durur', () => {
+		for ( const [ selector, target ] of Object.entries( doc.targets ) ) {
+			expect( doc.scopes[ selector ] ).toBeTruthy();
+			expect( existsSync( join( ROOT, target ) ) ).toBe( true );
+		}
+	} );
+
+	test( 'her hedef kendi kapsaminin blogunu tasir, otekinin degil', () => {
+		for ( const [ selector, target ] of Object.entries( doc.targets ) ) {
+			const text = readFileSync( join( ROOT, target ), 'utf8' );
+			expect( replaceBlock( text, renderTokensBlock( doc, selector ) ) ).toBe( text );
+		}
+	} );
+
+	test( 'front.css font-family bildirmez -- tema kazanir (spec kapi 3)', () => {
+		const front = readFileSync( join( ROOT, 'assets', 'react', 'front.css' ), 'utf8' );
+		expect( front ).not.toMatch( /font-family\s*:/ );
 	} );
 } );

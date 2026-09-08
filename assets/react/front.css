@@ -1,0 +1,37 @@
+/* =============================================================================
+   MHM UI Core — frontend kit styles
+   Scope: .mhmui-front mount nodes (a plugin surface inside someone else's theme)
+
+   🔴 Bu dosya font-family BILDIRMEZ. Spec §4: frontend'de tipografinin sahibi
+   temadir; `inherit` de bir bildirimdir ve bileseni ebeveynin hesaplanmis
+   fontuna baglar -- istenen o degil, HIC bildirmemektir.
+
+   🔴 @layer KULLANILMAZ. Katmansiz yazar bildirimi, ozgullukten bagimsiz
+   olarak, her katmanliyi yener; WP cekirdeginde ve WooCommerce stillerinde
+   @layer yoktur. Yapi kurallari katmansiz + normal ozgullukte, skin
+   :where(...) ile sifir ozgullukte yazilir.
+   ============================================================================= */
+
+/* mhmui:tokens:start -- generated from src-react/tokens.json by bin/build-tokens.js; do not edit by hand */
+.mhmui-front {
+	--mhmui-blue:         #0088b0;
+	--mhmui-blue-dark:    #00697f;
+	--mhmui-green:        #1a7f37;
+	--mhmui-green-dark:   #116329;
+	--mhmui-amber:        #9a6700;
+	--mhmui-amber-dark:   #7d5300;
+	--mhmui-red:          #cf222e;
+	--mhmui-red-dark:     #a40e26;
+	--mhmui-grey:         #57606a;
+	--mhmui-grey-dark:    #424a53;
+	--mhmui-border:       #d0d7de;
+	--mhmui-border-light: #eaeef2;
+	--mhmui-text:         #1f2328;
+	--mhmui-text-light:   #57606a;
+	--mhmui-bg:           transparent;
+	--mhmui-surface:      #ffffff;
+	--mhmui-card-bg:      #ffffff;
+	--mhmui-gap:          12px;
+	--mhmui-radius:       4px;
+}
+/* mhmui:tokens:end */
