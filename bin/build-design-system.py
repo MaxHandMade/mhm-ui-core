@@ -119,7 +119,8 @@ files["components/stats-grid.html"] = page(
     width=960,
 )
 
-# KpiBox was absorbed into StatCard in 0.9.7. Its look did not go away -- it is
+# KpiBox was absorbed into StatCard after v0.9.6 (unreleased at the time of
+# writing). Its look did not go away -- it is
 # what StatCard renders when no tone is given -- so the sheet shows that state
 # next to the toned ones instead of documenting a second component.
 def quiet_card(value, label):
