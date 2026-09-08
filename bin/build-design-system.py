@@ -96,14 +96,14 @@ def stat_card(label, value, tone, icon=True, delta=None, sub=None):
 
 files["components/stat-card.html"] = page(
     "Components", "StatCard",
-    "<b>StatCard</b> — etiket · biçimlendirilmiş değer · isteğe bağlı delta ya da alt satır. Prop'lar: label, value, icon, tone (blue/green/amber/grey/red), sub, delta{direction,text}. "
+    "<b>StatCard</b> — etiket · biçimlendirilmiş değer · isteğe bağlı delta ya da alt satır. Prop'lar: label, value, icon, tone (success/warning/danger/info/neutral), sub, delta{direction,text}. "
     "Her dize prop'tur: paketin text domain'i yok, çeviriyi ürün yapar.",
     '<div class="ds-label">Tonlar</div><div class="ds-row" style="display:grid;grid-template-columns:repeat(2,1fr)">'
-    + stat_card("Toplam Rezervasyon", "1.284", "blue", delta=("up", "↑ %12 bu ay"))
-    + stat_card("Toplam Gelir", "₺418.900", "green", delta=("down", "↓ %3 bu ay"))
-    + stat_card("Aktif Araç", "37", "amber", sub="52 toplam")
-    + stat_card("Bu ay kiralayan", "63", "grey", delta=("flat", ""), sub="")
-    + stat_card("İptal", "4", "red", sub="son 7 gün")
+    + stat_card("Toplam Rezervasyon", "1.284", "info", delta=("up", "↑ %12 bu ay"))
+    + stat_card("Toplam Gelir", "₺418.900", "success", delta=("down", "↓ %3 bu ay"))
+    + stat_card("Aktif Araç", "37", "warning", sub="52 toplam")
+    + stat_card("Bu ay kiralayan", "63", "neutral", delta=("flat", ""), sub="")
+    + stat_card("İptal", "4", "danger", sub="son 7 gün")
     + "</div>",
 )
 
@@ -111,10 +111,10 @@ files["components/stats-grid.html"] = page(
     "Components", "StatsGrid",
     "<b>StatsGrid</b> — StatCard satırı. Prop'lar: cards[] (StatCard prop nesneleri, key = label), columns (varsayılan 4).",
     '<div class="mhmui-stats-grid" style="grid-template-columns:repeat(4,1fr)">'
-    + stat_card("Rezervasyon", "1.284", "blue", delta=("up", "↑ %12 bu ay"))
-    + stat_card("Gelir", "₺418.900", "green", delta=("up", "↑ %8 bu ay"))
-    + stat_card("Aktif Araç", "37", "amber", sub="52 toplam")
-    + stat_card("Kiralayan", "63", "grey", sub="bu ay")
+    + stat_card("Rezervasyon", "1.284", "info", delta=("up", "↑ %12 bu ay"))
+    + stat_card("Gelir", "₺418.900", "success", delta=("up", "↑ %8 bu ay"))
+    + stat_card("Aktif Araç", "37", "warning", sub="52 toplam")
+    + stat_card("Kiralayan", "63", "neutral", sub="bu ay")
     + "</div>",
     width=960,
 )
@@ -169,10 +169,10 @@ files["components/pro-lock.html"] = page(
 
 files["components/notice.html"] = page(
     "Components", "Notice",
-    "<b>Notice</b> — WordPress'in kendi bildirim biçiminde satır içi bildirim. Prop'lar: tone (success/warning/error/info), onDismiss, dismissLabel, children.",
+    "<b>Notice</b> — WordPress'in kendi bildirim biçiminde satır içi bildirim. Prop'lar: tone (success/warning/danger/info), onDismiss, dismissLabel, children.",
     '<div class="notice notice-success mhmui-notice mhmui-notice--success" role="status"><p>Ayarlar kaydedildi.</p><button type="button" class="notice-dismiss"><span class="screen-reader-text">Kapat</span></button></div>'
     '<div class="notice notice-warning mhmui-notice mhmui-notice--warning" role="status"><p>Lisans 12 gün içinde doluyor.</p></div>'
-    '<div class="notice notice-error mhmui-notice mhmui-notice--error" role="status"><p>Dışa aktarma başarısız: dosya yazılamadı.</p></div>'
+    '<div class="notice notice-error mhmui-notice mhmui-notice--danger" role="status"><p>Dışa aktarma başarısız: dosya yazılamadı.</p></div>'
     '<div class="notice notice-info mhmui-notice mhmui-notice--info" role="status"><p>Yeni sürüm hazır.</p></div>',
     width=620,
 )
@@ -183,7 +183,7 @@ files["components/widget.html"] = page(
     '<section class="mhmui-widget"><header class="mhmui-widget__header"><h3 class="mhmui-widget__title"><span class="dashicons" aria-hidden="true"></span>Son rezervasyonlar<span class="mhmui-widget__subtitle">son 7 gün</span></h3>'
     '<div class="mhmui-widget__actions"><a href="#" class="button">Tümü</a></div></header>'
     '<div class="mhmui-widget__body"><div class="mhmui-stats-grid" style="grid-template-columns:repeat(3,1fr)">'
-    + kpi("14", "Yeni", "blue") + kpi("9", "Teslim", "green") + kpi("2", "İade", "amber")
+    + stat_card("Yeni", "14", "info") + stat_card("Teslim", "9", "success") + stat_card("İade", "2", "warning")
     + "</div></div></section>",
     width=720,
 )
@@ -222,16 +222,33 @@ yeniden eşitlenir; aksi hâlde Claude Design bizim olmayan bileşenlerle çizme
 # releases without a single failure anywhere. Nothing was broken; something
 # simply stopped being true, quietly.
 #
-# Modifiers (--suffix) are exempt on purpose: several lean on WordPress's own
-# .notice-* classes and legitimately have no rule of their own here.
 # Extension points: classes the kit emits for consumers to target, with no rule
 # of their own here and none in any consumer today (measured 2026-09-06). They
 # are not the lock case: nothing about the component's appearance depends on
 # them. .mhmui-pagination__button rides alongside WordPress's own .button, which
 # does the styling; .mhmui-widget__actions is a container inside a header that
-# already lays its children out. Listed BY NAME so the exemption is a decision on
-# the record, not an inference the check quietly makes.
-STYLE_HOOKS = {"mhmui-pagination__button", "mhmui-widget__actions"}
+# already lays its children out. Notice's tone modifiers carry NO color of
+# their own by design -- WordPress's native .notice-success/-warning/-error/-info
+# does all the coloring (Notice.jsx emits both), so `mhmui-notice--<tone>` is a
+# bare semantic hook for consumers, not a styled state. Listed BY NAME so the
+# exemption is a decision on the record, not an inference the check quietly makes.
+STYLE_HOOKS = {
+    "mhmui-pagination__button",
+    "mhmui-widget__actions",
+    "mhmui-notice--success",
+    "mhmui-notice--warning",
+    "mhmui-notice--danger",
+    "mhmui-notice--info",
+}
+
+# Modifiers that intentionally SHARE the unmodified rule instead of carrying
+# one of their own. `--up` needs no visual difference from the plain delta
+# line -- only `--down` gets emphasis (see the comment on
+# .mhmui-stat-card__delta--down in admin.css). This is a deliberate design
+# choice, not the vocabulary drift this check exists to catch (that drift
+# looks like `mhmui-stat-card--blue`, a modifier with NO canonical role
+# behind it at all): named here so the exemption is on the record.
+SHARED_RULE_MODIFIERS = {"mhmui-stat-card__delta--up"}
 
 missing = []
 for rel, content in files.items():
@@ -240,7 +257,7 @@ for rel, content in files.items():
     used = set()
     for attr in re.findall(r'class="([^"]+)"', body):
         for cls in attr.split():
-            if cls.startswith("mhmui-") and "--" not in cls and cls not in STYLE_HOOKS:
+            if cls.startswith("mhmui-") and cls not in STYLE_HOOKS and cls not in SHARED_RULE_MODIFIERS:
                 used.add(cls)
     for cls in sorted(used):
         if not re.search(r"\." + re.escape(cls) + r"\s*[,{]", styles):

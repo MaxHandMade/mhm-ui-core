@@ -321,6 +321,7 @@
 .mhmui-status--warning { background: var( --mhmui-warning-soft ); color: var( --mhmui-warning-strong ); }
 .mhmui-status--danger  { background: var( --mhmui-danger-soft );  color: var( --mhmui-danger-strong ); }
 .mhmui-status--info    { background: var( --mhmui-info-soft );    color: var( --mhmui-info-strong ); }
+.mhmui-status--neutral { background: var( --mhmui-neutral-soft ); color: var( --mhmui-text ); }
 
 .mhmui-pagination { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
 .mhmui-pagination__status { color: var( --mhmui-text-muted ); font-variant-numeric: tabular-nums; }
