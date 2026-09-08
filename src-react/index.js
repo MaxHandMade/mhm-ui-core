@@ -14,4 +14,10 @@ export { default as Widget } from './components/Widget';
 
 // The single token source, for consumers that need the raw values in JS
 // (charts, inline styles). The CSS custom properties are generated from it.
-export { default as tokens } from './tokens.json';
+// `tokens.tokens` is the legacy flat view (the admin scope) and is kept for
+// at least one minor: this file is a public export and readers depend on it.
+const tokenDoc = require( './tokens.json' );
+export const tokens = {
+	...tokenDoc,
+	tokens: tokenDoc.scopes[ '.mhmui-admin' ],
+};
