@@ -5,27 +5,35 @@ React kaynakları, admin CSS'i, ikonlar.
 
 ## Nasıl adreslenir
 
-Asla başka bir eklentinin URL sabitini elle yazma. Kazanan kopyayı iki yardımcı verir
-(ikisi de `bootstrap.php`'de, yani **sürüm seçicinin kazananında** tanımlı):
+Asla başka bir eklentinin URL sabitini elle yazma, ve kendi `wp_enqueue_style()`'ini kendin
+kurma. Kazanan kopya (`bootstrap.php`, **sürüm seçicinin kazananı**) tek bir yardımcı verir:
 
 ```php
-if ( function_exists( 'mhmuicore_asset_url' ) ) {
-    wp_enqueue_style(
-        'mhmuicore-admin',
-        mhmuicore_asset_url( 'react/admin.css' ),
-        array(),
-        mhmuicore_version()
-    );
+if ( function_exists( 'mhmuicore_enqueue_kit' ) ) {
+    mhmuicore_enqueue_kit( 'admin' ); // ya da 'front' / 'pro'
 }
 ```
 
-- `mhmuicore_asset_url( $relative )` → herkese açık URL
-- `mhmuicore_asset_path( $relative )` → mutlak dosya yolu
-- `mhmuicore_version()` → **booting eden** kopyanın sürümü (önbellek kırma için bunu kullan,
-  tüketen eklentinin kendi sürümünü değil)
+`mhmuicore_enqueue_kit( $surface, $fallback_root = '' )` handle'ı, URL'yi VE sürümü kendi
+seçer — tüketici hiçbirini elle yazmaz:
+
+- `'admin'` / `'front'` / `'pro'` paketin sabit handle'larına kaydolur (`mhmuicore-admin` vb.)
+- `'pro'` tek başına yeterlidir: `admin.css`'i de kendisi kuyruğa alır ve ona **bağımlı** kılar
+  (`pro.css`'in token'ları `admin.css`'te yaşar — ayrı ayrı çağırmak gerekmez, ikisini de bu
+  tek çağrı halleder)
+- Free bir çekirdek kendi `assets/`'inden `pro.css`'i budamışsa (`.distignore`), `$fallback_root`
+  bir Pro tüketicinin kendi ui-core kopyasına düşmesini sağlar — kazanan yine paketin kendisidir,
+  tüketici yalnız bir kök adı verir
+- Dosya hiçbir kopyada yoksa boş dize döner: sessiz 404 yerine ölçülebilir "hiç"
+
+Alt seviye yardımcılar (`mhmuicore_asset_url()`, `mhmuicore_asset_path()`, `mhmuicore_version()`)
+hâlâ `bootstrap.php`'de tanımlı ve kendi URL/yol/sürüm ihtiyacın için kullanılabilir, ama bir
+kit stylesheet'i kuyruğa almak için **`mhmuicore_enqueue_kit()`i kullan** — el yazımı
+`wp_enqueue_style()` çağrısı, spec'in yasakladığı "tüketicinin kendi vendor yolunu enqueue etmesi"
+kalıbına geri döner.
 
 🔴 **`function_exists()` koruması zorunlu.** Sahada hâlâ ui-core **0.2.x** kazanıyor olabilir;
-o sürümde bu fonksiyonlar yok. Korumasız çağrı fatal atar.
+o sürümde bu fonksiyon yok. Korumasız çağrı fatal atar.
 
 ## Neden `register.php`'de değil
 
