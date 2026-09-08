@@ -43,9 +43,11 @@ describe( 'tokens.json kapsam şeması', () => {
 		expect( Object.keys( doc.scopes ).sort() ).toEqual( [ '.mhmui-admin', '.mhmui-front' ] );
 	} );
 
-	test( 'her kapsam kendi degerlerini tasir -- ayni ad, farkli deger olabilir', () => {
-		expect( doc.scopes[ '.mhmui-admin' ] ).toHaveProperty( 'surface' );
-		expect( doc.scopes[ '.mhmui-front' ] ).toHaveProperty( 'surface' );
+	test( 'ayni ad, kapsama gore FARKLI deger tasiyabilir', () => {
+		expect( doc.scopes[ '.mhmui-front' ].blue ).not.toBe( doc.scopes[ '.mhmui-admin' ].blue );
+		expect( doc.scopes[ '.mhmui-front' ].red ).not.toBe( doc.scopes[ '.mhmui-admin' ].red );
+		// surface is intentionally the same in both scopes; that's fine, but other tokens differ
+		expect( doc.scopes[ '.mhmui-front' ].bg ).not.toBe( doc.scopes[ '.mhmui-admin' ].bg );
 	} );
 
 	test( 'renderTokensBlock yalniz istenen kapsamin bloklarini basar', () => {
@@ -55,6 +57,10 @@ describe( 'tokens.json kapsam şeması', () => {
 	} );
 
 	test( 'flatTokens eski duz gorunumu korur (tokens.json herkese acik API)', () => {
-		expect( flatTokens( doc ) ).toEqual( doc.scopes[ '.mhmui-admin' ] );
+		expect( flatTokens( doc ) ).toEqual( doc.tokens );
+	} );
+
+	test( 'legacy duz gorunum admin kapsaminin AYNASIDIR -- surukleme kapisi', () => {
+		expect( doc.tokens ).toEqual( doc.scopes[ '.mhmui-admin' ] );
 	} );
 } );
