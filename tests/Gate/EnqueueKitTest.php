@@ -69,8 +69,11 @@ final class EnqueueKitTest extends TestCase {
 		$GLOBALS['mhmuicore_test_wp_calls'] = array();
 		\mhmuicore_enqueue_kit( 'pro', sys_get_temp_dir() . '/some-consumer/vendor/mhm/ui-core' );
 
+		// 'pro' cascades into 'admin' first (B4), so the package's own handle
+		// for the surface actually asked for is the LAST call, not the first.
 		$calls = \mhmuicore_test_calls( 'wp_enqueue_style' );
-		self::assertSame( 'mhmuicore-pro', $calls[0]['handle'], 'the handle stays the package\'s' );
+		$last  = $calls[ count( $calls ) - 1 ];
+		self::assertSame( 'mhmuicore-pro', $last['handle'], 'the handle stays the package\'s' );
 	}
 
 	public function test_when_fallback_root_does_not_exist_on_disk_but_primary_does_enqueue_succeeds(): void {
@@ -85,6 +88,33 @@ final class EnqueueKitTest extends TestCase {
 		$calls = \mhmuicore_test_calls( 'wp_enqueue_style' );
 		self::assertCount( 1, $calls );
 		self::assertStringContainsString( 'react/front.css', $calls[0]['src'] );
+	}
+
+	public function test_pro_enqueues_admin_first_and_declares_it_as_a_dependency(): void {
+		// B4: pro.css's own header says its tokens live in admin.css, and
+		// .mhmui-pro-lock reads four of them via var(). Enqueueing 'pro' alone
+		// (empty deps, as bootstrap.php's surfaces used to do) rendered the
+		// lock card with unresolved custom properties and no error anywhere.
+		//
+		// Declaring array( 'mhmuicore-admin' ) as a dependency does nothing if
+		// nothing ever registered that handle -- WordPress silently drops a
+		// stylesheet whose dependency was never enqueued. So a single call for
+		// 'pro' must itself enqueue 'admin' first, then enqueue 'pro' with
+		// that handle as its dependency.
+		$handle = \mhmuicore_enqueue_kit( 'pro' );
+
+		self::assertSame( 'mhmuicore-pro', $handle );
+
+		$calls = \mhmuicore_test_calls( 'wp_enqueue_style' );
+		self::assertCount( 2, $calls, 'asking for pro enqueues exactly two stylesheets' );
+		self::assertSame( 'mhmuicore-admin', $calls[0]['handle'], 'admin is enqueued FIRST' );
+		self::assertSame( array(), $calls[0]['deps'], 'admin itself has no dependency' );
+		self::assertSame( 'mhmuicore-pro', $calls[1]['handle'], 'pro is enqueued SECOND' );
+		self::assertSame(
+			array( 'mhmuicore-admin' ),
+			$calls[1]['deps'],
+			'pro declares admin as its dependency, not an empty array WordPress would silently drop'
+		);
 	}
 
 	public function test_guard_prevents_silent_failure_when_file_cannot_be_located(): void {
