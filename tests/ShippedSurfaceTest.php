@@ -81,12 +81,11 @@ final class ShippedSurfaceTest extends TestCase {
 		$p1 = array_filter( $files, static fn( $p ) => (bool) preg_match( '/\.(css|js|jsx|php)$/', $p ) );
 		$p2 = array_filter( $files, static fn( $p ) => str_ends_with( $p, '.css' ) );
 
-		// 53/46/3 — Task 2: assets/react/front.css added as the frontend surface's
-		// own stylesheet, so the frontend stops borrowing admin.css (which carries
-		// .mhm-* legacy rules and the wp-admin palette). This pin is a tripwire,
-		// not a target: it moves only with a commit that deliberately changes what
-		// ships, and the commit says which file.
-		self::assertCount( 53, $files, 'shipped file count changed' );
+		// 54/46/3 — Task 5: src-react/components.json added as the manifest for
+		// component metadata (interactive, tone_semantics, fixtures). This pin is a
+		// tripwire, not a target: it moves only with a commit that deliberately
+		// changes what ships, and the commit says which file.
+		self::assertCount( 54, $files, 'shipped file count changed' );
 		self::assertCount( 46, $p1, 'P1 file set changed' );
 		self::assertCount( 3, $p2, 'P2 file set changed' );
 	}

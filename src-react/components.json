@@ -1,0 +1,45 @@
+{
+  "ErrorBoundary": {
+    "interactive": false, "tone_semantics": false,
+    "props": { "children": "node" },
+    "fixtures": [ { "children": "ok" } ]
+  },
+  "StatCard": {
+    "interactive": false, "tone_semantics": true,
+    "props": { "label": "string", "value": "string", "icon": "icon?", "tone": "role?", "sub": "string?", "delta": "object?" },
+    "fixtures": [
+      { "label": "Bookings", "value": "42" },
+      { "label": "Bookings", "value": "42", "tone": "success", "icon": "calendar-alt" }
+    ]
+  },
+  "StatsGrid": {
+    "interactive": false, "tone_semantics": false,
+    "props": { "cards": "array", "columns": "number?" },
+    "fixtures": [ { "cards": [ { "label": "A", "value": "1" } ], "columns": 2 } ]
+  },
+  "StatusBadge": {
+    "interactive": false, "tone_semantics": true,
+    "props": { "children": "node", "tone": "role?" },
+    "fixtures": [ { "children": "Confirmed", "tone": "success" } ]
+  },
+  "Pagination": {
+    "interactive": true, "tone_semantics": false,
+    "props": { "page": "number", "totalPages": "number", "onChange": "function", "labels": "object" },
+    "fixtures": [ { "page": 1, "totalPages": 3, "labels": { "previous": "Prev", "next": "Next", "of": "of" } } ]
+  },
+  "ProLock": {
+    "interactive": false, "tone_semantics": false,
+    "props": { "unlocked": "boolean", "fallback": "node", "children": "node" },
+    "fixtures": [ { "unlocked": false, "fallback": "Pro only", "children": "Secret" } ]
+  },
+  "Notice": {
+    "interactive": true, "tone_semantics": true,
+    "props": { "children": "node", "tone": "role?", "onDismiss": "function?", "dismissLabel": "string?" },
+    "fixtures": [ { "children": "Broken", "tone": "danger", "dismissLabel": "Dismiss" } ]
+  },
+  "Widget": {
+    "interactive": false, "tone_semantics": false,
+    "props": { "title": "string", "subtitle": "string?", "actions": "node?", "children": "node" },
+    "fixtures": [ { "title": "Recent", "children": "Body" } ]
+  }
+}
