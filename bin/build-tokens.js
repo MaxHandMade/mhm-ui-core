@@ -22,9 +22,17 @@ const { join } = require( 'node:path' );
 
 const ROOT = join( __dirname, '..' );
 const TOKENS = join( ROOT, 'src-react', 'tokens.json' );
-const CSS = join( ROOT, 'assets', 'react', 'admin.css' );
 const START = '/* mhmui:tokens:start -- generated from src-react/tokens.json by bin/build-tokens.js; do not edit by hand */';
 const END = '/* mhmui:tokens:end */';
+
+/**
+ * Selectors a scope's block is written under.
+ *
+ * `.mhm-stats-grid` is a legacy selector Rentiva still relies on (six files).
+ * Dropping it would silently unstyle those grids, so the scope carries it as
+ * a second selector rather than losing it in the schema change.
+ */
+const LEGACY_SELECTORS = { '.mhmui-admin': [ '.mhmui-admin', '.mhm-stats-grid' ] };
 
 /**
  * Render the custom-property block for one scope of a tokens.json document.
@@ -44,7 +52,8 @@ function renderTokensBlock( doc, selector ) {
 		const prop = `--mhmui-${ name }:`;
 		return `\t${ prop.padEnd( width + 1 ) }${ map[ name ] };`;
 	} );
-	return [ START, `${ selector } {`, ...lines, '}', END ].join( '\n' );
+	const selectors = ( LEGACY_SELECTORS[ selector ] || [ selector ] ).join( ',\n' );
+	return [ START, `${ selectors } {`, ...lines, '}', END ].join( '\n' );
 }
 
 /**
@@ -82,20 +91,37 @@ function replaceBlock( css, block ) {
 
 function main( argv ) {
 	const doc = JSON.parse( readFileSync( TOKENS, 'utf8' ) );
-	const current = readFileSync( CSS, 'utf8' );
-	const next = replaceBlock( current, renderTokensBlock( doc, '.mhmui-admin' ) );
+	const check = argv.includes( '--check' );
+	let stale = 0;
+	let written = 0;
 
-	if ( argv.includes( '--check' ) ) {
-		if ( next !== current ) {
-			process.stderr.write( 'tokens:check: assets/react/admin.css is stale -- run `npm run tokens:build`.\n' );
+	for ( const [ selector, target ] of Object.entries( doc.targets ) ) {
+		const file = join( ROOT, target );
+		const current = readFileSync( file, 'utf8' );
+		const next = replaceBlock( current, renderTokensBlock( doc, selector ) );
+
+		if ( check ) {
+			if ( next !== current ) {
+				process.stderr.write( `tokens:check: ${ target } is stale -- run \`npm run tokens:build\`.\n` );
+				stale += 1;
+			}
+			continue;
+		}
+
+		writeFileSync( file, next );
+		written += Object.keys( doc.scopes[ selector ] ).length;
+	}
+
+	if ( check ) {
+		if ( stale > 0 ) {
 			process.exit( 1 );
 		}
-		process.stdout.write( `tokens:check: ${ Object.keys( doc.scopes[ '.mhmui-admin' ] ).length } token(s) in sync.\n` );
+		const total = Object.values( doc.scopes ).reduce( ( n, m ) => n + Object.keys( m ).length, 0 );
+		process.stdout.write( `tokens:check: ${ total } token(s) in sync across ${ Object.keys( doc.targets ).length } target(s).\n` );
 		return;
 	}
 
-	writeFileSync( CSS, next );
-	process.stdout.write( `tokens:build: wrote ${ Object.keys( doc.scopes[ '.mhmui-admin' ] ).length } token(s) into assets/react/admin.css.\n` );
+	process.stdout.write( `tokens:build: wrote ${ written } token(s) across ${ Object.keys( doc.targets ).length } target(s).\n` );
 }
 
 module.exports = { renderTokensBlock, replaceBlock, flatTokens, START, END };
