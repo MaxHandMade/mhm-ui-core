@@ -119,13 +119,18 @@ files["components/stats-grid.html"] = page(
     width=960,
 )
 
-def kpi(value, label, tone):
-    return ('<div class="mhmui-kpi-box mhmui-kpi-box--%s"><p class="mhmui-kpi-box__value">%s</p>'
-            '<p class="mhmui-kpi-box__label">%s</p></div>' % (tone, value, label))
-files["components/kpi-box.html"] = page(
-    "Components", "KpiBox",
-    "<b>KpiBox</b> — küçük anahtar rakam: değer üstte, etiket altta. Prop'lar: value, label, tone (blue/green/amber/grey/red).",
-    '<div class="ds-row">' + kpi("%92", "Doluluk", "blue") + kpi("18", "Bekleyen", "amber") + kpi("₺12.400", "Depozito", "green") + kpi("3", "Gecikmiş", "red") + kpi("241", "Müşteri", "grey") + "</div>",
+# KpiBox was absorbed into StatCard in 0.9.7. Its look did not go away -- it is
+# what StatCard renders when no tone is given -- so the sheet shows that state
+# next to the toned ones instead of documenting a second component.
+def quiet_card(value, label):
+    return ('<div class="mhmui-stat-card"><div class="mhmui-stat-card__body">'
+            '<p class="mhmui-stat-card__label">%s</p>'
+            '<p class="mhmui-stat-card__value">%s</p></div></div>' % (label, value))
+files["components/stat-card-quiet.html"] = page(
+    "Components", "StatCard (tonsuz)",
+    "<b>StatCard</b> ton verilmediğinde sessiz çerçeveli kutudur. Renk <i>opt-in</i>'dir: "
+    "anahtar rakam, anlamı gerektirmedikçe renk taşımaz. Ton verilince kart dolgulu hale gelir.",
+    '<div class="ds-row">' + quiet_card("%92", "Doluluk") + quiet_card("18", "Bekleyen") + quiet_card("₺12.400", "Depozito") + "</div>",
 )
 
 files["components/status-badge.html"] = page(
@@ -198,7 +203,7 @@ Burada çizilen, WordPress'te aynen render olur.
 - Claude Design **üretim kodu üretmez**; devir paketi üretir, kodu Claude Code yazar.
 
 ## Bileşenler
-StatCard · StatsGrid · KpiBox · StatusBadge · Pagination · ProLock · Notice · Widget
+StatCard · StatsGrid · StatusBadge · Pagination · ProLock · Notice · Widget
 (+ görünmeyenler: ErrorBoundary, createApiClient, useApi, createFormatter)
 
 ## Senkron
