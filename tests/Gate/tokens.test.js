@@ -44,10 +44,10 @@ describe( 'tokens.json kapsam şeması', () => {
 	} );
 
 	test( 'ayni ad, kapsama gore FARKLI deger tasiyabilir', () => {
-		expect( doc.scopes[ '.mhmui-front' ].blue ).not.toBe( doc.scopes[ '.mhmui-admin' ].blue );
-		expect( doc.scopes[ '.mhmui-front' ].red ).not.toBe( doc.scopes[ '.mhmui-admin' ].red );
+		expect( doc.scopes[ '.mhmui-front' ].info ).not.toBe( doc.scopes[ '.mhmui-admin' ].info );
+		expect( doc.scopes[ '.mhmui-front' ].danger ).not.toBe( doc.scopes[ '.mhmui-admin' ].danger );
 		// surface is intentionally the same in both scopes; that's fine, but other tokens differ
-		expect( doc.scopes[ '.mhmui-front' ].bg ).not.toBe( doc.scopes[ '.mhmui-admin' ].bg );
+		expect( doc.scopes[ '.mhmui-front' ][ 'surface-sunken' ] ).not.toBe( doc.scopes[ '.mhmui-admin' ][ 'surface-sunken' ] );
 	} );
 
 	test( 'renderTokensBlock yalniz istenen kapsamin bloklarini basar', () => {
@@ -72,7 +72,7 @@ describe( 'tokens.json kapsam şeması', () => {
 		};
 		const block = renderTokensBlock( skewed, '.mhmui-admin' );
 		expect( block ).not.toContain( '--mhmui-only' );
-		expect( block ).toContain( '--mhmui-blue' );
+		expect( block ).toContain( '--mhmui-info' );
 	} );
 } );
 

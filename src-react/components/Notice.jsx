@@ -2,7 +2,7 @@
  * An inline admin notice in WordPress's own notice shape.
  *
  * @param {Object}   props
- * @param {string}   [props.tone]         success | warning | error | info.
+ * @param {string}   [props.tone]         success | warning | danger | info.
  * @param {*}        props.children       Translated message.
  * @param {Function} [props.onDismiss]    When given, a dismiss button is rendered.
  * @param {string}   [props.dismissLabel] Accessible label for the dismiss button.
@@ -13,9 +13,10 @@ export default function Notice( {
 	onDismiss,
 	dismissLabel,
 } ) {
+	const wpTone = 'danger' === tone ? 'error' : tone;
 	return (
 		<div
-			className={ `notice notice-${ tone } mhmui-notice mhmui-notice--${ tone }` }
+			className={ `notice notice-${ wpTone } mhmui-notice mhmui-notice--${ tone }` }
 			role="status"
 		>
 			<p>{ children }</p>

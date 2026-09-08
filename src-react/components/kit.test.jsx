@@ -16,7 +16,7 @@ describe( 'the visual kit renders only what it is given', () => {
 			<StatCard
 				label="Bookings"
 				value="42"
-				tone="green"
+				tone="success"
 				delta={ { direction: 'up', text: '+3 this month' } }
 			/>
 		);
@@ -69,12 +69,17 @@ describe( 'the visual kit renders only what it is given', () => {
 		expect( container.querySelector( '.dashicons' ) ).toBeNull();
 	} );
 
-	test( 'StatCard carries the tone and icon it is given', () => {
+	test( 'StatCard rol adini modifier olarak tasir, renk adini degil', () => {
 		const { container } = render(
-			<StatCard label="Open" value="9" tone="amber" icon="calendar-alt" />
+			<StatCard
+				label="Open"
+				value="9"
+				tone="success"
+				icon="calendar-alt"
+			/>
 		);
 		expect( container.firstChild.className ).toBe(
-			'mhmui-stat-card mhmui-stat-card--amber'
+			'mhmui-stat-card mhmui-stat-card--success'
 		);
 		expect(
 			container.querySelector( '.dashicons-calendar-alt' )
@@ -135,13 +140,26 @@ describe( 'the visual kit renders only what it is given', () => {
 	test( 'Notice takes WordPress notice classes and dismisses through the callback', () => {
 		const onDismiss = jest.fn();
 		const { container } = render(
-			<Notice tone="error" onDismiss={ onDismiss } dismissLabel="Dismiss">
+			<Notice
+				tone="danger"
+				onDismiss={ onDismiss }
+				dismissLabel="Dismiss"
+			>
 				Broken
 			</Notice>
 		);
 		expect( container.firstChild.className ).toContain( 'notice-error' );
 		fireEvent.click( container.querySelector( '.notice-dismiss' ) );
 		expect( onDismiss ).toHaveBeenCalled();
+	} );
+
+	test( 'Notice danger der, error demez -- tek rol sozlugu', () => {
+		const { container } = render( <Notice tone="danger">Broken</Notice> );
+		expect( container.firstChild.className ).toContain(
+			'mhmui-notice--danger'
+		);
+		// WordPress'in kendi bildirim sinifi KORUNUR: notice-error WP sozlesmesidir.
+		expect( container.firstChild.className ).toContain( 'notice-error' );
 	} );
 
 	test( 'Widget renders title, subtitle, actions and body', () => {
@@ -161,7 +179,7 @@ describe( 'the visual kit renders only what it is given', () => {
 	} );
 
 	test( 'tokens are exported from the single source', () => {
-		expect( tokens.tokens.blue ).toBe( '#2271b1' );
+		expect( tokens.tokens.success ).toBe( '#00a32a' );
 		expect( Object.keys( tokens.tokens ).length ).toBeGreaterThanOrEqual(
 			15
 		);

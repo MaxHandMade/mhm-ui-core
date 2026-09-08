@@ -14,24 +14,37 @@
 
 /* mhmui:tokens:start -- generated from src-react/tokens.json by bin/build-tokens.js; do not edit by hand */
 .mhmui-front {
-	--mhmui-blue:         #0088b0;
-	--mhmui-blue-dark:    #00697f;
-	--mhmui-green:        #1a7f37;
-	--mhmui-green-dark:   #116329;
-	--mhmui-amber:        #9a6700;
-	--mhmui-amber-dark:   #7d5300;
-	--mhmui-red:          #cf222e;
-	--mhmui-red-dark:     #a40e26;
-	--mhmui-grey:         #57606a;
-	--mhmui-grey-dark:    #424a53;
-	--mhmui-border:       #d0d7de;
-	--mhmui-border-light: #eaeef2;
-	--mhmui-text:         #1f2328;
-	--mhmui-text-light:   #57606a;
-	--mhmui-bg:           transparent;
-	--mhmui-surface:      #ffffff;
-	--mhmui-card-bg:      #ffffff;
-	--mhmui-gap:          12px;
-	--mhmui-radius:       4px;
+	--mhmui-info:           #0088b0;
+	--mhmui-info-strong:    #00697f;
+	--mhmui-success:        #1a7f37;
+	--mhmui-success-strong: #116329;
+	--mhmui-warning:        #9a6700;
+	--mhmui-warning-strong: #7d5300;
+	--mhmui-danger:         #cf222e;
+	--mhmui-danger-strong:  #a40e26;
+	--mhmui-neutral:        #57606a;
+	--mhmui-neutral-strong: #424a53;
+	--mhmui-border:         #d0d7de;
+	--mhmui-border-light:   #eaeef2;
+	--mhmui-text:           #1f2328;
+	--mhmui-text-muted:     #57606a;
+	--mhmui-surface-sunken: transparent;
+	--mhmui-surface:        #ffffff;
+	--mhmui-gap:            12px;
+	--mhmui-radius:         4px;
+	--mhmui-accent:         #0088b0;
+	--mhmui-accent-strong:  #00697f;
+	--mhmui-on-accent:      #ffffff;
+	--mhmui-success-soft:   #dafbe1;
+	--mhmui-warning-soft:   #fff8c5;
+	--mhmui-danger-soft:    #ffebe9;
+	--mhmui-info-soft:      #ddf4ff;
+	--mhmui-neutral-soft:   #f6f8fa;
+	--mhmui-shadow-1:       0 1px 2px rgba(0,0,0,.06);
+	--mhmui-shadow-2:       0 2px 8px rgba(0,0,0,.10);
+	--mhmui-space-1:        4px;
+	--mhmui-space-2:        8px;
+	--mhmui-space-3:        12px;
+	--mhmui-space-4:        20px;
 }
 /* mhmui:tokens:end */
