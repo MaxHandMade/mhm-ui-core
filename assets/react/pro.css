@@ -8,10 +8,11 @@
  * crippleware however innocent its plugin's behaviour is. A compliance audit
  * of the first product that tried to bundle this package found it there.
  *
- * A Pro product enqueues both:
+ * A Pro product enqueues it with the package's own helper, which handles
+ * enqueueing admin.css first and wiring it in as pro.css's dependency --
+ * a consumer never enqueues its own vendored path by hand:
  *
- *   wp_enqueue_style( 'x-admin', mhmuicore_asset_url( 'react/admin.css' ), array(), mhmuicore_version() );
- *   wp_enqueue_style( 'x-pro',   mhmuicore_asset_url( 'react/pro.css' ), array( 'x-admin' ), mhmuicore_version() );
+ *   mhmuicore_enqueue_kit( 'pro' );
  *
  * The tokens live in admin.css, so this file is only ever loaded beside it.
  * ========================================================================== */

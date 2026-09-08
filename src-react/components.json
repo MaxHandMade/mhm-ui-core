@@ -34,7 +34,7 @@
   },
   "Notice": {
     "interactive": true, "tone_semantics": true, "tone_cue": "children",
-    "props": { "children": "node", "tone": "role?", "onDismiss": "function?", "dismissLabel": "string?" },
+    "props": { "children": "node", "tone": "success|warning|danger|info?", "onDismiss": "function?", "dismissLabel": "string?" },
     "fixtures": [ { "children": "Broken", "tone": "danger", "onDismiss": "function", "dismissLabel": "Dismiss" } ]
   },
   "Widget": {

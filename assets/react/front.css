@@ -10,6 +10,12 @@
    olarak, her katmanliyi yener; WP cekirdeginde ve WooCommerce stillerinde
    @layer yoktur. Yapi kurallari katmansiz + normal ozgullukte, skin
    :where(...) ile sifir ozgullukte yazilir.
+
+   Bu dosya bugün YALNIZ token bloğunu taşır -- .mhmui-stat-card,
+   .mhmui-status vb. için yapı/skin kuralı yok. Bilinçli: bu dilimin işi
+   admin yüzeyi; bileşen kuralları vendor-panel diliminde buraya gelecek.
+   Bu haliyle .mhmui-front içine mount edilen bir bileşen (ör. StatCard)
+   şimdilik biçimsiz render olur -- eksik değil, henüz sırası gelmemiş.
    ============================================================================= */
 
 /* mhmui:tokens:start -- generated from src-react/tokens.json by bin/build-tokens.js; do not edit by hand */
