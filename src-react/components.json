@@ -6,7 +6,7 @@
   },
   "StatCard": {
     "interactive": false, "tone_semantics": true, "tone_cue": "label",
-    "props": { "label": "string", "value": "string", "icon": "icon?", "tone": "role?", "sub": "string?", "delta": "object?" },
+    "props": { "label": "string", "value": "string", "icon": "icon?", "tone": "role?", "sub": "string?", "delta": "{ direction: string, text: string }?" },
     "fixtures": [
       { "label": "Bookings", "value": "42" },
       { "label": "Bookings", "value": "42", "tone": "success", "icon": "calendar-alt" }
@@ -24,8 +24,8 @@
   },
   "Pagination": {
     "interactive": true, "tone_semantics": false,
-    "props": { "page": "number", "totalPages": "number", "onChange": "function", "labels": "object" },
-    "fixtures": [ { "page": 1, "totalPages": 3, "onChange": "function", "labels": { "previous": "Prev", "next": "Next", "of": "of" } } ]
+    "props": { "page": "number", "totalPages": "number", "onChange": "function", "labels": "{ previous: string, of: string, next: string, navigation: string }" },
+    "fixtures": [ { "page": 1, "totalPages": 3, "onChange": "function", "labels": { "previous": "Prev", "next": "Next", "of": "of", "navigation": "Pagination" } } ]
   },
   "ProLock": {
     "interactive": false, "tone_semantics": false,
