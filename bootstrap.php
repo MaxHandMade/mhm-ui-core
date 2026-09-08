@@ -142,6 +142,64 @@ if ( ! function_exists( 'mhmuicore_asset_url' ) ) {
 	}
 }
 
+if ( ! function_exists( 'mhmuicore_kit_handle' ) ) {
+	/**
+	 * The package-constant style handle for a kit surface.
+	 *
+	 * The handle is the package's, never the consumer's: two plugins on one
+	 * page must not enqueue two copies of the same stylesheet under two names.
+	 *
+	 * @param string $surface One of 'admin', 'front', 'pro'.
+	 * @return string Handle.
+	 * @throws InvalidArgumentException When the surface is unknown.
+	 */
+	function mhmuicore_kit_handle( string $surface ): string {
+		$handles = array(
+			'admin' => 'mhmuicore-admin',
+			'front' => 'mhmuicore-front',
+			'pro'   => 'mhmuicore-pro',
+		);
+
+		if ( ! isset( $handles[ $surface ] ) ) {
+			throw new InvalidArgumentException(
+				esc_html( 'mhmuicore_kit_handle: unknown surface "' . $surface . '".' )
+			);
+		}
+
+		return $handles[ $surface ];
+	}
+}
+
+if ( ! function_exists( 'mhmuicore_enqueue_kit' ) ) {
+	/**
+	 * Enqueue one kit stylesheet from the winning copy.
+	 *
+	 * $fallback_root exists for assets a free core PRUNES from its own vendored
+	 * copy. The loader boots the highest registered version and serves everyone
+	 * from it; if that copy is a free core's, `assets/react/pro.css` is not in
+	 * it and the URL would 404. A Pro consumer therefore declares the root it
+	 * can fall back to. It is still the package that enqueues and that owns the
+	 * handle -- the consumer only names a directory.
+	 *
+	 * @param string $surface       One of 'admin', 'front', 'pro'.
+	 * @param string $fallback_root Absolute path to the caller's own ui-core copy.
+	 * @return string The handle that was registered.
+	 */
+	function mhmuicore_enqueue_kit( string $surface, string $fallback_root = '' ): string {
+		$handle   = mhmuicore_kit_handle( $surface );
+		$relative = 'react/' . $surface . '.css';
+		$src      = mhmuicore_asset_url( $relative );
+
+		if ( ! file_exists( mhmuicore_asset_path( $relative ) ) && '' !== $fallback_root ) {
+			$src = plugins_url( 'assets/' . $relative, $fallback_root . '/bootstrap.php' );
+		}
+
+		wp_enqueue_style( $handle, $src, array(), MHMUICORE_VERSION );
+
+		return $handle;
+	}
+}
+
 /*
  * ─── React admin page loader ─────────────────────────────────────────────────
  *
