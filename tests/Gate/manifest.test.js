@@ -26,13 +26,34 @@ describe( 'components.json kapilarin girdisidir', () => {
 		}
 	} );
 
-	test( 'ton tasiyan her uye anlamini renkten baska bir seyle de verir (WCAG 1.4.1)', () => {
+	test( 'ton tasiyan her uye tone_cue ile anlam kiladı -- renk aramasin', () => {
+		// 🔴 A gate that cannot fail is worse than none: the old test just checked
+		// whether tone_semantics: true entries happened to include label or children
+		// (which all fixtures of those components require anyway, so the test was
+		// always green). This gate verifies the intent: every tone-carrying component
+		// declares which prop conveys meaning without relying on color. If someone adds
+		// a tone-semantics component without declaring a cue, or writes a fixture that
+		// omits it, this test goes red.
 		for ( const [ name, entry ] of Object.entries( manifest ) ) {
 			if ( entry.tone_semantics ) {
-				const hasText = entry.fixtures.some(
-					( f ) => 'string' === typeof f.label || 'string' === typeof f.children
+				// tone_cue is REQUIRED when tone_semantics is true
+				expect( entry.tone_cue ).toBeDefined();
+				expect( typeof entry.tone_cue ).toBe( 'string' );
+
+				// tone_cue must name a key that exists in props
+				expect( Object.keys( entry.props ) ).toContain(
+					entry.tone_cue,
+					`Component "${ name }" declares tone_cue "${ entry.tone_cue }" but it does not exist in props`
 				);
-				expect( hasText ).toBe( true );
+
+				// EVERY fixture must include the tone_cue prop
+				for ( let i = 0; i < entry.fixtures.length; i++ ) {
+					const fixture = entry.fixtures[ i ];
+					expect( Object.keys( fixture ) ).toContain(
+						entry.tone_cue,
+						`Component "${ name }" fixture ${ i } is missing tone_cue prop "${ entry.tone_cue }"`
+					);
+				}
 			}
 		}
 	} );

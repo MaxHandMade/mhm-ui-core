@@ -1,11 +1,11 @@
 {
   "ErrorBoundary": {
     "interactive": false, "tone_semantics": false,
-    "props": { "children": "node" },
-    "fixtures": [ { "children": "ok" } ]
+    "props": { "children": "node", "fallback": "node?" },
+    "fixtures": [ { "children": "ok", "fallback": "Error fallback" } ]
   },
   "StatCard": {
-    "interactive": false, "tone_semantics": true,
+    "interactive": false, "tone_semantics": true, "tone_cue": "label",
     "props": { "label": "string", "value": "string", "icon": "icon?", "tone": "role?", "sub": "string?", "delta": "object?" },
     "fixtures": [
       { "label": "Bookings", "value": "42" },
@@ -18,28 +18,28 @@
     "fixtures": [ { "cards": [ { "label": "A", "value": "1" } ], "columns": 2 } ]
   },
   "StatusBadge": {
-    "interactive": false, "tone_semantics": true,
+    "interactive": false, "tone_semantics": true, "tone_cue": "children",
     "props": { "children": "node", "tone": "role?" },
     "fixtures": [ { "children": "Confirmed", "tone": "success" } ]
   },
   "Pagination": {
     "interactive": true, "tone_semantics": false,
     "props": { "page": "number", "totalPages": "number", "onChange": "function", "labels": "object" },
-    "fixtures": [ { "page": 1, "totalPages": 3, "labels": { "previous": "Prev", "next": "Next", "of": "of" } } ]
+    "fixtures": [ { "page": 1, "totalPages": 3, "onChange": "function", "labels": { "previous": "Prev", "next": "Next", "of": "of" } } ]
   },
   "ProLock": {
     "interactive": false, "tone_semantics": false,
-    "props": { "unlocked": "boolean", "fallback": "node", "children": "node" },
+    "props": { "unlocked": "boolean", "fallback": "node?", "children": "node" },
     "fixtures": [ { "unlocked": false, "fallback": "Pro only", "children": "Secret" } ]
   },
   "Notice": {
-    "interactive": true, "tone_semantics": true,
+    "interactive": true, "tone_semantics": true, "tone_cue": "children",
     "props": { "children": "node", "tone": "role?", "onDismiss": "function?", "dismissLabel": "string?" },
-    "fixtures": [ { "children": "Broken", "tone": "danger", "dismissLabel": "Dismiss" } ]
+    "fixtures": [ { "children": "Broken", "tone": "danger", "onDismiss": "function", "dismissLabel": "Dismiss" } ]
   },
   "Widget": {
     "interactive": false, "tone_semantics": false,
-    "props": { "title": "string", "subtitle": "string?", "actions": "node?", "children": "node" },
-    "fixtures": [ { "title": "Recent", "children": "Body" } ]
+    "props": { "title": "string", "subtitle": "string?", "icon": "string?", "actions": "node?", "children": "node" },
+    "fixtures": [ { "title": "Recent", "icon": "dashicons-chart-line", "children": "Body" } ]
   }
 }
