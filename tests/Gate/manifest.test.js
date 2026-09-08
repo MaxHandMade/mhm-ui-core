@@ -40,19 +40,15 @@ describe( 'components.json kapilarin girdisidir', () => {
 				expect( entry.tone_cue ).toBeDefined();
 				expect( typeof entry.tone_cue ).toBe( 'string' );
 
-				// tone_cue must name a key that exists in props
-				expect( Object.keys( entry.props ) ).toContain(
-					entry.tone_cue,
-					`Component "${ name }" declares tone_cue "${ entry.tone_cue }" but it does not exist in props`
-				);
+				// tone_cue must name a key that exists in props.
+				// Failure: Component declares tone_cue but it is not in props.
+				expect( Object.keys( entry.props ) ).toContain( entry.tone_cue );
 
-				// EVERY fixture must include the tone_cue prop
+				// EVERY fixture must include the tone_cue prop.
+				// Failure: A fixture is missing the tone_cue that the component declares.
 				for ( let i = 0; i < entry.fixtures.length; i++ ) {
 					const fixture = entry.fixtures[ i ];
-					expect( Object.keys( fixture ) ).toContain(
-						entry.tone_cue,
-						`Component "${ name }" fixture ${ i } is missing tone_cue prop "${ entry.tone_cue }"`
-					);
+					expect( Object.keys( fixture ) ).toContain( entry.tone_cue );
 				}
 			}
 		}

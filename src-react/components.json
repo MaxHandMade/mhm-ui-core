@@ -40,6 +40,6 @@
   "Widget": {
     "interactive": false, "tone_semantics": false,
     "props": { "title": "string", "subtitle": "string?", "icon": "string?", "actions": "node?", "children": "node" },
-    "fixtures": [ { "title": "Recent", "icon": "dashicons-chart-line", "children": "Body" } ]
+    "fixtures": [ { "title": "Recent", "icon": "chart-line", "children": "Body" } ]
   }
 }
