@@ -116,7 +116,14 @@ function main( argv ) {
 		if ( stale > 0 ) {
 			process.exit( 1 );
 		}
-		const total = Object.values( doc.scopes ).reduce( ( n, m ) => n + Object.keys( m ).length, 0 );
+		// Counted from doc.targets, the SAME set the loop above just verified --
+		// not from doc.scopes, which can hold a scope with no target. An earlier
+		// round fixed exactly this class of bug in the build branch (the loop
+		// counts what it wrote, not what merely exists in the source doc); this
+		// mirrors that fix on the check branch, where the printed total is a
+		// claim about what was just checked, not an independent re-count.
+		const total = Object.keys( doc.targets )
+			.reduce( ( n, selector ) => n + Object.keys( doc.scopes[ selector ] ).length, 0 );
 		process.stdout.write( `tokens:check: ${ total } token(s) in sync across ${ Object.keys( doc.targets ).length } target(s).\n` );
 		return;
 	}

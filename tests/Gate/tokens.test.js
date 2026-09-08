@@ -97,4 +97,15 @@ describe( 'iki hedef, iki blok', () => {
 		const front = readFileSync( join( ROOT, 'assets', 'react', 'front.css' ), 'utf8' );
 		expect( front ).not.toMatch( /font-family\s*:/ );
 	} );
+
+	// B6: tokens:check's printed total is computed from doc.targets, which is
+	// also the set the --check loop actually iterates and verifies. If a scope
+	// existed with no target, doc.scopes and doc.targets would disagree, and
+	// the total would silently include a scope no loop ever checked -- the
+	// same class of bug an earlier round fixed on the build branch (count what
+	// you verified, not what merely exists). Pinning the two key sets as equal
+	// keeps that reopened.
+	test( 'doc.scopes ve doc.targets ayni kapsam kumesini tasir', () => {
+		expect( Object.keys( doc.scopes ).sort() ).toEqual( Object.keys( doc.targets ).sort() );
+	} );
 } );
