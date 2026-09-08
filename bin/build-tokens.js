@@ -51,15 +51,15 @@ function renderTokensBlock( doc, selector ) {
  * The legacy flat view of the token document.
  *
  * tokens.json is a public export (package.json `exports`, index.js, the
- * design-system generator). The scoped schema would break every reader that
- * expects `doc.tokens`, so the admin scope keeps being served under that name
- * for at least one minor.
+ * design-system generator). External readers that access the raw file (like
+ * build-design-system.py) expect a top-level `tokens` key. We maintain it as
+ * a mirror of scopes['.mhmui-admin'], pinned by test gate.
  *
- * @param {{scopes: Record<string,Record<string,string>>}} doc Parsed tokens.json.
- * @return {Record<string,string>} The admin scope's map.
+ * @param {{tokens: Record<string,string>, scopes: Record<string,Record<string,string>>}} doc Parsed tokens.json.
+ * @return {Record<string,string>} The legacy flat view (doc.tokens).
  */
 function flatTokens( doc ) {
-	return doc.scopes[ '.mhmui-admin' ];
+	return doc.tokens;
 }
 
 /**
