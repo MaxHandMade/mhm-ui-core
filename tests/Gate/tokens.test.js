@@ -63,4 +63,15 @@ describe( 'tokens.json kapsam şeması', () => {
 	test( 'legacy duz gorunum admin kapsaminin AYNASIDIR -- surukleme kapisi', () => {
 		expect( doc.tokens ).toEqual( doc.scopes[ '.mhmui-admin' ] );
 	} );
+
+	test( 'blok, aynadan degil KAPSAMDAN uretilir', () => {
+		const skewed = {
+			...doc,
+			tokens: { only: '#000000' },
+			scopes: { ...doc.scopes },
+		};
+		const block = renderTokensBlock( skewed, '.mhmui-admin' );
+		expect( block ).not.toContain( '--mhmui-only' );
+		expect( block ).toContain( '--mhmui-blue' );
+	} );
 } );
