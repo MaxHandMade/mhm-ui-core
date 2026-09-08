@@ -5,7 +5,8 @@
  * this package has no text domain, so the consumer formats the value and
  * translates the label before rendering.
  *
- * This is the kit's ONLY key-figure component. It absorbed KpiBox in 0.9.7:
+ * This is the kit's ONLY key-figure component. It absorbed KpiBox (unreleased
+ * at the time of writing; the merge landed after v0.9.6):
  * that component was the quiet bordered box and this one the filled card,
  * and nothing stated which a screen should pick -- so the two would have
  * drifted apart screen by screen. Both looks survive here, as one prop.
