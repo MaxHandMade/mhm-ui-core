@@ -181,6 +181,18 @@ if ( ! function_exists( 'mhmuicore_enqueue_kit' ) ) {
 	 * can fall back to. It is still the package that enqueues and that owns the
 	 * handle -- the consumer only names a directory.
 	 *
+	 * `'pro'` is not self-contained: its tokens live in `admin.css` (see that
+	 * file's own header), so this function also enqueues `'admin'` and wires
+	 * it in as `'pro'`'s dependency. A caller asking for `'pro'` gets both
+	 * stylesheets from one call, in the right order; it does not need to (and
+	 * should not) call this twice.
+	 *
+	 * `'front'` today carries ONLY the token block -- no structural or skin
+	 * rules. That is deliberate for this slice (those rules belong to the
+	 * vendor-panel slice, not the admin one), not a gap in this function:
+	 * enqueueing `'front'` and mounting `.mhmui-front` renders unstyled until
+	 * that slice lands.
+	 *
 	 * @param string $surface       One of 'admin', 'front', 'pro'.
 	 * @param string $fallback_root Absolute path to the caller's own ui-core copy.
 	 * @return string The handle that was registered, or empty string if no
@@ -206,7 +218,30 @@ if ( ! function_exists( 'mhmuicore_enqueue_kit' ) ) {
 			}
 		}
 
-		wp_enqueue_style( $handle, $src, array(), MHMUICORE_VERSION );
+		$deps = array();
+
+		if ( 'pro' === $surface ) {
+			// pro.css's own header says its tokens live in admin.css, and
+			// .mhmui-pro-lock reads four of them with var(). Enqueueing pro
+			// alone therefore renders the lock card with unresolved custom
+			// properties and no error -- nothing looks broken until someone
+			// checks a computed style.
+			//
+			// Passing array( 'mhmuicore-admin' ) here would not fix that if
+			// nothing ever registered that handle: WordPress silently drops a
+			// stylesheet whose dependency was never enqueued. So this enqueues
+			// admin itself first (registering + enqueueing it) and THEN
+			// declares it pro's dependency, which is what makes WordPress order
+			// the two <link> tags correctly regardless of what else on the page
+			// already asked for 'pro' first.
+			$admin_handle = mhmuicore_enqueue_kit( 'admin', $fallback_root );
+
+			if ( '' !== $admin_handle ) {
+				$deps = array( $admin_handle );
+			}
+		}
+
+		wp_enqueue_style( $handle, $src, $deps, MHMUICORE_VERSION );
 
 		return $handle;
 	}
