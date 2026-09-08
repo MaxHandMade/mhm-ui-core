@@ -27,19 +27,39 @@ const START = '/* mhmui:tokens:start -- generated from src-react/tokens.json by 
 const END = '/* mhmui:tokens:end */';
 
 /**
- * Render the custom-property block for a tokens.json document.
+ * Render the custom-property block for one scope of a tokens.json document.
  *
- * @param {{scope: string[], tokens: Record<string,string>}} doc Parsed tokens.json.
+ * @param {{scopes: Record<string,Record<string,string>>}} doc Parsed tokens.json.
+ * @param {string} selector Scope key, e.g. '.mhmui-admin'.
  * @return {string} CSS block, START and END markers included.
  */
-function renderTokensBlock( doc ) {
-	const names = Object.keys( doc.tokens );
+function renderTokensBlock( doc, selector ) {
+	const map = doc.scopes[ selector ];
+	if ( ! map ) {
+		throw new Error( `tokens.json has no scope "${ selector }"; refusing to render an empty block.` );
+	}
+	const names = Object.keys( map );
 	const width = Math.max( ...names.map( ( n ) => n.length ) ) + '--mhmui-:'.length;
 	const lines = names.map( ( name ) => {
 		const prop = `--mhmui-${ name }:`;
-		return `\t${ prop.padEnd( width + 1 ) }${ doc.tokens[ name ] };`;
+		return `\t${ prop.padEnd( width + 1 ) }${ map[ name ] };`;
 	} );
-	return [ START, `${ doc.scope.join( ',\n' ) } {`, ...lines, '}', END ].join( '\n' );
+	return [ START, `${ selector } {`, ...lines, '}', END ].join( '\n' );
+}
+
+/**
+ * The legacy flat view of the token document.
+ *
+ * tokens.json is a public export (package.json `exports`, index.js, the
+ * design-system generator). The scoped schema would break every reader that
+ * expects `doc.tokens`, so the admin scope keeps being served under that name
+ * for at least one minor.
+ *
+ * @param {{scopes: Record<string,Record<string,string>>}} doc Parsed tokens.json.
+ * @return {Record<string,string>} The admin scope's map.
+ */
+function flatTokens( doc ) {
+	return doc.scopes[ '.mhmui-admin' ];
 }
 
 /**
@@ -61,22 +81,22 @@ function replaceBlock( css, block ) {
 function main( argv ) {
 	const doc = JSON.parse( readFileSync( TOKENS, 'utf8' ) );
 	const current = readFileSync( CSS, 'utf8' );
-	const next = replaceBlock( current, renderTokensBlock( doc ) );
+	const next = replaceBlock( current, renderTokensBlock( doc, '.mhmui-admin' ) );
 
 	if ( argv.includes( '--check' ) ) {
 		if ( next !== current ) {
 			process.stderr.write( 'tokens:check: assets/react/admin.css is stale -- run `npm run tokens:build`.\n' );
 			process.exit( 1 );
 		}
-		process.stdout.write( `tokens:check: ${ Object.keys( doc.tokens ).length } token(s) in sync.\n` );
+		process.stdout.write( `tokens:check: ${ Object.keys( flatTokens( doc ) ).length } token(s) in sync.\n` );
 		return;
 	}
 
 	writeFileSync( CSS, next );
-	process.stdout.write( `tokens:build: wrote ${ Object.keys( doc.tokens ).length } token(s) into assets/react/admin.css.\n` );
+	process.stdout.write( `tokens:build: wrote ${ Object.keys( flatTokens( doc ) ).length } token(s) into assets/react/admin.css.\n` );
 }
 
-module.exports = { renderTokensBlock, replaceBlock, START, END };
+module.exports = { renderTokensBlock, replaceBlock, flatTokens, START, END };
 
 if ( require.main === module ) {
 	main( process.argv.slice( 2 ) );

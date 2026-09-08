@@ -4,8 +4,7 @@
    ============================================================================= */
 
 /* mhmui:tokens:start -- generated from src-react/tokens.json by bin/build-tokens.js; do not edit by hand */
-.mhmui-admin,
-.mhm-stats-grid {
+.mhmui-admin {
 	--mhmui-blue:         #2271b1;
 	--mhmui-blue-dark:    #135e96;
 	--mhmui-green:        #00a32a;
@@ -21,6 +20,7 @@
 	--mhmui-text:         #1d2327;
 	--mhmui-text-light:   #646970;
 	--mhmui-bg:           #f0f0f1;
+	--mhmui-surface:      #ffffff;
 	--mhmui-card-bg:      #ffffff;
 	--mhmui-gap:          12px;
 	--mhmui-radius:       4px;
