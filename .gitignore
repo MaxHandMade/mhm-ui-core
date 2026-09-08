@@ -3,6 +3,12 @@
 /.phpunit.result.cache
 /composer.lock
 build/
+# Subagent-driven-development scratch: ledgers, briefs, review packages.
+# Git-ignored on purpose -- the git history is the record, this is the map
+# the controller uses to survive a compaction. Unignored, it would be one
+# `git add -A` away from entering a package whose shipped surface is pinned
+# by a test.
+.superpowers/
 .claude/memory/
 .claude/settings.json
 .claude/settings.local.json
