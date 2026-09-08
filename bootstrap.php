@@ -183,15 +183,27 @@ if ( ! function_exists( 'mhmuicore_enqueue_kit' ) ) {
 	 *
 	 * @param string $surface       One of 'admin', 'front', 'pro'.
 	 * @param string $fallback_root Absolute path to the caller's own ui-core copy.
-	 * @return string The handle that was registered.
+	 * @return string The handle that was registered, or empty string if no
+	 *                stylesheet could be found (primary missing, fallback absent
+	 *                or not provided). An empty string means no enqueue occurred.
 	 */
 	function mhmuicore_enqueue_kit( string $surface, string $fallback_root = '' ): string {
 		$handle   = mhmuicore_kit_handle( $surface );
 		$relative = 'react/' . $surface . '.css';
 		$src      = mhmuicore_asset_url( $relative );
 
-		if ( ! file_exists( mhmuicore_asset_path( $relative ) ) && '' !== $fallback_root ) {
-			$src = plugins_url( 'assets/' . $relative, $fallback_root . '/bootstrap.php' );
+		$primary_path = mhmuicore_asset_path( $relative );
+
+		if ( ! file_exists( $primary_path ) ) {
+			// Primary copy does not have the stylesheet.
+			if ( '' !== $fallback_root && file_exists( $fallback_root . '/assets/' . $relative ) ) {
+				// Fallback was given and the file exists there.
+				$src = plugins_url( 'assets/' . $relative, $fallback_root . '/bootstrap.php' );
+			} else {
+				// No fallback given or file does not exist at fallback root.
+				// Do not enqueue; return empty string to signal measurable non-existence.
+				return '';
+			}
 		}
 
 		wp_enqueue_style( $handle, $src, array(), MHMUICORE_VERSION );
