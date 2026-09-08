@@ -399,7 +399,7 @@ pin it with a check in your own gates, as the existing consumer does.
 
 ## Admin React kit
 
-`src-react/index.js` exports `StatCard`, `StatsGrid`, `KpiBox`, `StatusBadge`,
+`src-react/index.js` exports `StatCard`, `StatsGrid`, `StatusBadge`,
 `Pagination`, `ProLock`, `Notice`, `Widget`, `ErrorBoundary`, `createApiClient`,
 `useApi`, `createFormatter` and `tokens`. Every string is a prop: this package
 has no text domain. `src-react/tokens.json` is the single token source;

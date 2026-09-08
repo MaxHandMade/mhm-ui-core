@@ -253,7 +253,7 @@ Eklenti `is_declared()` ile korunsaydı **sessizce ölürdü**, ki o daha kötü
 
 ### React kiti ve token kaynağı
 
-`src-react/index.js`: `StatCard` · `StatsGrid` · `KpiBox` · `StatusBadge` · `Pagination` ·
+`src-react/index.js`: `StatCard` · `StatsGrid` · `StatusBadge` · `Pagination` ·
 `ProLock` · `Notice` · `Widget` (+ önceki `ErrorBoundary`, `createApiClient`, `useApi`,
 `createFormatter`). **Her dize prop'tur** — paketin text domain'i yok, çeviriyi ürün yapar.
 

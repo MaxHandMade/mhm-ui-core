@@ -242,7 +242,7 @@
 }
 
 /* =============================================================================
-   Visual kit — StatCard · StatsGrid · KpiBox · StatusBadge · Pagination ·
+   Visual kit — StatCard · StatsGrid · StatusBadge · Pagination ·
    Notice · Widget (src-react/components). Extracted from Rentiva's admin.css on
    2026-09-03 and renamed into the package namespace; the product keeps its
    .mhm-* rules until it migrates. Only --mhmui-* tokens below.
@@ -262,14 +262,24 @@
 	margin-top: 16px;
 }
 
+/* Base = the quiet bordered box (what KpiBox used to be). A tone modifier
+   fills it. Colour is opt-in so a screen cannot go coloured by default --
+   that default is how one screen ended up blue and the next one neutral. */
 .mhmui-stat-card {
 	display: flex;
 	align-items: center;
 	gap: 14px;
 	padding: 18px 20px;
 	border-radius: var( --mhmui-radius );
-	color: #fff;
+	border: 1px solid var( --mhmui-border );
+	background: var( --mhmui-card-bg );
+	color: var( --mhmui-text );
 }
+.mhmui-stat-card--blue,
+.mhmui-stat-card--green,
+.mhmui-stat-card--amber,
+.mhmui-stat-card--grey,
+.mhmui-stat-card--red { border-color: transparent; color: #fff; }
 .mhmui-stat-card--blue  { background: linear-gradient( 135deg, var( --mhmui-blue ),  var( --mhmui-blue-dark )  ); }
 .mhmui-stat-card--green { background: linear-gradient( 135deg, var( --mhmui-green ), var( --mhmui-green-dark ) ); }
 .mhmui-stat-card--amber { background: linear-gradient( 135deg, var( --mhmui-amber ), var( --mhmui-amber-dark ) ); }
@@ -282,20 +292,6 @@
 .mhmui-stat-card__sub,
 .mhmui-stat-card__delta { margin: 4px 0 0; font-size: 12px; opacity: .9; }
 .mhmui-stat-card__delta--down { opacity: 1; text-decoration: underline; }
-
-.mhmui-kpi-box {
-	padding: 12px 14px;
-	border-radius: var( --mhmui-radius );
-	border: 1px solid var( --mhmui-border );
-	background: var( --mhmui-card-bg );
-}
-.mhmui-kpi-box__value { margin: 0; font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; color: var( --mhmui-text ); }
-.mhmui-kpi-box__label { margin: 2px 0 0; font-size: 12px; color: var( --mhmui-text-light ); }
-.mhmui-kpi-box--blue  .mhmui-kpi-box__value { color: var( --mhmui-blue ); }
-.mhmui-kpi-box--green .mhmui-kpi-box__value { color: var( --mhmui-green ); }
-.mhmui-kpi-box--amber .mhmui-kpi-box__value { color: var( --mhmui-amber-dark ); }
-.mhmui-kpi-box--red   .mhmui-kpi-box__value { color: var( --mhmui-red ); }
-.mhmui-kpi-box--grey  .mhmui-kpi-box__value { color: var( --mhmui-grey ); }
 
 .mhmui-status {
 	display: inline-block;

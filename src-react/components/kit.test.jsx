@@ -2,7 +2,6 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import {
 	StatCard,
 	StatsGrid,
-	KpiBox,
 	StatusBadge,
 	Pagination,
 	ProLock,
@@ -58,13 +57,28 @@ describe( 'the visual kit renders only what it is given', () => {
 		);
 	} );
 
-	test( 'KpiBox carries its tone as a modifier class', () => {
+	// StatCard is the kit's ONLY key-figure component. KpiBox was a second one
+	// whose only difference was which props it refused (no icon, no sub/delta,
+	// a different default tone) -- a fork that would have drifted screen to
+	// screen. These two tests pin what the merge decided.
+	test( 'StatCard is quiet and iconless until asked otherwise', () => {
+		const { container } = render( <StatCard label="Open" value="9" /> );
+		// No tone modifier at all: the base class is the quiet bordered box.
+		// Colour is opt-in, so a screen cannot become coloured by default.
+		expect( container.firstChild.className ).toBe( 'mhmui-stat-card' );
+		expect( container.querySelector( '.dashicons' ) ).toBeNull();
+	} );
+
+	test( 'StatCard carries the tone and icon it is given', () => {
 		const { container } = render(
-			<KpiBox value="9" label="Open" tone="amber" />
+			<StatCard label="Open" value="9" tone="amber" icon="calendar-alt" />
 		);
 		expect( container.firstChild.className ).toBe(
-			'mhmui-kpi-box mhmui-kpi-box--amber'
+			'mhmui-stat-card mhmui-stat-card--amber'
 		);
+		expect(
+			container.querySelector( '.dashicons-calendar-alt' )
+		).toBeTruthy();
 	} );
 
 	test( 'StatusBadge maps a tone, not a domain status', () => {
