@@ -20,6 +20,6 @@
 	padding: 14px 16px;
 	border: 1px dashed var( --mhmui-border );
 	border-radius: var( --mhmui-radius );
-	color: var( --mhmui-text-light );
-	background: var( --mhmui-bg );
+	color: var( --mhmui-text-muted );
+	background: var( --mhmui-surface-sunken );
 }

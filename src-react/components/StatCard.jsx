@@ -15,10 +15,11 @@
  * @param {string} props.label   Translated label.
  * @param {string} props.value   Already-formatted value.
  * @param {string} [props.icon]  Dashicons class suffix, e.g. "calendar-alt".
- * @param {string} [props.tone]  blue | green | amber | grey | red. Omit it for
- *                               the quiet bordered box, which is the default:
- *                               a key figure carries no colour until the
- *                               meaning asks for one. A tone fills the card.
+ * @param {string} [props.tone]  success | warning | danger | info | neutral.
+ *                               Omit it for the quiet bordered box, which is
+ *                               the default: a key figure carries no colour
+ *                               until the meaning asks for one. A tone fills
+ *                               the card.
  * @param {string} [props.sub]   Secondary line, shown when there is no delta.
  * @param {Object} [props.delta] { direction: 'up'|'down'|'flat', text: string }.
  */
