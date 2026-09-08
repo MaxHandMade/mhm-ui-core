@@ -53,10 +53,12 @@ function renderTokensBlock( doc, selector ) {
  * tokens.json is a public export (package.json `exports`, index.js, the
  * design-system generator). External readers that access the raw file (like
  * build-design-system.py) expect a top-level `tokens` key. We maintain it as
- * a mirror of scopes['.mhmui-admin'], pinned by test gate.
+ * a mirror of scopes['.mhmui-admin'], pinned by test gate. This view is
+ * deliberately NOT what the generator counts — the generator counts from
+ * scopes['.mhmui-admin'] so the count always matches what was rendered.
  *
  * @param {{tokens: Record<string,string>, scopes: Record<string,Record<string,string>>}} doc Parsed tokens.json.
- * @return {Record<string,string>} The legacy flat view (doc.tokens).
+ * @return {Record<string,string>} The legacy flat view (doc.tokens), for external consumers.
  */
 function flatTokens( doc ) {
 	return doc.tokens;
@@ -88,12 +90,12 @@ function main( argv ) {
 			process.stderr.write( 'tokens:check: assets/react/admin.css is stale -- run `npm run tokens:build`.\n' );
 			process.exit( 1 );
 		}
-		process.stdout.write( `tokens:check: ${ Object.keys( flatTokens( doc ) ).length } token(s) in sync.\n` );
+		process.stdout.write( `tokens:check: ${ Object.keys( doc.scopes[ '.mhmui-admin' ] ).length } token(s) in sync.\n` );
 		return;
 	}
 
 	writeFileSync( CSS, next );
-	process.stdout.write( `tokens:build: wrote ${ Object.keys( flatTokens( doc ) ).length } token(s) into assets/react/admin.css.\n` );
+	process.stdout.write( `tokens:build: wrote ${ Object.keys( doc.scopes[ '.mhmui-admin' ] ).length } token(s) into assets/react/admin.css.\n` );
 }
 
 module.exports = { renderTokensBlock, replaceBlock, flatTokens, START, END };
