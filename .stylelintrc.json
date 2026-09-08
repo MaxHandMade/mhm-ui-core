@@ -1,6 +1,10 @@
 {
   "rules": {
     "selector-max-id": 0,
+    "declaration-no-important": [
+      true,
+      { "message": "The kit never writes !important -- the whole layering policy (structure unlayered/normal specificity, skin at :where() zero specificity) rests on the kit staying out of specificity wars. Fix the selector, not this rule." }
+    ],
     "custom-property-pattern": [
       "^mhmui-[a-z0-9]+(-[a-z0-9]+)*$",
       { "message": "This package may only define --mhmui-* custom properties; --mhm-* belongs to the products." }
