@@ -17,9 +17,6 @@ final class KitEscapingTest extends WP_UnitTestCase {
 
 	public function set_up(): void {
 		parent::set_up();
-		if ( ! function_exists( 'mhmuicore_stat_card_html' ) ) {
-			require_once dirname( __DIR__, 2 ) . '/bootstrap.php';
-		}
 		self::assertTrue( function_exists( 'mhmuicore_stat_card_html' ), 'an older ui-core copy booted first; this test cannot measure 0.11.0' );
 	}
 
@@ -39,6 +36,9 @@ final class KitEscapingTest extends WP_UnitTestCase {
 		self::assertStringNotContainsString( 'onmouseover=', $html );
 		self::assertStringContainsString( '&lt;script&gt;alert(1)&lt;/script&gt;', $html );
 		self::assertStringContainsString( 'class="dashicons dashicons-xonmouseoveralert3"', $html );
+		self::assertStringContainsString( '<p class="mhmui-stat-card__value">&quot;&gt;&lt;img src=x onerror=alert(2)&gt;</p>', $html );
+		self::assertStringContainsString( '<p class="mhmui-stat-card__sub">&lt;b&gt;s&lt;/b&gt;</p>', $html );
+		self::assertStringContainsString( 'data-stat="&quot;&gt;&lt;script&gt;alert(4)&lt;/script&gt;"', $html );
 	}
 
 	public function test_grid_style_attribute_is_an_integer_only(): void {

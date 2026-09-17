@@ -51,6 +51,10 @@ final class StatCardTest extends TestCase {
 		self::assertStringContainsString( 'esc_html(<script>l</script>)', $html );
 		self::assertStringContainsString( 'esc_html(<b>v</b>)', $html );
 		self::assertStringContainsString( 'esc_html(<i>d</i>)', $html );
+
+		// sub only renders when there is no up/down delta, so it needs its own call.
+		$sub_html = StatCard::render_html( array( 'label' => 'L', 'value' => '1', 'sub' => '<u>s</u>' ) );
+		self::assertStringContainsString( 'esc_html(<u>s</u>)', $sub_html );
 	}
 
 	public function test_tone_outside_the_vocabulary_prints_no_class(): void {
