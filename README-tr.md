@@ -284,6 +284,10 @@ ekranı), `tone` (`success|warning|danger|info|neutral`, başka her şey düşü
 `data-anahtar`, anahtarlar `^[a-z0-9-]{1,32}$`). İkinci argüman sütun **tavanıdır**; ızgara
 CSS'te sarar.
 
+Bu 0.11.0 bileşenleri 0.11.0 stil dosyasını ister — `mhmuicore_enqueue_kit()` üzerinden
+enqueue edin ki yükleyici kazanan kopyayı sunsun; daha eski bir stil dosyasının altında
+ızgaranın sütunu olmaz.
+
 Şeridi yüzey kapsamına sarın ve stil dosyasını enqueue edin:
 `<div class="mhmui-admin">…</div>` + `mhmuicore_enqueue_kit( 'admin', $your_vendor_ui_core_root )`
 (ön yüz: `mhmui-front` / `'front'`).

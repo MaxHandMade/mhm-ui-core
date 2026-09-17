@@ -429,6 +429,10 @@ only), `tone` (`success|warning|danger|info|neutral`, anything else is dropped),
 `data` (`key => value` → `data-key`, keys `^[a-z0-9-]{1,32}$`). The second
 argument is a column **ceiling**; the grid wraps in CSS.
 
+These 0.11.0 components need the 0.11.0 stylesheet — enqueue through
+`mhmuicore_enqueue_kit()` so the loader serves the winning copy; under an
+older stylesheet the grid has no columns.
+
 Wrap the strip in the surface scope and enqueue its stylesheet:
 `<div class="mhmui-admin">…</div>` + `mhmuicore_enqueue_kit( 'admin', $your_vendor_ui_core_root )`
 (front end: `mhmui-front` / `'front'`).

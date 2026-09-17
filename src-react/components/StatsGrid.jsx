@@ -7,6 +7,11 @@
  * (measured 2026-09-17: 392px). The wrapping formula lives in admin.css and
  * front.css. PHP twin: src/Kit/StatsGrid.php.
  *
+ * 0.11.0 components need the 0.11.0 stylesheet -- enqueue through
+ * mhmuicore_enqueue_kit() so the loader serves the winning copy, because an
+ * older (0.10.x) stylesheet has no grid-template-columns fallback for
+ * --mhmui-columns and so leaves the grid with no columns at all.
+ *
  * @param {Object} props
  * @param {Array}  props.cards     StatCard prop objects; `label` doubles as the key.
  * @param {number} [props.columns] Most columns on a wide container, default 4.
