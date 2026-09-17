@@ -247,6 +247,38 @@ if ( ! function_exists( 'mhmuicore_enqueue_kit' ) ) {
 	}
 }
 
+if ( ! function_exists( 'mhmuicore_stat_card_html' ) ) {
+	/**
+	 * One key-figure card as escaped HTML. The public PHP kit API.
+	 *
+	 * A function, not the static method it wraps, because WPCS can only be told
+	 * a FUNCTION is an escaping function: for `StatCard::render_html()` the
+	 * sniff reads the token `StatCard` (measured 2026-09-17, WPCS 3.3.0). List
+	 * both wrappers under customEscapingFunctions in the consumer's ruleset.
+	 * Born in 0.11.0 -- guard calls with function_exists() while an older copy
+	 * can still win the loader.
+	 *
+	 * @param array<string, mixed> $props See MHMUiCore\Kit\StatCard::render_html().
+	 * @return string
+	 */
+	function mhmuicore_stat_card_html( array $props ): string {
+		return \MHMUiCore\Kit\StatCard::render_html( $props );
+	}
+}
+
+if ( ! function_exists( 'mhmuicore_stats_grid_html' ) ) {
+	/**
+	 * A row of key-figure cards as escaped HTML. See mhmuicore_stat_card_html().
+	 *
+	 * @param array<int|string, mixed> $cards   StatCard prop arrays.
+	 * @param mixed                    $columns Column ceiling.
+	 * @return string
+	 */
+	function mhmuicore_stats_grid_html( array $cards, $columns = 4 ): string {
+		return \MHMUiCore\Kit\StatsGrid::render_html( $cards, $columns );
+	}
+}
+
 /*
  * ─── React admin page loader ─────────────────────────────────────────────────
  *

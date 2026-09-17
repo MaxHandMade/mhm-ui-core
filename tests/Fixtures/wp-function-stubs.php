@@ -296,6 +296,23 @@ if ( ! function_exists( 'esc_attr' ) ) {
 	}
 }
 
+if ( ! function_exists( 'sanitize_html_class' ) ) {
+	/**
+	 * WordPress's own algorithm: strip percent-encoded octets, then anything
+	 * outside A-Z a-z 0-9 _ -. A real sanitiser, not a marker, because the class
+	 * set it produces is what gate 6 compares.
+	 *
+	 * @param string $classname Raw class name.
+	 * @param string $fallback  Returned when the result is empty.
+	 * @return string
+	 */
+	function sanitize_html_class( string $classname, string $fallback = '' ): string {
+		$sanitized = preg_replace( '|%[a-fA-F0-9][a-fA-F0-9]|', '', $classname );
+		$sanitized = (string) preg_replace( '/[^A-Za-z0-9_-]/', '', (string) $sanitized );
+		return ( '' === $sanitized && '' !== $fallback ) ? sanitize_html_class( $fallback ) : $sanitized;
+	}
+}
+
 if ( ! function_exists( 'wp_json_encode' ) ) {
 	/**
 	 * @param mixed $data Value to encode.
