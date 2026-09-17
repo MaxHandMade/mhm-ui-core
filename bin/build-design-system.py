@@ -96,7 +96,11 @@ def stat_card(label, value, tone, icon=True, delta=None, sub=None):
     if delta and delta[0] in DIRECTION_MARKS:
         direction, text = delta[0], delta[1]
         label_text = delta[2] if len(delta) > 2 else None
-        sr = '<span class="mhmui-stat-card__delta-sr">%s</span>' % label_text if label_text else ""
+        # Trailing space INSIDE the span's own text, not a bare text node
+        # after it -- otherwise the label and text run together as one word
+        # (measured 2026-09-18: "artış3 this month"). Keeps the class set
+        # unchanged: the span still emits exactly one class either way.
+        sr = '<span class="mhmui-stat-card__delta-sr">%s </span>' % label_text if label_text else ""
         line = ('<p class="mhmui-stat-card__delta mhmui-stat-card__delta--%s" data-direction="%s">'
                 '<span class="mhmui-stat-card__delta-mark" aria-hidden="true">%s</span>%s%s</p>'
                 % (direction, direction, DIRECTION_MARKS[direction], sr, text))

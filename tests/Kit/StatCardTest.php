@@ -95,13 +95,21 @@ final class StatCardTest extends TestCase {
 				'delta' => array( 'direction' => 'up', 'text' => '3 this month', 'label' => 'artış' ),
 			)
 		);
+		// Trailing space lives INSIDE the sr span's own text (not a bare text
+		// node after it), so the marking stub's input carries it too.
 		self::assertStringContainsString(
-			'<span class="mhmui-stat-card__delta-sr">esc_html(artış)</span>',
+			'<span class="mhmui-stat-card__delta-sr">esc_html(artış )</span>',
 			$up
 		);
 		// The sr span sits inside the delta paragraph, after the aria-hidden mark.
 		self::assertMatchesRegularExpression(
 			'/mhmui-stat-card__delta-mark" aria-hidden="true">esc_html\(↑\)<\/span><span class="mhmui-stat-card__delta-sr">/',
+			$up
+		);
+		// The label and delta.text do not run together as one word: the space
+		// is part of the sr span's own (stub-marked) text content.
+		self::assertStringContainsString(
+			'esc_html(artış )</span>esc_html(3 this month)',
 			$up
 		);
 
@@ -113,7 +121,7 @@ final class StatCardTest extends TestCase {
 			)
 		);
 		self::assertStringContainsString(
-			'<span class="mhmui-stat-card__delta-sr">esc_html(azalış)</span>',
+			'<span class="mhmui-stat-card__delta-sr">esc_html(azalış )</span>',
 			$down
 		);
 	}

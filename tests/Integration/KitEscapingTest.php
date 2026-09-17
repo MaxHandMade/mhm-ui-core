@@ -67,8 +67,10 @@ final class KitEscapingTest extends WP_UnitTestCase {
 			'<span class="mhmui-stat-card__delta-mark" aria-hidden="true">' . "\u{2191}" . '</span>',
 			$html
 		);
+		// Trailing space lives INSIDE the sr span's own text (not a bare text
+		// node after it), so real esc_html() output carries it too.
 		self::assertStringContainsString(
-			'<span class="mhmui-stat-card__delta-sr">&quot;&gt;&lt;img src=x onerror=alert(6)&gt;</span>',
+			'<span class="mhmui-stat-card__delta-sr">&quot;&gt;&lt;img src=x onerror=alert(6)&gt; </span>',
 			$html
 		);
 		self::assertStringContainsString( '&lt;script&gt;alert(5)&lt;/script&gt;', $html );

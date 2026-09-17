@@ -98,11 +98,14 @@ describe( 'the visual kit renders only what it is given', () => {
 		const upDelta = up.container.querySelector( '.mhmui-stat-card__delta' );
 		const sr = upDelta.querySelector( '.mhmui-stat-card__delta-sr' );
 		expect( sr ).not.toBeNull();
-		expect( sr.textContent ).toBe( 'artış' );
+		// Trailing space lives INSIDE the sr span's own text (not a bare text
+		// node after it) so the label and delta.text do not run together as
+		// one word in the DOM's text content.
+		expect( sr.textContent ).toBe( 'artış ' );
 		expect( sr.getAttribute( 'aria-hidden' ) ).not.toBe( 'true' );
 		// sr text sits after the aria-hidden mark, before the plain text --
 		// "artış 3 this month" reads coherently to a screen reader.
-		expect( upDelta.textContent ).toBe( '↑artış3 this month' );
+		expect( upDelta.textContent ).toBe( '↑artış 3 this month' );
 
 		const down = render(
 			<StatCard
@@ -118,7 +121,7 @@ describe( 'the visual kit renders only what it is given', () => {
 		const downSr = down.container
 			.querySelector( '.mhmui-stat-card__delta' )
 			.querySelector( '.mhmui-stat-card__delta-sr' );
-		expect( downSr.textContent ).toBe( 'azalış' );
+		expect( downSr.textContent ).toBe( 'azalış ' );
 	} );
 
 	test( 'StatCard omits the sr span entirely when delta.label is absent -- no invented fallback', () => {

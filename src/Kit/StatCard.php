@@ -131,11 +131,17 @@ final class StatCard {
 	 * accessibility tree: the standard clip-to-1px pattern in both stylesheets'
 	 * `.mhmui-stat-card__delta-sr` rule.
 	 *
+	 * The trailing space is INSIDE the span's own text, not a bare text node
+	 * after it: without it the DOM's text content runs the label and
+	 * delta.text together as one word (measured 2026-09-18: "artış3 this
+	 * month"). Keeping it inside the span leaves the class set gate 6
+	 * compares unchanged -- the span still emits exactly one class either way.
+	 *
 	 * @param array<string, mixed> $delta The delta prop.
 	 */
 	private static function delta_label( array $delta ): string {
 		$label = self::presence_text( $delta['label'] ?? '' );
-		return '' === $label ? '' : '<span class="mhmui-stat-card__delta-sr">' . esc_html( $label ) . '</span>';
+		return '' === $label ? '' : '<span class="mhmui-stat-card__delta-sr">' . esc_html( $label . ' ' ) . '</span>';
 	}
 
 	/**

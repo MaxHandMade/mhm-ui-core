@@ -123,6 +123,12 @@ export default function StatCard( {
 		// 2026-09-17: the 0.12.0 mark is aria-hidden and data-direction is not
 		// an accessible name either, so up and down announced identically).
 		// Absent, behaviour is exactly 0.12.0 -- no fallback string is invented.
+		// The trailing space lives INSIDE the sr span's own text (not a bare
+		// text node after it): without it the DOM's text content runs the
+		// label and delta.text together as one word (measured 2026-09-18:
+		// "artış3 this month"), and putting the space outside the span would
+		// change the class set gate 6 compares -- it does not, since the span
+		// still emits the one class either way.
 		line = (
 			<p
 				className={ `mhmui-stat-card__delta mhmui-stat-card__delta--${ direction }` }
@@ -136,7 +142,7 @@ export default function StatCard( {
 				</span>
 				{ present( delta.label ) && (
 					<span className="mhmui-stat-card__delta-sr">
-						{ delta.label }
+						{ `${ delta.label } ` }
 					</span>
 				) }
 				{ delta.text }
