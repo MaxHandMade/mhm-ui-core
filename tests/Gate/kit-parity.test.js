@@ -16,11 +16,15 @@ function classesOf( element ) {
 	return [ ...all ].sort();
 }
 
-/** Every class StatCard.jsx can emit: static literals + template prefixes expanded by the vocabularies. */
+/** Every class a kit member's source can emit: static literals + template prefixes expanded by the vocabularies. */
 export function classUniverse( source ) {
 	const code = source.replace( /\/\*[\s\S]*?\*\//g, '' ).replace( /\/\/.*$/gm, '' );
 	const universe = new Set();
-	for ( const m of code.matchAll( /mhmui-[a-z0-9_-]*[a-z0-9_](?![a-z0-9_-]*\$\{)/g ) ) {
+	// Negative lookbehind excludes a `--mhmui-*` CSS custom property (e.g.
+	// StatsGrid.jsx's '--mhmui-columns' style var): it is not a class, and
+	// without the lookbehind the regex still matches "mhmui-columns" starting
+	// one character in.
+	for ( const m of code.matchAll( /(?<!-)mhmui-[a-z0-9_-]*[a-z0-9_](?![a-z0-9_-]*\$\{)/g ) ) {
 		universe.add( m[ 0 ] );
 	}
 	for ( const m of code.matchAll( /(mhmui-[a-z0-9_-]+--)\$\{\s*(\w+)\s*\}/g ) ) {
@@ -51,11 +55,13 @@ describe( 'gate 6 -- the PHP and JSX kit renderers emit the same classes', () =>
 		}
 	} );
 
-	test( 'branch coverage: every class StatCard.jsx can emit appears in some fixture', () => {
-		const source = readFileSync( join( ROOT, 'src-react', 'components', 'StatCard.jsx' ), 'utf8' );
-		const covered = new Set( snapshot.StatCard.flat() );
-		const missing = [ ...classUniverse( source ) ].filter( ( c ) => ! covered.has( c ) );
-		expect( missing ).toEqual( [] );
+	test( 'branch coverage: every class each PHP-twinned member can emit appears in its own fixtures', () => {
+		for ( const [ name ] of members ) {
+			const source = readFileSync( join( ROOT, 'src-react', 'components', `${ name }.jsx` ), 'utf8' );
+			const covered = new Set( snapshot[ name ].flat() );
+			const missing = [ ...classUniverse( source ) ].filter( ( c ) => ! covered.has( c ) );
+			expect( [ name, missing ] ).toEqual( [ name, [] ] );
+		}
 	} );
 
 	test( 'the coverage check is not vacuous: a class literal no fixture reaches is reported', () => {
