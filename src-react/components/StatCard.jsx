@@ -24,11 +24,14 @@ export const DIRECTIONS = [ 'up', 'down', 'flat' ];
 
 const DATA_KEY = /^[a-z0-9-]{1,32}$/;
 
-// Presence test matching the PHP twin's is_scalar()+string-coercion check
-// ('' !== $icon / '' === $sub): a value counts as present once it is a
-// non-empty string or number -- "0" and 0 both present, "" and undefined
-// both absent. Plain `icon && ...` / `else if ( sub )` treats numeric 0 as
-// absent (0 is JS-falsy), which the PHP twin does not.
+// Presence test for the string/number props icon and sub take, matching the
+// PHP twin's '' !== $icon / '' === $sub check for those same two types: a
+// value counts as present once it is a non-empty string or number -- "0" and
+// 0 both present, "" and undefined both absent. Plain `icon && ...` /
+// `else if ( sub )` treats numeric 0 as absent (0 is JS-falsy), which the PHP
+// twin does not. (PHP's check is_scalar()-based and also accepts bool/float;
+// this helper only needs to agree with it on the string/number range icon and
+// sub are documented to take.)
 const present = ( v ) =>
 	( typeof v === 'string' || typeof v === 'number' ) && String( v ) !== '';
 

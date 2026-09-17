@@ -81,13 +81,17 @@ final class ShippedSurfaceTest extends TestCase {
 		$p1 = array_filter( $files, static fn( $p ) => (bool) preg_match( '/\.(css|js|jsx|php)$/', $p ) );
 		$p2 = array_filter( $files, static fn( $p ) => str_ends_with( $p, '.css' ) );
 
-		// 57/48/3 — src-react/kit-classes.json (gate 6's committed PHP/JSX class
-		// snapshot, Task 5) ships: it lives in src-react/, which is not under any
-		// export-ignore rule, and it is not a *.test.js(x) file. bin/dump-kit-
-		// classes.php that writes it stays out (/bin/ is export-ignore). This
-		// pin is a tripwire, not a target: it moves only with a commit that
+		// 56/48/3 — src/Kit/StatCard.php and src/Kit/StatsGrid.php (the PHP kit
+		// renderers, gate 6's PHP half) shipped in an earlier commit on this
+		// branch (be1c759) without this pin being moved; caught while running
+		// `composer test` ahead of the gate-6 commit (Task 5). src-react/kit-
+		// classes.json (gate 6's committed PHP/JSX class snapshot) does NOT
+		// move this count: nothing at runtime reads it, only bin/dump-kit-
+		// classes.php (writer) and the two gate tests (readers), so it is
+		// export-ignored like the rest of that tooling. This pin is a
+		// tripwire, not a target: it moves only with a commit that
 		// deliberately changes what ships, and the commit says which file.
-		self::assertCount( 57, $files, 'shipped file count changed' );
+		self::assertCount( 56, $files, 'shipped file count changed' );
 		self::assertCount( 48, $p1, 'P1 file set changed' );
 		self::assertCount( 3, $p2, 'P2 file set changed' );
 	}
