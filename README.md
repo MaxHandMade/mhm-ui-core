@@ -427,7 +427,10 @@ Props: `label`, `value` (already formatted), `icon` (Dashicons suffix — admin
 only), `tone` (`success|warning|danger|info|neutral`, anything else is dropped),
 `sub`, `delta` (`{direction: up|down|flat, text}`), `emphasis` (bool),
 `data` (`key => value` → `data-key`, keys `^[a-z0-9-]{1,32}$`). The second
-argument is a column **ceiling**; the grid wraps in CSS.
+argument is a column **ceiling**; the grid wraps in CSS. Avoid `direction` as
+a key in your own `data` map — the kit already emits `data-direction` on the
+delta line for `up`/`down`; no collision is possible (different elements),
+but it would leave a `[data-direction]` query matching both.
 
 **Since 0.12.0** the kit itself renders the direction cue for `delta` — an
 `aria-hidden` ↑/↓ mark before the text, for `up`/`down` only (never `flat`,

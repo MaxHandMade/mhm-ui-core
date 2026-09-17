@@ -282,7 +282,9 @@ Prop'lar: `label`, `value` (zaten biçimlendirilmiş), `icon` (Dashicons soneki 
 ekranı), `tone` (`success|warning|danger|info|neutral`, başka her şey düşürülür), `sub`,
 `delta` (`{direction: up|down|flat, text}`), `emphasis` (bool), `data` (`anahtar => değer` →
 `data-anahtar`, anahtarlar `^[a-z0-9-]{1,32}$`). İkinci argüman sütun **tavanıdır**; ızgara
-CSS'te sarar.
+CSS'te sarar. Kendi `data` haritanızda `direction` anahtarından kaçının — kit zaten delta
+satırında `data-direction` basıyor; çakışma imkânsız (farklı elemanlar) ama bir
+`[data-direction]` sorgusu ikisiyle de eşleşir.
 
 **0.12.0'dan itibaren** yön ipucunu artık kit'in kendisi çiziyor — `up`/`down` için (asla
 `flat` için değil, o zaten delta satırı hiç basmaz) metinden önce `aria-hidden` bir ↑/↓

@@ -66,9 +66,13 @@ final class StatCardTest extends TestCase {
 		$up = StatCard::render_html(
 			array( 'label' => 'L', 'value' => '1', 'delta' => array( 'direction' => 'up', 'text' => '3 this month' ) )
 		);
+		// The stub marks instead of escaping (wp-function-stubs.php), same as
+		// test_text_goes_through_esc_html() below: this proves the glyph is
+		// routed through esc_html() like every other text node in this file,
+		// not that it comes out byte-identical.
 		self::assertStringContainsString( 'data-direction="up"', $up );
 		self::assertStringContainsString(
-			'<span class="mhmui-stat-card__delta-mark" aria-hidden="true">↑</span>',
+			'<span class="mhmui-stat-card__delta-mark" aria-hidden="true">esc_html(↑)</span>',
 			$up
 		);
 		self::assertStringContainsString( 'mhmui-stat-card__delta-mark', $up );
@@ -78,7 +82,7 @@ final class StatCardTest extends TestCase {
 		);
 		self::assertStringContainsString( 'data-direction="down"', $down );
 		self::assertStringContainsString(
-			'<span class="mhmui-stat-card__delta-mark" aria-hidden="true">↓</span>',
+			'<span class="mhmui-stat-card__delta-mark" aria-hidden="true">esc_html(↓)</span>',
 			$down
 		);
 	}

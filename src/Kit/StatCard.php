@@ -97,7 +97,7 @@ final class StatCard {
 			if ( 'up' === $direction || 'down' === $direction ) {
 				return '<p class="' . esc_attr( 'mhmui-stat-card__delta mhmui-stat-card__delta--' . $direction ) . '"'
 					. ' data-direction="' . esc_attr( $direction ) . '">'
-					. '<span class="mhmui-stat-card__delta-mark" aria-hidden="true">' . self::DIRECTION_MARKS[ $direction ] . '</span>'
+					. '<span class="mhmui-stat-card__delta-mark" aria-hidden="true">' . esc_html( self::DIRECTION_MARKS[ $direction ] ) . '</span>'
 					. esc_html( self::text( $delta['text'] ?? '' ) ) . '</p>';
 			}
 		}
