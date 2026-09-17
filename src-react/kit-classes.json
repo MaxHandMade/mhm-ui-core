@@ -109,6 +109,14 @@
             "mhmui-stat-card__body",
             "mhmui-stat-card__label",
             "mhmui-stat-card__value"
+        ],
+        [
+            "dashicons",
+            "dashicons-calendaralt",
+            "mhmui-stat-card",
+            "mhmui-stat-card__body",
+            "mhmui-stat-card__label",
+            "mhmui-stat-card__value"
         ]
     ],
     "StatsGrid": [

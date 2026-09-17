@@ -38,6 +38,13 @@ const DATA_KEY = /^[a-z0-9-]{1,32}$/;
 const present = ( v ) =>
 	( typeof v === 'string' || typeof v === 'number' ) && String( v ) !== '';
 
+// Mirrors WordPress's sanitize_html_class(), which the PHP twin runs icon
+// through: strip everything outside A-Z a-z 0-9 _ -, don't collapse the gap,
+// so "calendar alt" becomes "calendaralt" in both twins rather than two
+// space-separated classes here and one merged one there (measured
+// 2026-09-17). Call only after present( icon ) -- it stringifies anything.
+const sanitizeIconClass = ( v ) => String( v ).replace( /[^A-Za-z0-9_-]/g, '' );
+
 function dataAttributes( data ) {
 	const out = {};
 	if ( ! data || typeof data !== 'object' ) {
@@ -86,11 +93,15 @@ export default function StatCard( {
 		line = <p className="mhmui-stat-card__sub">{ sub }</p>;
 	}
 
+	// A sanitised-away icon ( e.g. "%%" ) renders no span, matching the PHP
+	// twin's '' !== $icon check on its own sanitize_html_class() output.
+	const iconClass = present( icon ) ? sanitizeIconClass( icon ) : '';
+
 	return (
 		<div className={ classes.join( ' ' ) } { ...dataAttributes( data ) }>
-			{ present( icon ) && (
+			{ iconClass !== '' && (
 				<span
-					className={ `dashicons dashicons-${ icon }` }
+					className={ `dashicons dashicons-${ iconClass }` }
 					aria-hidden="true"
 				/>
 			) }

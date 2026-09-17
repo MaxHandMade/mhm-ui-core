@@ -269,4 +269,18 @@ describe( 'the visual kit renders only what it is given', () => {
 		expect( subEl.textContent ).toBe( '0' );
 		expect( container.querySelector( '.dashicons-0' ) ).not.toBeNull();
 	} );
+
+	test( 'StatCard sanitises icon like the PHP twin -- spaces are stripped, not kept', () => {
+		const { container } = render(
+			<StatCard label="Icon" value="1" icon="calendar alt" />
+		);
+		// PHP's sanitize_html_class() strips [^A-Za-z0-9_-], it does not
+		// collapse into a boundary, so "calendar alt" -> "calendaralt" in
+		// both twins -- a single dashicons-calendaralt class, not two.
+		expect(
+			container.querySelector( '.dashicons-calendaralt' )
+		).not.toBeNull();
+		expect( container.querySelector( '.dashicons-calendar' ) ).toBeNull();
+		expect( container.querySelector( '.dashicons-alt' ) ).toBeNull();
+	} );
 } );
