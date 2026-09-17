@@ -36,6 +36,71 @@ function gridWrapsFromColumns( css, selector ) {
 	return body !== null && /repeat\(\s*auto-fit/.test( body ) && /var\(\s*--mhmui-columns\s*\)/.test( body );
 }
 
+/** Splits a comma-separated selector list on its TOP-LEVEL commas only --
+ * one inside a pseudo-class's parentheses (e.g. `:is( a, b )`) does not end
+ * the selector it is part of. */
+function splitTopLevelCommas( selectorList ) {
+	const parts = [];
+	let depth = 0;
+	let current = '';
+	for ( const ch of selectorList ) {
+		if ( ch === '(' ) {
+			depth++;
+		} else if ( ch === ')' ) {
+			depth--;
+		}
+		if ( ch === ',' && depth === 0 ) {
+			parts.push( current );
+			current = '';
+		} else {
+			current += ch;
+		}
+	}
+	parts.push( current );
+	return parts;
+}
+
+/** True only when `selector` is `:where( ... )` in its entirety -- the
+ * :where(...) opens at the very first character and its matching close is
+ * the very last, so nothing trails outside it (which would carry its own,
+ * non-zero specificity: `:where( .mhmui-front ) .x` is 0-1-0, not 0-0-0). */
+function isFullyWrappedInWhere( selector ) {
+	if ( ! selector.startsWith( ':where(' ) ) {
+		return false;
+	}
+	let depth = 0;
+	for ( let i = 6; i < selector.length; i++ ) {
+		if ( selector[ i ] === '(' ) {
+			depth++;
+		} else if ( selector[ i ] === ')' ) {
+			depth--;
+			if ( depth === 0 ) {
+				return i === selector.length - 1;
+			}
+		}
+	}
+	return false;
+}
+
+/** Gate for item 1 of the audit: every `:where(` skin selector in the
+ * stylesheet must wrap its WHOLE selector, not just the `.mhmui-front`
+ * ancestor -- `:where( .mhmui-front ) .x` is 0-1-0 per MDN's :where()
+ * specificity rule, not the zero specificity the header comment promises. */
+function allWhereSelectorsFullyWrapped( css ) {
+	const code = css.replace( /\/\*[\s\S]*?\*\//g, '' );
+	const ruleRe = /([^{}]+)\{[^}]*\}/g;
+	let m;
+	while ( ( m = ruleRe.exec( code ) ) !== null ) {
+		for ( const raw of splitTopLevelCommas( m[ 1 ] ) ) {
+			const sel = raw.trim();
+			if ( sel.includes( ':where(' ) && ! isFullyWrappedInWhere( sel ) ) {
+				return false;
+			}
+		}
+	}
+	return true;
+}
+
 describe( 'page layout standard (spec §3.5)', () => {
 	const admin = read( 'admin.css' );
 	const front = read( 'front.css' );
@@ -64,6 +129,10 @@ describe( 'page layout standard (spec §3.5)', () => {
 		expect( emphasisPlainRuleSetsAccent( front ) ).toBe( true );
 	} );
 
+	test( 'front.css skin rules wrap the WHOLE selector in :where(), not just the .mhmui-front ancestor', () => {
+		expect( allWhereSelectorsFullyWrapped( front ) ).toBe( true );
+	} );
+
 	test( 'the checks are not vacuous: a capped admin shell and an uncontained front shell go red', () => {
 		expect( adminPageFlows( '.mhmui-admin-page { max-width: 1200px; }' ) ).toBe( false );
 		expect( adminPageFlows( '.mhmui-admin-page { max-width: none; container: x / inline-size; }' ) ).toBe( false );
@@ -81,6 +150,13 @@ describe( 'page layout standard (spec §3.5)', () => {
 		expect( gridWrapsFromColumns(
 			'.mhmui-stats-grid { grid-template-columns: repeat( 4, 1fr ); }',
 			'.mhmui-stats-grid'
+		) ).toBe( false );
+
+		// Only the .mhmui-front ancestor is zeroed; the descendant compound
+		// trails outside the :where(...) and still carries its own
+		// specificity (0-1-0) -- exactly the bug this gate exists to catch.
+		expect( allWhereSelectorsFullyWrapped(
+			':where( .mhmui-front ) .x { }'
 		) ).toBe( false );
 	} );
 } );
