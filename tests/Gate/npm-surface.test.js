@@ -1,5 +1,6 @@
 const { execFileSync } = require( 'node:child_process' );
-const { readFileSync, writeFileSync } = require( 'node:fs' );
+const { cpSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } = require( 'node:fs' );
+const os = require( 'node:os' );
 const { join } = require( 'node:path' );
 
 /**
@@ -27,27 +28,41 @@ describe( 'the npm tarball', () => {
 	}
 
 	/**
-	 * Runs `packedFiles()` with package.json's `files` field temporarily
-	 * replaced by `files`, restoring the original content afterwards even if
-	 * the assertion throws. This is the same manual step the exclusion's own
-	 * commit was verified with (drop the `!src-react/kit-classes.json` line,
-	 * watch it ship, put the line back) turned into something the suite runs
-	 * itself, so a future edit that narrows or reorders `files` and drops the
-	 * exclusion is caught here instead of on the next `npm pack --dry-run`
-	 * someone happens to read by eye.
+	 * Runs `npm pack --dry-run` with package.json's `files` field replaced by
+	 * `files`, against a THROWAWAY COPY of the package rather than the real
+	 * tracked tree -- a gate must never write the repo it is guarding, and an
+	 * in-place rewrite-then-restore is one `finally` away from leaving
+	 * package.json mutated on disk if the process is killed mid-test (a
+	 * timeout, Ctrl+C, a worker crash all skip `finally`). The copy is built
+	 * fresh in `os.tmpdir()` and removed in `finally` regardless of outcome;
+	 * only `src-react`, LICENSE and README.md are copied in because those are
+	 * everything `npm pack`'s own always-include rules plus this package's
+	 * `files` entry can possibly list (verified against N-2's expectations).
 	 *
 	 * @return {string[]} Paths `npm pack --dry-run` would publish under `files`.
 	 */
 	function packedFilesWithFilesList( files ) {
-		const pkgPath = join( root, 'package.json' );
-		const original = readFileSync( pkgPath, 'utf8' );
-		const pkg = JSON.parse( original );
+		const pkg = JSON.parse( readFileSync( join( root, 'package.json' ), 'utf8' ) );
 		pkg.files = files;
-		writeFileSync( pkgPath, JSON.stringify( pkg, null, '\t' ) + '\n' );
+
+		const tmpDir = mkdtempSync( join( os.tmpdir(), 'mhmui-npm-surface-' ) );
 		try {
-			return packedFiles();
+			writeFileSync( join( tmpDir, 'package.json' ), JSON.stringify( pkg, null, '\t' ) + '\n' );
+			cpSync( join( root, 'src-react' ), join( tmpDir, 'src-react' ), { recursive: true } );
+			for ( const extra of [ 'LICENSE', 'README.md' ] ) {
+				if ( existsSync( join( root, extra ) ) ) {
+					cpSync( join( root, extra ), join( tmpDir, extra ) );
+				}
+			}
+
+			const out = execFileSync(
+				'npm',
+				[ 'pack', '--dry-run', '--json' ],
+				{ cwd: tmpDir, encoding: 'utf8', shell: process.platform === 'win32' }
+			);
+			return JSON.parse( out )[ 0 ].files.map( ( entry ) => entry.path );
 		} finally {
-			writeFileSync( pkgPath, original );
+			rmSync( tmpDir, { recursive: true, force: true } );
 		}
 	}
 
