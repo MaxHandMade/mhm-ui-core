@@ -29,9 +29,12 @@ const DATA_KEY = /^[a-z0-9-]{1,32}$/;
 // value counts as present once it is a non-empty string or number -- "0" and
 // 0 both present, "" and undefined both absent. Plain `icon && ...` /
 // `else if ( sub )` treats numeric 0 as absent (0 is JS-falsy), which the PHP
-// twin does not. (PHP's check is_scalar()-based and also accepts bool/float;
-// this helper only needs to agree with it on the string/number range icon and
-// sub are documented to take.)
+// twin does not. The PHP twin narrows to the same string|int|float range for
+// these two props (StatCard.php's presence_text(), not the wider is_scalar()
+// text() label/value/delta.text still use), so a boolean is absent on both
+// sides too: `icon: true` / `sub: true` render nothing in either twin
+// (measured 2026-09-17). The two now agree on the full scalar range icon and
+// sub are documented to take.
 const present = ( v ) =>
 	( typeof v === 'string' || typeof v === 'number' ) && String( v ) !== '';
 

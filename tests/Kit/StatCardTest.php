@@ -86,6 +86,16 @@ final class StatCardTest extends TestCase {
 		self::assertStringNotContainsString( 'dashicons', StatCard::render_html( array( 'label' => 'L', 'value' => '1', 'icon' => '%%' ) ) );
 	}
 
+	public function test_boolean_icon_and_sub_are_dropped_like_the_jsx_twin(): void {
+		// JSX's present() only accepts string|number, so `icon: true` / `sub: true`
+		// render nothing there. is_scalar() also accepts bool, so before this was
+		// narrowed, PHP's text() turned `true` into "1" and printed a
+		// dashicons-1 span and a sub line the JSX twin never emits.
+		$html = StatCard::render_html( array( 'label' => 'Bool', 'value' => '1', 'sub' => true, 'icon' => true ) );
+		self::assertStringNotContainsString( 'dashicons', $html );
+		self::assertStringNotContainsString( 'mhmui-stat-card__sub', $html );
+	}
+
 	public function test_emphasis_only_for_literal_true(): void {
 		self::assertSame( 'mhmui-stat-card mhmui-stat-card--emphasis', self::root_class( array( 'label' => 'L', 'value' => '1', 'emphasis' => true ) ) );
 		self::assertSame( 'mhmui-stat-card', self::root_class( array( 'label' => 'L', 'value' => '1', 'emphasis' => 'yes' ) ) );

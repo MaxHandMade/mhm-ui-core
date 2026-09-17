@@ -51,7 +51,7 @@ final class StatCard {
 
 		$html = '<div class="' . esc_attr( implode( ' ', $classes ) ) . '"' . self::data_attributes( $props['data'] ?? null ) . '>';
 
-		$icon = sanitize_html_class( self::text( $props['icon'] ?? '' ) );
+		$icon = sanitize_html_class( self::presence_text( $props['icon'] ?? '' ) );
 		if ( '' !== $icon ) {
 			$html .= '<span class="' . esc_attr( 'dashicons dashicons-' . $icon ) . '" aria-hidden="true"></span>';
 		}
@@ -80,7 +80,7 @@ final class StatCard {
 			}
 		}
 
-		$sub = self::text( $props['sub'] ?? '' );
+		$sub = self::presence_text( $props['sub'] ?? '' );
 		return '' === $sub ? '' : '<p class="mhmui-stat-card__sub">' . esc_html( $sub ) . '</p>';
 	}
 
@@ -110,5 +110,23 @@ final class StatCard {
 	 */
 	private static function text( $value ): string {
 		return is_scalar( $value ) ? (string) $value : '';
+	}
+
+	/**
+	 * Coerce a string|int|float prop to a string, or drop it silently -- the
+	 * same range as StatCard.jsx's present(). Unlike self::text(), a bool does
+	 * NOT count: is_scalar() accepts bool too, so before this helper existed
+	 * `icon: true` / `sub: true` coerced to "1" here and printed a
+	 * dashicons-1 span / a sub line that the JSX twin, whose present() only
+	 * accepts string|number, never emits for the same props (measured
+	 * 2026-09-17). Used only for icon and sub, the two props JSX gates behind
+	 * present(); label/value/delta.text keep self::text()'s wider is_scalar()
+	 * range because JSX reads them directly with no presence check of its own
+	 * to disagree with.
+	 *
+	 * @param mixed $value Anything.
+	 */
+	private static function presence_text( $value ): string {
+		return ( is_string( $value ) || is_int( $value ) || is_float( $value ) ) ? (string) $value : '';
 	}
 }
