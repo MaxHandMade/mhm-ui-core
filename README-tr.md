@@ -215,7 +215,7 @@ da bu tek yanlış cümle yüzünden taşıdı.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.10.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.11.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 `bootstrap.php`'yi doğrudan require etmek `MHMUICORE_VERSION`'ı anında tanımlar
@@ -260,6 +260,59 @@ Eklenti `is_declared()` ile korunsaydı **sessizce ölürdü**, ki o daha kötü
 Tek token kaynağı `src-react/tokens.json`: `npm run tokens:build` `assets/react/admin.css`'teki
 `--mhmui-*` bloğunu yeniden üretir, `npm run tokens:check` CI'da sürüklenmeyi kırmızı yapar.
 JS tarafında `import { tokens } from '…/src-react'` ile aynı değerler.
+
+### PHP kiti (0.11.0+)
+
+İki fonksiyon, anahtar rakam kartını sunucu tarafında `StatCard` / `StatsGrid` ile aynı DOM
+ve sınıf kümesiyle üretir (gate 6 ikisini karşılaştırır):
+
+```php
+if ( function_exists( 'mhmuicore_stats_grid_html' ) ) {
+	echo mhmuicore_stats_grid_html(
+		array(
+			array( 'label' => __( 'Pending', 'my-plugin' ), 'value' => number_format_i18n( $pending ), 'tone' => 'warning', 'icon' => 'clock' ),
+			array( 'label' => __( 'Balance', 'my-plugin' ), 'value' => $balance_formatted, 'emphasis' => true, 'data' => array( 'stat' => 'balance' ) ),
+		),
+		4
+	);
+}
+```
+
+Prop'lar: `label`, `value` (zaten biçimlendirilmiş), `icon` (Dashicons soneki — yalnız yönetici
+ekranı), `tone` (`success|warning|danger|info|neutral`, başka her şey düşürülür), `sub`,
+`delta` (`{direction: up|down|flat, text}`), `emphasis` (bool), `data` (`anahtar => değer` →
+`data-anahtar`, anahtarlar `^[a-z0-9-]{1,32}$`). İkinci argüman sütun **tavanıdır**; ızgara
+CSS'te sarar.
+
+Şeridi yüzey kapsamına sarın ve stil dosyasını enqueue edin:
+`<div class="mhmui-admin">…</div>` + `mhmuicore_enqueue_kit( 'admin', $your_vendor_ui_core_root )`
+(ön yüz: `mhmui-front` / `'front'`).
+
+WPCS'e sarmalayıcıların escape ettiğini söyleyin — statik metotlar bildirilemez, sniff sınıf
+token'ını okur:
+
+```xml
+<rule ref="WordPress.Security.EscapeOutput">
+  <properties>
+    <property name="customEscapingFunctions" type="array">
+      <element value="mhmuicore_stat_card_html"/>
+      <element value="mhmuicore_stats_grid_html"/>
+    </property>
+  </properties>
+</rule>
+```
+
+### Sayfa düzeni (0.11.0+)
+
+| Yüzey | Markup | Kural |
+|---|---|---|
+| admin | `<div class="mhmui-admin mhmui-admin-page">` | tam genişlik akar; `mhmui-measure`'ı bir **form sütununa** koy, sayfaya asla |
+| front | `<div class="mhmui-front mhmui-front-page">` | ortalanır, `--mhmui-page-max`'te sınırlanır; adlandırılmış sorgu konteyneri `mhmui-page` |
+
+Ön yüz düzenleri viewport'u değil konteyneri sorgular:
+`@container mhmui-page (width < 40rem) { … }`. Eşikler sabit sayılardır (özel özellikler bir
+konteyner koşulunda kullanılamaz): **narrow < 40rem ≤ medium < 64rem ≤ wide**. `position: fixed`
+kaplamaları kabuğun dışında tutun.
 
 ### Bilerek yapılmayanlar
 
@@ -343,7 +396,7 @@ parite kapısı eşitlik arar, uyumluluk değil.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.10.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.11.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 🔴 Sürüm dizesi **elle yazılır** (kayıt, herhangi bir bootstrap yüklenmeden önce koşar) ve

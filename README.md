@@ -22,7 +22,7 @@ A consuming plugin `require_once`s `vendor/mhm/ui-core/register.php` from its
 main file and registers its own copy:
 
 ```php
-mhmuicore_register( '0.10.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.11.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 At `plugins_loaded` priority 0 the highest registered version boots; the rest
@@ -389,7 +389,7 @@ build from.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.10.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.11.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 Requiring `bootstrap.php` directly defines `MHMUICORE_VERSION` immediately, which
@@ -405,3 +405,56 @@ pin it with a check in your own gates, as the existing consumer does.
 has no text domain. `src-react/tokens.json` is the single token source;
 `npm run tokens:build` regenerates the `--mhmui-*` block in
 `assets/react/admin.css`, and `npm run tokens:check` fails CI on drift.
+
+### PHP kit (0.11.0+)
+
+Two functions render the key-figure card server-side, with the same DOM and
+class set as `StatCard` / `StatsGrid` (gate 6 compares them):
+
+```php
+if ( function_exists( 'mhmuicore_stats_grid_html' ) ) {
+	echo mhmuicore_stats_grid_html(
+		array(
+			array( 'label' => __( 'Pending', 'my-plugin' ), 'value' => number_format_i18n( $pending ), 'tone' => 'warning', 'icon' => 'clock' ),
+			array( 'label' => __( 'Balance', 'my-plugin' ), 'value' => $balance_formatted, 'emphasis' => true, 'data' => array( 'stat' => 'balance' ) ),
+		),
+		4
+	);
+}
+```
+
+Props: `label`, `value` (already formatted), `icon` (Dashicons suffix — admin
+only), `tone` (`success|warning|danger|info|neutral`, anything else is dropped),
+`sub`, `delta` (`{direction: up|down|flat, text}`), `emphasis` (bool),
+`data` (`key => value` → `data-key`, keys `^[a-z0-9-]{1,32}$`). The second
+argument is a column **ceiling**; the grid wraps in CSS.
+
+Wrap the strip in the surface scope and enqueue its stylesheet:
+`<div class="mhmui-admin">…</div>` + `mhmuicore_enqueue_kit( 'admin', $your_vendor_ui_core_root )`
+(front end: `mhmui-front` / `'front'`).
+
+Tell WPCS the wrappers escape — the static methods cannot be declared, the
+sniff reads the class token:
+
+```xml
+<rule ref="WordPress.Security.EscapeOutput">
+  <properties>
+    <property name="customEscapingFunctions" type="array">
+      <element value="mhmuicore_stat_card_html"/>
+      <element value="mhmuicore_stats_grid_html"/>
+    </property>
+  </properties>
+</rule>
+```
+
+### Page layout (0.11.0+)
+
+| Surface | Markup | Rule |
+|---|---|---|
+| admin | `<div class="mhmui-admin mhmui-admin-page">` | flows full width; put `mhmui-measure` on a **form column**, never on the page |
+| front | `<div class="mhmui-front mhmui-front-page">` | centred, capped at `--mhmui-page-max`; named query container `mhmui-page` |
+
+Front-end layouts query the container, not the viewport:
+`@container mhmui-page (width < 40rem) { … }`. Thresholds are fixed numbers
+(custom properties are not allowed in a container condition): **narrow < 40rem ≤
+medium < 64rem ≤ wide**. Keep `position: fixed` overlays outside the shell.
