@@ -215,7 +215,7 @@ da bu tek yanlış cümle yüzünden taşıdı.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.11.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.11.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 `bootstrap.php`'yi doğrudan require etmek `MHMUICORE_VERSION`'ı anında tanımlar
@@ -282,7 +282,8 @@ Prop'lar: `label`, `value` (zaten biçimlendirilmiş), `icon` (Dashicons soneki 
 ekranı), `tone` (`success|warning|danger|info|neutral`, başka her şey düşürülür), `sub`,
 `delta` (`{direction: up|down|flat, text}`), `emphasis` (bool), `data` (`anahtar => değer` →
 `data-anahtar`, anahtarlar `^[a-z0-9-]{1,32}$`). İkinci argüman sütun **tavanıdır**; ızgara
-CSS'te sarar.
+CSS'te sarar. `delta.text` kendi yön ipucunu (bir ok veya işaret) taşımalıdır — renk tek
+başına yukarı/aşağı yönünü iletmemelidir.
 
 Bu 0.11.0 bileşenleri 0.11.0 stil dosyasını ister — `mhmuicore_enqueue_kit()` üzerinden
 enqueue edin ki yükleyici kazanan kopyayı sunsun; daha eski bir stil dosyasının altında
@@ -400,7 +401,7 @@ parite kapısı eşitlik arar, uyumluluk değil.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.11.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.11.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 🔴 Sürüm dizesi **elle yazılır** (kayıt, herhangi bir bootstrap yüklenmeden önce koşar) ve

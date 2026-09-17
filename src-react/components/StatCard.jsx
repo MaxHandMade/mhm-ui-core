@@ -15,7 +15,10 @@
  * @param {string}  [props.icon]     Dashicons class suffix, e.g. "calendar-alt".
  * @param {string}  [props.tone]     One of TONES; anything else is dropped.
  * @param {string}  [props.sub]      Secondary line, shown when no delta line is.
- * @param {Object}  [props.delta]    { direction: one of DIRECTIONS, text }.
+ * @param {Object}  [props.delta]    { direction: one of DIRECTIONS, text }. `text` must
+ *                                   carry its own direction cue (an arrow or a sign, e.g.
+ *                                   "↑ 3 this month" / "-2 this month") -- colour alone
+ *                                   must not convey up vs. down (WCAG 1.4.1).
  * @param {boolean} [props.emphasis] Value in the accent colour; not a fill.
  * @param {Object}  [props.data]     { key: value } -> data-key="value"; keys ^[a-z0-9-]{1,32}$.
  */

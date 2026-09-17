@@ -308,19 +308,31 @@
 .mhmui-stat-card--warning { background: linear-gradient( 135deg, var( --mhmui-warning ), var( --mhmui-warning-strong ) ); }
 .mhmui-stat-card--danger  { background: linear-gradient( 135deg, var( --mhmui-danger ),  var( --mhmui-danger-strong )  ); }
 .mhmui-stat-card--neutral { background: linear-gradient( 135deg, var( --mhmui-neutral ), var( --mhmui-neutral-strong ) ); }
-.mhmui-stat-card .dashicons { font-size: 28px; width: 28px; height: 28px; opacity: .9; }
+.mhmui-stat-card .dashicons { font-size: 28px; width: 28px; height: 28px; opacity: .9; color: var( --mhmui-accent ); }
 .mhmui-stat-card__body { flex: 1; min-width: 0; }
 .mhmui-stat-card__label { margin: 0; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; opacity: .9; }
 .mhmui-stat-card__value { margin: 2px 0 0; font-size: 24px; font-weight: 600; line-height: 1.2; font-variant-numeric: tabular-nums; }
 .mhmui-stat-card__sub,
 .mhmui-stat-card__delta { margin: 4px 0 0; font-size: 12px; opacity: .9; }
-.mhmui-stat-card__delta--down { opacity: 1; text-decoration: underline; }
+.mhmui-stat-card__delta--up { color: var( --mhmui-success-strong ); }
+.mhmui-stat-card__delta--down { opacity: 1; color: var( --mhmui-danger-strong ); }
 
 /* Emphasis: the value in the accent colour, no fill (spec §3.2). On a toned
    card the value keeps the fill's on-accent colour -- accent on a fill does not
    read. (0,3,0) beats the emphasis rule's (0,2,0) regardless of source order. */
 .mhmui-stat-card--emphasis .mhmui-stat-card__value { color: var( --mhmui-accent-strong ); }
 :is( .mhmui-stat-card--success, .mhmui-stat-card--warning, .mhmui-stat-card--danger, .mhmui-stat-card--info, .mhmui-stat-card--neutral ).mhmui-stat-card--emphasis .mhmui-stat-card__value { color: inherit; }
+
+/* A toned (filled) card must not get an accent icon or a green/red delta on
+   top of its own fill -- both go back to inherit (the on-accent colour the
+   tone rules above already set on the card). Compounding the tone :is() with
+   .mhmui-stat-card (always co-present on the same element, same trick as the
+   emphasis override above) gives this rule (0,3,0): :is(5 tone classes) is
+   (0,1,0), compounded with .mhmui-stat-card (0,1,0) makes the compound
+   (0,2,0), and the descendant :is(.dashicons, .delta--up, .delta--down) adds
+   another (0,1,0) -- (0,3,0) beats .mhmui-stat-card .dashicons's (0,2,0) and
+   .mhmui-stat-card__delta--up/--down's (0,1,0) regardless of source order. */
+:is( .mhmui-stat-card--success, .mhmui-stat-card--warning, .mhmui-stat-card--danger, .mhmui-stat-card--info, .mhmui-stat-card--neutral ).mhmui-stat-card :is( .dashicons, .mhmui-stat-card__delta--up, .mhmui-stat-card__delta--down ) { color: inherit; }
 
 /* Page layout, admin surface (spec §3.5): the page flows full width like
    WordPress's own screens; a readable measure belongs to a form column, never

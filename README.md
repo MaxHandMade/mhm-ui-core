@@ -22,7 +22,7 @@ A consuming plugin `require_once`s `vendor/mhm/ui-core/register.php` from its
 main file and registers its own copy:
 
 ```php
-mhmuicore_register( '0.11.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.11.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 At `plugins_loaded` priority 0 the highest registered version boots; the rest
@@ -389,7 +389,7 @@ build from.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.11.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.11.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 Requiring `bootstrap.php` directly defines `MHMUICORE_VERSION` immediately, which
@@ -427,7 +427,9 @@ Props: `label`, `value` (already formatted), `icon` (Dashicons suffix — admin
 only), `tone` (`success|warning|danger|info|neutral`, anything else is dropped),
 `sub`, `delta` (`{direction: up|down|flat, text}`), `emphasis` (bool),
 `data` (`key => value` → `data-key`, keys `^[a-z0-9-]{1,32}$`). The second
-argument is a column **ceiling**; the grid wraps in CSS.
+argument is a column **ceiling**; the grid wraps in CSS. `delta.text` must
+carry its own direction cue (an arrow or a sign) — colour alone must not
+convey up vs. down.
 
 These 0.11.0 components need the 0.11.0 stylesheet — enqueue through
 `mhmuicore_enqueue_kit()` so the loader serves the winning copy; under an
