@@ -52,6 +52,20 @@ function statCardDeltaHasDirectionColour( css ) {
 		&& ! /text-decoration/.test( down );
 }
 
+/** The direction mark (StatCard's aria-hidden ↑/↓) inherits the delta line's
+ * colour and keeps a small gap from the text -- it must not disappear
+ * (display:none / visibility:hidden) or lose its colour, either of which
+ * would silently drop the non-colour cue WCAG 1.4.1 needs even though the
+ * coloured delta line still renders fine. */
+function deltaMarkInheritsColourAndHasSpacing( css, selector ) {
+	const body = ruleBody( css, selector );
+	return body !== null
+		&& /color:\s*inherit/.test( body )
+		&& /margin/.test( body )
+		&& ! /display:\s*none/.test( body )
+		&& ! /visibility:\s*hidden/.test( body );
+}
+
 /** The grid rule itself wraps from the --mhmui-columns ceiling via auto-fit,
  * not merely present somewhere else in the file. */
 function gridWrapsFromColumns( css, selector ) {
@@ -169,6 +183,11 @@ describe( 'page layout standard (spec §3.5)', () => {
 		expect( statCardDeltaHasDirectionColour( admin ) ).toBe( true );
 	} );
 
+	test( 'the delta direction mark inherits the delta colour and keeps a gap from the text, in both stylesheets', () => {
+		expect( deltaMarkInheritsColourAndHasSpacing( admin, '.mhmui-stat-card__delta-mark' ) ).toBe( true );
+		expect( deltaMarkInheritsColourAndHasSpacing( front, '.mhmui-front .mhmui-stat-card__delta-mark' ) ).toBe( true );
+	} );
+
 	test( 'front.css skin rules wrap the WHOLE selector in :where(), not just the .mhmui-front ancestor', () => {
 		// minCount 6: the actual count of skin rules (measured 2026-09-17) --
 		// not just "every :where( selector found is fully wrapped", which is
@@ -209,6 +228,32 @@ describe( 'page layout standard (spec §3.5)', () => {
 		// must fail this check.
 		expect( statCardDeltaHasDirectionColour(
 			'.mhmui-stat-card__delta--up { color: var( --mhmui-success-strong ); } .mhmui-stat-card__delta--down { color: var( --mhmui-danger-strong ); text-decoration: underline; }'
+		) ).toBe( false );
+
+		// Direction mark rule present but the colour dropped -- would silently
+		// lose the WCAG 1.4.1 cue even though the coloured delta line itself
+		// still renders fine.
+		expect( deltaMarkInheritsColourAndHasSpacing(
+			'.mhmui-stat-card__delta-mark { margin-right: 4px; }',
+			'.mhmui-stat-card__delta-mark'
+		) ).toBe( false );
+
+		// Colour present but the mark is hidden -- it must never be able to
+		// disappear, that IS the non-colour cue.
+		expect( deltaMarkInheritsColourAndHasSpacing(
+			'.mhmui-stat-card__delta-mark { color: inherit; margin-right: 4px; display: none; }',
+			'.mhmui-stat-card__delta-mark'
+		) ).toBe( false );
+		expect( deltaMarkInheritsColourAndHasSpacing(
+			'.mhmui-stat-card__delta-mark { color: inherit; margin-right: 4px; visibility: hidden; }',
+			'.mhmui-stat-card__delta-mark'
+		) ).toBe( false );
+
+		// The rule for the mark itself is missing entirely -- only the delta
+		// line's own colour rule is present.
+		expect( deltaMarkInheritsColourAndHasSpacing(
+			'.mhmui-stat-card__delta { color: red; }',
+			'.mhmui-stat-card__delta-mark'
 		) ).toBe( false );
 
 		// Grid rule present but fixed tracks, not auto-fit -- would still wrap

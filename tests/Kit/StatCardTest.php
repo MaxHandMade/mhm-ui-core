@@ -62,6 +62,39 @@ final class StatCardTest extends TestCase {
 		self::assertSame( 'mhmui-stat-card mhmui-stat-card--danger', self::root_class( array( 'label' => 'L', 'value' => '1', 'tone' => 'danger' ) ) );
 	}
 
+	public function test_up_and_down_deltas_carry_a_direction_mark_and_attribute(): void {
+		$up = StatCard::render_html(
+			array( 'label' => 'L', 'value' => '1', 'delta' => array( 'direction' => 'up', 'text' => '3 this month' ) )
+		);
+		self::assertStringContainsString( 'data-direction="up"', $up );
+		self::assertStringContainsString(
+			'<span class="mhmui-stat-card__delta-mark" aria-hidden="true">↑</span>',
+			$up
+		);
+		self::assertStringContainsString( 'mhmui-stat-card__delta-mark', $up );
+
+		$down = StatCard::render_html(
+			array( 'label' => 'L', 'value' => '1', 'delta' => array( 'direction' => 'down', 'text' => '2 this month' ) )
+		);
+		self::assertStringContainsString( 'data-direction="down"', $down );
+		self::assertStringContainsString(
+			'<span class="mhmui-stat-card__delta-mark" aria-hidden="true">↓</span>',
+			$down
+		);
+	}
+
+	public function test_direction_mark_never_appears_for_flat_or_sub_lines(): void {
+		$flat = StatCard::render_html(
+			array( 'label' => 'L', 'value' => '1', 'sub' => 'fallback', 'delta' => array( 'direction' => 'flat', 'text' => 'ignored' ) )
+		);
+		self::assertStringNotContainsString( 'delta-mark', $flat );
+		self::assertStringNotContainsString( 'data-direction', $flat );
+
+		$sub_only = StatCard::render_html( array( 'label' => 'L', 'value' => '1', 'sub' => 'x' ) );
+		self::assertStringNotContainsString( 'delta-mark', $sub_only );
+		self::assertStringNotContainsString( 'data-direction', $sub_only );
+	}
+
 	public function test_invalid_or_flat_direction_falls_back_to_sub(): void {
 		foreach ( array( 'sideways', 'flat' ) as $direction ) {
 			$html = StatCard::render_html(

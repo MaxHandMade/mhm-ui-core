@@ -12,18 +12,75 @@ import {
 
 describe( 'the visual kit renders only what it is given', () => {
 	test( 'StatCard shows label, value and a delta line in the delta direction', () => {
-		render(
+		const { container } = render(
 			<StatCard
 				label="Bookings"
 				value="42"
 				tone="success"
-				delta={ { direction: 'up', text: '+3 this month' } }
+				delta={ { direction: 'up', text: '3 this month' } }
 			/>
 		);
 		expect( screen.getByText( 'Bookings' ) ).toBeTruthy();
 		expect( screen.getByText( '42' ) ).toBeTruthy();
-		const delta = screen.getByText( '+3 this month' );
+		// `text` is plain since 0.12.0 -- the kit's own mark carries the arrow,
+		// so the paragraph's text is the mark plus the plain text, not the
+		// plain text alone.
+		const delta = container.querySelector( '.mhmui-stat-card__delta' );
+		expect( delta.textContent ).toBe( '↑3 this month' );
 		expect( delta.className ).toContain( 'mhmui-stat-card__delta--up' );
+	} );
+
+	test( 'StatCard gives the delta line a direction mark the kit supplies, not colour alone', () => {
+		const up = render(
+			<StatCard
+				label="Members"
+				value="12"
+				delta={ { direction: 'up', text: '3 this month' } }
+			/>
+		);
+		const upDelta = up.container.querySelector( '.mhmui-stat-card__delta' );
+		expect( upDelta.getAttribute( 'data-direction' ) ).toBe( 'up' );
+		const upMark = upDelta.querySelector( '.mhmui-stat-card__delta-mark' );
+		expect( upMark ).not.toBeNull();
+		expect( upMark.getAttribute( 'aria-hidden' ) ).toBe( 'true' );
+		expect( upMark.textContent ).toBe( '↑' );
+
+		const down = render(
+			<StatCard
+				label="Members"
+				value="9"
+				delta={ { direction: 'down', text: '2 this month' } }
+			/>
+		);
+		const downDelta = down.container.querySelector(
+			'.mhmui-stat-card__delta'
+		);
+		expect( downDelta.getAttribute( 'data-direction' ) ).toBe( 'down' );
+		const downMark = downDelta.querySelector(
+			'.mhmui-stat-card__delta-mark'
+		);
+		expect( downMark.getAttribute( 'aria-hidden' ) ).toBe( 'true' );
+		expect( downMark.textContent ).toBe( '↓' );
+
+		// The mark carries the direction cue on its own -- unsigned consumer
+		// text (no arrow, no sign) must not leave up vs. down distinguishable
+		// by colour alone (WCAG 1.4.1).
+		expect( upDelta.textContent ).toBe( '↑3 this month' );
+	} );
+
+	test( 'StatCard emits no direction mark or data-direction for a flat or sub line', () => {
+		const flat = render(
+			<StatCard
+				label="Vehicles"
+				value="7"
+				sub="12 total"
+				delta={ { direction: 'flat', text: 'ignored' } }
+			/>
+		);
+		expect(
+			flat.container.querySelector( '.mhmui-stat-card__delta-mark' )
+		).toBeNull();
+		expect( flat.container.querySelector( '[data-direction]' ) ).toBeNull();
 	} );
 
 	test( 'StatCard falls back to the sub line when the delta is flat', () => {
