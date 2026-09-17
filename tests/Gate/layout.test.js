@@ -29,6 +29,26 @@ function emphasisPlainRuleSetsAccent( css ) {
 	return body !== null && /color:\s*var\(\s*--mhmui-accent-strong\s*\)/.test( body );
 }
 
+/** The stat-card dashicon carries the accent colour -- the defect this gate
+ * exists to catch (admin.css:311 had no colour at all before the fix, so the
+ * icon silently inherited --mhmui-text instead of standing out in the
+ * accent). */
+function statCardIconIsAccent( css ) {
+	const body = ruleBody( css, '.mhmui-stat-card .dashicons' );
+	return body !== null && /color:\s*var\(\s*--mhmui-accent\s*\)/.test( body );
+}
+
+/** The delta line is green climbing, red falling -- and the falling rule
+ * keeps its underline, because colour must not be the only cue (WCAG 1.4.1). */
+function statCardDeltaHasDirectionColour( css ) {
+	const up = ruleBody( css, '.mhmui-stat-card__delta--up' );
+	const down = ruleBody( css, '.mhmui-stat-card__delta--down' );
+	return up !== null && down !== null
+		&& /color:\s*var\(\s*--mhmui-success-strong\s*\)/.test( up )
+		&& /color:\s*var\(\s*--mhmui-danger-strong\s*\)/.test( down )
+		&& /text-decoration:\s*underline/.test( down );
+}
+
 /** The grid rule itself wraps from the --mhmui-columns ceiling via auto-fit,
  * not merely present somewhere else in the file. */
 function gridWrapsFromColumns( css, selector ) {
@@ -141,6 +161,11 @@ describe( 'page layout standard (spec §3.5)', () => {
 		expect( emphasisPlainRuleSetsAccent( front ) ).toBe( true );
 	} );
 
+	test( 'admin.css stat-card icon is the accent colour and the delta line is coloured by direction', () => {
+		expect( statCardIconIsAccent( admin ) ).toBe( true );
+		expect( statCardDeltaHasDirectionColour( admin ) ).toBe( true );
+	} );
+
 	test( 'front.css skin rules wrap the WHOLE selector in :where(), not just the .mhmui-front ancestor', () => {
 		// minCount 6: the actual count of skin rules (measured 2026-09-17) --
 		// not just "every :where( selector found is fully wrapped", which is
@@ -158,6 +183,27 @@ describe( 'page layout standard (spec §3.5)', () => {
 		// substring, which is exactly what made the old substring-regex test vacuous.
 		expect( emphasisPlainRuleSetsAccent(
 			':is( .mhmui-stat-card--info ).mhmui-stat-card--emphasis .mhmui-stat-card__value { color: inherit; }'
+		) ).toBe( false );
+
+		// Icon rule present but the colour got dropped -- would silently
+		// go back to inheriting page text instead of the accent.
+		expect( statCardIconIsAccent( '.mhmui-stat-card .dashicons { font-size: 28px; }' ) ).toBe( false );
+
+		// Neither delta direction has a colour at all.
+		expect( statCardDeltaHasDirectionColour(
+			'.mhmui-stat-card__delta--up { } .mhmui-stat-card__delta--down { text-decoration: underline; }'
+		) ).toBe( false );
+
+		// Up has its colour, but down lost its -- still fails, both directions
+		// are required.
+		expect( statCardDeltaHasDirectionColour(
+			'.mhmui-stat-card__delta--up { color: var( --mhmui-success-strong ); } .mhmui-stat-card__delta--down { text-decoration: underline; }'
+		) ).toBe( false );
+
+		// Both colours present but the underline (the non-colour cue) was
+		// dropped from --down -- still fails.
+		expect( statCardDeltaHasDirectionColour(
+			'.mhmui-stat-card__delta--up { color: var( --mhmui-success-strong ); } .mhmui-stat-card__delta--down { color: var( --mhmui-danger-strong ); }'
 		) ).toBe( false );
 
 		// Grid rule present but fixed tracks, not auto-fit -- would still wrap
