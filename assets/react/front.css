@@ -92,6 +92,11 @@
 .mhmui-front .mhmui-stat-card__value,
 .mhmui-front .mhmui-stat-card__sub,
 .mhmui-front .mhmui-stat-card__delta { margin: 0; }
+/* The direction mark (aria-hidden ↑/↓, StatCard.php / StatCard.jsx): inherits
+   the delta line's colour, no colour of its own -- this is the non-colour
+   cue WCAG 1.4.1 needs, so it must render regardless of colour perception,
+   never be styled to disappear. */
+.mhmui-front .mhmui-stat-card__delta-mark { margin-inline-end: var( --mhmui-space-1 ); color: inherit; }
 
 /* Card skin -- zero specificity: the WHOLE selector sits inside :where(...),
    not just the .mhmui-front ancestor -- :where( .mhmui-front ) .x is 0-1-0,

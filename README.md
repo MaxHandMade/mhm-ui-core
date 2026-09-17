@@ -22,7 +22,7 @@ A consuming plugin `require_once`s `vendor/mhm/ui-core/register.php` from its
 main file and registers its own copy:
 
 ```php
-mhmuicore_register( '0.11.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.12.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 At `plugins_loaded` priority 0 the highest registered version boots; the rest
@@ -389,7 +389,7 @@ build from.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.11.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.12.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 Requiring `bootstrap.php` directly defines `MHMUICORE_VERSION` immediately, which
@@ -427,9 +427,19 @@ Props: `label`, `value` (already formatted), `icon` (Dashicons suffix — admin
 only), `tone` (`success|warning|danger|info|neutral`, anything else is dropped),
 `sub`, `delta` (`{direction: up|down|flat, text}`), `emphasis` (bool),
 `data` (`key => value` → `data-key`, keys `^[a-z0-9-]{1,32}$`). The second
-argument is a column **ceiling**; the grid wraps in CSS. `delta.text` must
-carry its own direction cue (an arrow or a sign) — colour alone must not
-convey up vs. down.
+argument is a column **ceiling**; the grid wraps in CSS. Avoid `direction` as
+a key in your own `data` map — the kit already emits `data-direction` on the
+delta line for `up`/`down`; no collision is possible (different elements),
+but it would leave a `[data-direction]` query matching both.
+
+**Since 0.12.0** the kit itself renders the direction cue for `delta` — an
+`aria-hidden` ↑/↓ mark before the text, for `up`/`down` only (never `flat`,
+which prints no delta line at all) — because colour alone must never be the
+only way up vs. down is conveyed (WCAG 1.4.1), and only the kit knows the
+direction vocabulary. `delta.text` must therefore be **plain**: no arrow, no
+sign. **Breaking change from <=0.11.x:** back then `delta.text` was expected
+to carry its own arrow or sign (the kit added none); a consumer still doing
+that after upgrading will show two marks.
 
 These 0.11.0 components need the 0.11.0 stylesheet — enqueue through
 `mhmuicore_enqueue_kit()` so the loader serves the winning copy; under an

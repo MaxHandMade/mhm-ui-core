@@ -35,6 +35,14 @@ final class StatCard {
 	/**
 	 * Render one stat card to an HTML string.
 	 *
+	 * `delta` is `{ direction: one of self::DIRECTIONS, text: string }`. Since
+	 * 0.12.0 `text` must be PLAIN -- no arrow, no sign -- because this method
+	 * itself renders the direction mark for `up`/`down` (see DIRECTION_MARKS);
+	 * a consumer that still puts one in `text` will show two. This is a
+	 * breaking change from <=0.11.x, where the consumer's text was the only
+	 * non-colour cue (WCAG 1.4.1) and an unsigned text left up/down
+	 * distinguishable by colour alone.
+	 *
 	 * @param array<string, mixed> $props label, value, icon?, tone?, sub?, delta?, emphasis?, data?.
 	 * @return string Escaped HTML.
 	 */
@@ -66,6 +74,18 @@ final class StatCard {
 	}
 
 	/**
+	 * Up/down direction marks (measured 2026-09-17: 0.11.1 relied on the
+	 * consumer's own delta.text carrying an arrow or sign, which left an
+	 * unsigned text like "3 this month" distinguishable only by the delta
+	 * line's colour -- WCAG 1.4.1. The kit now supplies the mark itself,
+	 * because only the kit knows the direction vocabulary.
+	 */
+	private const DIRECTION_MARKS = array(
+		'up'   => "\u{2191}",
+		'down' => "\u{2193}",
+	);
+
+	/**
 	 * Delta line when the direction is up/down, else the sub line, else nothing.
 	 *
 	 * @param array<string, mixed> $props Card props.
@@ -75,7 +95,9 @@ final class StatCard {
 		if ( is_array( $delta ) ) {
 			$direction = self::text( $delta['direction'] ?? '' );
 			if ( 'up' === $direction || 'down' === $direction ) {
-				return '<p class="' . esc_attr( 'mhmui-stat-card__delta mhmui-stat-card__delta--' . $direction ) . '">'
+				return '<p class="' . esc_attr( 'mhmui-stat-card__delta mhmui-stat-card__delta--' . $direction ) . '"'
+					. ' data-direction="' . esc_attr( $direction ) . '">'
+					. '<span class="mhmui-stat-card__delta-mark" aria-hidden="true">' . esc_html( self::DIRECTION_MARKS[ $direction ] ) . '</span>'
 					. esc_html( self::text( $delta['text'] ?? '' ) ) . '</p>';
 			}
 		}
