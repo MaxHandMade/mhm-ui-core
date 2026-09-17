@@ -28,7 +28,10 @@ export function classUniverse( source ) {
 		universe.add( m[ 0 ] );
 	}
 	for ( const m of code.matchAll( /(mhmui-[a-z0-9_-]+--)\$\{\s*(\w+)\s*\}/g ) ) {
-		const vocab = m[ 2 ] === 'tone' ? TONES : DIRECTIONS.filter( ( d ) => d !== 'flat' );
+		// Since 0.13.0 the delta line renders for every DIRECTIONS member,
+		// flat included (it is no longer a dead branch the fixtures never
+		// need to reach) -- so the full vocabulary applies here too.
+		const vocab = m[ 2 ] === 'tone' ? TONES : DIRECTIONS;
 		vocab.forEach( ( v ) => universe.add( m[ 1 ] + v ) );
 	}
 	return universe;

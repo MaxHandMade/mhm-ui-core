@@ -316,7 +316,11 @@
 .mhmui-stat-card__delta { margin: 4px 0 0; font-size: 12px; opacity: .9; }
 .mhmui-stat-card__delta--up { color: var( --mhmui-success-strong ); }
 .mhmui-stat-card__delta--down { opacity: 1; color: var( --mhmui-danger-strong ); }
-/* The direction mark (aria-hidden ↑/↓, StatCard.php / StatCard.jsx): inherits
+/* --flat deliberately gets NO colour rule: the base .mhmui-stat-card__delta
+   rule above (the card's own text, opacity .9) already reads as neutral, and
+   a flat delta must read as neither good nor bad -- the → mark is its whole
+   cue. Do not "fix" this gap by inventing a colour for it. */
+/* The direction mark (aria-hidden ↑/↓/→, StatCard.php / StatCard.jsx): inherits
    the delta line's colour, no colour of its own -- this is the non-colour
    cue WCAG 1.4.1 needs, so it must render regardless of colour perception,
    never be styled to disappear. */

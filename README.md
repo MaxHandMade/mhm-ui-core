@@ -429,17 +429,23 @@ only), `tone` (`success|warning|danger|info|neutral`, anything else is dropped),
 `data` (`key => value` → `data-key`, keys `^[a-z0-9-]{1,32}$`). The second
 argument is a column **ceiling**; the grid wraps in CSS. Avoid `direction` as
 a key in your own `data` map — the kit already emits `data-direction` on the
-delta line for `up`/`down`; no collision is possible (different elements),
-but it would leave a `[data-direction]` query matching both.
+delta line for every recognised direction; no collision is possible (different
+elements), but it would leave a `[data-direction]` query matching both.
 
 **Since 0.12.0** the kit itself renders the direction cue for `delta` — an
-`aria-hidden` ↑/↓ mark before the text, for `up`/`down` only (never `flat`,
-which prints no delta line at all) — because colour alone must never be the
-only way up vs. down is conveyed (WCAG 1.4.1), and only the kit knows the
+`aria-hidden` mark before the text — because colour alone must never be the
+only way a trend is conveyed (WCAG 1.4.1), and only the kit knows the
 direction vocabulary. `delta.text` must therefore be **plain**: no arrow, no
-sign, unchanged from 0.12.0. **Breaking change from <=0.11.x:** back then
+sign, unchanged since. **Breaking change from <=0.11.x:** back then
 `delta.text` was expected to carry its own arrow or sign (the kit added
 none); a consumer still doing that after upgrading will show two marks.
+
+**`flat` gets its own line too, not just `up`/`down` (0.13.0):** the mark is
+↑ for `up`, ↓ for `down`, → for `flat` — "no data" (the `sub` line) and "no
+change" (a `flat` delta) are different facts, and a zero trend must not
+silently fall through to `sub` and lose its number. `flat` carries no colour
+of its own in either stylesheet (the base delta colour is already neutral);
+the → mark is its whole cue.
 
 **Since 0.13.0**, `delta.label` is how a consumer gives that direction cue an
 accessible name: an optional string, already translated by the CONSUMER (e.g.

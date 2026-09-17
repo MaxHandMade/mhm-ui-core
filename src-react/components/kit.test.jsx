@@ -68,19 +68,69 @@ describe( 'the visual kit renders only what it is given', () => {
 		expect( upDelta.textContent ).toBe( '↑3 this month' );
 	} );
 
-	test( 'StatCard emits no direction mark or data-direction for a flat or sub line', () => {
-		const flat = render(
+	test( 'StatCard emits no direction mark or data-direction for a sub-only line', () => {
+		const { container } = render(
+			<StatCard label="Vehicles" value="7" sub="12 total" />
+		);
+		expect(
+			container.querySelector( '.mhmui-stat-card__delta-mark' )
+		).toBeNull();
+		expect( container.querySelector( '[data-direction]' ) ).toBeNull();
+	} );
+
+	test( 'StatCard gives a flat delta its own line with a → mark and data-direction, not the sub line', () => {
+		// "no data" (the sub line) and "no change" (a flat delta) are different
+		// facts: since 0.13.0 flat gets its own line, exactly like up/down --
+		// it no longer falls through to sub.
+		const { container, queryByText } = render(
 			<StatCard
 				label="Vehicles"
 				value="7"
 				sub="12 total"
-				delta={ { direction: 'flat', text: 'ignored' } }
+				delta={ { direction: 'flat', text: '0 this month' } }
+			/>
+		);
+		const delta = container.querySelector( '.mhmui-stat-card__delta' );
+		expect( delta ).not.toBeNull();
+		expect( delta.className ).toContain( 'mhmui-stat-card__delta--flat' );
+		expect( delta.getAttribute( 'data-direction' ) ).toBe( 'flat' );
+		const mark = delta.querySelector( '.mhmui-stat-card__delta-mark' );
+		expect( mark.getAttribute( 'aria-hidden' ) ).toBe( 'true' );
+		expect( mark.textContent ).toBe( '→' );
+		expect( delta.textContent ).toBe( '→0 this month' );
+		expect( queryByText( '12 total' ) ).toBeNull();
+	} );
+
+	test( 'StatCard renders delta.label for a flat delta too, absent when not supplied', () => {
+		const withLabel = render(
+			<StatCard
+				label="Bookings"
+				value="40"
+				delta={ {
+					direction: 'flat',
+					text: '0 this month',
+					label: 'değişmedi',
+				} }
+			/>
+		);
+		const delta = withLabel.container.querySelector(
+			'.mhmui-stat-card__delta'
+		);
+		const sr = delta.querySelector( '.mhmui-stat-card__delta-sr' );
+		expect( sr ).not.toBeNull();
+		expect( sr.textContent ).toBe( 'değişmedi ' );
+		expect( delta.textContent ).toBe( '→değişmedi 0 this month' );
+
+		const withoutLabel = render(
+			<StatCard
+				label="Bookings"
+				value="40"
+				delta={ { direction: 'flat', text: '0 this month' } }
 			/>
 		);
 		expect(
-			flat.container.querySelector( '.mhmui-stat-card__delta-mark' )
+			withoutLabel.container.querySelector( '.mhmui-stat-card__delta-sr' )
 		).toBeNull();
-		expect( flat.container.querySelector( '[data-direction]' ) ).toBeNull();
 	} );
 
 	test( 'StatCard renders delta.label as visually-hidden accessible text, after the aria-hidden mark', () => {
@@ -135,19 +185,6 @@ describe( 'the visual kit renders only what it is given', () => {
 		expect(
 			container.querySelector( '.mhmui-stat-card__delta-sr' )
 		).toBeNull();
-	} );
-
-	test( 'StatCard falls back to the sub line when the delta is flat', () => {
-		render(
-			<StatCard
-				label="Vehicles"
-				value="7"
-				sub="12 total"
-				delta={ { direction: 'flat', text: 'ignored' } }
-			/>
-		);
-		expect( screen.getByText( '12 total' ) ).toBeTruthy();
-		expect( screen.queryByText( 'ignored' ) ).toBeNull();
 	} );
 
 	test( 'StatsGrid renders one card per entry', () => {

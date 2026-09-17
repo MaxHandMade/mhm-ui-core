@@ -283,16 +283,21 @@ ekranı), `tone` (`success|warning|danger|info|neutral`, başka her şey düşü
 `delta` (`{direction: up|down|flat, text, label?}`), `emphasis` (bool), `data` (`anahtar => değer` →
 `data-anahtar`, anahtarlar `^[a-z0-9-]{1,32}$`). İkinci argüman sütun **tavanıdır**; ızgara
 CSS'te sarar. Kendi `data` haritanızda `direction` anahtarından kaçının — kit zaten delta
-satırında `data-direction` basıyor; çakışma imkânsız (farklı elemanlar) ama bir
-`[data-direction]` sorgusu ikisiyle de eşleşir.
+satırında her tanınan yön için `data-direction` basıyor; çakışma imkânsız (farklı elemanlar)
+ama bir `[data-direction]` sorgusu ikisiyle de eşleşir.
 
-**0.12.0'dan itibaren** yön ipucunu artık kit'in kendisi çiziyor — `up`/`down` için (asla
-`flat` için değil, o zaten delta satırı hiç basmaz) metinden önce `aria-hidden` bir ↑/↓
-işareti — çünkü renk tek başına yukarı/aşağı yönünü iletmemelidir (WCAG 1.4.1) ve yön
-sözlüğünü yalnız kit bilir. Bu yüzden `delta.text` artık **düz** olmalı: ok yok, işaret yok,
-0.12.0'dan bu yana değişmedi. **<=0.11.x'ten kırıcı değişiklik:** o sürümlerde `delta.text`'in
-kendi okunu/işaretini taşıması beklenirdi (kit hiçbir şey eklemiyordu); güncelledikten sonra
-hâlâ öyle yazan bir tüketici iki işaret gösterir.
+**0.12.0'dan itibaren** yön ipucunu artık kit'in kendisi çiziyor — metinden önce `aria-hidden`
+bir işaret — çünkü renk tek başına bir eğilimi iletmemelidir (WCAG 1.4.1) ve yön sözlüğünü
+yalnız kit bilir. Bu yüzden `delta.text` artık **düz** olmalı: ok yok, işaret yok, o zamandan
+beri değişmedi. **<=0.11.x'ten kırıcı değişiklik:** o sürümlerde `delta.text`'in kendi
+okunu/işaretini taşıması beklenirdi (kit hiçbir şey eklemiyordu); güncelledikten sonra hâlâ
+öyle yazan bir tüketici iki işaret gösterir.
+
+**`flat` de kendi satırını alır, yalnız `up`/`down` değil (0.13.0):** işaret `up` için ↑,
+`down` için ↓, `flat` için →  — "veri yok" (`sub` satırı) ile "değişim yok" (`flat` delta'sı)
+farklı olgulardır; sıfır bir eğilim sessizce `sub`'a düşüp sayısını kaybetmemeli. `flat` her
+iki stil dosyasında da kendi rengini taşımaz (temel delta rengi zaten nötr) — → işareti tek
+ipucudur.
 
 **0.13.0'dan itibaren** `delta.label`, bu yön ipucuna erişilebilir bir ad kazandırmanın yolu:
 isteğe bağlı bir dize, TÜKETİCİ tarafından zaten çevrilmiş (örn. `"artış"` / `"azalış"` /

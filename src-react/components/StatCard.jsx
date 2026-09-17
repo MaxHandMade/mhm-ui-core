@@ -18,8 +18,10 @@
  * @param {Object}  [props.delta]       { direction: one of DIRECTIONS, text, label? }. Since
  *                                      0.12.0 `text` must be PLAIN -- no arrow, no sign --
  *                                      because the kit itself renders the direction mark (an
- *                                      aria-hidden ↑/↓ before the text) for `up`/`down`, never
- *                                      for `flat`. This is a breaking change from <=0.11.x: a
+ *                                      aria-hidden ↑/↓/→) for every direction in DIRECTIONS --
+ *                                      `up`/`down`/`flat` alike since 0.13.0, when "no change"
+ *                                      gets its own line instead of silently falling through to
+ *                                      `sub`. This is a breaking change from <=0.11.x: a
  *                                      consumer that still puts an arrow or sign in `text`
  *                                      will show two. Colour alone must never be the only cue
  *                                      (WCAG 1.4.1) -- that is now the kit's job, not the
@@ -71,6 +73,12 @@ const sanitizeIconClass = ( v ) =>
 		.replace( /%[0-9a-fA-F]{2}/g, '' )
 		.replace( /[^A-Za-z0-9_-]/g, '' );
 
+// Direction marks, one per DIRECTIONS member -- mirrors StatCard.php's
+// DIRECTION_MARKS. Since 0.13.0 `flat` gets its own mark (→): "no data" (the
+// sub line) and "no change" (a flat delta) are different facts, and a zero
+// trend must not silently fall through to the sub line and lose its number.
+const DIRECTION_MARKS = { up: '↑', down: '↓', flat: '→' };
+
 function dataAttributes( data ) {
 	const out = {};
 	if ( ! data || typeof data !== 'object' ) {
@@ -107,14 +115,14 @@ export default function StatCard( {
 
 	let line = null;
 	const direction = delta && typeof delta === 'object' ? delta.direction : '';
-	if ( direction === 'up' || direction === 'down' ) {
+	if ( Object.prototype.hasOwnProperty.call( DIRECTION_MARKS, direction ) ) {
 		// The kit supplies the direction mark itself (measured 2026-09-17: relying
 		// on the consumer's delta.text to carry an arrow or sign left an unsigned
 		// text like "3 this month" distinguishable only by colour -- WCAG 1.4.1).
 		// aria-hidden on the mark: it is decorative, not a translated word this
 		// package (no text domain) could add as an accessible name. See
 		// StatCard.php's DIRECTION_MARKS docblock for the a11y reasoning in full.
-		const mark = direction === 'up' ? '↑' : '↓';
+		const mark = DIRECTION_MARKS[ direction ];
 		// delta.label is optional, consumer-translated (this package has no text
 		// domain): when present it becomes the delta line's accessible name,
 		// visually hidden and placed right after the aria-hidden mark so a

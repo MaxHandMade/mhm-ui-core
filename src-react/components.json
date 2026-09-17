@@ -27,7 +27,9 @@
       { "label": "Icon", "value": "1", "icon": "calendar alt" },
       { "label": "Octet", "value": "1", "icon": "%41" },
       { "label": "Bookings", "value": "45", "delta": { "direction": "up", "text": "3 this month", "label": "artış" } },
-      { "label": "Bookings", "value": "38", "delta": { "direction": "down", "text": "2 this month", "label": "azalış" } }
+      { "label": "Bookings", "value": "38", "delta": { "direction": "down", "text": "2 this month", "label": "azalış" } },
+      { "label": "Bookings", "value": "40", "delta": { "direction": "flat", "text": "0 this month" } },
+      { "label": "Bookings", "value": "40", "delta": { "direction": "flat", "text": "0 this month", "label": "değişmedi" } }
     ]
   },
   "StatsGrid": {

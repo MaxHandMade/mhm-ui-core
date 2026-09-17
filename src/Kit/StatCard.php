@@ -37,8 +37,9 @@ final class StatCard {
 	 *
 	 * `delta` is `{ direction: one of self::DIRECTIONS, text: string }`. Since
 	 * 0.12.0 `text` must be PLAIN -- no arrow, no sign -- because this method
-	 * itself renders the direction mark for `up`/`down` (see DIRECTION_MARKS);
-	 * a consumer that still puts one in `text` will show two. This is a
+	 * itself renders the direction mark for every direction in DIRECTIONS
+	 * (`up`/`down`/`flat`, see DIRECTION_MARKS); a consumer that still puts
+	 * one in `text` will show two. This is a
 	 * breaking change from <=0.11.x, where the consumer's text was the only
 	 * non-colour cue (WCAG 1.4.1) and an unsigned text left up/down
 	 * distinguishable by colour alone.
@@ -81,19 +82,24 @@ final class StatCard {
 	}
 
 	/**
-	 * Up/down direction marks (measured 2026-09-17: 0.11.1 relied on the
-	 * consumer's own delta.text carrying an arrow or sign, which left an
-	 * unsigned text like "3 this month" distinguishable only by the delta
-	 * line's colour -- WCAG 1.4.1. The kit now supplies the mark itself,
-	 * because only the kit knows the direction vocabulary.
+	 * Direction marks, one per self::DIRECTIONS member (measured 2026-09-17:
+	 * 0.11.1 relied on the consumer's own delta.text carrying an arrow or
+	 * sign, which left an unsigned text like "3 this month" distinguishable
+	 * only by the delta line's colour -- WCAG 1.4.1. The kit now supplies the
+	 * mark itself, because only the kit knows the direction vocabulary. Since
+	 * 0.13.0 `flat` gets its own mark too: "no data" (the sub line) and "no
+	 * change" (a flat delta) are different facts, and a zero trend must not
+	 * silently fall through to the sub line and lose its number.
 	 */
 	private const DIRECTION_MARKS = array(
 		'up'   => "\u{2191}",
 		'down' => "\u{2193}",
+		'flat' => "\u{2192}",
 	);
 
 	/**
-	 * Delta line when the direction is up/down, else the sub line, else nothing.
+	 * Delta line when the direction is recognised (a DIRECTION_MARKS member),
+	 * else the sub line, else nothing.
 	 *
 	 * @param array<string, mixed> $props Card props.
 	 */
@@ -101,7 +107,7 @@ final class StatCard {
 		$delta = $props['delta'] ?? null;
 		if ( is_array( $delta ) ) {
 			$direction = self::text( $delta['direction'] ?? '' );
-			if ( 'up' === $direction || 'down' === $direction ) {
+			if ( array_key_exists( $direction, self::DIRECTION_MARKS ) ) {
 				return '<p class="' . esc_attr( 'mhmui-stat-card__delta mhmui-stat-card__delta--' . $direction ) . '"'
 					. ' data-direction="' . esc_attr( $direction ) . '">'
 					. '<span class="mhmui-stat-card__delta-mark" aria-hidden="true">' . esc_html( self::DIRECTION_MARKS[ $direction ] ) . '</span>'
