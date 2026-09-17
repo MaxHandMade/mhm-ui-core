@@ -81,12 +81,14 @@ final class ShippedSurfaceTest extends TestCase {
 		$p1 = array_filter( $files, static fn( $p ) => (bool) preg_match( '/\.(css|js|jsx|php)$/', $p ) );
 		$p2 = array_filter( $files, static fn( $p ) => str_ends_with( $p, '.css' ) );
 
-		// 54/46/3 — Task 5: src-react/components.json added as the manifest for
-		// component metadata (interactive, tone_semantics, fixtures). This pin is a
+		// 56/48/3 — src/Kit/StatCard.php and src/Kit/StatsGrid.php (the PHP kit
+		// renderers, gate 6's PHP half) shipped in an earlier commit on this
+		// branch (be1c759) without this pin being moved; caught while running
+		// `composer test` ahead of the gate-6 commit (Task 5). This pin is a
 		// tripwire, not a target: it moves only with a commit that deliberately
 		// changes what ships, and the commit says which file.
-		self::assertCount( 54, $files, 'shipped file count changed' );
-		self::assertCount( 46, $p1, 'P1 file set changed' );
+		self::assertCount( 56, $files, 'shipped file count changed' );
+		self::assertCount( 48, $p1, 'P1 file set changed' );
 		self::assertCount( 3, $p2, 'P2 file set changed' );
 	}
 }
