@@ -6,16 +6,32 @@
   },
   "StatCard": {
     "interactive": false, "tone_semantics": true, "tone_cue": "label",
-    "props": { "label": "string", "value": "string", "icon": "icon?", "tone": "role?", "sub": "string?", "delta": "{ direction: string, text: string }?" },
+    "php": "mhmuicore_stat_card_html",
+    "props": { "label": "string", "value": "string", "icon": "icon?", "tone": "role?", "sub": "string?", "delta": "{ direction: string, text: string }?", "emphasis": "boolean?", "data": "{ [key: string]: string }?" },
     "fixtures": [
       { "label": "Bookings", "value": "42" },
-      { "label": "Bookings", "value": "42", "tone": "success", "icon": "calendar-alt" }
+      { "label": "Bookings", "value": "42", "tone": "success", "icon": "calendar-alt" },
+      { "label": "Pending", "value": "3", "tone": "warning" },
+      { "label": "Refunds", "value": "1", "tone": "danger" },
+      { "label": "Revenue", "value": "900", "tone": "info" },
+      { "label": "Drafts", "value": "0", "tone": "neutral" },
+      { "label": "Bookings", "value": "42", "delta": { "direction": "up", "text": "+3 this month" } },
+      { "label": "Bookings", "value": "40", "delta": { "direction": "down", "text": "-2 this month" } },
+      { "label": "Vehicles", "value": "7", "sub": "12 total", "delta": { "direction": "flat", "text": "ignored" } },
+      { "label": "Vehicles", "value": "7", "sub": "12 total" },
+      { "label": "Invalid", "value": "1", "tone": "purple", "sub": "fallback", "delta": { "direction": "sideways", "text": "x" } },
+      { "label": "Balance", "value": "$0.00", "emphasis": true, "data": { "stat": "balance", "Bad Key": "x" } },
+      { "label": "Balance", "value": "$0.00", "tone": "info", "emphasis": true }
     ]
   },
   "StatsGrid": {
     "interactive": false, "tone_semantics": false,
+    "php": "mhmuicore_stats_grid_html",
     "props": { "cards": "array", "columns": "number?" },
-    "fixtures": [ { "cards": [ { "label": "A", "value": "1" } ], "columns": 2 } ]
+    "fixtures": [
+      { "cards": [ { "label": "A", "value": "1" }, { "label": "B", "value": "2", "tone": "info" } ], "columns": 2 },
+      { "cards": [ { "label": "A", "value": "1" } ], "columns": 0 }
+    ]
   },
   "StatusBadge": {
     "interactive": false, "tone_semantics": true, "tone_cue": "children",
