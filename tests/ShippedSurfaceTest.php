@@ -83,7 +83,7 @@ final class ShippedSurfaceTest extends TestCase {
 
 		// 56/48/3 — src/Kit/StatCard.php and src/Kit/StatsGrid.php (the PHP kit
 		// renderers, gate 6's PHP half) shipped in an earlier commit on this
-		// branch (be1c759) without this pin being moved; caught while running
+		// branch (a794305) without this pin being moved; caught while running
 		// `composer test` ahead of the gate-6 commit (Task 5). src-react/kit-
 		// classes.json (gate 6's committed PHP/JSX class snapshot) does NOT
 		// move this count: nothing at runtime reads it, only bin/dump-kit-
