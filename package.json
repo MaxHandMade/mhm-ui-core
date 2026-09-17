@@ -7,7 +7,8 @@
 	"files": [
 		"src-react",
 		"!src-react/**/*.test.js",
-		"!src-react/**/*.test.jsx"
+		"!src-react/**/*.test.jsx",
+		"!src-react/kit-classes.json"
 	],
 	"scripts": {
 		"test": "wp-scripts test-unit-js",
