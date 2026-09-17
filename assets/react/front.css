@@ -11,11 +11,10 @@
    @layer yoktur. Yapi kurallari katmansiz + normal ozgullukte, skin
    :where(...) ile sifir ozgullukte yazilir.
 
-   Bu dosya bugün YALNIZ token bloğunu taşır -- .mhmui-stat-card,
-   .mhmui-status vb. için yapı/skin kuralı yok. Bilinçli: bu dilimin işi
-   admin yüzeyi; bileşen kuralları vendor-panel diliminde buraya gelecek.
-   Bu haliyle .mhmui-front içine mount edilen bir bileşen (ör. StatCard)
-   şimdilik biçimsiz render olur -- eksik değil, henüz sırası gelmemiş.
+   Since 0.11.0 this file carries the key-figure card, its grid and the page
+   shell. Structure rules are unlayered at normal specificity; skin rules sit
+   under :where(.mhmui-front) at zero specificity so the host theme wins on
+   look but not on layout.
    ============================================================================= */
 
 /* mhmui:tokens:start -- generated from src-react/tokens.json by bin/build-tokens.js; do not edit by hand */
@@ -52,5 +51,67 @@
 	--mhmui-space-2:        8px;
 	--mhmui-space-3:        12px;
 	--mhmui-space-4:        20px;
+	--mhmui-page-max:       72rem;
+	--mhmui-measure:        48rem;
+	--mhmui-card-min:       11rem;
 }
 /* mhmui:tokens:end */
+
+/* Page shell (spec §3.5): centred, capped at page-max on a wide theme
+   container, filling a narrow one. The query container for every layout that
+   must follow the space it was GIVEN, not the viewport. */
+.mhmui-front-page {
+	container: mhmui-page / inline-size;
+	width: 100%;
+	max-width: var( --mhmui-page-max );
+	margin-inline: auto;
+	box-sizing: border-box;
+}
+
+/* Key-figure grid -- same ceiling formula as admin.css. */
+.mhmui-front .mhmui-stats-grid {
+	--mhmui-columns: 4;
+	display: grid;
+	gap: var( --mhmui-gap );
+	grid-template-columns: repeat( auto-fit, minmax( max( var( --mhmui-card-min ), calc( ( 100% - ( var( --mhmui-columns ) - 1 ) * var( --mhmui-gap ) ) / var( --mhmui-columns ) ) ), 1fr ) );
+}
+
+/* Card structure. Sizes follow the approved vendor-panel card, not admin. */
+.mhmui-front .mhmui-stat-card {
+	display: grid;
+	gap: var( --mhmui-space-1 );
+	min-width: 0;
+	padding: var( --mhmui-space-3 );
+	border: 1px solid var( --mhmui-border-light );
+	border-radius: var( --mhmui-radius );
+	background: var( --mhmui-surface );
+}
+.mhmui-front .mhmui-stat-card__label,
+.mhmui-front .mhmui-stat-card__value,
+.mhmui-front .mhmui-stat-card__sub,
+.mhmui-front .mhmui-stat-card__delta { margin: 0; }
+
+/* Card skin -- zero specificity. */
+:where( .mhmui-front ) .mhmui-stat-card__label { font-size: 0.8125rem; letter-spacing: 0.04em; text-transform: uppercase; color: var( --mhmui-text-muted ); }
+:where( .mhmui-front ) .mhmui-stat-card__value { font-size: 1.75rem; font-weight: 600; line-height: 1.2; font-variant-numeric: tabular-nums; color: var( --mhmui-text ); }
+:where( .mhmui-front ) .mhmui-stat-card__sub,
+:where( .mhmui-front ) .mhmui-stat-card__delta { font-size: 0.75rem; color: var( --mhmui-text-muted ); }
+:where( .mhmui-front ) .mhmui-stat-card__delta--up { color: var( --mhmui-success-strong ); }
+:where( .mhmui-front ) .mhmui-stat-card__delta--down { color: var( --mhmui-danger-strong ); }
+
+/* Tone fills, same roles as admin.css. */
+.mhmui-front .mhmui-stat-card--info,
+.mhmui-front .mhmui-stat-card--success,
+.mhmui-front .mhmui-stat-card--warning,
+.mhmui-front .mhmui-stat-card--danger,
+.mhmui-front .mhmui-stat-card--neutral { border-color: transparent; color: var( --mhmui-on-accent ); }
+.mhmui-front .mhmui-stat-card--info    { background: linear-gradient( 135deg, var( --mhmui-info ),    var( --mhmui-info-strong )    ); }
+.mhmui-front .mhmui-stat-card--success { background: linear-gradient( 135deg, var( --mhmui-success ), var( --mhmui-success-strong ) ); }
+.mhmui-front .mhmui-stat-card--warning { background: linear-gradient( 135deg, var( --mhmui-warning ), var( --mhmui-warning-strong ) ); }
+.mhmui-front .mhmui-stat-card--danger  { background: linear-gradient( 135deg, var( --mhmui-danger ),  var( --mhmui-danger-strong )  ); }
+.mhmui-front .mhmui-stat-card--neutral { background: linear-gradient( 135deg, var( --mhmui-neutral ), var( --mhmui-neutral-strong ) ); }
+:is( .mhmui-stat-card--success, .mhmui-stat-card--warning, .mhmui-stat-card--danger, .mhmui-stat-card--info, .mhmui-stat-card--neutral ) :is( .mhmui-stat-card__label, .mhmui-stat-card__value, .mhmui-stat-card__sub, .mhmui-stat-card__delta ) { color: inherit; }
+
+/* Emphasis (spec §3.2) -- see admin.css for the specificity argument. */
+.mhmui-stat-card--emphasis .mhmui-stat-card__value { color: var( --mhmui-accent-strong ); }
+:is( .mhmui-stat-card--success, .mhmui-stat-card--warning, .mhmui-stat-card--danger, .mhmui-stat-card--info, .mhmui-stat-card--neutral ).mhmui-stat-card--emphasis .mhmui-stat-card__value { color: inherit; }

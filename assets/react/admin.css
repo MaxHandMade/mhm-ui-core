@@ -38,6 +38,9 @@
 	--mhmui-space-2:        8px;
 	--mhmui-space-3:        12px;
 	--mhmui-space-4:        20px;
+	--mhmui-page-max:       72rem;
+	--mhmui-measure:        48rem;
+	--mhmui-card-min:       11rem;
 }
 /* mhmui:tokens:end */
 
@@ -270,10 +273,16 @@
    simply accurate: nothing below styles that component.
    ============================================================================= */
 
+/* Column CEILING from the renderer (--mhmui-columns), wrapping from CSS:
+   at most N tracks on a wide container, and a card never narrower than
+   --mhmui-card-min -- it moves to the next row instead. Measured 2026-09-17,
+   four cards: 1920/1024/987px -> 4, 645 -> 3, 392 -> 2, 176 -> 1. */
 .mhmui-stats-grid {
+	--mhmui-columns: 4;
 	display: grid;
 	gap: var( --mhmui-gap );
 	margin-top: 16px;
+	grid-template-columns: repeat( auto-fit, minmax( max( var( --mhmui-card-min ), calc( ( 100% - ( var( --mhmui-columns ) - 1 ) * var( --mhmui-gap ) ) / var( --mhmui-columns ) ) ), 1fr ) );
 }
 
 /* Base = the quiet bordered box (what KpiBox used to be). A tone modifier
@@ -306,6 +315,23 @@
 .mhmui-stat-card__sub,
 .mhmui-stat-card__delta { margin: 4px 0 0; font-size: 12px; opacity: .9; }
 .mhmui-stat-card__delta--down { opacity: 1; text-decoration: underline; }
+
+/* Emphasis: the value in the accent colour, no fill (spec §3.2). On a toned
+   card the value keeps the fill's on-accent colour -- accent on a fill does not
+   read. (0,3,0) beats the emphasis rule's (0,2,0) regardless of source order. */
+.mhmui-stat-card--emphasis .mhmui-stat-card__value { color: var( --mhmui-accent-strong ); }
+:is( .mhmui-stat-card--success, .mhmui-stat-card--warning, .mhmui-stat-card--danger, .mhmui-stat-card--info, .mhmui-stat-card--neutral ).mhmui-stat-card--emphasis .mhmui-stat-card__value { color: inherit; }
+
+/* Page layout, admin surface (spec §3.5): the page flows full width like
+   WordPress's own screens; a readable measure belongs to a form column, never
+   to the page. Deliberately NOT a query container -- admin pages keep fixed
+   overlays inside their roots. */
+.mhmui-admin-page {
+	width: 100%;
+	max-width: none;
+	box-sizing: border-box;
+}
+.mhmui-measure { max-width: var( --mhmui-measure ); }
 
 .mhmui-status {
 	display: inline-block;
