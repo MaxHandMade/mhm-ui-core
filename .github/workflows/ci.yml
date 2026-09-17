@@ -51,6 +51,9 @@ jobs:
       - name: No gettext in the engine
         run: composer check:no-i18n
 
+      - name: Kit PHP/JSX class parity snapshot (gate 6)
+        run: composer check:kit-parity
+
   js:
     name: JS checks
     runs-on: ubuntu-latest
