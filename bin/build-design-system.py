@@ -110,7 +110,7 @@ files["components/stat-card.html"] = page(
 files["components/stats-grid.html"] = page(
     "Components", "StatsGrid",
     "<b>StatsGrid</b> — StatCard satırı. Prop'lar: cards[] (StatCard prop nesneleri, key = label), columns (varsayılan 4).",
-    '<div class="mhmui-stats-grid" style="grid-template-columns:repeat(4,1fr)">'
+    '<div class="mhmui-stats-grid" style="--mhmui-columns:4">'
     + stat_card("Rezervasyon", "1.284", "info", delta=("up", "↑ %12 bu ay"))
     + stat_card("Gelir", "₺418.900", "success", delta=("up", "↑ %8 bu ay"))
     + stat_card("Aktif Araç", "37", "warning", sub="52 toplam")
@@ -182,7 +182,7 @@ files["components/widget.html"] = page(
     "<b>Widget</b> — başlıklı panel; çoğu yönetici ekranının yapı taşı. Prop'lar: title, subtitle, icon, actions, children.",
     '<section class="mhmui-widget"><header class="mhmui-widget__header"><h3 class="mhmui-widget__title"><span class="dashicons" aria-hidden="true"></span>Son rezervasyonlar<span class="mhmui-widget__subtitle">son 7 gün</span></h3>'
     '<div class="mhmui-widget__actions"><a href="#" class="button">Tümü</a></div></header>'
-    '<div class="mhmui-widget__body"><div class="mhmui-stats-grid" style="grid-template-columns:repeat(3,1fr)">'
+    '<div class="mhmui-widget__body"><div class="mhmui-stats-grid" style="--mhmui-columns:3">'
     + stat_card("Yeni", "14", "info") + stat_card("Teslim", "9", "success") + stat_card("İade", "2", "warning")
     + "</div></div></section>",
     width=720,
