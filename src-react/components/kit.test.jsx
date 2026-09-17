@@ -52,9 +52,6 @@ describe( 'the visual kit renders only what it is given', () => {
 		expect( container.querySelectorAll( '.mhmui-stat-card' ) ).toHaveLength(
 			2
 		);
-		expect( container.firstChild.style.gridTemplateColumns ).toBe(
-			'repeat(2, 1fr)'
-		);
 	} );
 
 	// StatCard is the kit's ONLY key-figure component. KpiBox was a second one
@@ -182,6 +179,84 @@ describe( 'the visual kit renders only what it is given', () => {
 		expect( tokens.tokens.success ).toBe( '#00a32a' );
 		expect( Object.keys( tokens.tokens ).length ).toBeGreaterThanOrEqual(
 			15
+		);
+	} );
+
+	test( 'StatsGrid gives CSS a column ceiling, not a track list it cannot override', () => {
+		const { container } = render(
+			<StatsGrid cards={ [ { label: 'A', value: '1' } ] } columns={ 2 } />
+		);
+		expect( container.firstChild.style.gridTemplateColumns ).toBe( '' );
+		expect(
+			container.firstChild.style.getPropertyValue( '--mhmui-columns' )
+		).toBe( '2' );
+	} );
+
+	test( 'StatsGrid floors the ceiling at one and defaults a non-number to four', () => {
+		const zero = render( <StatsGrid cards={ [] } columns={ 0 } /> );
+		expect(
+			zero.container.firstChild.style.getPropertyValue(
+				'--mhmui-columns'
+			)
+		).toBe( '1' );
+		const junk = render( <StatsGrid cards={ [] } columns="wide" /> );
+		expect(
+			junk.container.firstChild.style.getPropertyValue(
+				'--mhmui-columns'
+			)
+		).toBe( '4' );
+	} );
+
+	test( 'StatCard drops a tone or direction outside the vocabulary, like the PHP renderer', () => {
+		const { container } = render(
+			<StatCard
+				label="L"
+				value="1"
+				tone="purple"
+				sub="fallback"
+				delta={ { direction: 'sideways', text: 'x' } }
+			/>
+		);
+		expect( container.firstChild.className ).toBe( 'mhmui-stat-card' );
+		expect(
+			container.querySelector( '.mhmui-stat-card__sub' ).textContent
+		).toBe( 'fallback' );
+		expect( container.querySelector( '[class*="__delta"]' ) ).toBeNull();
+	} );
+
+	test( 'StatCard emphasis is a modifier, and only for literal true', () => {
+		const on = render( <StatCard label="L" value="1" emphasis /> );
+		expect( on.container.firstChild.className ).toBe(
+			'mhmui-stat-card mhmui-stat-card--emphasis'
+		);
+		const truthy = render(
+			<StatCard label="L" value="1" emphasis="yes" />
+		);
+		expect( truthy.container.firstChild.className ).toBe(
+			'mhmui-stat-card'
+		);
+	} );
+
+	test( 'StatCard data becomes data-* attributes, invalid keys are skipped', () => {
+		const { container } = render(
+			<StatCard
+				label="L"
+				value="1"
+				data={ {
+					stat: 'active_addons',
+					'Bad Key': 'x',
+					'on-click': 'y',
+				} }
+			/>
+		);
+		expect( container.firstChild.getAttribute( 'data-stat' ) ).toBe(
+			'active_addons'
+		);
+		expect( container.firstChild.getAttribute( 'data-on-click' ) ).toBe(
+			'y'
+		);
+		expect( container.firstChild.hasAttribute( 'data-Bad Key' ) ).toBe(
+			false
 		);
 	} );
 } );
