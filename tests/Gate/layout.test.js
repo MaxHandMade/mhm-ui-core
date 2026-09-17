@@ -85,20 +85,32 @@ function isFullyWrappedInWhere( selector ) {
 /** Gate for item 1 of the audit: every `:where(` skin selector in the
  * stylesheet must wrap its WHOLE selector, not just the `.mhmui-front`
  * ancestor -- `:where( .mhmui-front ) .x` is 0-1-0 per MDN's :where()
- * specificity rule, not the zero specificity the header comment promises. */
-function allWhereSelectorsFullyWrapped( css ) {
+ * specificity rule, not the zero specificity the header comment promises.
+ *
+ * `minCount` guards the check from passing vacuously: a stylesheet with zero
+ * `:where(` selectors used to read as "every one of them is fully wrapped"
+ * (true over an empty set) even though the six skin rules this gate exists
+ * to police had silently gone missing. Default 1 rejects that empty case for
+ * any caller; the real front.css assertion below raises it to 6, the actual
+ * count of skin rules (measured 2026-09-17). */
+function allWhereSelectorsFullyWrapped( css, minCount = 1 ) {
 	const code = css.replace( /\/\*[\s\S]*?\*\//g, '' );
 	const ruleRe = /([^{}]+)\{[^}]*\}/g;
 	let m;
+	let found = 0;
 	while ( ( m = ruleRe.exec( code ) ) !== null ) {
 		for ( const raw of splitTopLevelCommas( m[ 1 ] ) ) {
 			const sel = raw.trim();
-			if ( sel.includes( ':where(' ) && ! isFullyWrappedInWhere( sel ) ) {
+			if ( ! sel.includes( ':where(' ) ) {
+				continue;
+			}
+			found++;
+			if ( ! isFullyWrappedInWhere( sel ) ) {
 				return false;
 			}
 		}
 	}
-	return true;
+	return found >= minCount;
 }
 
 describe( 'page layout standard (spec §3.5)', () => {
@@ -130,7 +142,10 @@ describe( 'page layout standard (spec §3.5)', () => {
 	} );
 
 	test( 'front.css skin rules wrap the WHOLE selector in :where(), not just the .mhmui-front ancestor', () => {
-		expect( allWhereSelectorsFullyWrapped( front ) ).toBe( true );
+		// minCount 6: the actual count of skin rules (measured 2026-09-17) --
+		// not just "every :where( selector found is fully wrapped", which is
+		// vacuously true if the six rules themselves went missing.
+		expect( allWhereSelectorsFullyWrapped( front, 6 ) ).toBe( true );
 	} );
 
 	test( 'the checks are not vacuous: a capped admin shell and an uncontained front shell go red', () => {
@@ -157,6 +172,13 @@ describe( 'page layout standard (spec §3.5)', () => {
 		// specificity (0-1-0) -- exactly the bug this gate exists to catch.
 		expect( allWhereSelectorsFullyWrapped(
 			':where( .mhmui-front ) .x { }'
+		) ).toBe( false );
+
+		// No :where( selector at all -- "every one of them is fully wrapped"
+		// used to be true over an empty set, so a stylesheet that lost all
+		// six skin rules would have passed this gate silently.
+		expect( allWhereSelectorsFullyWrapped(
+			'.mhmui-front .mhmui-stat-card__label { color: red; }'
 		) ).toBe( false );
 	} );
 } );
