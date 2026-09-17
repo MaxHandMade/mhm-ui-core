@@ -293,6 +293,8 @@ describe( 'the visual kit renders only what it is given', () => {
 			<StatCard label="Octet" value="1" icon="%41" />
 		);
 		expect( container.querySelector( '.dashicons' ) ).toBeNull();
-		expect( container.querySelector( '[class*="dashicons-41"]' ) ).toBeNull();
+		expect(
+			container.querySelector( '[class*="dashicons-41"]' )
+		).toBeNull();
 	} );
 } );
