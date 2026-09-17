@@ -283,4 +283,16 @@ describe( 'the visual kit renders only what it is given', () => {
 		expect( container.querySelector( '.dashicons-calendar' ) ).toBeNull();
 		expect( container.querySelector( '.dashicons-alt' ) ).toBeNull();
 	} );
+
+	test( 'StatCard sanitises icon like the PHP twin -- a percent-octet is stripped first, not kept as digits', () => {
+		// WordPress's sanitize_html_class() strips %[a-fA-F0-9]{2} octets
+		// BEFORE stripping [^A-Za-z0-9_-]. "%41" must therefore sanitise to
+		// "" (the octet is removed whole), not "41" (stripping only the "%"
+		// and keeping the hex digits behind it).
+		const { container } = render(
+			<StatCard label="Octet" value="1" icon="%41" />
+		);
+		expect( container.querySelector( '.dashicons' ) ).toBeNull();
+		expect( container.querySelector( '[class*="dashicons-41"]' ) ).toBeNull();
+	} );
 } );

@@ -24,7 +24,8 @@
       { "label": "Balance", "value": "$0.00", "tone": "info", "emphasis": true },
       { "label": "Zero", "value": "0", "sub": "0", "icon": "0" },
       { "label": "Bool", "value": "1", "sub": true, "icon": true },
-      { "label": "Icon", "value": "1", "icon": "calendar alt" }
+      { "label": "Icon", "value": "1", "icon": "calendar alt" },
+      { "label": "Octet", "value": "1", "icon": "%41" }
     ]
   },
   "StatsGrid": {

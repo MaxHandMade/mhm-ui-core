@@ -39,11 +39,18 @@ const present = ( v ) =>
 	( typeof v === 'string' || typeof v === 'number' ) && String( v ) !== '';
 
 // Mirrors WordPress's sanitize_html_class(), which the PHP twin runs icon
-// through: strip everything outside A-Z a-z 0-9 _ -, don't collapse the gap,
-// so "calendar alt" becomes "calendaralt" in both twins rather than two
-// space-separated classes here and one merged one there (measured
-// 2026-09-17). Call only after present( icon ) -- it stringifies anything.
-const sanitizeIconClass = ( v ) => String( v ).replace( /[^A-Za-z0-9_-]/g, '' );
+// through: FIRST strip percent-encoded octets ( %[0-9a-fA-F]{2} ) as whole
+// units, THEN strip everything outside A-Z a-z 0-9 _ -, without collapsing
+// the gap -- so "calendar alt" becomes "calendaralt" in both twins rather
+// than two space-separated classes here and one merged one there, and
+// "%41" becomes "" in both rather than "41" here (dropping only the "%"
+// and keeping the hex digits behind it, which is not what the octet step
+// removes) vs. "" there (measured 2026-09-17). Call only after
+// present( icon ) -- it stringifies anything.
+const sanitizeIconClass = ( v ) =>
+	String( v )
+		.replace( /%[0-9a-fA-F]{2}/g, '' )
+		.replace( /[^A-Za-z0-9_-]/g, '' );
 
 function dataAttributes( data ) {
 	const out = {};
