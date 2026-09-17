@@ -21,7 +21,8 @@
       { "label": "Vehicles", "value": "7", "sub": "12 total" },
       { "label": "Invalid", "value": "1", "tone": "purple", "sub": "fallback", "delta": { "direction": "sideways", "text": "x" } },
       { "label": "Balance", "value": "$0.00", "emphasis": true, "data": { "stat": "balance", "Bad Key": "x" } },
-      { "label": "Balance", "value": "$0.00", "tone": "info", "emphasis": true }
+      { "label": "Balance", "value": "$0.00", "tone": "info", "emphasis": true },
+      { "label": "Zero", "value": "0", "sub": "0", "icon": "0" }
     ]
   },
   "StatsGrid": {

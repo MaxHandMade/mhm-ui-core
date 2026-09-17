@@ -24,6 +24,14 @@ export const DIRECTIONS = [ 'up', 'down', 'flat' ];
 
 const DATA_KEY = /^[a-z0-9-]{1,32}$/;
 
+// Presence test matching the PHP twin's is_scalar()+string-coercion check
+// ('' !== $icon / '' === $sub): a value counts as present once it is a
+// non-empty string or number -- "0" and 0 both present, "" and undefined
+// both absent. Plain `icon && ...` / `else if ( sub )` treats numeric 0 as
+// absent (0 is JS-falsy), which the PHP twin does not.
+const present = ( v ) =>
+	( typeof v === 'string' || typeof v === 'number' ) && String( v ) !== '';
+
 function dataAttributes( data ) {
 	const out = {};
 	if ( ! data || typeof data !== 'object' ) {
@@ -68,13 +76,13 @@ export default function StatCard( {
 				{ delta.text }
 			</p>
 		);
-	} else if ( sub ) {
+	} else if ( present( sub ) ) {
 		line = <p className="mhmui-stat-card__sub">{ sub }</p>;
 	}
 
 	return (
 		<div className={ classes.join( ' ' ) } { ...dataAttributes( data ) }>
-			{ icon && (
+			{ present( icon ) && (
 				<span
 					className={ `dashicons dashicons-${ icon }` }
 					aria-hidden="true"

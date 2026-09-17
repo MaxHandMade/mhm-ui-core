@@ -259,4 +259,14 @@ describe( 'the visual kit renders only what it is given', () => {
 			false
 		);
 	} );
+
+	test( 'StatCard treats "0" icon/sub as present, like the PHP twin', () => {
+		const { container } = render(
+			<StatCard label="L" value="1" sub="0" icon="0" />
+		);
+		const subEl = container.querySelector( '.mhmui-stat-card__sub' );
+		expect( subEl ).not.toBeNull();
+		expect( subEl.textContent ).toBe( '0' );
+		expect( container.querySelector( '.dashicons-0' ) ).not.toBeNull();
+	} );
 } );
