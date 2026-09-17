@@ -84,10 +84,22 @@ files["foundations/tokens.html"] = page(
 )
 
 # ---- Components (DOM = what the JSX emits) --------------------------------
+# Direction marks (aria-hidden), same vocabulary as StatCard.php / StatCard.jsx.
+# `delta` is (direction, text) or (direction, text, label) -- `label` is the
+# 0.13.0 optional consumer-supplied accessible name, rendered as the
+# visually-hidden .mhmui-stat-card__delta-sr span. `text` NEVER carries an
+# arrow or sign (0.12.0+): the mark below is what the kit itself draws.
+DIRECTION_MARKS = {"up": "↑", "down": "↓"}
+
 def stat_card(label, value, tone, icon=True, delta=None, sub=None):
     line = ""
-    if delta and delta[0] != "flat":
-        line = '<p class="mhmui-stat-card__delta mhmui-stat-card__delta--%s">%s</p>' % delta
+    if delta and delta[0] in DIRECTION_MARKS:
+        direction, text = delta[0], delta[1]
+        label_text = delta[2] if len(delta) > 2 else None
+        sr = '<span class="mhmui-stat-card__delta-sr">%s</span>' % label_text if label_text else ""
+        line = ('<p class="mhmui-stat-card__delta mhmui-stat-card__delta--%s" data-direction="%s">'
+                '<span class="mhmui-stat-card__delta-mark" aria-hidden="true">%s</span>%s%s</p>'
+                % (direction, direction, DIRECTION_MARKS[direction], sr, text))
     elif sub:
         line = '<p class="mhmui-stat-card__sub">%s</p>' % sub
     return ('<div class="mhmui-stat-card mhmui-stat-card--%s">%s<div class="mhmui-stat-card__body">'
@@ -96,11 +108,12 @@ def stat_card(label, value, tone, icon=True, delta=None, sub=None):
 
 files["components/stat-card.html"] = page(
     "Components", "StatCard",
-    "<b>StatCard</b> — etiket · biçimlendirilmiş değer · isteğe bağlı delta ya da alt satır. Prop'lar: label, value, icon, tone (success/warning/danger/info/neutral), sub, delta{direction,text}. "
+    "<b>StatCard</b> — etiket · biçimlendirilmiş değer · isteğe bağlı delta ya da alt satır. Prop'lar: label, value, icon, tone (success/warning/danger/info/neutral), sub, delta{direction,text,label}. "
+    "delta.text hiçbir zaman ok/işaret taşımaz (kit kendi aria-hidden ↑/↓ işaretini basar); delta.label isteğe bağlıdır -- tüketicinin çevirdiği erişilebilir ad (örn. \"artış\"/\"azalış\"), görsel olarak gizli ama ekran okuyucuda. "
     "Her dize prop'tur: paketin text domain'i yok, çeviriyi ürün yapar.",
     '<div class="ds-label">Tonlar</div><div class="ds-row" style="display:grid;grid-template-columns:repeat(2,1fr)">'
-    + stat_card("Toplam Rezervasyon", "1.284", "info", delta=("up", "↑ %12 bu ay"))
-    + stat_card("Toplam Gelir", "₺418.900", "success", delta=("down", "↓ %3 bu ay"))
+    + stat_card("Toplam Rezervasyon", "1.284", "info", delta=("up", "%12 bu ay", "artış"))
+    + stat_card("Toplam Gelir", "₺418.900", "success", delta=("down", "%3 bu ay", "azalış"))
     + stat_card("Aktif Araç", "37", "warning", sub="52 toplam")
     + stat_card("Bu ay kiralayan", "63", "neutral", delta=("flat", ""), sub="")
     + stat_card("İptal", "4", "danger", sub="son 7 gün")
@@ -111,8 +124,8 @@ files["components/stats-grid.html"] = page(
     "Components", "StatsGrid",
     "<b>StatsGrid</b> — StatCard satırı. Prop'lar: cards[] (StatCard prop nesneleri, key = label), columns (varsayılan 4).",
     '<div class="mhmui-stats-grid" style="--mhmui-columns:4">'
-    + stat_card("Rezervasyon", "1.284", "info", delta=("up", "↑ %12 bu ay"))
-    + stat_card("Gelir", "₺418.900", "success", delta=("up", "↑ %8 bu ay"))
+    + stat_card("Rezervasyon", "1.284", "info", delta=("up", "%12 bu ay"))
+    + stat_card("Gelir", "₺418.900", "success", delta=("up", "%8 bu ay"))
     + stat_card("Aktif Araç", "37", "warning", sub="52 toplam")
     + stat_card("Kiralayan", "63", "neutral", sub="bu ay")
     + "</div>",

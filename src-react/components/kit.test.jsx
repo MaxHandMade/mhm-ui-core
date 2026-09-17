@@ -83,6 +83,57 @@ describe( 'the visual kit renders only what it is given', () => {
 		expect( flat.container.querySelector( '[data-direction]' ) ).toBeNull();
 	} );
 
+	test( 'StatCard renders delta.label as visually-hidden accessible text, after the aria-hidden mark', () => {
+		const up = render(
+			<StatCard
+				label="Members"
+				value="12"
+				delta={ {
+					direction: 'up',
+					text: '3 this month',
+					label: 'artış',
+				} }
+			/>
+		);
+		const upDelta = up.container.querySelector( '.mhmui-stat-card__delta' );
+		const sr = upDelta.querySelector( '.mhmui-stat-card__delta-sr' );
+		expect( sr ).not.toBeNull();
+		expect( sr.textContent ).toBe( 'artış' );
+		expect( sr.getAttribute( 'aria-hidden' ) ).not.toBe( 'true' );
+		// sr text sits after the aria-hidden mark, before the plain text --
+		// "artış 3 this month" reads coherently to a screen reader.
+		expect( upDelta.textContent ).toBe( '↑artış3 this month' );
+
+		const down = render(
+			<StatCard
+				label="Members"
+				value="9"
+				delta={ {
+					direction: 'down',
+					text: '2 this month',
+					label: 'azalış',
+				} }
+			/>
+		);
+		const downSr = down.container
+			.querySelector( '.mhmui-stat-card__delta' )
+			.querySelector( '.mhmui-stat-card__delta-sr' );
+		expect( downSr.textContent ).toBe( 'azalış' );
+	} );
+
+	test( 'StatCard omits the sr span entirely when delta.label is absent -- no invented fallback', () => {
+		const { container } = render(
+			<StatCard
+				label="Members"
+				value="12"
+				delta={ { direction: 'up', text: '3 this month' } }
+			/>
+		);
+		expect(
+			container.querySelector( '.mhmui-stat-card__delta-sr' )
+		).toBeNull();
+	} );
+
 	test( 'StatCard falls back to the sub line when the delta is flat', () => {
 		render(
 			<StatCard

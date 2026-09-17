@@ -10,24 +10,33 @@
  * class sets they emit are compared by gate 6 (tests/Gate/kit-parity.test.js).
  *
  * @param {Object}  props
- * @param {string}  props.label      Translated label.
- * @param {string}  props.value      Already-formatted value.
- * @param {string}  [props.icon]     Dashicons class suffix, e.g. "calendar-alt".
- * @param {string}  [props.tone]     One of TONES; anything else is dropped.
- * @param {string}  [props.sub]      Secondary line, shown when no delta line is.
- * @param {Object}  [props.delta]    { direction: one of DIRECTIONS, text }. Since 0.12.0
- *                                   `text` must be PLAIN -- no arrow, no sign -- because
- *                                   the kit itself renders the direction mark (an
- *                                   aria-hidden ↑/↓ before the text) for `up`/`down`, never
- *                                   for `flat`. This is a breaking change from <=0.11.x: a
- *                                   consumer that still puts an arrow or sign in `text`
- *                                   will show two. Colour alone must never be the only cue
- *                                   (WCAG 1.4.1) -- that is now the kit's job, not the
- *                                   consumer's, because only the kit knows the direction
- *                                   vocabulary and a shared kit cannot rely on every
- *                                   consumer's text agreeing.
- * @param {boolean} [props.emphasis] Value in the accent colour; not a fill.
- * @param {Object}  [props.data]     { key: value } -> data-key="value"; keys ^[a-z0-9-]{1,32}$.
+ * @param {string}  props.label         Translated label.
+ * @param {string}  props.value         Already-formatted value.
+ * @param {string}  [props.icon]        Dashicons class suffix, e.g. "calendar-alt".
+ * @param {string}  [props.tone]        One of TONES; anything else is dropped.
+ * @param {string}  [props.sub]         Secondary line, shown when no delta line is.
+ * @param {Object}  [props.delta]       { direction: one of DIRECTIONS, text, label? }. Since
+ *                                      0.12.0 `text` must be PLAIN -- no arrow, no sign --
+ *                                      because the kit itself renders the direction mark (an
+ *                                      aria-hidden ↑/↓ before the text) for `up`/`down`, never
+ *                                      for `flat`. This is a breaking change from <=0.11.x: a
+ *                                      consumer that still puts an arrow or sign in `text`
+ *                                      will show two. Colour alone must never be the only cue
+ *                                      (WCAG 1.4.1) -- that is now the kit's job, not the
+ *                                      consumer's, because only the kit knows the direction
+ *                                      vocabulary and a shared kit cannot rely on every
+ *                                      consumer's text agreeing.
+ * @param {string}  [props.delta.label] Since 0.13.0: an optional, already-translated
+ *                                      accessible name for the delta line (e.g. "artış" /
+ *                                      "azalış" / "rose 5% this month"), supplied by the
+ *                                      CONSUMER -- this package has no text domain and cannot
+ *                                      invent one. Rendered as visually-hidden text inside the
+ *                                      delta line, after the aria-hidden mark: without it, up
+ *                                      and down still announce identically to a screen reader
+ *                                      (the mark is aria-hidden and data-direction is not an
+ *                                      accessible name), exactly as in 0.12.0.
+ * @param {boolean} [props.emphasis]    Value in the accent colour; not a fill.
+ * @param {Object}  [props.data]        { key: value } -> data-key="value"; keys ^[a-z0-9-]{1,32}$.
  */
 export const TONES = [ 'success', 'warning', 'danger', 'info', 'neutral' ];
 export const DIRECTIONS = [ 'up', 'down', 'flat' ];
@@ -106,6 +115,14 @@ export default function StatCard( {
 		// package (no text domain) could add as an accessible name. See
 		// StatCard.php's DIRECTION_MARKS docblock for the a11y reasoning in full.
 		const mark = direction === 'up' ? '↑' : '↓';
+		// delta.label is optional, consumer-translated (this package has no text
+		// domain): when present it becomes the delta line's accessible name,
+		// visually hidden and placed right after the aria-hidden mark so a
+		// screen reader reads "<label> <text>" (e.g. "artış 3 this month")
+		// instead of colour being the only up/down cue (WCAG 1.4.1, measured
+		// 2026-09-17: the 0.12.0 mark is aria-hidden and data-direction is not
+		// an accessible name either, so up and down announced identically).
+		// Absent, behaviour is exactly 0.12.0 -- no fallback string is invented.
 		line = (
 			<p
 				className={ `mhmui-stat-card__delta mhmui-stat-card__delta--${ direction }` }
@@ -117,6 +134,11 @@ export default function StatCard( {
 				>
 					{ mark }
 				</span>
+				{ present( delta.label ) && (
+					<span className="mhmui-stat-card__delta-sr">
+						{ delta.label }
+					</span>
+				) }
 				{ delta.text }
 			</p>
 		);

@@ -321,6 +321,22 @@
    cue WCAG 1.4.1 needs, so it must render regardless of colour perception,
    never be styled to disappear. */
 .mhmui-stat-card__delta-mark { margin-right: 4px; color: inherit; }
+/* delta.label (0.13.0+): the delta line's optional, consumer-supplied
+   accessible name. Visually hidden, standard clip-to-1px pattern -- NEVER
+   display:none / visibility:hidden, either of which would drop it from the
+   accessibility tree too, defeating the reason it exists (P1: an up delta
+   and a down delta otherwise announce identically). */
+.mhmui-stat-card__delta-sr {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect( 0, 0, 0, 0 );
+	white-space: nowrap;
+	border: 0;
+}
 
 /* Emphasis: the value in the accent colour, no fill (spec §3.2). On a toned
    card the value keeps the fill's on-accent colour -- accent on a fill does not

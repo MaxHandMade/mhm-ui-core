@@ -125,6 +125,26 @@
             "mhmui-stat-card__body",
             "mhmui-stat-card__label",
             "mhmui-stat-card__value"
+        ],
+        [
+            "mhmui-stat-card",
+            "mhmui-stat-card__body",
+            "mhmui-stat-card__delta",
+            "mhmui-stat-card__delta--up",
+            "mhmui-stat-card__delta-mark",
+            "mhmui-stat-card__delta-sr",
+            "mhmui-stat-card__label",
+            "mhmui-stat-card__value"
+        ],
+        [
+            "mhmui-stat-card",
+            "mhmui-stat-card__body",
+            "mhmui-stat-card__delta",
+            "mhmui-stat-card__delta--down",
+            "mhmui-stat-card__delta-mark",
+            "mhmui-stat-card__delta-sr",
+            "mhmui-stat-card__label",
+            "mhmui-stat-card__value"
         ]
     ],
     "StatsGrid": [

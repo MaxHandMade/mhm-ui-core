@@ -22,7 +22,7 @@ A consuming plugin `require_once`s `vendor/mhm/ui-core/register.php` from its
 main file and registers its own copy:
 
 ```php
-mhmuicore_register( '0.12.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.13.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 At `plugins_loaded` priority 0 the highest registered version boots; the rest
@@ -389,7 +389,7 @@ build from.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.12.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.13.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 Requiring `bootstrap.php` directly defines `MHMUICORE_VERSION` immediately, which
@@ -425,7 +425,7 @@ if ( function_exists( 'mhmuicore_stats_grid_html' ) ) {
 
 Props: `label`, `value` (already formatted), `icon` (Dashicons suffix — admin
 only), `tone` (`success|warning|danger|info|neutral`, anything else is dropped),
-`sub`, `delta` (`{direction: up|down|flat, text}`), `emphasis` (bool),
+`sub`, `delta` (`{direction: up|down|flat, text, label?}`), `emphasis` (bool),
 `data` (`key => value` → `data-key`, keys `^[a-z0-9-]{1,32}$`). The second
 argument is a column **ceiling**; the grid wraps in CSS. Avoid `direction` as
 a key in your own `data` map — the kit already emits `data-direction` on the
@@ -437,9 +437,21 @@ but it would leave a `[data-direction]` query matching both.
 which prints no delta line at all) — because colour alone must never be the
 only way up vs. down is conveyed (WCAG 1.4.1), and only the kit knows the
 direction vocabulary. `delta.text` must therefore be **plain**: no arrow, no
-sign. **Breaking change from <=0.11.x:** back then `delta.text` was expected
-to carry its own arrow or sign (the kit added none); a consumer still doing
-that after upgrading will show two marks.
+sign, unchanged from 0.12.0. **Breaking change from <=0.11.x:** back then
+`delta.text` was expected to carry its own arrow or sign (the kit added
+none); a consumer still doing that after upgrading will show two marks.
+
+**Since 0.13.0**, `delta.label` is how a consumer gives that direction cue an
+accessible name: an optional string, already translated by the CONSUMER (e.g.
+`"artış"` / `"azalış"` / `"rose 5% this month"`) — this package has no text
+domain and cannot invent one. When present, both renderers put it in a
+visually-hidden `<span class="mhmui-stat-card__delta-sr">`, right after the
+`aria-hidden` mark, so a screen reader reads label + text together (e.g.
+"artış 3 this month"). **Without `delta.label`, up and down still sound
+identical to a screen reader** — the 0.12.0 mark is `aria-hidden` and
+`data-direction` is not an accessible name either — behaviour is exactly
+0.12.0, and the kit does not invent a fallback string. Escaped like every
+other text prop (`esc_html` in PHP; React escapes text children).
 
 These 0.11.0 components need the 0.11.0 stylesheet — enqueue through
 `mhmuicore_enqueue_kit()` so the loader serves the winning copy; under an

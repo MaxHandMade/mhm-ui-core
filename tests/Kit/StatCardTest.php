@@ -87,6 +87,44 @@ final class StatCardTest extends TestCase {
 		);
 	}
 
+	public function test_delta_label_renders_as_visually_hidden_accessible_name(): void {
+		$up = StatCard::render_html(
+			array(
+				'label' => 'L',
+				'value' => '1',
+				'delta' => array( 'direction' => 'up', 'text' => '3 this month', 'label' => 'artış' ),
+			)
+		);
+		self::assertStringContainsString(
+			'<span class="mhmui-stat-card__delta-sr">esc_html(artış)</span>',
+			$up
+		);
+		// The sr span sits inside the delta paragraph, after the aria-hidden mark.
+		self::assertMatchesRegularExpression(
+			'/mhmui-stat-card__delta-mark" aria-hidden="true">esc_html\(↑\)<\/span><span class="mhmui-stat-card__delta-sr">/',
+			$up
+		);
+
+		$down = StatCard::render_html(
+			array(
+				'label' => 'L',
+				'value' => '1',
+				'delta' => array( 'direction' => 'down', 'text' => '2 this month', 'label' => 'azalış' ),
+			)
+		);
+		self::assertStringContainsString(
+			'<span class="mhmui-stat-card__delta-sr">esc_html(azalış)</span>',
+			$down
+		);
+	}
+
+	public function test_delta_without_label_prints_no_sr_span(): void {
+		$html = StatCard::render_html(
+			array( 'label' => 'L', 'value' => '1', 'delta' => array( 'direction' => 'up', 'text' => '3 this month' ) )
+		);
+		self::assertStringNotContainsString( 'delta-sr', $html );
+	}
+
 	public function test_direction_mark_never_appears_for_flat_or_sub_lines(): void {
 		$flat = StatCard::render_html(
 			array( 'label' => 'L', 'value' => '1', 'sub' => 'fallback', 'delta' => array( 'direction' => 'flat', 'text' => 'ignored' ) )

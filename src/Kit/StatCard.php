@@ -43,6 +43,13 @@ final class StatCard {
 	 * non-colour cue (WCAG 1.4.1) and an unsigned text left up/down
 	 * distinguishable by colour alone.
 	 *
+	 * Since 0.13.0, `delta.label` is an optional accessible name for the delta
+	 * line: an already-translated string the CONSUMER supplies (e.g. "artış" /
+	 * "azalış" / "rose 5% this month"), rendered as visually-hidden text inside
+	 * the delta line so up vs. down is no longer silent to a screen reader. See
+	 * self::delta_label() for the full reasoning. Without it, behaviour is
+	 * exactly 0.12.0 -- no fallback string is invented.
+	 *
 	 * @param array<string, mixed> $props label, value, icon?, tone?, sub?, delta?, emphasis?, data?.
 	 * @return string Escaped HTML.
 	 */
@@ -98,12 +105,37 @@ final class StatCard {
 				return '<p class="' . esc_attr( 'mhmui-stat-card__delta mhmui-stat-card__delta--' . $direction ) . '"'
 					. ' data-direction="' . esc_attr( $direction ) . '">'
 					. '<span class="mhmui-stat-card__delta-mark" aria-hidden="true">' . esc_html( self::DIRECTION_MARKS[ $direction ] ) . '</span>'
+					. self::delta_label( $delta )
 					. esc_html( self::text( $delta['text'] ?? '' ) ) . '</p>';
 			}
 		}
 
 		$sub = self::presence_text( $props['sub'] ?? '' );
 		return '' === $sub ? '' : '<p class="mhmui-stat-card__sub">' . esc_html( $sub ) . '</p>';
+	}
+
+	/**
+	 * The delta line's accessible name, supplied by the consumer.
+	 *
+	 * Since 0.13.0, `delta.label` is an already-translated string (e.g. "artış" /
+	 * "rose 5% this month") the CONSUMER provides so an up delta and a down delta
+	 * do not announce identically to assistive technology -- 0.12.0's direction
+	 * mark is `aria-hidden` and `data-direction` is not exposed either, so up vs.
+	 * down was invisible to a screen reader (both just read the plain `text`,
+	 * e.g. "3 this month"). This package has no text domain (`composer
+	 * check:no-i18n`) and cannot invent that string itself; when the consumer
+	 * does not supply one, behaviour is unchanged from 0.12.0 -- no fallback text
+	 * is invented here.
+	 *
+	 * Visually hidden (the visible mark stays `aria-hidden`), present in the
+	 * accessibility tree: the standard clip-to-1px pattern in both stylesheets'
+	 * `.mhmui-stat-card__delta-sr` rule.
+	 *
+	 * @param array<string, mixed> $delta The delta prop.
+	 */
+	private static function delta_label( array $delta ): string {
+		$label = self::presence_text( $delta['label'] ?? '' );
+		return '' === $label ? '' : '<span class="mhmui-stat-card__delta-sr">' . esc_html( $label ) . '</span>';
 	}
 
 	/**
