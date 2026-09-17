@@ -282,7 +282,8 @@ Prop'lar: `label`, `value` (zaten biçimlendirilmiş), `icon` (Dashicons soneki 
 ekranı), `tone` (`success|warning|danger|info|neutral`, başka her şey düşürülür), `sub`,
 `delta` (`{direction: up|down|flat, text}`), `emphasis` (bool), `data` (`anahtar => değer` →
 `data-anahtar`, anahtarlar `^[a-z0-9-]{1,32}$`). İkinci argüman sütun **tavanıdır**; ızgara
-CSS'te sarar.
+CSS'te sarar. `delta.text` kendi yön ipucunu (bir ok veya işaret) taşımalıdır — renk tek
+başına yukarı/aşağı yönünü iletmemelidir.
 
 Bu 0.11.0 bileşenleri 0.11.0 stil dosyasını ister — `mhmuicore_enqueue_kit()` üzerinden
 enqueue edin ki yükleyici kazanan kopyayı sunsun; daha eski bir stil dosyasının altında

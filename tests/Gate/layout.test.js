@@ -38,15 +38,18 @@ function statCardIconIsAccent( css ) {
 	return body !== null && /color:\s*var\(\s*--mhmui-accent\s*\)/.test( body );
 }
 
-/** The delta line is green climbing, red falling -- and the falling rule
- * keeps its underline, because colour must not be the only cue (WCAG 1.4.1). */
+/** The delta line is green climbing, red falling. The non-colour cue WCAG
+ * 1.4.1 requires no longer lives in the stylesheet -- it lives in the
+ * consumer's own delta text (an arrow or a sign, per the `delta` docblock /
+ * README), so the falling rule must NOT reintroduce an underline (or any
+ * other text-decoration) on top of that. */
 function statCardDeltaHasDirectionColour( css ) {
 	const up = ruleBody( css, '.mhmui-stat-card__delta--up' );
 	const down = ruleBody( css, '.mhmui-stat-card__delta--down' );
 	return up !== null && down !== null
 		&& /color:\s*var\(\s*--mhmui-success-strong\s*\)/.test( up )
 		&& /color:\s*var\(\s*--mhmui-danger-strong\s*\)/.test( down )
-		&& /text-decoration:\s*underline/.test( down );
+		&& ! /text-decoration/.test( down );
 }
 
 /** The grid rule itself wraps from the --mhmui-columns ceiling via auto-fit,
@@ -191,19 +194,21 @@ describe( 'page layout standard (spec §3.5)', () => {
 
 		// Neither delta direction has a colour at all.
 		expect( statCardDeltaHasDirectionColour(
-			'.mhmui-stat-card__delta--up { } .mhmui-stat-card__delta--down { text-decoration: underline; }'
+			'.mhmui-stat-card__delta--up { } .mhmui-stat-card__delta--down { }'
 		) ).toBe( false );
 
 		// Up has its colour, but down lost its -- still fails, both directions
 		// are required.
 		expect( statCardDeltaHasDirectionColour(
-			'.mhmui-stat-card__delta--up { color: var( --mhmui-success-strong ); } .mhmui-stat-card__delta--down { text-decoration: underline; }'
+			'.mhmui-stat-card__delta--up { color: var( --mhmui-success-strong ); } .mhmui-stat-card__delta--down { }'
 		) ).toBe( false );
 
-		// Both colours present but the underline (the non-colour cue) was
-		// dropped from --down -- still fails.
+		// Both colours present, but an underline crept back onto --down --
+		// the non-colour cue now lives in the consumer's delta text (an arrow
+		// or sign), not the stylesheet, so a reintroduced text-decoration
+		// must fail this check.
 		expect( statCardDeltaHasDirectionColour(
-			'.mhmui-stat-card__delta--up { color: var( --mhmui-success-strong ); } .mhmui-stat-card__delta--down { color: var( --mhmui-danger-strong ); }'
+			'.mhmui-stat-card__delta--up { color: var( --mhmui-success-strong ); } .mhmui-stat-card__delta--down { color: var( --mhmui-danger-strong ); text-decoration: underline; }'
 		) ).toBe( false );
 
 		// Grid rule present but fixed tracks, not auto-fit -- would still wrap
