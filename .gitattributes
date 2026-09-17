@@ -32,6 +32,11 @@
 /docker/           export-ignore
 /phpunit-integration.xml export-ignore
 
+# gate 6's CI contract (bin/dump-kit-classes.php writes it, tests/Gate/kit-
+# parity.test.js and tests/ShippedSurfaceTest.php read it) -- nothing at
+# runtime reads it, so it has no business in a consumer's vendor tree either.
+/src-react/kit-classes.json export-ignore
+
 # .gitignore has no role in a consumer's tree: it is git metadata for THIS
 # repository, and a consumer installs this package as files, not as a clone.
 # It was the last dev-only file still landing in vendor/mhm/ui-core, which
