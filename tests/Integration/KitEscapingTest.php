@@ -41,6 +41,41 @@ final class KitEscapingTest extends WP_UnitTestCase {
 		self::assertStringContainsString( 'data-stat="&quot;&gt;&lt;script&gt;alert(4)&lt;/script&gt;"', $html );
 	}
 
+	/**
+	 * test_hostile_props_come_out_inert() above never passes a `delta` prop, so
+	 * the whole delta branch -- text, the 0.13.0 label, the mark -- had no real-
+	 * WordPress escaping coverage (only the unit suite's marking stub touched
+	 * it). This closes that gap with a hostile delta.text AND delta.label.
+	 */
+	public function test_hostile_delta_comes_out_inert(): void {
+		$html = mhmuicore_stat_card_html(
+			array(
+				'label' => 'L',
+				'value' => '1',
+				'delta' => array(
+					'direction' => 'up',
+					'text'      => '<script>alert(5)</script>',
+					'label'     => '"><img src=x onerror=alert(6)>',
+				),
+			)
+		);
+
+		self::assertStringNotContainsString( '<script', $html );
+		self::assertStringNotContainsString( '<img', $html );
+		self::assertStringContainsString( 'data-direction="up"', $html );
+		self::assertStringContainsString(
+			'<span class="mhmui-stat-card__delta-mark" aria-hidden="true">' . "\u{2191}" . '</span>',
+			$html
+		);
+		// Trailing space lives INSIDE the sr span's own text (not a bare text
+		// node after it), so real esc_html() output carries it too.
+		self::assertStringContainsString(
+			'<span class="mhmui-stat-card__delta-sr">&quot;&gt;&lt;img src=x onerror=alert(6)&gt; </span>',
+			$html
+		);
+		self::assertStringContainsString( '&lt;script&gt;alert(5)&lt;/script&gt;', $html );
+	}
+
 	public function test_grid_style_attribute_is_an_integer_only(): void {
 		self::assertStringContainsString( 'style="--mhmui-columns:4"', mhmuicore_stats_grid_html( array(), '4;background:url(x)' ) );
 	}

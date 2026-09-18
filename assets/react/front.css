@@ -61,7 +61,23 @@
 
 /* Page shell (spec §3.5): centred, capped at page-max on a wide theme
    container, filling a narrow one. The query container for every layout that
-   must follow the space it was GIVEN, not the viewport. */
+   must follow the space it was GIVEN, not the viewport.
+
+   PRECONDITION (consumer contract, not something this repo can enforce):
+   this class must go on an element that carries NO horizontal margin from
+   any other source -- no theme wrapper margin, no Elementor/page-builder
+   section margin, no inline `style="margin:…"` (inline always wins the
+   cascade over this class either way). `width: 100%` here is safe ONLY
+   because `margin-inline: auto` is the box's only margin: when `max-width`
+   caps the computed width below the container, the auto margins split the
+   remainder and centre the box; when it doesn't, they compute to zero --
+   neither case overflows. This is the front-end twin of L1 (2026-09-18):
+   `.mhmui-admin-page` broke because `width: 100%` was forced on an element
+   that ALSO carried a fixed, non-auto margin from elsewhere (WP core's own
+   `.wrap`, margin: 10px 20px 0 2px) -- the box overflowed its container by
+   exactly that margin. `.mhmui-front-page` is consumer-applied exactly like
+   `.mhmui-admin-page` was; the same overflow reproduces here the moment a
+   consumer's markup adds a margin this class does not know about. */
 .mhmui-front-page {
 	container: mhmui-page / inline-size;
 	width: 100%;
@@ -92,11 +108,28 @@
 .mhmui-front .mhmui-stat-card__value,
 .mhmui-front .mhmui-stat-card__sub,
 .mhmui-front .mhmui-stat-card__delta { margin: 0; }
-/* The direction mark (aria-hidden ↑/↓, StatCard.php / StatCard.jsx): inherits
+/* The direction mark (aria-hidden ↑/↓/→, StatCard.php / StatCard.jsx): inherits
    the delta line's colour, no colour of its own -- this is the non-colour
    cue WCAG 1.4.1 needs, so it must render regardless of colour perception,
    never be styled to disappear. */
 .mhmui-front .mhmui-stat-card__delta-mark { margin-inline-end: var( --mhmui-space-1 ); color: inherit; }
+/* delta.label (0.13.0+): the delta line's optional, consumer-supplied
+   accessible name. Visually hidden, standard clip-to-1px pattern -- NEVER
+   display:none / visibility:hidden, either of which would drop it from the
+   accessibility tree too, defeating the reason it exists (P1: an up delta
+   and a down delta otherwise announce identically). No font-family here,
+   like the rest of this stylesheet. */
+.mhmui-front .mhmui-stat-card__delta-sr {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect( 0, 0, 0, 0 );
+	white-space: nowrap;
+	border: 0;
+}
 
 /* Card skin -- zero specificity: the WHOLE selector sits inside :where(...),
    not just the .mhmui-front ancestor -- :where( .mhmui-front ) .x is 0-1-0,
@@ -108,6 +141,10 @@
 :where( .mhmui-front .mhmui-stat-card__delta ) { font-size: 0.75rem; color: var( --mhmui-text-muted ); }
 :where( .mhmui-front .mhmui-stat-card__delta--up ) { color: var( --mhmui-success-strong ); }
 :where( .mhmui-front .mhmui-stat-card__delta--down ) { color: var( --mhmui-danger-strong ); }
+/* --flat deliberately gets NO colour rule: the base .mhmui-stat-card__delta
+   rule above (var( --mhmui-text-muted )) already reads as neutral, and a
+   flat delta must read as neither good nor bad -- the → mark is its whole
+   cue. Do not "fix" this gap by inventing a colour for it. */
 
 /* Tone fills, same roles as admin.css. */
 .mhmui-front .mhmui-stat-card--info,

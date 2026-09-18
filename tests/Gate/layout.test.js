@@ -12,9 +12,21 @@ function ruleBody( css, selector ) {
 	return m ? m[ 2 ] : null;
 }
 
+/** No `width` declaration on the admin shell: it sits on the SAME element as
+ * WP core's own `.wrap` (margin: 10px 20px 0 2px), and a block box already
+ * fills its container's content box on its own while respecting its own
+ * margins -- that IS "flows full width". Forcing `width: 100%` on top of
+ * that margin pushes the box past its container by exactly the horizontal
+ * margins (measured 2026-09-18, Chrome 1905px: .wrap.mhmui-admin.mhmui-admin-page
+ * grew to 1907, the fourth KPI card clipped, page grew a horizontal
+ * scrollbar). The lookbehind excludes `max-width` (and would exclude
+ * `min-width`), whose hyphen sits directly before "width:". */
 function adminPageFlows( css ) {
 	const body = ruleBody( css, '.mhmui-admin-page' );
-	return body !== null && /max-width:\s*none/.test( body ) && ! /container/.test( body );
+	return body !== null
+		&& /max-width:\s*none/.test( body )
+		&& ! /container/.test( body )
+		&& ! /(?<!-)width:/.test( body );
 }
 
 function frontPageCentresAndContains( css ) {
@@ -62,6 +74,24 @@ function deltaMarkInheritsColourAndHasSpacing( css, selector ) {
 	return body !== null
 		&& /color:\s*inherit/.test( body )
 		&& /margin/.test( body )
+		&& ! /display:\s*none/.test( body )
+		&& ! /visibility:\s*hidden/.test( body );
+}
+
+/** The delta line's accessible-name span (StatCard's optional `delta.label`,
+ * 0.13.0+) must be visually hidden but stay IN the accessibility tree: the
+ * standard clip-to-1px pattern (position:absolute, 1x1px, clipped, no
+ * wrapping), never display:none / visibility:hidden -- either of those
+ * removes it from the accessibility tree too, which defeats the entire
+ * point of adding it (P1: direction invisible to assistive technology). */
+function deltaSrIsVisuallyHidden( css, selector ) {
+	const body = ruleBody( css, selector );
+	return body !== null
+		&& /position:\s*absolute/.test( body )
+		&& /width:\s*1px/.test( body )
+		&& /height:\s*1px/.test( body )
+		&& /overflow:\s*hidden/.test( body )
+		&& /clip(-path)?:/.test( body )
 		&& ! /display:\s*none/.test( body )
 		&& ! /visibility:\s*hidden/.test( body );
 }
@@ -188,6 +218,11 @@ describe( 'page layout standard (spec §3.5)', () => {
 		expect( deltaMarkInheritsColourAndHasSpacing( front, '.mhmui-front .mhmui-stat-card__delta-mark' ) ).toBe( true );
 	} );
 
+	test( 'the delta accessible-name span is visually hidden but stays in the accessibility tree, in both stylesheets', () => {
+		expect( deltaSrIsVisuallyHidden( admin, '.mhmui-stat-card__delta-sr' ) ).toBe( true );
+		expect( deltaSrIsVisuallyHidden( front, '.mhmui-front .mhmui-stat-card__delta-sr' ) ).toBe( true );
+	} );
+
 	test( 'front.css skin rules wrap the WHOLE selector in :where(), not just the .mhmui-front ancestor', () => {
 		// minCount 6: the actual count of skin rules (measured 2026-09-17) --
 		// not just "every :where( selector found is fully wrapped", which is
@@ -198,6 +233,10 @@ describe( 'page layout standard (spec §3.5)', () => {
 	test( 'the checks are not vacuous: a capped admin shell and an uncontained front shell go red', () => {
 		expect( adminPageFlows( '.mhmui-admin-page { max-width: 1200px; }' ) ).toBe( false );
 		expect( adminPageFlows( '.mhmui-admin-page { max-width: none; container: x / inline-size; }' ) ).toBe( false );
+		// The regression this gate was added for (2026-09-18): `width: 100%`
+		// on the SAME element as WP core's own `.wrap` (non-zero horizontal
+		// margin) overflows the container by exactly that margin.
+		expect( adminPageFlows( '.mhmui-admin-page { width: 100%; max-width: none; box-sizing: border-box; }' ) ).toBe( false );
 		expect( frontPageCentresAndContains( '.mhmui-front-page { max-width: var(--mhmui-page-max); margin-inline: auto; }' ) ).toBe( false );
 
 		// Only the tone-override selector present (no plain emphasis rule) --
@@ -275,6 +314,32 @@ describe( 'page layout standard (spec §3.5)', () => {
 		// six skin rules would have passed this gate silently.
 		expect( allWhereSelectorsFullyWrapped(
 			'.mhmui-front .mhmui-stat-card__label { color: red; }'
+		) ).toBe( false );
+
+		// The rule is missing entirely.
+		expect( deltaSrIsVisuallyHidden(
+			'.mhmui-stat-card__delta { color: red; }',
+			'.mhmui-stat-card__delta-sr'
+		) ).toBe( false );
+
+		// Not clipped/positioned at all -- would render as plain visible text.
+		expect( deltaSrIsVisuallyHidden(
+			'.mhmui-stat-card__delta-sr { color: red; }',
+			'.mhmui-stat-card__delta-sr'
+		) ).toBe( false );
+
+		// display:none -- hides it from the accessibility tree too, defeating
+		// the entire point of an accessible-name span.
+		expect( deltaSrIsVisuallyHidden(
+			'.mhmui-stat-card__delta-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); display: none; }',
+			'.mhmui-stat-card__delta-sr'
+		) ).toBe( false );
+
+		// visibility:hidden -- same defect as display:none, via a different
+		// property.
+		expect( deltaSrIsVisuallyHidden(
+			'.mhmui-stat-card__delta-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); visibility: hidden; }',
+			'.mhmui-stat-card__delta-sr'
 		) ).toBe( false );
 	} );
 } );

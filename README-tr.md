@@ -215,7 +215,7 @@ da bu tek yanlış cümle yüzünden taşıdı.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.12.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.13.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 `bootstrap.php`'yi doğrudan require etmek `MHMUICORE_VERSION`'ı anında tanımlar
@@ -280,19 +280,39 @@ if ( function_exists( 'mhmuicore_stats_grid_html' ) ) {
 
 Prop'lar: `label`, `value` (zaten biçimlendirilmiş), `icon` (Dashicons soneki — yalnız yönetici
 ekranı), `tone` (`success|warning|danger|info|neutral`, başka her şey düşürülür), `sub`,
-`delta` (`{direction: up|down|flat, text}`), `emphasis` (bool), `data` (`anahtar => değer` →
+`delta` (`{direction: up|down|flat, text, label?}`), `emphasis` (bool), `data` (`anahtar => değer` →
 `data-anahtar`, anahtarlar `^[a-z0-9-]{1,32}$`). İkinci argüman sütun **tavanıdır**; ızgara
 CSS'te sarar. Kendi `data` haritanızda `direction` anahtarından kaçının — kit zaten delta
-satırında `data-direction` basıyor; çakışma imkânsız (farklı elemanlar) ama bir
-`[data-direction]` sorgusu ikisiyle de eşleşir.
+satırında her tanınan yön için `data-direction` basıyor; çakışma imkânsız (farklı elemanlar)
+ama bir `[data-direction]` sorgusu ikisiyle de eşleşir.
 
-**0.12.0'dan itibaren** yön ipucunu artık kit'in kendisi çiziyor — `up`/`down` için (asla
-`flat` için değil, o zaten delta satırı hiç basmaz) metinden önce `aria-hidden` bir ↑/↓
-işareti — çünkü renk tek başına yukarı/aşağı yönünü iletmemelidir (WCAG 1.4.1) ve yön
-sözlüğünü yalnız kit bilir. Bu yüzden `delta.text` artık **düz** olmalı: ok yok, işaret yok.
-**<=0.11.x'ten kırıcı değişiklik:** o sürümlerde `delta.text`'in kendi okunu/işaretini
-taşıması beklenirdi (kit hiçbir şey eklemiyordu); güncelledikten sonra hâlâ öyle yazan bir
-tüketici iki işaret gösterir.
+**0.12.0'dan itibaren** yön ipucunu artık kit'in kendisi çiziyor — metinden önce `aria-hidden`
+bir işaret — çünkü renk tek başına bir eğilimi iletmemelidir (WCAG 1.4.1) ve yön sözlüğünü
+yalnız kit bilir. Bu yüzden `delta.text` artık **düz** olmalı: ok yok, işaret yok, o zamandan
+beri değişmedi. **<=0.11.x'ten kırıcı değişiklik:** o sürümlerde `delta.text`'in kendi
+okunu/işaretini taşıması beklenirdi (kit hiçbir şey eklemiyordu); güncelledikten sonra hâlâ
+öyle yazan bir tüketici iki işaret gösterir.
+
+**`flat` de kendi satırını alır, yalnız `up`/`down` değil (0.13.0):** işaret `up` için ↑,
+`down` için ↓, `flat` için →  — "veri yok" (`sub` satırı) ile "değişim yok" (`flat` delta'sı)
+farklı olgulardır; sıfır bir eğilim sessizce `sub`'a düşüp sayısını kaybetmemeli. `flat` her
+iki stil dosyasında da kendi rengini taşımaz (temel delta rengi zaten nötr) — → işareti tek
+ipucudur. **<=0.12.x'ten davranış değişikliği:** `flat` bir delta eskiden hiç satır basmazdı,
+`sub` verilmişse ona düşerdi. **`flat` bir delta'yı `sub` ile birlikte veren bir kart artık
+`sub` satırını sessizce kaybeder** — `delta.direction` tanındığı an delta satırı `sub`'ın
+önüne geçer, `up`/`down`'ın zaten sahip olduğu önceliğin aynısı. `sub`'ın bir `flat` delta'nın
+arkasından göründüğüne güveniyorsanız, o `delta`'yı artık geçmeyin (ya da aynı metni tek
+başına `sub`'a taşıyın).
+
+**0.13.0'dan itibaren** `delta.label`, bu yön ipucuna erişilebilir bir ad kazandırmanın yolu:
+isteğe bağlı bir dize, TÜKETİCİ tarafından zaten çevrilmiş (örn. `"artış"` / `"azalış"` /
+`"rose 5% this month"`) — bu paketin text domain'i yok, kendisi bir dize uyduramaz. Verildiğinde
+her iki render de onu `aria-hidden` işaretten hemen sonra, görsel olarak gizli bir
+`<span class="mhmui-stat-card__delta-sr">` içine koyar; ekran okuyucu etiket + metni birlikte
+okur (örn. "artış 3 this month"). **`delta.label` yoksa yukarı/aşağı ekran okuyucuda hâlâ aynı
+seslenir** — 0.12.0'ın işareti `aria-hidden`, `data-direction` de erişilebilir ad değil —
+davranış tam olarak 0.12.0'daki gibidir, kit varsayılan bir metin uydurmaz. Diğer her metin
+prop'u gibi escape edilir (PHP'de `esc_html`; React metin çocuklarını kendisi escape eder).
 
 Bu 0.11.0 bileşenleri 0.11.0 stil dosyasını ister — `mhmuicore_enqueue_kit()` üzerinden
 enqueue edin ki yükleyici kazanan kopyayı sunsun; daha eski bir stil dosyasının altında
@@ -322,6 +342,20 @@ token'ını okur:
 |---|---|---|
 | admin | `<div class="mhmui-admin mhmui-admin-page">` | tam genişlik akar; `mhmui-measure`'ı bir **form sütununa** koy, sayfaya asla |
 | front | `<div class="mhmui-front mhmui-front-page">` | ortalanır, `--mhmui-page-max`'te sınırlanır; adlandırılmış sorgu konteyneri `mhmui-page` |
+
+**Her iki kabuk sınıfı da üzerinde bulunduğu elemanın başka HİÇBİR yerden
+yatay margin taşımamasını şart koşar** — ne tema sarmalayıcısının marginini,
+ne bir sayfa oluşturucu bölümünün marginini, ne de satır içi
+`style="margin:…"`'i. İkisi de kutusunu konteynerinin `width: 100%`'ü olarak
+hesaplar; bu paketin bilmediği bir margin (yönetici tarafında WP
+çekirdeğinin kendi `.wrap`'i, ön yüzde bir tema/sayfa oluşturucu
+sarmalayıcısı) kutuyu konteynerinden tam o margin kadar taşırır. Yönetici
+tarafında ölçüldü (2026-09-18): `.mhmui-admin-page`, WP çekirdeğinin
+`.wrap`'iyle (`margin: 10px 20px 0 2px`) aynı elemanın üzerinde durur; o
+sabit marginin üstüne `width: 100%` zorlamak sayfanın dördüncü KPI kartını
+kesti ve yatay kaydırma çubuğu büyüttü. `.mhmui-front-page` de aynı ölçüde
+açıktır — onu temanızdan ya da bir sayfa oluşturucu bölümünden margin alan
+bir elemana koyarsanız aynı taşma orada da tekrarlanır.
 
 Ön yüz düzenleri viewport'u değil konteyneri sorgular:
 `@container mhmui-page (width < 40rem) { … }`. Eşikler sabit sayılardır (özel özellikler bir
@@ -410,7 +444,7 @@ parite kapısı eşitlik arar, uyumluluk değil.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.12.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.13.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 🔴 Sürüm dizesi **elle yazılır** (kayıt, herhangi bir bootstrap yüklenmeden önce koşar) ve

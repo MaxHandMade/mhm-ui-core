@@ -68,32 +68,123 @@ describe( 'the visual kit renders only what it is given', () => {
 		expect( upDelta.textContent ).toBe( '↑3 this month' );
 	} );
 
-	test( 'StatCard emits no direction mark or data-direction for a flat or sub line', () => {
-		const flat = render(
+	test( 'StatCard emits no direction mark or data-direction for a sub-only line', () => {
+		const { container } = render(
+			<StatCard label="Vehicles" value="7" sub="12 total" />
+		);
+		expect(
+			container.querySelector( '.mhmui-stat-card__delta-mark' )
+		).toBeNull();
+		expect( container.querySelector( '[data-direction]' ) ).toBeNull();
+	} );
+
+	test( 'StatCard gives a flat delta its own line with a → mark and data-direction, not the sub line', () => {
+		// "no data" (the sub line) and "no change" (a flat delta) are different
+		// facts: since 0.13.0 flat gets its own line, exactly like up/down --
+		// it no longer falls through to sub.
+		const { container, queryByText } = render(
 			<StatCard
 				label="Vehicles"
 				value="7"
 				sub="12 total"
-				delta={ { direction: 'flat', text: 'ignored' } }
+				delta={ { direction: 'flat', text: '0 this month' } }
+			/>
+		);
+		const delta = container.querySelector( '.mhmui-stat-card__delta' );
+		expect( delta ).not.toBeNull();
+		expect( delta.className ).toContain( 'mhmui-stat-card__delta--flat' );
+		expect( delta.getAttribute( 'data-direction' ) ).toBe( 'flat' );
+		const mark = delta.querySelector( '.mhmui-stat-card__delta-mark' );
+		expect( mark.getAttribute( 'aria-hidden' ) ).toBe( 'true' );
+		expect( mark.textContent ).toBe( '→' );
+		expect( delta.textContent ).toBe( '→0 this month' );
+		expect( queryByText( '12 total' ) ).toBeNull();
+	} );
+
+	test( 'StatCard renders delta.label for a flat delta too, absent when not supplied', () => {
+		const withLabel = render(
+			<StatCard
+				label="Bookings"
+				value="40"
+				delta={ {
+					direction: 'flat',
+					text: '0 this month',
+					label: 'değişmedi',
+				} }
+			/>
+		);
+		const delta = withLabel.container.querySelector(
+			'.mhmui-stat-card__delta'
+		);
+		const sr = delta.querySelector( '.mhmui-stat-card__delta-sr' );
+		expect( sr ).not.toBeNull();
+		expect( sr.textContent ).toBe( 'değişmedi ' );
+		expect( delta.textContent ).toBe( '→değişmedi 0 this month' );
+
+		const withoutLabel = render(
+			<StatCard
+				label="Bookings"
+				value="40"
+				delta={ { direction: 'flat', text: '0 this month' } }
 			/>
 		);
 		expect(
-			flat.container.querySelector( '.mhmui-stat-card__delta-mark' )
+			withoutLabel.container.querySelector( '.mhmui-stat-card__delta-sr' )
 		).toBeNull();
-		expect( flat.container.querySelector( '[data-direction]' ) ).toBeNull();
 	} );
 
-	test( 'StatCard falls back to the sub line when the delta is flat', () => {
-		render(
+	test( 'StatCard renders delta.label as visually-hidden accessible text, after the aria-hidden mark', () => {
+		const up = render(
 			<StatCard
-				label="Vehicles"
-				value="7"
-				sub="12 total"
-				delta={ { direction: 'flat', text: 'ignored' } }
+				label="Members"
+				value="12"
+				delta={ {
+					direction: 'up',
+					text: '3 this month',
+					label: 'artış',
+				} }
 			/>
 		);
-		expect( screen.getByText( '12 total' ) ).toBeTruthy();
-		expect( screen.queryByText( 'ignored' ) ).toBeNull();
+		const upDelta = up.container.querySelector( '.mhmui-stat-card__delta' );
+		const sr = upDelta.querySelector( '.mhmui-stat-card__delta-sr' );
+		expect( sr ).not.toBeNull();
+		// Trailing space lives INSIDE the sr span's own text (not a bare text
+		// node after it) so the label and delta.text do not run together as
+		// one word in the DOM's text content.
+		expect( sr.textContent ).toBe( 'artış ' );
+		expect( sr.getAttribute( 'aria-hidden' ) ).not.toBe( 'true' );
+		// sr text sits after the aria-hidden mark, before the plain text --
+		// "artış 3 this month" reads coherently to a screen reader.
+		expect( upDelta.textContent ).toBe( '↑artış 3 this month' );
+
+		const down = render(
+			<StatCard
+				label="Members"
+				value="9"
+				delta={ {
+					direction: 'down',
+					text: '2 this month',
+					label: 'azalış',
+				} }
+			/>
+		);
+		const downSr = down.container
+			.querySelector( '.mhmui-stat-card__delta' )
+			.querySelector( '.mhmui-stat-card__delta-sr' );
+		expect( downSr.textContent ).toBe( 'azalış ' );
+	} );
+
+	test( 'StatCard omits the sr span entirely when delta.label is absent -- no invented fallback', () => {
+		const { container } = render(
+			<StatCard
+				label="Members"
+				value="12"
+				delta={ { direction: 'up', text: '3 this month' } }
+			/>
+		);
+		expect(
+			container.querySelector( '.mhmui-stat-card__delta-sr' )
+		).toBeNull();
 	} );
 
 	test( 'StatsGrid renders one card per entry', () => {
@@ -279,6 +370,48 @@ describe( 'the visual kit renders only what it is given', () => {
 			container.querySelector( '.mhmui-stat-card__sub' ).textContent
 		).toBe( 'fallback' );
 		expect( container.querySelector( '[class*="__delta"]' ) ).toBeNull();
+	} );
+
+	test( 'StatCard requires direction to be a string, like the PHP twin -- a coercible non-string falls back to sub', () => {
+		// hasOwnProperty.call coerces its key, so an array or an object with
+		// its own toString() would otherwise match a DIRECTION_MARKS key even
+		// though delta.direction is not that string. The PHP twin runs
+		// direction through self::text() (is_scalar() -> '' for both), which
+		// always falls through to sub -- the two must agree here too.
+		const arrayDirection = render(
+			<StatCard
+				label="L"
+				value="1"
+				sub="fallback"
+				delta={ { direction: [ 'up' ], text: 'x' } }
+			/>
+		);
+		expect(
+			arrayDirection.container.querySelector( '.mhmui-stat-card__sub' )
+				.textContent
+		).toBe( 'fallback' );
+		expect(
+			arrayDirection.container.querySelector( '[class*="__delta"]' )
+		).toBeNull();
+
+		const toStringDirection = render(
+			<StatCard
+				label="L"
+				value="1"
+				sub="fallback"
+				delta={ {
+					direction: { toString: () => 'down' },
+					text: 'x',
+				} }
+			/>
+		);
+		expect(
+			toStringDirection.container.querySelector( '.mhmui-stat-card__sub' )
+				.textContent
+		).toBe( 'fallback' );
+		expect(
+			toStringDirection.container.querySelector( '[class*="__delta"]' )
+		).toBeNull();
 	} );
 
 	test( 'StatCard emphasis is a modifier, and only for literal true', () => {

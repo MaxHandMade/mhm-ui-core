@@ -37,11 +37,19 @@ final class StatCard {
 	 *
 	 * `delta` is `{ direction: one of self::DIRECTIONS, text: string }`. Since
 	 * 0.12.0 `text` must be PLAIN -- no arrow, no sign -- because this method
-	 * itself renders the direction mark for `up`/`down` (see DIRECTION_MARKS);
-	 * a consumer that still puts one in `text` will show two. This is a
-	 * breaking change from <=0.11.x, where the consumer's text was the only
-	 * non-colour cue (WCAG 1.4.1) and an unsigned text left up/down
-	 * distinguishable by colour alone.
+	 * itself renders the direction mark BEFORE the text, for every direction
+	 * in DIRECTIONS (`up`/`down`/`flat`, see DIRECTION_MARKS); a consumer
+	 * that still puts one in `text` will show two. This is a breaking change
+	 * from <=0.11.x, where the consumer's text was the only non-colour cue
+	 * (WCAG 1.4.1) and an unsigned text left up/down distinguishable by
+	 * colour alone.
+	 *
+	 * Since 0.13.0, `delta.label` is an optional accessible name for the delta
+	 * line: an already-translated string the CONSUMER supplies (e.g. "artış" /
+	 * "azalış" / "rose 5% this month"), rendered as visually-hidden text inside
+	 * the delta line so up vs. down is no longer silent to a screen reader. See
+	 * self::delta_label() for the full reasoning. Without it, behaviour is
+	 * exactly 0.12.0 -- no fallback string is invented.
 	 *
 	 * @param array<string, mixed> $props label, value, icon?, tone?, sub?, delta?, emphasis?, data?.
 	 * @return string Escaped HTML.
@@ -74,19 +82,24 @@ final class StatCard {
 	}
 
 	/**
-	 * Up/down direction marks (measured 2026-09-17: 0.11.1 relied on the
-	 * consumer's own delta.text carrying an arrow or sign, which left an
-	 * unsigned text like "3 this month" distinguishable only by the delta
-	 * line's colour -- WCAG 1.4.1. The kit now supplies the mark itself,
-	 * because only the kit knows the direction vocabulary.
+	 * Direction marks, one per self::DIRECTIONS member (measured 2026-09-17:
+	 * 0.11.1 relied on the consumer's own delta.text carrying an arrow or
+	 * sign, which left an unsigned text like "3 this month" distinguishable
+	 * only by the delta line's colour -- WCAG 1.4.1. The kit now supplies the
+	 * mark itself, because only the kit knows the direction vocabulary. Since
+	 * 0.13.0 `flat` gets its own mark too: "no data" (the sub line) and "no
+	 * change" (a flat delta) are different facts, and a zero trend must not
+	 * silently fall through to the sub line and lose its number.
 	 */
 	private const DIRECTION_MARKS = array(
 		'up'   => "\u{2191}",
 		'down' => "\u{2193}",
+		'flat' => "\u{2192}",
 	);
 
 	/**
-	 * Delta line when the direction is up/down, else the sub line, else nothing.
+	 * Delta line when the direction is recognised (a DIRECTION_MARKS member),
+	 * else the sub line, else nothing.
 	 *
 	 * @param array<string, mixed> $props Card props.
 	 */
@@ -94,16 +107,47 @@ final class StatCard {
 		$delta = $props['delta'] ?? null;
 		if ( is_array( $delta ) ) {
 			$direction = self::text( $delta['direction'] ?? '' );
-			if ( 'up' === $direction || 'down' === $direction ) {
+			if ( array_key_exists( $direction, self::DIRECTION_MARKS ) ) {
 				return '<p class="' . esc_attr( 'mhmui-stat-card__delta mhmui-stat-card__delta--' . $direction ) . '"'
 					. ' data-direction="' . esc_attr( $direction ) . '">'
 					. '<span class="mhmui-stat-card__delta-mark" aria-hidden="true">' . esc_html( self::DIRECTION_MARKS[ $direction ] ) . '</span>'
+					. self::delta_label( $delta )
 					. esc_html( self::text( $delta['text'] ?? '' ) ) . '</p>';
 			}
 		}
 
 		$sub = self::presence_text( $props['sub'] ?? '' );
 		return '' === $sub ? '' : '<p class="mhmui-stat-card__sub">' . esc_html( $sub ) . '</p>';
+	}
+
+	/**
+	 * The delta line's accessible name, supplied by the consumer.
+	 *
+	 * Since 0.13.0, `delta.label` is an already-translated string (e.g. "artış" /
+	 * "rose 5% this month") the CONSUMER provides so an up delta and a down delta
+	 * do not announce identically to assistive technology -- 0.12.0's direction
+	 * mark is `aria-hidden` and `data-direction` is not exposed either, so up vs.
+	 * down was invisible to a screen reader (both just read the plain `text`,
+	 * e.g. "3 this month"). This package has no text domain (`composer
+	 * check:no-i18n`) and cannot invent that string itself; when the consumer
+	 * does not supply one, behaviour is unchanged from 0.12.0 -- no fallback text
+	 * is invented here.
+	 *
+	 * Visually hidden (the visible mark stays `aria-hidden`), present in the
+	 * accessibility tree: the standard clip-to-1px pattern in both stylesheets'
+	 * `.mhmui-stat-card__delta-sr` rule.
+	 *
+	 * The trailing space is INSIDE the span's own text, not a bare text node
+	 * after it: without it the DOM's text content runs the label and
+	 * delta.text together as one word (measured 2026-09-18: "artış3 this
+	 * month"). Keeping it inside the span leaves the class set gate 6
+	 * compares unchanged -- the span still emits exactly one class either way.
+	 *
+	 * @param array<string, mixed> $delta The delta prop.
+	 */
+	private static function delta_label( array $delta ): string {
+		$label = self::presence_text( $delta['label'] ?? '' );
+		return '' === $label ? '' : '<span class="mhmui-stat-card__delta-sr">' . esc_html( $label . ' ' ) . '</span>';
 	}
 
 	/**

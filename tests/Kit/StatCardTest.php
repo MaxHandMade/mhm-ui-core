@@ -87,31 +87,118 @@ final class StatCardTest extends TestCase {
 		);
 	}
 
-	public function test_direction_mark_never_appears_for_flat_or_sub_lines(): void {
+	public function test_flat_delta_carries_its_own_direction_mark_and_attribute(): void {
+		// "no data" (the sub line) and "no change" (a flat delta) are different
+		// facts: since 0.13.0 flat gets its own line, mark and class, exactly
+		// like up/down -- it no longer falls through to sub.
 		$flat = StatCard::render_html(
-			array( 'label' => 'L', 'value' => '1', 'sub' => 'fallback', 'delta' => array( 'direction' => 'flat', 'text' => 'ignored' ) )
+			array( 'label' => 'L', 'value' => '1', 'sub' => 'fallback', 'delta' => array( 'direction' => 'flat', 'text' => '0 this month' ) )
 		);
-		self::assertStringNotContainsString( 'delta-mark', $flat );
-		self::assertStringNotContainsString( 'data-direction', $flat );
+		self::assertStringContainsString( 'data-direction="flat"', $flat );
+		self::assertStringContainsString( 'mhmui-stat-card__delta--flat', $flat );
+		self::assertStringContainsString(
+			'<span class="mhmui-stat-card__delta-mark" aria-hidden="true">esc_html(→)</span>',
+			$flat
+		);
+		self::assertStringNotContainsString( 'mhmui-stat-card__sub', $flat );
+	}
 
+	public function test_delta_label_renders_as_visually_hidden_accessible_name(): void {
+		$up = StatCard::render_html(
+			array(
+				'label' => 'L',
+				'value' => '1',
+				'delta' => array( 'direction' => 'up', 'text' => '3 this month', 'label' => 'artış' ),
+			)
+		);
+		// Trailing space lives INSIDE the sr span's own text (not a bare text
+		// node after it), so the marking stub's input carries it too.
+		self::assertStringContainsString(
+			'<span class="mhmui-stat-card__delta-sr">esc_html(artış )</span>',
+			$up
+		);
+		// The sr span sits inside the delta paragraph, after the aria-hidden mark.
+		self::assertMatchesRegularExpression(
+			'/mhmui-stat-card__delta-mark" aria-hidden="true">esc_html\(↑\)<\/span><span class="mhmui-stat-card__delta-sr">/',
+			$up
+		);
+		// The label and delta.text do not run together as one word: the space
+		// is part of the sr span's own (stub-marked) text content.
+		self::assertStringContainsString(
+			'esc_html(artış )</span>esc_html(3 this month)',
+			$up
+		);
+
+		$down = StatCard::render_html(
+			array(
+				'label' => 'L',
+				'value' => '1',
+				'delta' => array( 'direction' => 'down', 'text' => '2 this month', 'label' => 'azalış' ),
+			)
+		);
+		self::assertStringContainsString(
+			'<span class="mhmui-stat-card__delta-sr">esc_html(azalış )</span>',
+			$down
+		);
+
+		$flat = StatCard::render_html(
+			array(
+				'label' => 'L',
+				'value' => '1',
+				'delta' => array( 'direction' => 'flat', 'text' => '0 this month', 'label' => 'değişmedi' ),
+			)
+		);
+		self::assertStringContainsString(
+			'<span class="mhmui-stat-card__delta-sr">esc_html(değişmedi )</span>',
+			$flat
+		);
+	}
+
+	public function test_delta_without_label_prints_no_sr_span(): void {
+		$html = StatCard::render_html(
+			array( 'label' => 'L', 'value' => '1', 'delta' => array( 'direction' => 'up', 'text' => '3 this month' ) )
+		);
+		self::assertStringNotContainsString( 'delta-sr', $html );
+
+		$flat = StatCard::render_html(
+			array( 'label' => 'L', 'value' => '1', 'delta' => array( 'direction' => 'flat', 'text' => '0 this month' ) )
+		);
+		self::assertStringNotContainsString( 'delta-sr', $flat );
+	}
+
+	public function test_direction_mark_never_appears_for_a_sub_only_line(): void {
 		$sub_only = StatCard::render_html( array( 'label' => 'L', 'value' => '1', 'sub' => 'x' ) );
 		self::assertStringNotContainsString( 'delta-mark', $sub_only );
 		self::assertStringNotContainsString( 'data-direction', $sub_only );
 	}
 
-	public function test_invalid_or_flat_direction_falls_back_to_sub(): void {
-		foreach ( array( 'sideways', 'flat' ) as $direction ) {
-			$html = StatCard::render_html(
-				array( 'label' => 'L', 'value' => '1', 'sub' => 'fallback', 'delta' => array( 'direction' => $direction, 'text' => 'x' ) )
-			);
-			self::assertStringContainsString( 'mhmui-stat-card__sub', $html );
-			self::assertStringNotContainsString( '__delta', $html );
-		}
+	public function test_invalid_direction_falls_back_to_sub(): void {
+		// 'flat' is now a recognised direction (its own test above) and must not
+		// be in this list -- only an unrecognised direction still falls through.
+		$html = StatCard::render_html(
+			array( 'label' => 'L', 'value' => '1', 'sub' => 'fallback', 'delta' => array( 'direction' => 'sideways', 'text' => 'x' ) )
+		);
+		self::assertStringContainsString( 'mhmui-stat-card__sub', $html );
+		self::assertStringNotContainsString( '__delta', $html );
 	}
 
 	public function test_non_array_delta_and_missing_label_do_not_throw(): void {
 		$html = StatCard::render_html( array( 'value' => '1', 'delta' => 'up', 'label' => array( 'x' ) ) );
 		self::assertStringContainsString( '<p class="mhmui-stat-card__label">esc_html()</p>', $html );
+	}
+
+	public function test_non_scalar_direction_falls_back_to_sub_like_the_jsx_twin(): void {
+		// self::text() -> is_scalar() -> '' for a non-scalar direction (an
+		// array here; JS's nearest equivalents are an array or an object with
+		// its own toString(), pinned in kit.test.jsx), which is not a
+		// DIRECTION_MARKS key, so this always falls through to sub. Pins the
+		// twins together on non-scalar input -- before this measured, the JSX
+		// side coerced the key via hasOwnProperty.call and could match here.
+		$html = StatCard::render_html(
+			array( 'label' => 'L', 'value' => '1', 'sub' => 'fallback', 'delta' => array( 'direction' => array( 'up' ), 'text' => 'x' ) )
+		);
+		self::assertStringContainsString( 'mhmui-stat-card__sub', $html );
+		self::assertStringNotContainsString( '__delta', $html );
 	}
 
 	public function test_icon_is_sanitised_and_empty_icon_prints_no_span(): void {

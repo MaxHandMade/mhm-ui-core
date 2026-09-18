@@ -1,13 +1,37 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { render } from '@testing-library/react';
-import StatCard, { TONES, DIRECTIONS } from '../../src-react/components/StatCard';
+import StatCard, {
+	TONES,
+	DIRECTIONS,
+	DIRECTION_MARKS,
+} from '../../src-react/components/StatCard';
 import StatsGrid from '../../src-react/components/StatsGrid';
 
 const ROOT = join( __dirname, '..', '..' );
 const manifest = JSON.parse( readFileSync( join( ROOT, 'src-react', 'components.json' ), 'utf8' ) );
 const snapshot = JSON.parse( readFileSync( join( ROOT, 'src-react', 'kit-classes.json' ), 'utf8' ) );
 const COMPONENTS = { StatCard, StatsGrid };
+
+// Pins the JSX vocabulary to the PHP twin's, parsed straight from its source
+// (not re-typed here): StatCard::DIRECTIONS and the keys of its private
+// DIRECTION_MARKS. Without this, shrinking DIRECTIONS/DIRECTION_MARKS on one
+// side (or reverting both twins together) leaves every test below green
+// vacuously -- the residual escape hasOwnProperty a reviewer measured after
+// 4d9af87 (this gate's OWN vocabulary was still unpinned lever, not tied to
+// what either renderer actually branches on).
+const phpSource = readFileSync( join( ROOT, 'src', 'Kit', 'StatCard.php' ), 'utf8' );
+
+function phpArrayStrings( source, constName ) {
+	const m = source.match( new RegExp( `const\\s+${ constName }\\s*=\\s*array\\(([^;]*)\\);`, 's' ) );
+	if ( ! m ) {
+		throw new Error( `gate 6: could not find PHP const ${ constName } in StatCard.php` );
+	}
+	return [ ...m[ 1 ].matchAll( /'([^']+)'/g ) ].map( ( x ) => x[ 1 ] );
+}
+
+const PHP_DIRECTIONS = phpArrayStrings( phpSource, 'DIRECTIONS' );
+const PHP_DIRECTION_MARK_KEYS = phpArrayStrings( phpSource, 'DIRECTION_MARKS' );
 
 function classesOf( element ) {
 	const { container } = render( element );
@@ -28,7 +52,15 @@ export function classUniverse( source ) {
 		universe.add( m[ 0 ] );
 	}
 	for ( const m of code.matchAll( /(mhmui-[a-z0-9_-]+--)\$\{\s*(\w+)\s*\}/g ) ) {
-		const vocab = m[ 2 ] === 'tone' ? TONES : DIRECTIONS.filter( ( d ) => d !== 'flat' );
+		// Since 0.13.0 the delta line renders for every DIRECTION_MARKS
+		// member, flat included (it is no longer a dead branch the fixtures
+		// never need to reach) -- so the full vocabulary applies here too.
+		// Sourced from DIRECTION_MARKS, not the plain DIRECTIONS array:
+		// DIRECTION_MARKS is the object both StatCard.jsx and StatCard.php
+		// actually branch on, so THIS is what a fixture must be proven to
+		// reach -- DIRECTIONS is documentation-only and could drift from it
+		// unnoticed.
+		const vocab = m[ 2 ] === 'tone' ? TONES : Object.keys( DIRECTION_MARKS );
 		vocab.forEach( ( v ) => universe.add( m[ 1 ] + v ) );
 	}
 	return universe;
@@ -68,5 +100,20 @@ describe( 'gate 6 -- the PHP and JSX kit renderers emit the same classes', () =>
 		const universe = classUniverse( "const x = 'mhmui-stat-card__never';" );
 		expect( universe.has( 'mhmui-stat-card__never' ) ).toBe( true );
 		expect( snapshot.StatCard.flat() ).not.toContain( 'mhmui-stat-card__never' );
+	} );
+
+	test( 'the JSX direction vocabulary is pinned to the PHP twin -- DIRECTIONS and DIRECTION_MARKS keys', () => {
+		// Shrinking DIRECTIONS or DIRECTION_MARKS on ONE side (or reverting
+		// both twins together, so they still agree with each other but no
+		// longer with what this file used to assume) must go red here, not
+		// pass vacuously because every other gate 6 test derives its
+		// vocabulary from the same shrunken source.
+		expect( [ ...DIRECTIONS ].sort() ).toEqual( [ ...PHP_DIRECTIONS ].sort() );
+		expect( Object.keys( DIRECTION_MARKS ).sort() ).toEqual(
+			[ ...PHP_DIRECTION_MARK_KEYS ].sort()
+		);
+		expect( Object.keys( DIRECTION_MARKS ).sort() ).toEqual(
+			[ ...PHP_DIRECTIONS ].sort()
+		);
 	} );
 } );

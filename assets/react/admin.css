@@ -316,11 +316,31 @@
 .mhmui-stat-card__delta { margin: 4px 0 0; font-size: 12px; opacity: .9; }
 .mhmui-stat-card__delta--up { color: var( --mhmui-success-strong ); }
 .mhmui-stat-card__delta--down { opacity: 1; color: var( --mhmui-danger-strong ); }
-/* The direction mark (aria-hidden ↑/↓, StatCard.php / StatCard.jsx): inherits
+/* --flat deliberately gets NO colour rule: the base .mhmui-stat-card__delta
+   rule above (the card's own text, opacity .9) already reads as neutral, and
+   a flat delta must read as neither good nor bad -- the → mark is its whole
+   cue. Do not "fix" this gap by inventing a colour for it. */
+/* The direction mark (aria-hidden ↑/↓/→, StatCard.php / StatCard.jsx): inherits
    the delta line's colour, no colour of its own -- this is the non-colour
    cue WCAG 1.4.1 needs, so it must render regardless of colour perception,
    never be styled to disappear. */
 .mhmui-stat-card__delta-mark { margin-right: 4px; color: inherit; }
+/* delta.label (0.13.0+): the delta line's optional, consumer-supplied
+   accessible name. Visually hidden, standard clip-to-1px pattern -- NEVER
+   display:none / visibility:hidden, either of which would drop it from the
+   accessibility tree too, defeating the reason it exists (P1: an up delta
+   and a down delta otherwise announce identically). */
+.mhmui-stat-card__delta-sr {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect( 0, 0, 0, 0 );
+	white-space: nowrap;
+	border: 0;
+}
 
 /* Emphasis: the value in the accent colour, no fill (spec §3.2). On a toned
    card the value keeps the fill's on-accent colour -- accent on a fill does not
@@ -342,9 +362,18 @@
 /* Page layout, admin surface (spec §3.5): the page flows full width like
    WordPress's own screens; a readable measure belongs to a form column, never
    to the page. Deliberately NOT a query container -- admin pages keep fixed
-   overlays inside their roots. */
+   overlays inside their roots.
+
+   No `width` declaration: this class sits on the SAME element as WP core's
+   own `.wrap` (`<div class="wrap mhmui-admin mhmui-admin-page">`), which
+   already carries `margin: 10px 20px 0 2px`. A block box already fills its
+   container's content box on its own -- that IS "flows full width" -- while
+   still respecting its own margins. Forcing `width: 100%` on top of that
+   margin pushes the box's right/left edges past the container by exactly
+   the horizontal margins (measured 2026-09-18 in Chrome at 1905px:
+   #wpbody-content 180->1905, .wrap.mhmui-admin.mhmui-admin-page 182->1907 --
+   the fourth KPI card clipped, page grew a horizontal scrollbar). */
 .mhmui-admin-page {
-	width: 100%;
 	max-width: none;
 	box-sizing: border-box;
 }

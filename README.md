@@ -22,7 +22,7 @@ A consuming plugin `require_once`s `vendor/mhm/ui-core/register.php` from its
 main file and registers its own copy:
 
 ```php
-mhmuicore_register( '0.12.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.13.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 At `plugins_loaded` priority 0 the highest registered version boots; the rest
@@ -389,7 +389,7 @@ build from.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.12.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.13.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 Requiring `bootstrap.php` directly defines `MHMUICORE_VERSION` immediately, which
@@ -425,21 +425,45 @@ if ( function_exists( 'mhmuicore_stats_grid_html' ) ) {
 
 Props: `label`, `value` (already formatted), `icon` (Dashicons suffix — admin
 only), `tone` (`success|warning|danger|info|neutral`, anything else is dropped),
-`sub`, `delta` (`{direction: up|down|flat, text}`), `emphasis` (bool),
+`sub`, `delta` (`{direction: up|down|flat, text, label?}`), `emphasis` (bool),
 `data` (`key => value` → `data-key`, keys `^[a-z0-9-]{1,32}$`). The second
 argument is a column **ceiling**; the grid wraps in CSS. Avoid `direction` as
 a key in your own `data` map — the kit already emits `data-direction` on the
-delta line for `up`/`down`; no collision is possible (different elements),
-but it would leave a `[data-direction]` query matching both.
+delta line for every recognised direction; no collision is possible (different
+elements), but it would leave a `[data-direction]` query matching both.
 
 **Since 0.12.0** the kit itself renders the direction cue for `delta` — an
-`aria-hidden` ↑/↓ mark before the text, for `up`/`down` only (never `flat`,
-which prints no delta line at all) — because colour alone must never be the
-only way up vs. down is conveyed (WCAG 1.4.1), and only the kit knows the
+`aria-hidden` mark before the text — because colour alone must never be the
+only way a trend is conveyed (WCAG 1.4.1), and only the kit knows the
 direction vocabulary. `delta.text` must therefore be **plain**: no arrow, no
-sign. **Breaking change from <=0.11.x:** back then `delta.text` was expected
-to carry its own arrow or sign (the kit added none); a consumer still doing
-that after upgrading will show two marks.
+sign, unchanged since. **Breaking change from <=0.11.x:** back then
+`delta.text` was expected to carry its own arrow or sign (the kit added
+none); a consumer still doing that after upgrading will show two marks.
+
+**`flat` gets its own line too, not just `up`/`down` (0.13.0):** the mark is
+↑ for `up`, ↓ for `down`, → for `flat` — "no data" (the `sub` line) and "no
+change" (a `flat` delta) are different facts, and a zero trend must not
+silently fall through to `sub` and lose its number. `flat` carries no colour
+of its own in either stylesheet (the base delta colour is already neutral);
+the → mark is its whole cue. **Behaviour change from <=0.12.x:** a `flat`
+delta used to print no delta line at all, falling through to `sub` when one
+was given. **A card that passes a `flat` delta together with `sub` now
+silently loses its `sub` line** — the delta line always wins over `sub` once
+`delta.direction` is recognised, the same priority `up`/`down` already had.
+If you relied on `sub` showing through a `flat` delta, stop passing that
+`delta` (or move the same text into `sub` alone).
+
+**Since 0.13.0**, `delta.label` is how a consumer gives that direction cue an
+accessible name: an optional string, already translated by the CONSUMER (e.g.
+`"artış"` / `"azalış"` / `"rose 5% this month"`) — this package has no text
+domain and cannot invent one. When present, both renderers put it in a
+visually-hidden `<span class="mhmui-stat-card__delta-sr">`, right after the
+`aria-hidden` mark, so a screen reader reads label + text together (e.g.
+"artış 3 this month"). **Without `delta.label`, up and down still sound
+identical to a screen reader** — the 0.12.0 mark is `aria-hidden` and
+`data-direction` is not an accessible name either — behaviour is exactly
+0.12.0, and the kit does not invent a fallback string. Escaped like every
+other text prop (`esc_html` in PHP; React escapes text children).
 
 These 0.11.0 components need the 0.11.0 stylesheet — enqueue through
 `mhmuicore_enqueue_kit()` so the loader serves the winning copy; under an
@@ -469,6 +493,19 @@ sniff reads the class token:
 |---|---|---|
 | admin | `<div class="mhmui-admin mhmui-admin-page">` | flows full width; put `mhmui-measure` on a **form column**, never on the page |
 | front | `<div class="mhmui-front mhmui-front-page">` | centred, capped at `--mhmui-page-max`; named query container `mhmui-page` |
+
+**Both shell classes require the element they're on to carry NO horizontal
+margin from anywhere else** — no theme wrapper margin, no page-builder
+section margin, no inline `style="margin:…"`. Both compute their box as
+`width: 100%` of the container; a margin this repo doesn't know about
+(WP core's own `.wrap` on the admin side, a theme/page-builder wrapper on
+the front end) makes the box overflow its container by exactly that margin.
+Measured on the admin side (2026-09-18): `.mhmui-admin-page` sits on the
+same element as WP core's `.wrap` (`margin: 10px 20px 0 2px`), and forcing
+`width: 100%` on top of that fixed margin clipped the page's fourth KPI
+card and grew a horizontal scrollbar. `.mhmui-front-page` is exactly as
+exposed — put it on an element with a margin from your theme or a
+page-builder section and the same overflow reproduces there.
 
 Front-end layouts query the container, not the viewport:
 `@container mhmui-page (width < 40rem) { … }`. Thresholds are fixed numbers

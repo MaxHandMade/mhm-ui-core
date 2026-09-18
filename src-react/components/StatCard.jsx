@@ -10,24 +10,36 @@
  * class sets they emit are compared by gate 6 (tests/Gate/kit-parity.test.js).
  *
  * @param {Object}  props
- * @param {string}  props.label      Translated label.
- * @param {string}  props.value      Already-formatted value.
- * @param {string}  [props.icon]     Dashicons class suffix, e.g. "calendar-alt".
- * @param {string}  [props.tone]     One of TONES; anything else is dropped.
- * @param {string}  [props.sub]      Secondary line, shown when no delta line is.
- * @param {Object}  [props.delta]    { direction: one of DIRECTIONS, text }. Since 0.12.0
- *                                   `text` must be PLAIN -- no arrow, no sign -- because
- *                                   the kit itself renders the direction mark (an
- *                                   aria-hidden ↑/↓ before the text) for `up`/`down`, never
- *                                   for `flat`. This is a breaking change from <=0.11.x: a
- *                                   consumer that still puts an arrow or sign in `text`
- *                                   will show two. Colour alone must never be the only cue
- *                                   (WCAG 1.4.1) -- that is now the kit's job, not the
- *                                   consumer's, because only the kit knows the direction
- *                                   vocabulary and a shared kit cannot rely on every
- *                                   consumer's text agreeing.
- * @param {boolean} [props.emphasis] Value in the accent colour; not a fill.
- * @param {Object}  [props.data]     { key: value } -> data-key="value"; keys ^[a-z0-9-]{1,32}$.
+ * @param {string}  props.label         Translated label.
+ * @param {string}  props.value         Already-formatted value.
+ * @param {string}  [props.icon]        Dashicons class suffix, e.g. "calendar-alt".
+ * @param {string}  [props.tone]        One of TONES; anything else is dropped.
+ * @param {string}  [props.sub]         Secondary line, shown when no delta line is.
+ * @param {Object}  [props.delta]       { direction: one of DIRECTIONS, text, label? }. Since
+ *                                      0.12.0 `text` must be PLAIN -- no arrow, no sign --
+ *                                      because the kit itself renders the direction mark (an
+ *                                      aria-hidden ↑/↓/→) BEFORE the text, for every direction
+ *                                      in DIRECTIONS -- `up`/`down`/`flat` alike since 0.13.0,
+ *                                      when "no change" gets its own line instead of silently
+ *                                      falling through to `sub`. This is a breaking change
+ *                                      from <=0.11.x: a
+ *                                      consumer that still puts an arrow or sign in `text`
+ *                                      will show two. Colour alone must never be the only cue
+ *                                      (WCAG 1.4.1) -- that is now the kit's job, not the
+ *                                      consumer's, because only the kit knows the direction
+ *                                      vocabulary and a shared kit cannot rely on every
+ *                                      consumer's text agreeing.
+ * @param {string}  [props.delta.label] Since 0.13.0: an optional, already-translated
+ *                                      accessible name for the delta line (e.g. "artış" /
+ *                                      "azalış" / "rose 5% this month"), supplied by the
+ *                                      CONSUMER -- this package has no text domain and cannot
+ *                                      invent one. Rendered as visually-hidden text inside the
+ *                                      delta line, after the aria-hidden mark: without it, up
+ *                                      and down still announce identically to a screen reader
+ *                                      (the mark is aria-hidden and data-direction is not an
+ *                                      accessible name), exactly as in 0.12.0.
+ * @param {boolean} [props.emphasis]    Value in the accent colour; not a fill.
+ * @param {Object}  [props.data]        { key: value } -> data-key="value"; keys ^[a-z0-9-]{1,32}$.
  */
 export const TONES = [ 'success', 'warning', 'danger', 'info', 'neutral' ];
 export const DIRECTIONS = [ 'up', 'down', 'flat' ];
@@ -61,6 +73,18 @@ const sanitizeIconClass = ( v ) =>
 	String( v )
 		.replace( /%[0-9a-fA-F]{2}/g, '' )
 		.replace( /[^A-Za-z0-9_-]/g, '' );
+
+// Direction marks, one per DIRECTIONS member -- mirrors StatCard.php's
+// DIRECTION_MARKS. Since 0.13.0 `flat` gets its own mark (→): "no data" (the
+// sub line) and "no change" (a flat delta) are different facts, and a zero
+// trend must not silently fall through to the sub line and lose its number.
+// Exported (not a local const) so gate 6 can derive its class-emitting
+// direction vocabulary from the SAME object this component branches on,
+// instead of from DIRECTIONS -- a plain array nothing here still branches
+// on, and so a lever the gate's own coverage check could drift behind
+// silently (tests/Gate/kit-parity.test.js pins this against the PHP twin's
+// DIRECTIONS and DIRECTION_MARKS keys).
+export const DIRECTION_MARKS = { up: '↑', down: '↓', flat: '→' };
 
 function dataAttributes( data ) {
 	const out = {};
@@ -98,14 +122,39 @@ export default function StatCard( {
 
 	let line = null;
 	const direction = delta && typeof delta === 'object' ? delta.direction : '';
-	if ( direction === 'up' || direction === 'down' ) {
+	// typeof-guard FIRST: hasOwnProperty.call coerces its key argument, so an
+	// array or an object with its own toString() (e.g. `[ 'up' ]` or
+	// `{ toString: () => 'down' }`) would otherwise match here even though
+	// they are not the string 'up'/'down'/'flat'. The PHP twin runs
+	// delta.direction through self::text() first (is_scalar() -> '' for
+	// both), so without this guard a non-string direction rendered the
+	// delta line in JSX and the sub line in PHP -- the twins disagreeing on
+	// props neither previously matched (measured 2026-09-18).
+	if (
+		typeof direction === 'string' &&
+		Object.prototype.hasOwnProperty.call( DIRECTION_MARKS, direction )
+	) {
 		// The kit supplies the direction mark itself (measured 2026-09-17: relying
 		// on the consumer's delta.text to carry an arrow or sign left an unsigned
 		// text like "3 this month" distinguishable only by colour -- WCAG 1.4.1).
 		// aria-hidden on the mark: it is decorative, not a translated word this
 		// package (no text domain) could add as an accessible name. See
 		// StatCard.php's DIRECTION_MARKS docblock for the a11y reasoning in full.
-		const mark = direction === 'up' ? '↑' : '↓';
+		const mark = DIRECTION_MARKS[ direction ];
+		// delta.label is optional, consumer-translated (this package has no text
+		// domain): when present it becomes the delta line's accessible name,
+		// visually hidden and placed right after the aria-hidden mark so a
+		// screen reader reads "<label> <text>" (e.g. "artış 3 this month")
+		// instead of colour being the only up/down cue (WCAG 1.4.1, measured
+		// 2026-09-17: the 0.12.0 mark is aria-hidden and data-direction is not
+		// an accessible name either, so up and down announced identically).
+		// Absent, behaviour is exactly 0.12.0 -- no fallback string is invented.
+		// The trailing space lives INSIDE the sr span's own text (not a bare
+		// text node after it): without it the DOM's text content runs the
+		// label and delta.text together as one word (measured 2026-09-18:
+		// "artış3 this month"), and putting the space outside the span would
+		// change the class set gate 6 compares -- it does not, since the span
+		// still emits the one class either way.
 		line = (
 			<p
 				className={ `mhmui-stat-card__delta mhmui-stat-card__delta--${ direction }` }
@@ -117,6 +166,11 @@ export default function StatCard( {
 				>
 					{ mark }
 				</span>
+				{ present( delta.label ) && (
+					<span className="mhmui-stat-card__delta-sr">
+						{ `${ delta.label } ` }
+					</span>
+				) }
 				{ delta.text }
 			</p>
 		);
