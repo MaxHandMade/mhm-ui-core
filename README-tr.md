@@ -343,6 +343,20 @@ token'ını okur:
 | admin | `<div class="mhmui-admin mhmui-admin-page">` | tam genişlik akar; `mhmui-measure`'ı bir **form sütununa** koy, sayfaya asla |
 | front | `<div class="mhmui-front mhmui-front-page">` | ortalanır, `--mhmui-page-max`'te sınırlanır; adlandırılmış sorgu konteyneri `mhmui-page` |
 
+**Her iki kabuk sınıfı da üzerinde bulunduğu elemanın başka HİÇBİR yerden
+yatay margin taşımamasını şart koşar** — ne tema sarmalayıcısının marginini,
+ne bir sayfa oluşturucu bölümünün marginini, ne de satır içi
+`style="margin:…"`'i. İkisi de kutusunu konteynerinin `width: 100%`'ü olarak
+hesaplar; bu paketin bilmediği bir margin (yönetici tarafında WP
+çekirdeğinin kendi `.wrap`'i, ön yüzde bir tema/sayfa oluşturucu
+sarmalayıcısı) kutuyu konteynerinden tam o margin kadar taşırır. Yönetici
+tarafında ölçüldü (2026-09-18): `.mhmui-admin-page`, WP çekirdeğinin
+`.wrap`'iyle (`margin: 10px 20px 0 2px`) aynı elemanın üzerinde durur; o
+sabit marginin üstüne `width: 100%` zorlamak sayfanın dördüncü KPI kartını
+kesti ve yatay kaydırma çubuğu büyüttü. `.mhmui-front-page` de aynı ölçüde
+açıktır — onu temanızdan ya da bir sayfa oluşturucu bölümünden margin alan
+bir elemana koyarsanız aynı taşma orada da tekrarlanır.
+
 Ön yüz düzenleri viewport'u değil konteyneri sorgular:
 `@container mhmui-page (width < 40rem) { … }`. Eşikler sabit sayılardır (özel özellikler bir
 konteyner koşulunda kullanılamaz): **narrow < 40rem ≤ medium < 64rem ≤ wide**. `position: fixed`

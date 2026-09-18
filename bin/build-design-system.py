@@ -265,19 +265,24 @@ STYLE_HOOKS = {
     "mhmui-notice--info",
 }
 
-# Modifiers that intentionally SHARE the unmodified rule instead of carrying
-# one of their own. `--up` needs no visual difference from the plain delta
-# line -- only `--down` gets emphasis (see the comment on
-# .mhmui-stat-card__delta--down in admin.css). `--flat` (0.13.0) is the same
-# kind of exemption for a different reason: it deliberately gets NO colour
-# rule at all in either stylesheet (the base .mhmui-stat-card__delta colour
-# already reads as neutral, and flat must read as neither good nor bad --
-# the → mark is its whole cue; see the comment beside the --up/--down rules
-# in admin.css and front.css). Neither is the vocabulary drift this check
-# exists to catch (that drift looks like `mhmui-stat-card--blue`, a modifier
-# with NO canonical role behind it at all): named here so the exemption is
-# on the record.
-SHARED_RULE_MODIFIERS = {"mhmui-stat-card__delta--up", "mhmui-stat-card__delta--flat"}
+# Modifiers that intentionally carry NO rule of their own -- not the
+# vocabulary drift this check exists to catch (that drift looks like
+# `mhmui-stat-card--blue`, a modifier with NO canonical role behind it at
+# all), but a deliberate design decision, named here so the exemption is on
+# the record. `--up` and `--down` are NOT in this set: both DO have their
+# own colour rule in both stylesheets (admin.css:317-318, front.css:126-127)
+# and so must be checked like any other class -- exempting a modifier that
+# actually has a rule would make this self-check unable to fail for the one
+# thing it is named after (measured 2026-09-18: an earlier version of this
+# set exempted `--up` on a now-false premise -- "needs no visual difference
+# from the plain delta line" -- which predated the commit that gave it a
+# colour, so a since-deleted `--up` rule would have stayed invisible here).
+# `--flat` (0.13.0) is the real case: it deliberately gets NO colour rule at
+# all in either stylesheet (the base .mhmui-stat-card__delta colour already
+# reads as neutral, and flat must read as neither good nor bad -- the →
+# mark is its whole cue; see the comment beside the --up/--down rules in
+# admin.css and front.css).
+SHARED_RULE_MODIFIERS = {"mhmui-stat-card__delta--flat"}
 
 missing = []
 for rel, content in files.items():

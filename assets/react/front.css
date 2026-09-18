@@ -61,7 +61,23 @@
 
 /* Page shell (spec §3.5): centred, capped at page-max on a wide theme
    container, filling a narrow one. The query container for every layout that
-   must follow the space it was GIVEN, not the viewport. */
+   must follow the space it was GIVEN, not the viewport.
+
+   PRECONDITION (consumer contract, not something this repo can enforce):
+   this class must go on an element that carries NO horizontal margin from
+   any other source -- no theme wrapper margin, no Elementor/page-builder
+   section margin, no inline `style="margin:…"` (inline always wins the
+   cascade over this class either way). `width: 100%` here is safe ONLY
+   because `margin-inline: auto` is the box's only margin: when `max-width`
+   caps the computed width below the container, the auto margins split the
+   remainder and centre the box; when it doesn't, they compute to zero --
+   neither case overflows. This is the front-end twin of L1 (2026-09-18):
+   `.mhmui-admin-page` broke because `width: 100%` was forced on an element
+   that ALSO carried a fixed, non-auto margin from elsewhere (WP core's own
+   `.wrap`, margin: 10px 20px 0 2px) -- the box overflowed its container by
+   exactly that margin. `.mhmui-front-page` is consumer-applied exactly like
+   `.mhmui-admin-page` was; the same overflow reproduces here the moment a
+   consumer's markup adds a margin this class does not know about. */
 .mhmui-front-page {
 	container: mhmui-page / inline-size;
 	width: 100%;

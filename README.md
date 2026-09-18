@@ -494,6 +494,19 @@ sniff reads the class token:
 | admin | `<div class="mhmui-admin mhmui-admin-page">` | flows full width; put `mhmui-measure` on a **form column**, never on the page |
 | front | `<div class="mhmui-front mhmui-front-page">` | centred, capped at `--mhmui-page-max`; named query container `mhmui-page` |
 
+**Both shell classes require the element they're on to carry NO horizontal
+margin from anywhere else** — no theme wrapper margin, no page-builder
+section margin, no inline `style="margin:…"`. Both compute their box as
+`width: 100%` of the container; a margin this repo doesn't know about
+(WP core's own `.wrap` on the admin side, a theme/page-builder wrapper on
+the front end) makes the box overflow its container by exactly that margin.
+Measured on the admin side (2026-09-18): `.mhmui-admin-page` sits on the
+same element as WP core's `.wrap` (`margin: 10px 20px 0 2px`), and forcing
+`width: 100%` on top of that fixed margin clipped the page's fourth KPI
+card and grew a horizontal scrollbar. `.mhmui-front-page` is exactly as
+exposed — put it on an element with a margin from your theme or a
+page-builder section and the same overflow reproduces there.
+
 Front-end layouts query the container, not the viewport:
 `@container mhmui-page (width < 40rem) { … }`. Thresholds are fixed numbers
 (custom properties are not allowed in a container condition): **narrow < 40rem ≤
