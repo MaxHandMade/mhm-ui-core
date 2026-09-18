@@ -180,6 +180,66 @@ function allWhereSelectorsFullyWrapped( css, minCount = 1 ) {
 	return found >= minCount;
 }
 
+/** Every UNWRAPPED rule (selector text, after stripping comments, matched
+ * EXACTLY as one top-level item of a possibly comma-separated selector list)
+ * whose selector equals `selector` -- ALL of them, in source order, not just
+ * the first. Reused by `hierarchyDeclaredExactlyOnce` below; see that
+ * function's comment for why "just the first" was the bug. */
+function unwrappedRuleBodiesForSelector( css, selector ) {
+	const code = css.replace( /\/\*[\s\S]*?\*\//g, '' );
+	const ruleRe = /([^{}]+)\{([^}]*)\}/g;
+	const bodies = [];
+	let m;
+	while ( ( m = ruleRe.exec( code ) ) !== null ) {
+		for ( const raw of splitTopLevelCommas( m[ 1 ] ) ) {
+			if ( raw.trim() === selector ) {
+				bodies.push( m[ 2 ] );
+			}
+		}
+	}
+	return bodies;
+}
+
+/** L2 (2026-09-18), fix round 1 / F1 (reviewer-found regression in the gate
+ * itself, 2026-09-18): the front-end hierarchy typography -- the value
+ * dominating its label, the thing that makes a KPI card a KPI card -- must
+ * live OUTSIDE :where(), at normal specificity (0-2-0), not inside the
+ * zero-specificity skin block. Measured on a real page (Astra, WooCommerce
+ * My Account): a same-page CSS reset at 0-0-1 (Astra's own `main.min.css`,
+ * `address, blockquote, body, dd, …, p, … { font-size: 100%; font-weight:
+ * inherit }`) beats a 0-0-0 :where() rule every time, so
+ * .mhmui-stat-card__value rendered 16px / weight 400 -- identical to its
+ * label -- until the declarations moved here.
+ *
+ * The first version of this check used `ruleBody()`, which relies on
+ * `String.match()` WITHOUT the `g` flag -- it only ever sees the FIRST rule
+ * with a given selector. A SECOND, later
+ * `.mhmui-front .mhmui-stat-card__value { font-size: 1rem; font-weight: 400; }`
+ * -- a plausible bad-merge / bad-rebase reintroduction of the original bug --
+ * left that version green, because the first (correct) rule still matched.
+ * But a browser resolves an equal-specificity tie by SOURCE ORDER: the LATER
+ * rule wins, and the value renders identically to its label again. This
+ * version collects EVERY unwrapped rule for the selector and requires the
+ * one that declares the hierarchy properties to appear EXACTLY ONCE --
+ * zero means the declaration is missing (or still inside :where()), two or
+ * more means a later rule can silently overrule the first regardless of what
+ * it says. A rule that merely GROUPS this selector for something unrelated
+ * -- the margin reset `.mhmui-front .mhmui-stat-card__label, … .mhmui-stat-
+ * card__delta { margin: 0; }` -- does not count: it declares none of
+ * `properties`, so it is filtered out before counting (exercised below). */
+function hierarchyDeclaredExactlyOnce( css, selector, properties ) {
+	const bodies = unwrappedRuleBodiesForSelector( css, selector );
+	const declaring = bodies.filter( ( body ) => properties.some( ( prop ) => new RegExp( `${ prop }\\s*:` ).test( body ) ) );
+	return declaring.length === 1 && properties.every( ( prop ) => new RegExp( `${ prop }\\s*:` ).test( declaring[ 0 ] ) );
+}
+
+function frontHierarchyOutsideWhere( css ) {
+	return hierarchyDeclaredExactlyOnce( css, '.mhmui-front .mhmui-stat-card__value', [ 'font-size', 'font-weight' ] )
+		&& hierarchyDeclaredExactlyOnce( css, '.mhmui-front .mhmui-stat-card__label', [ 'font-size' ] )
+		&& hierarchyDeclaredExactlyOnce( css, '.mhmui-front .mhmui-stat-card__sub', [ 'font-size' ] )
+		&& hierarchyDeclaredExactlyOnce( css, '.mhmui-front .mhmui-stat-card__delta', [ 'font-size' ] );
+}
+
 describe( 'page layout standard (spec §3.5)', () => {
 	const admin = read( 'admin.css' );
 	const front = read( 'front.css' );
@@ -228,6 +288,10 @@ describe( 'page layout standard (spec §3.5)', () => {
 		// not just "every :where( selector found is fully wrapped", which is
 		// vacuously true if the six rules themselves went missing.
 		expect( allWhereSelectorsFullyWrapped( front, 6 ) ).toBe( true );
+	} );
+
+	test( 'front.css hierarchy declarations (value font-size/font-weight, label/sub/delta font-size) live OUTSIDE :where() at 0-2-0, EXACTLY ONCE each', () => {
+		expect( frontHierarchyOutsideWhere( front ) ).toBe( true );
 	} );
 
 	test( 'the checks are not vacuous: a capped admin shell and an uncontained front shell go red', () => {
@@ -315,6 +379,43 @@ describe( 'page layout standard (spec §3.5)', () => {
 		expect( allWhereSelectorsFullyWrapped(
 			'.mhmui-front .mhmui-stat-card__label { color: red; }'
 		) ).toBe( false );
+
+		// L2 regression, mutated: the value's font-size put back inside
+		// :where() only, leaving nothing but font-weight on the unwrapped
+		// rule -- the reset that motivated this gate would beat font-size
+		// again, so this must go red. (label/sub/delta given valid rules so
+		// the failure is attributable to the value mutation specifically.)
+		expect( frontHierarchyOutsideWhere(
+			'.mhmui-front .mhmui-stat-card__value { font-weight: 600; } '
+			+ ':where( .mhmui-front .mhmui-stat-card__value ) { font-size: 1.75rem; } '
+			+ '.mhmui-front .mhmui-stat-card__label { font-size: 0.8125rem; } '
+			+ '.mhmui-front .mhmui-stat-card__sub, .mhmui-front .mhmui-stat-card__delta { font-size: 0.75rem; }'
+		) ).toBe( false );
+
+		// F1 (reviewer-found, 2026-09-18): a SECOND, LATER value rule --
+		// e.g. a bad merge/rebase reintroducing the pre-fix declaration --
+		// appended after the correct one. The old ruleBody()-based check
+		// (String.match without the `g` flag) only ever saw the first match
+		// and stayed green here; a browser resolves the equal-specificity
+		// tie by source order and renders the LATER rule, so the value goes
+		// back to looking identical to its label. This must go red.
+		expect( frontHierarchyOutsideWhere(
+			'.mhmui-front .mhmui-stat-card__value { font-size: 1.75rem; font-weight: 600; } '
+			+ '.mhmui-front .mhmui-stat-card__label { font-size: 0.8125rem; } '
+			+ '.mhmui-front .mhmui-stat-card__sub, .mhmui-front .mhmui-stat-card__delta { font-size: 0.75rem; } '
+			+ '.mhmui-front .mhmui-stat-card__value { font-size: 1rem; font-weight: 400; }'
+		) ).toBe( false );
+
+		// The margin-reset rule groups all four part selectors together for
+		// an UNRELATED property -- it must not be mistaken for a second
+		// hierarchy-declaring rule. A single, correct hierarchy rule
+		// alongside it still reads as "exactly once" and must pass.
+		expect( frontHierarchyOutsideWhere(
+			'.mhmui-front .mhmui-stat-card__label, .mhmui-front .mhmui-stat-card__value, .mhmui-front .mhmui-stat-card__sub, .mhmui-front .mhmui-stat-card__delta { margin: 0; } '
+			+ '.mhmui-front .mhmui-stat-card__value { font-size: 1.75rem; font-weight: 600; } '
+			+ '.mhmui-front .mhmui-stat-card__label { font-size: 0.8125rem; } '
+			+ '.mhmui-front .mhmui-stat-card__sub, .mhmui-front .mhmui-stat-card__delta { font-size: 0.75rem; }'
+		) ).toBe( true );
 
 		// The rule is missing entirely.
 		expect( deltaSrIsVisuallyHidden(
