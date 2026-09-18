@@ -294,6 +294,19 @@ for rel, content in files.items():
             if cls.startswith("mhmui-") and cls not in STYLE_HOOKS and cls not in SHARED_RULE_MODIFIERS:
                 used.add(cls)
     for cls in sorted(used):
+        # 🔴 What this proves is narrower than it reads: the class is MENTIONED
+        # somewhere in the page's CSS, not that it has declarations of its own.
+        # A class that only appears as one member of a grouped or compound
+        # selector satisfies it. Measured 2026-09-18: with `--up` removed from
+        # SHARED_RULE_MODIFIERS (so it IS checked) its base colour rule was
+        # deleted from admin.css and this check still exited 0, because the
+        # tone-override selector further down still lists
+        # `.mhmui-stat-card__delta--up,` to cancel colour on toned cards. The
+        # same hole covers every class here, `.dashicons` included. Tightening
+        # it means parsing rule bodies rather than matching selector text --
+        # a change to how EVERY class is verified, deliberately not made on a
+        # release branch. Until then: a green run means "nothing renders a
+        # class the stylesheet has never heard of", and no more than that.
         if not re.search(r"\." + re.escape(cls) + r"\s*[,{]", styles):
             missing.append("%s -> .%s" % (rel, cls))
 
