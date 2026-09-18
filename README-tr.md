@@ -325,7 +325,8 @@ yeniyor, değer etiketiyle aynı boyut ve ağırlıkta render ediliyordu. Hiyera
 sarmalanmamış bir kuralda 0-2-0 özgüllükte duruyor — bu stil dosyasının yapı kurallarının
 zaten kullandığı özgüllük — böylece tek elemanlık bir reset'i yeniyorlar. Renk hâlâ
 `:where(...)` içinde: o kısım kasıtlı olarak sıfır özgüllükte kalıyor, böylece bir tema
-0-0-0'ı herhangi gerçek bir seçiciyle yenerek onu restyle edebilir. Admin tarafında hiçbir
+0-0-0'ı herhangi gerçek, **katmansız** bir seçiciyle yenerek onu restyle edebilir (aşağıda
+*Kademe katmanları*'na bakın). Admin tarafında hiçbir
 şey değişmedi (`admin.css` bunu hiç `:where()` içine sarmamıştı). **Temanız eski 0-0-0
 kuralını gerçek bir seçiciyle yenerek ön yüz değer/etiket tipografisini kasıtlı olarak
 restyle ediyorduysa**, seçiciniz artık kitin 0-2-0'ını en az yakalamalı ya da geçmeli.
@@ -340,6 +341,23 @@ restyle ediyorduysa**, seçiciniz artık kitin 0-2-0'ını en az yakalamalı ya 
 
 Tek başına `.mhmui-stat-card__value` ya da `.mhmui-stat-card__label` yalnızca 0-1-0'dır
 ve ne kadar geç yüklenirse yüklensin kitin kuralını **ezemez**.
+
+**Kademe katmanları.** Yukarıdakilerin hepsi geçersiz kılmanızın **katmansız** olduğunu
+varsayar. Kitin stil dosyaları bilerek katmansızdır ve katmansız bir kural, bir `@layer`
+içindeki her kuralı yener — özgüllükten ve yükleme sırasından bağımsız olarak. Yani
+`@layer theme { … }` içine konan bir geçersiz kılma, **daha özgül olsa ve sonra yüklense
+bile** kite kaybeder; sıfır özgüllükteki renk kurallarına karşı bile. 0.13.1 yüklü canlı
+bir sayfada ölçüldü:
+
+| Geçersiz kılma (40px / kırmızı) | Katmansız | `@layer` içinde |
+|---|---|---|
+| aynı 0-2-0 seçici, kitten sonra yüklü | kazanır | kaybeder |
+| daha yüksek özgüllüklü seçici | kazanır | kaybeder |
+| etiket rengi, 0-0-0 skin'e karşı | kazanır | kaybeder |
+
+Kit stillerinin geçersiz kılmalarını katmansız CSS'e koyun. Kit bunu kendisini bir katmana
+taşıyarak çözemez: o zaman temanın katmansız CSS reset'i kitin hiyerarşisini yeniden yener
+— 0.13.1'in düzelttiği kusurun ta kendisi.
 
 Bu 0.11.0 bileşenleri 0.11.0 stil dosyasını ister — `mhmuicore_enqueue_kit()` üzerinden
 enqueue edin ki yükleyici kazanan kopyayı sunsun; daha eski bir stil dosyasının altında

@@ -478,7 +478,7 @@ and weight as its label. The hierarchy declarations (`font-size`,
 this stylesheet's structure rules already use — so they beat any single-element
 reset. Colour stays inside `:where(...)`: that part is still zero specificity
 on purpose, so a theme can restyle it by outweighing 0-0-0 with any real
-selector. Nothing changed on the admin side (`admin.css` never wrapped this
+**unlayered** selector (see *Cascade layers* below). Nothing changed on the admin side (`admin.css` never wrapped this
 in `:where()`). **If your theme intentionally restyled the front-end value/label
 typography by outweighing the old 0-0-0 rule**, your selector now has to
 match or beat the kit's 0-2-0. Either works:
@@ -492,6 +492,23 @@ match or beat the kit's 0-2-0. Either works:
 
 A bare `.mhmui-stat-card__value` or `.mhmui-stat-card__label` is only 0-1-0
 and **cannot** override the kit's rule, however late it loads.
+
+**Cascade layers.** Everything above assumes your override is **unlayered**.
+The kit's stylesheets are deliberately unlayered, and an unlayered rule beats
+every rule inside an `@layer` — regardless of specificity and regardless of
+load order. So an override placed in `@layer theme { … }` loses to the kit
+**even when it is more specific and loaded later**, and even against the
+zero-specificity colour rules. Measured on a live page with 0.13.1 served:
+
+| Override (setting 40px / red) | Unlayered | Inside `@layer` |
+|---|---|---|
+| same 0-2-0 selector, loaded after the kit | wins | loses |
+| higher-specificity selector | wins | loses |
+| label colour, against the 0-0-0 skin | wins | loses |
+
+Put overrides of kit styles in unlayered CSS. The kit cannot solve this by
+moving into a layer itself: a theme's unlayered CSS reset would then beat the
+kit's hierarchy again — the exact defect 0.13.1 fixed.
 
 These 0.11.0 components need the 0.11.0 stylesheet — enqueue through
 `mhmuicore_enqueue_kit()` so the loader serves the winning copy; under an
