@@ -131,14 +131,47 @@
 	border: 0;
 }
 
+/* Card hierarchy -- the value MUST dominate its label; that dominance is
+   what makes a KPI card a KPI card, not skin. Normal specificity (0-2-0),
+   same weight the structure rules above already use (.mhmui-front
+   .mhmui-stats-grid, the card box, the label/value/sub/delta margin reset)
+   -- deliberately NOT inside :where(...). These declarations used to live
+   in the zero-specificity skin block below; measured 2026-09-18 on a real
+   page (Astra, WooCommerce My Account), that lost the fight to Astra's own
+   CSS reset in main.min.css (`address, blockquote, body, dd, …, p, … {
+   font-size: 100%; font-weight: inherit }`, specificity 0-0-1 -- not
+   deliberate theme typography, just a reset almost every theme ships):
+   .mhmui-stat-card__value rendered at 16px / weight 400, IDENTICAL to its
+   16px label, the number did not stand out at all. Injecting the same
+   declarations at 0-2-0 on that page measured 28px / 600 on the value and
+   13px on the label -- that is the fix below. Do not move these back inside
+   :where() to "match" the skin block; that is the regression this file's
+   gate (tests/Gate/layout.test.js, "front.css hierarchy declarations live
+   outside :where()") exists to catch. */
+.mhmui-front .mhmui-stat-card__label { font-size: 0.8125rem; letter-spacing: 0.04em; text-transform: uppercase; }
+.mhmui-front .mhmui-stat-card__value { font-size: 1.75rem; font-weight: 600; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.mhmui-front .mhmui-stat-card__sub,
+.mhmui-front .mhmui-stat-card__delta { font-size: 0.75rem; }
+
 /* Card skin -- zero specificity: the WHOLE selector sits inside :where(...),
    not just the .mhmui-front ancestor -- :where( .mhmui-front ) .x is 0-1-0,
    not 0-0-0 (MDN, CSS cascade / specificity: :where() only zeroes its own
-   argument). */
-:where( .mhmui-front .mhmui-stat-card__label ) { font-size: 0.8125rem; letter-spacing: 0.04em; text-transform: uppercase; color: var( --mhmui-text-muted ); }
-:where( .mhmui-front .mhmui-stat-card__value ) { font-size: 1.75rem; font-weight: 600; line-height: 1.2; font-variant-numeric: tabular-nums; color: var( --mhmui-text ); }
+   argument). This block is COLOUR ONLY -- the brand colours a host theme is
+   free to restyle by outweighing 0-0-0 with any real selector of its own.
+   It must NOT hold the hierarchy typography that defines the component
+   (font-size / font-weight / line-height / letter-spacing / text-transform /
+   font-variant-numeric): a same-page measurement against Astra found a
+   0-0-1 CSS reset beats a 0-0-0 :where() rule every time (see the comment
+   above) -- the value and its label rendered identically, 16px / 400, on a
+   real theme. That hierarchy now lives above, unwrapped, at 0-2-0. Colour
+   has no such problem: a theme NOT restyling it still inherits nothing from
+   a reset (resets do not set `color`), so zero specificity is safe here and
+   is the point -- a theme that DOES want a different value/label colour
+   only needs a real selector to win. */
+:where( .mhmui-front .mhmui-stat-card__label ) { color: var( --mhmui-text-muted ); }
+:where( .mhmui-front .mhmui-stat-card__value ) { color: var( --mhmui-text ); }
 :where( .mhmui-front .mhmui-stat-card__sub ),
-:where( .mhmui-front .mhmui-stat-card__delta ) { font-size: 0.75rem; color: var( --mhmui-text-muted ); }
+:where( .mhmui-front .mhmui-stat-card__delta ) { color: var( --mhmui-text-muted ); }
 :where( .mhmui-front .mhmui-stat-card__delta--up ) { color: var( --mhmui-success-strong ); }
 :where( .mhmui-front .mhmui-stat-card__delta--down ) { color: var( --mhmui-danger-strong ); }
 /* --flat deliberately gets NO colour rule: the base .mhmui-stat-card__delta

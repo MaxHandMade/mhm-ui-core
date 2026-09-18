@@ -22,7 +22,7 @@ A consuming plugin `require_once`s `vendor/mhm/ui-core/register.php` from its
 main file and registers its own copy:
 
 ```php
-mhmuicore_register( '0.13.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.13.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 At `plugins_loaded` priority 0 the highest registered version boots; the rest
@@ -389,7 +389,7 @@ build from.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.13.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.13.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 Requiring `bootstrap.php` directly defines `MHMUICORE_VERSION` immediately, which
@@ -464,6 +464,26 @@ identical to a screen reader** — the 0.12.0 mark is `aria-hidden` and
 `data-direction` is not an accessible name either — behaviour is exactly
 0.12.0, and the kit does not invent a fallback string. Escaped like every
 other text prop (`esc_html` in PHP; React escapes text children).
+
+**Fixed in 0.13.1** — the front-end `StatCard`'s value/label hierarchy (the
+number dominating its label, the thing that makes a KPI card a KPI card) was
+losing to a real theme's own CSS reset. It lived inside `assets/react/front.css`'s
+zero-specificity `:where(...)` skin block, and a typical theme reset
+(`p, … { font-size: 100%; font-weight: inherit }`, specificity 0-0-1 — not
+even deliberate theme typography) beat it, rendering the value the same size
+and weight as its label. The hierarchy declarations (`font-size`,
+`font-weight`, `line-height`, `font-variant-numeric` on the value;
+`font-size`, `letter-spacing`, `text-transform` on the label; `font-size` on
+`sub`/`delta`) now sit in an unwrapped rule at 0-2-0 — the same specificity
+this stylesheet's structure rules already use — so they beat any single-element
+reset. Colour stays inside `:where(...)`: that part is still zero specificity
+on purpose, so a theme can restyle it by outweighing 0-0-0 with any real
+selector. Nothing changed on the admin side (`admin.css` never wrapped this
+in `:where()`). **If your theme intentionally restyled the front-end value/label
+typography by outweighing the old 0-0-0 rule**, your own selector now needs
+0-2-1 or higher to keep winning — or target `.mhmui-stat-card__value` /
+`.mhmui-stat-card__label` directly, which the kit will no longer concede by
+default.
 
 These 0.11.0 components need the 0.11.0 stylesheet — enqueue through
 `mhmuicore_enqueue_kit()` so the loader serves the winning copy; under an

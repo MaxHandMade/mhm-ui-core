@@ -180,6 +180,29 @@ function allWhereSelectorsFullyWrapped( css, minCount = 1 ) {
 	return found >= minCount;
 }
 
+/** L2 (2026-09-18): the front-end hierarchy typography -- the value
+ * dominating its label, the thing that makes a KPI card a KPI card -- must
+ * live OUTSIDE :where(), at normal specificity (0-2-0), not inside the
+ * zero-specificity skin block. Measured on a real page (Astra, WooCommerce
+ * My Account): a same-page CSS reset at 0-0-1 (Astra's own `main.min.css`,
+ * `address, blockquote, body, dd, …, p, … { font-size: 100%; font-weight:
+ * inherit }`) beats a 0-0-0 :where() rule every time, so
+ * .mhmui-stat-card__value rendered 16px / weight 400 -- identical to its
+ * label -- until the declarations moved here.
+ *
+ * `ruleBody` only matches a rule whose selector text is EXACTLY the string
+ * given, so `:where( .mhmui-front .mhmui-stat-card__value )` (a different
+ * selector string) is invisible to this check -- putting the declaration
+ * back inside :where() makes the UNWRAPPED selector's rule disappear (or,
+ * if a stray unwrapped rule with no properties were left behind, its body
+ * would no longer contain font-size/font-weight), so this must go red. */
+function frontHierarchyOutsideWhere( css ) {
+	const value = ruleBody( css, '.mhmui-front .mhmui-stat-card__value' );
+	const label = ruleBody( css, '.mhmui-front .mhmui-stat-card__label' );
+	return value !== null && /font-size\s*:/.test( value ) && /font-weight\s*:/.test( value )
+		&& label !== null && /font-size\s*:/.test( label );
+}
+
 describe( 'page layout standard (spec §3.5)', () => {
 	const admin = read( 'admin.css' );
 	const front = read( 'front.css' );
@@ -228,6 +251,10 @@ describe( 'page layout standard (spec §3.5)', () => {
 		// not just "every :where( selector found is fully wrapped", which is
 		// vacuously true if the six rules themselves went missing.
 		expect( allWhereSelectorsFullyWrapped( front, 6 ) ).toBe( true );
+	} );
+
+	test( 'front.css hierarchy declarations (value font-size/font-weight, label font-size) live OUTSIDE :where() at 0-2-0', () => {
+		expect( frontHierarchyOutsideWhere( front ) ).toBe( true );
 	} );
 
 	test( 'the checks are not vacuous: a capped admin shell and an uncontained front shell go red', () => {
@@ -314,6 +341,16 @@ describe( 'page layout standard (spec §3.5)', () => {
 		// six skin rules would have passed this gate silently.
 		expect( allWhereSelectorsFullyWrapped(
 			'.mhmui-front .mhmui-stat-card__label { color: red; }'
+		) ).toBe( false );
+
+		// L2 regression, mutated: the value's font-size put back inside
+		// :where() only, leaving nothing but font-weight on the unwrapped
+		// rule -- the reset that motivated this gate would beat font-size
+		// again, so this must go red.
+		expect( frontHierarchyOutsideWhere(
+			'.mhmui-front .mhmui-stat-card__value { font-weight: 600; } '
+			+ ':where( .mhmui-front .mhmui-stat-card__value ) { font-size: 1.75rem; } '
+			+ '.mhmui-front .mhmui-stat-card__label { font-size: 0.8125rem; }'
 		) ).toBe( false );
 
 		// The rule is missing entirely.

@@ -215,7 +215,7 @@ da bu tek yanlış cümle yüzünden taşıdı.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.13.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.13.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 `bootstrap.php`'yi doğrudan require etmek `MHMUICORE_VERSION`'ı anında tanımlar
@@ -313,6 +313,24 @@ okur (örn. "artış 3 this month"). **`delta.label` yoksa yukarı/aşağı ekra
 seslenir** — 0.12.0'ın işareti `aria-hidden`, `data-direction` de erişilebilir ad değil —
 davranış tam olarak 0.12.0'daki gibidir, kit varsayılan bir metin uydurmaz. Diğer her metin
 prop'u gibi escape edilir (PHP'de `esc_html`; React metin çocuklarını kendisi escape eder).
+
+**0.13.1'de düzeltildi** — ön yüzdeki `StatCard`'ın değer/etiket hiyerarşisi (sayının
+etiketine baskın gelmesi, bir KPI kartını KPI kartı yapan şey) gerçek bir temanın kendi
+CSS reset'ine kaybediyordu. Bildirimler `assets/react/front.css`'in sıfır özgüllükteki
+`:where(...)` skin bloğunun içindeydi, ve tipik bir tema reset'i (`p, … { font-size: 100%;
+font-weight: inherit }`, özgüllük 0-0-1 — kasıtlı bir tema tipografisi bile değil) onu
+yeniyor, değer etiketiyle aynı boyut ve ağırlıkta render ediliyordu. Hiyerarşi bildirimleri
+(değerde `font-size`, `font-weight`, `line-height`, `font-variant-numeric`; etikette
+`font-size`, `letter-spacing`, `text-transform`; `sub`/`delta`'da `font-size`) artık
+sarmalanmamış bir kuralda 0-2-0 özgüllükte duruyor — bu stil dosyasının yapı kurallarının
+zaten kullandığı özgüllük — böylece tek elemanlık bir reset'i yeniyorlar. Renk hâlâ
+`:where(...)` içinde: o kısım kasıtlı olarak sıfır özgüllükte kalıyor, böylece bir tema
+0-0-0'ı herhangi gerçek bir seçiciyle yenerek onu restyle edebilir. Admin tarafında hiçbir
+şey değişmedi (`admin.css` bunu hiç `:where()` içine sarmamıştı). **Temanız eski 0-0-0
+kuralını gerçek bir seçiciyle yenerek ön yüz değer/etiket tipografisini kasıtlı olarak
+restyle ediyorduysa**, kendi seçicinizin kazanmaya devam etmesi için artık 0-2-1 veya
+üstü gerekir — ya da doğrudan `.mhmui-stat-card__value` / `.mhmui-stat-card__label`'ı
+hedefleyin, kit artık bunu varsayılan olarak vermiyor.
 
 Bu 0.11.0 bileşenleri 0.11.0 stil dosyasını ister — `mhmuicore_enqueue_kit()` üzerinden
 enqueue edin ki yükleyici kazanan kopyayı sunsun; daha eski bir stil dosyasının altında
@@ -444,7 +462,7 @@ parite kapısı eşitlik arar, uyumluluk değil.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.13.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.13.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 🔴 Sürüm dizesi **elle yazılır** (kayıt, herhangi bir bootstrap yüklenmeden önce koşar) ve
