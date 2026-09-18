@@ -328,9 +328,18 @@ zaten kullandığı özgüllük — böylece tek elemanlık bir reset'i yeniyorl
 0-0-0'ı herhangi gerçek bir seçiciyle yenerek onu restyle edebilir. Admin tarafında hiçbir
 şey değişmedi (`admin.css` bunu hiç `:where()` içine sarmamıştı). **Temanız eski 0-0-0
 kuralını gerçek bir seçiciyle yenerek ön yüz değer/etiket tipografisini kasıtlı olarak
-restyle ediyorduysa**, kendi seçicinizin kazanmaya devam etmesi için artık 0-2-1 veya
-üstü gerekir — ya da doğrudan `.mhmui-stat-card__value` / `.mhmui-stat-card__label`'ı
-hedefleyin, kit artık bunu varsayılan olarak vermiyor.
+restyle ediyorduysa**, seçiciniz artık kitin 0-2-0'ını en az yakalamalı ya da geçmeli.
+İkisi de çalışır:
+
+- **aynı 0-2-0 seçici, kitin `front.css`'inden sonra yüklenerek** — ör. kitin handle'ına
+  bağımlı bir stil dosyasında `.mhmui-front .mhmui-stat-card__value { … }`; eşit
+  özgüllükteki çekişmeyi sonra gelen kuralınız kazanır; ya da
+- **daha yüksek özgüllüklü bir seçici**, yükleme sırasından bağımsız kazanır — ör.
+  `.temaniz .mhmui-front .mhmui-stat-card__value` (0-3-0) ya da
+  `.mhmui-front p.mhmui-stat-card__value` (0-2-1).
+
+Tek başına `.mhmui-stat-card__value` ya da `.mhmui-stat-card__label` yalnızca 0-1-0'dır
+ve ne kadar geç yüklenirse yüklensin kitin kuralını **ezemez**.
 
 Bu 0.11.0 bileşenleri 0.11.0 stil dosyasını ister — `mhmuicore_enqueue_kit()` üzerinden
 enqueue edin ki yükleyici kazanan kopyayı sunsun; daha eski bir stil dosyasının altında
