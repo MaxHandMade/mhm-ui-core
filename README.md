@@ -480,10 +480,18 @@ reset. Colour stays inside `:where(...)`: that part is still zero specificity
 on purpose, so a theme can restyle it by outweighing 0-0-0 with any real
 selector. Nothing changed on the admin side (`admin.css` never wrapped this
 in `:where()`). **If your theme intentionally restyled the front-end value/label
-typography by outweighing the old 0-0-0 rule**, your own selector now needs
-0-2-1 or higher to keep winning — or target `.mhmui-stat-card__value` /
-`.mhmui-stat-card__label` directly, which the kit will no longer concede by
-default.
+typography by outweighing the old 0-0-0 rule**, your selector now has to
+match or beat the kit's 0-2-0. Either works:
+
+- **the same 0-2-0 selector, loaded after the kit's `front.css`** — e.g.
+  `.mhmui-front .mhmui-stat-card__value { … }` in a stylesheet that depends on
+  the kit's handle, so an equal-specificity tie goes to your later rule; or
+- **a higher-specificity selector**, which wins regardless of load order —
+  e.g. `.your-theme .mhmui-front .mhmui-stat-card__value` (0-3-0) or
+  `.mhmui-front p.mhmui-stat-card__value` (0-2-1).
+
+A bare `.mhmui-stat-card__value` or `.mhmui-stat-card__label` is only 0-1-0
+and **cannot** override the kit's rule, however late it loads.
 
 These 0.11.0 components need the 0.11.0 stylesheet — enqueue through
 `mhmuicore_enqueue_kit()` so the loader serves the winning copy; under an
