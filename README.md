@@ -478,7 +478,7 @@ and weight as its label. The hierarchy declarations (`font-size`,
 this stylesheet's structure rules already use — so they beat any single-element
 reset. Colour stays inside `:where(...)`: that part is still zero specificity
 on purpose, so a theme can restyle it by outweighing 0-0-0 with any real
-selector. Nothing changed on the admin side (`admin.css` never wrapped this
+**unlayered** selector (see *Cascade layers* below). Nothing changed on the admin side (`admin.css` never wrapped this
 in `:where()`). **If your theme intentionally restyled the front-end value/label
 typography by outweighing the old 0-0-0 rule**, your selector now has to
 match or beat the kit's 0-2-0. Either works:
@@ -492,6 +492,38 @@ match or beat the kit's 0-2-0. Either works:
 
 A bare `.mhmui-stat-card__value` or `.mhmui-stat-card__label` is only 0-1-0
 and **cannot** override the kit's rule, however late it loads.
+
+**Cascade layers and `!important`.** Everything above is about **normal**
+declarations, and assumes your override is **unlayered**. The kit's
+stylesheets are deliberately unlayered and declare nothing `!important` (a
+gate in `tests/Gate/layout.test.js` keeps it that way). The CSS cascade then
+gives you exactly two ways to win:
+
+1. **A normal declaration, unlayered**, that matches or beats 0-2-0 — the two
+   routes above. A normal declaration inside `@layer` **always loses** to the
+   kit, even when it is more specific and loaded later, and even against the
+   zero-specificity colour rules: for normal declarations, unlayered beats
+   layered before specificity is consulted.
+2. **Any `!important` declaration** — layered or not, at any specificity. The
+   cascade reverses layer precedence for `!important`, and every `!important`
+   beats every normal declaration; since the kit has none, yours wins. This is
+   the escape hatch for design systems that deliberately keep their overrides
+   inside a layer.
+
+Measured on a live page with 0.13.1 served, each override setting 40px / red:
+
+| Override | Result |
+|---|---|
+| normal, unlayered, same 0-2-0 selector loaded after the kit | wins |
+| normal, unlayered, higher-specificity selector | wins |
+| normal, **inside `@layer`**, even a far more specific selector | **loses** |
+| normal, inside `@layer`, label colour against the 0-0-0 skin | **loses** |
+| **`!important` inside `@layer`**, value size and label colour | wins |
+| **`!important` unlayered**, even a bare 0-1-0 class | wins |
+
+The kit cannot remove the layer trap by moving into a layer itself: a
+theme's unlayered CSS reset would then beat the kit's hierarchy again — the
+exact defect 0.13.1 fixed.
 
 These 0.11.0 components need the 0.11.0 stylesheet — enqueue through
 `mhmuicore_enqueue_kit()` so the loader serves the winning copy; under an

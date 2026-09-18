@@ -325,7 +325,8 @@ yeniyor, değer etiketiyle aynı boyut ve ağırlıkta render ediliyordu. Hiyera
 sarmalanmamış bir kuralda 0-2-0 özgüllükte duruyor — bu stil dosyasının yapı kurallarının
 zaten kullandığı özgüllük — böylece tek elemanlık bir reset'i yeniyorlar. Renk hâlâ
 `:where(...)` içinde: o kısım kasıtlı olarak sıfır özgüllükte kalıyor, böylece bir tema
-0-0-0'ı herhangi gerçek bir seçiciyle yenerek onu restyle edebilir. Admin tarafında hiçbir
+0-0-0'ı herhangi gerçek, **katmansız** bir seçiciyle yenerek onu restyle edebilir (aşağıda
+*Kademe katmanları*'na bakın). Admin tarafında hiçbir
 şey değişmedi (`admin.css` bunu hiç `:where()` içine sarmamıştı). **Temanız eski 0-0-0
 kuralını gerçek bir seçiciyle yenerek ön yüz değer/etiket tipografisini kasıtlı olarak
 restyle ediyorduysa**, seçiciniz artık kitin 0-2-0'ını en az yakalamalı ya da geçmeli.
@@ -340,6 +341,34 @@ restyle ediyorduysa**, seçiciniz artık kitin 0-2-0'ını en az yakalamalı ya 
 
 Tek başına `.mhmui-stat-card__value` ya da `.mhmui-stat-card__label` yalnızca 0-1-0'dır
 ve ne kadar geç yüklenirse yüklensin kitin kuralını **ezemez**.
+
+**Kademe katmanları ve `!important`.** Yukarıdakilerin hepsi **normal** bildirimlerle
+ilgilidir ve geçersiz kılmanızın **katmansız** olduğunu varsayar. Kitin stil dosyaları
+bilerek katmansızdır ve hiçbir şeyi `!important` bildirmez (`tests/Gate/layout.test.js`'teki
+bir kapı bunu böyle tutar). CSS kademesi size bundan sonra tam olarak iki kazanma yolu bırakır:
+
+1. **Katmansız, normal bir bildirim** — 0-2-0'ı yakalayan ya da geçen; yukarıdaki iki yol.
+   `@layer` içindeki normal bir bildirim kite **her zaman kaybeder** — daha özgül olsa ve
+   sonra yüklense bile, sıfır özgüllükteki renk kurallarına karşı bile: normal bildirimlerde
+   katmansız, özgüllüğe bakılmadan önce katmanlıyı yener.
+2. **Herhangi bir `!important` bildirim** — katmanlı ya da değil, hangi özgüllükte olursa
+   olsun. Kademe, `!important` için katman önceliğini tersine çevirir ve her `!important`
+   her normal bildirimi yener; kitte hiç olmadığı için sizinki kazanır. Geçersiz kılmalarını
+   bilerek bir katman içinde tutan tasarım sistemleri için kaçış kapısı budur.
+
+0.13.1 yüklü canlı bir sayfada ölçüldü; her geçersiz kılma 40px / kırmızı veriyor:
+
+| Geçersiz kılma | Sonuç |
+|---|---|
+| normal, katmansız, kitten sonra yüklenen aynı 0-2-0 seçici | kazanır |
+| normal, katmansız, daha yüksek özgüllüklü seçici | kazanır |
+| normal, **`@layer` içinde**, çok daha özgül bir seçici bile | **kaybeder** |
+| normal, `@layer` içinde, 0-0-0 skin'e karşı etiket rengi | **kaybeder** |
+| **`@layer` içinde `!important`**, değer boyutu ve etiket rengi | kazanır |
+| **katmansız `!important`**, tek başına 0-1-0 bir sınıf bile | kazanır |
+
+Kit katman tuzağını kendisini bir katmana taşıyarak kaldıramaz: o zaman temanın katmansız
+CSS reset'i kitin hiyerarşisini yeniden yener — 0.13.1'in düzelttiği kusurun ta kendisi.
 
 Bu 0.11.0 bileşenleri 0.11.0 stil dosyasını ister — `mhmuicore_enqueue_kit()` üzerinden
 enqueue edin ki yükleyici kazanan kopyayı sunsun; daha eski bir stil dosyasının altında

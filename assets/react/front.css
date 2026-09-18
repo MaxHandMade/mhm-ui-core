@@ -6,8 +6,10 @@
    temadir; `inherit` de bir bildirimdir ve bileseni ebeveynin hesaplanmis
    fontuna baglar -- istenen o degil, HIC bildirmemektir.
 
-   🔴 @layer KULLANILMAZ. Katmansiz yazar bildirimi, ozgullukten bagimsiz
-   olarak, her katmanliyi yener; WP cekirdeginde ve WooCommerce stillerinde
+   🔴 @layer KULLANILMAZ. Katmansiz NORMAL yazar bildirimi, ozgullukten
+   bagimsiz olarak, her katmanli normal bildirimi yener (`!important`'ta
+   katman onceligi tersine doner -- asagidaki Ingilizce nota bakin);
+   WP cekirdeginde ve WooCommerce stillerinde
    @layer yoktur. Yapi kurallari katmansiz + normal ozgullukte, skin
    kurallarinin TUM secicisi :where( ... ) icine alinarak sifir ozgullukte
    yazilir -- yalniz .mhmui-front atasi degil, cunku :where(.mhmui-front) .x
@@ -15,8 +17,16 @@
 
    Since 0.11.0 this file carries the key-figure card, its grid and the page
    shell. Structure rules are unlayered at normal specificity; skin rules
-   wrap their WHOLE selector inside :where( ... ) at zero specificity so the
-   host theme wins on look but not on layout.
+   wrap their WHOLE selector inside :where( ... ) at zero specificity so an
+   UNLAYERED host-theme rule wins on look but not on layout. A NORMAL theme
+   rule inside @layer loses to all of this regardless of specificity or load
+   order; an `!important` one -- layered or not, any specificity -- wins,
+   because the cascade reverses layer precedence for `!important` and this
+   file declares none (measured 2026-09-19, 0.13.1 served). Keep it that
+   way: the "nothing !important" gate in tests/Gate/layout.test.js is what
+   keeps that escape hatch open for layered design systems. The Turkish note
+   above says why the kit stays unlayered; this is what that costs, and
+   leaves, the theme author.
    ============================================================================= */
 
 /* mhmui:tokens:start -- generated from src-react/tokens.json by bin/build-tokens.js; do not edit by hand */
@@ -157,7 +167,13 @@
    not just the .mhmui-front ancestor -- :where( .mhmui-front ) .x is 0-1-0,
    not 0-0-0 (MDN, CSS cascade / specificity: :where() only zeroes its own
    argument). This block is COLOUR ONLY -- the brand colours a host theme is
-   free to restyle by outweighing 0-0-0 with any real selector of its own.
+   free to restyle by outweighing 0-0-0 with any real, UNLAYERED selector of
+   its own. "Any real selector" is not enough on its own: a NORMAL theme rule
+   inside @layer loses even to this zero-specificity block, because for
+   normal declarations unlayered beats layered before specificity is
+   consulted (measured: a layered label colour rule left the label muted;
+   the same rule unlayered turned it red; the layered rule with `!important`
+   also turned it red).
    It must NOT hold the hierarchy typography that defines the component
    (font-size / font-weight / line-height / letter-spacing / text-transform /
    font-variant-numeric): a same-page measurement against Astra found a
