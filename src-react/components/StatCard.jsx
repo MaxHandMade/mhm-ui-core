@@ -18,10 +18,11 @@
  * @param {Object}  [props.delta]       { direction: one of DIRECTIONS, text, label? }. Since
  *                                      0.12.0 `text` must be PLAIN -- no arrow, no sign --
  *                                      because the kit itself renders the direction mark (an
- *                                      aria-hidden ↑/↓/→) for every direction in DIRECTIONS --
- *                                      `up`/`down`/`flat` alike since 0.13.0, when "no change"
- *                                      gets its own line instead of silently falling through to
- *                                      `sub`. This is a breaking change from <=0.11.x: a
+ *                                      aria-hidden ↑/↓/→) BEFORE the text, for every direction
+ *                                      in DIRECTIONS -- `up`/`down`/`flat` alike since 0.13.0,
+ *                                      when "no change" gets its own line instead of silently
+ *                                      falling through to `sub`. This is a breaking change
+ *                                      from <=0.11.x: a
  *                                      consumer that still puts an arrow or sign in `text`
  *                                      will show two. Colour alone must never be the only cue
  *                                      (WCAG 1.4.1) -- that is now the kit's job, not the
@@ -77,7 +78,13 @@ const sanitizeIconClass = ( v ) =>
 // DIRECTION_MARKS. Since 0.13.0 `flat` gets its own mark (→): "no data" (the
 // sub line) and "no change" (a flat delta) are different facts, and a zero
 // trend must not silently fall through to the sub line and lose its number.
-const DIRECTION_MARKS = { up: '↑', down: '↓', flat: '→' };
+// Exported (not a local const) so gate 6 can derive its class-emitting
+// direction vocabulary from the SAME object this component branches on,
+// instead of from DIRECTIONS -- a plain array nothing here still branches
+// on, and so a lever the gate's own coverage check could drift behind
+// silently (tests/Gate/kit-parity.test.js pins this against the PHP twin's
+// DIRECTIONS and DIRECTION_MARKS keys).
+export const DIRECTION_MARKS = { up: '↑', down: '↓', flat: '→' };
 
 function dataAttributes( data ) {
 	const out = {};
@@ -115,7 +122,18 @@ export default function StatCard( {
 
 	let line = null;
 	const direction = delta && typeof delta === 'object' ? delta.direction : '';
-	if ( Object.prototype.hasOwnProperty.call( DIRECTION_MARKS, direction ) ) {
+	// typeof-guard FIRST: hasOwnProperty.call coerces its key argument, so an
+	// array or an object with its own toString() (e.g. `[ 'up' ]` or
+	// `{ toString: () => 'down' }`) would otherwise match here even though
+	// they are not the string 'up'/'down'/'flat'. The PHP twin runs
+	// delta.direction through self::text() first (is_scalar() -> '' for
+	// both), so without this guard a non-string direction rendered the
+	// delta line in JSX and the sub line in PHP -- the twins disagreeing on
+	// props neither previously matched (measured 2026-09-18).
+	if (
+		typeof direction === 'string' &&
+		Object.prototype.hasOwnProperty.call( DIRECTION_MARKS, direction )
+	) {
 		// The kit supplies the direction mark itself (measured 2026-09-17: relying
 		// on the consumer's delta.text to carry an arrow or sign left an unsigned
 		// text like "3 this month" distinguishable only by colour -- WCAG 1.4.1).

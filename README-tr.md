@@ -297,7 +297,12 @@ okunu/işaretini taşıması beklenirdi (kit hiçbir şey eklemiyordu); güncell
 `down` için ↓, `flat` için →  — "veri yok" (`sub` satırı) ile "değişim yok" (`flat` delta'sı)
 farklı olgulardır; sıfır bir eğilim sessizce `sub`'a düşüp sayısını kaybetmemeli. `flat` her
 iki stil dosyasında da kendi rengini taşımaz (temel delta rengi zaten nötr) — → işareti tek
-ipucudur.
+ipucudur. **<=0.12.x'ten davranış değişikliği:** `flat` bir delta eskiden hiç satır basmazdı,
+`sub` verilmişse ona düşerdi. **`flat` bir delta'yı `sub` ile birlikte veren bir kart artık
+`sub` satırını sessizce kaybeder** — `delta.direction` tanındığı an delta satırı `sub`'ın
+önüne geçer, `up`/`down`'ın zaten sahip olduğu önceliğin aynısı. `sub`'ın bir `flat` delta'nın
+arkasından göründüğüne güveniyorsanız, o `delta`'yı artık geçmeyin (ya da aynı metni tek
+başına `sub`'a taşıyın).
 
 **0.13.0'dan itibaren** `delta.label`, bu yön ipucuna erişilebilir bir ad kazandırmanın yolu:
 isteğe bağlı bir dize, TÜKETİCİ tarafından zaten çevrilmiş (örn. `"artış"` / `"azalış"` /

@@ -89,7 +89,14 @@ files["foundations/tokens.html"] = page(
 # 0.13.0 optional consumer-supplied accessible name, rendered as the
 # visually-hidden .mhmui-stat-card__delta-sr span. `text` NEVER carries an
 # arrow or sign (0.12.0+): the mark below is what the kit itself draws.
-DIRECTION_MARKS = {"up": "↑", "down": "↓"}
+# Since 0.13.0 `flat` gets its own mark too (→) and its own delta line --
+# "no data" (the sub line) and "no change" (a flat delta) are different
+# facts. Unlike up/down, flat deliberately carries NO colour rule of its own
+# in either stylesheet (the base .mhmui-stat-card__delta colour already
+# reads as neutral) -- so .mhmui-stat-card__delta--flat is exempted below,
+# in SHARED_RULE_MODIFIERS, from the "does every rendered class have a rule"
+# self-check; otherwise this file's own flat demo card below trips it.
+DIRECTION_MARKS = {"up": "↑", "down": "↓", "flat": "→"}
 
 def stat_card(label, value, tone, icon=True, delta=None, sub=None):
     line = ""
@@ -113,13 +120,13 @@ def stat_card(label, value, tone, icon=True, delta=None, sub=None):
 files["components/stat-card.html"] = page(
     "Components", "StatCard",
     "<b>StatCard</b> — etiket · biçimlendirilmiş değer · isteğe bağlı delta ya da alt satır. Prop'lar: label, value, icon, tone (success/warning/danger/info/neutral), sub, delta{direction,text,label}. "
-    "delta.text hiçbir zaman ok/işaret taşımaz (kit kendi aria-hidden ↑/↓ işaretini basar); delta.label isteğe bağlıdır -- tüketicinin çevirdiği erişilebilir ad (örn. \"artış\"/\"azalış\"), görsel olarak gizli ama ekran okuyucuda. "
+    "delta.text hiçbir zaman ok/işaret taşımaz (kit kendi aria-hidden ↑/↓/→ işaretini basar -- flat de 0.13.0'dan itibaren kendi satırını alır, sub'a düşmez); delta.label isteğe bağlıdır -- tüketicinin çevirdiği erişilebilir ad (örn. \"artış\"/\"azalış\"), görsel olarak gizli ama ekran okuyucuda. "
     "Her dize prop'tur: paketin text domain'i yok, çeviriyi ürün yapar.",
     '<div class="ds-label">Tonlar</div><div class="ds-row" style="display:grid;grid-template-columns:repeat(2,1fr)">'
     + stat_card("Toplam Rezervasyon", "1.284", "info", delta=("up", "%12 bu ay", "artış"))
     + stat_card("Toplam Gelir", "₺418.900", "success", delta=("down", "%3 bu ay", "azalış"))
     + stat_card("Aktif Araç", "37", "warning", sub="52 toplam")
-    + stat_card("Bu ay kiralayan", "63", "neutral", delta=("flat", ""), sub="")
+    + stat_card("Bu ay kiralayan", "63", "neutral", delta=("flat", "%0 bu ay"))
     + stat_card("İptal", "4", "danger", sub="son 7 gün")
     + "</div>",
 )
@@ -261,11 +268,16 @@ STYLE_HOOKS = {
 # Modifiers that intentionally SHARE the unmodified rule instead of carrying
 # one of their own. `--up` needs no visual difference from the plain delta
 # line -- only `--down` gets emphasis (see the comment on
-# .mhmui-stat-card__delta--down in admin.css). This is a deliberate design
-# choice, not the vocabulary drift this check exists to catch (that drift
-# looks like `mhmui-stat-card--blue`, a modifier with NO canonical role
-# behind it at all): named here so the exemption is on the record.
-SHARED_RULE_MODIFIERS = {"mhmui-stat-card__delta--up"}
+# .mhmui-stat-card__delta--down in admin.css). `--flat` (0.13.0) is the same
+# kind of exemption for a different reason: it deliberately gets NO colour
+# rule at all in either stylesheet (the base .mhmui-stat-card__delta colour
+# already reads as neutral, and flat must read as neither good nor bad --
+# the → mark is its whole cue; see the comment beside the --up/--down rules
+# in admin.css and front.css). Neither is the vocabulary drift this check
+# exists to catch (that drift looks like `mhmui-stat-card--blue`, a modifier
+# with NO canonical role behind it at all): named here so the exemption is
+# on the record.
+SHARED_RULE_MODIFIERS = {"mhmui-stat-card__delta--up", "mhmui-stat-card__delta--flat"}
 
 missing = []
 for rel, content in files.items():

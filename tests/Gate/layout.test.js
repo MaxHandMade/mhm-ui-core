@@ -12,9 +12,21 @@ function ruleBody( css, selector ) {
 	return m ? m[ 2 ] : null;
 }
 
+/** No `width` declaration on the admin shell: it sits on the SAME element as
+ * WP core's own `.wrap` (margin: 10px 20px 0 2px), and a block box already
+ * fills its container's content box on its own while respecting its own
+ * margins -- that IS "flows full width". Forcing `width: 100%` on top of
+ * that margin pushes the box past its container by exactly the horizontal
+ * margins (measured 2026-09-18, Chrome 1905px: .wrap.mhmui-admin.mhmui-admin-page
+ * grew to 1907, the fourth KPI card clipped, page grew a horizontal
+ * scrollbar). The lookbehind excludes `max-width` (and would exclude
+ * `min-width`), whose hyphen sits directly before "width:". */
 function adminPageFlows( css ) {
 	const body = ruleBody( css, '.mhmui-admin-page' );
-	return body !== null && /max-width:\s*none/.test( body ) && ! /container/.test( body );
+	return body !== null
+		&& /max-width:\s*none/.test( body )
+		&& ! /container/.test( body )
+		&& ! /(?<!-)width:/.test( body );
 }
 
 function frontPageCentresAndContains( css ) {
@@ -221,6 +233,10 @@ describe( 'page layout standard (spec §3.5)', () => {
 	test( 'the checks are not vacuous: a capped admin shell and an uncontained front shell go red', () => {
 		expect( adminPageFlows( '.mhmui-admin-page { max-width: 1200px; }' ) ).toBe( false );
 		expect( adminPageFlows( '.mhmui-admin-page { max-width: none; container: x / inline-size; }' ) ).toBe( false );
+		// The regression this gate was added for (2026-09-18): `width: 100%`
+		// on the SAME element as WP core's own `.wrap` (non-zero horizontal
+		// margin) overflows the container by exactly that margin.
+		expect( adminPageFlows( '.mhmui-admin-page { width: 100%; max-width: none; box-sizing: border-box; }' ) ).toBe( false );
 		expect( frontPageCentresAndContains( '.mhmui-front-page { max-width: var(--mhmui-page-max); margin-inline: auto; }' ) ).toBe( false );
 
 		// Only the tone-override selector present (no plain emphasis rule) --

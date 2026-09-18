@@ -362,9 +362,18 @@
 /* Page layout, admin surface (spec §3.5): the page flows full width like
    WordPress's own screens; a readable measure belongs to a form column, never
    to the page. Deliberately NOT a query container -- admin pages keep fixed
-   overlays inside their roots. */
+   overlays inside their roots.
+
+   No `width` declaration: this class sits on the SAME element as WP core's
+   own `.wrap` (`<div class="wrap mhmui-admin mhmui-admin-page">`), which
+   already carries `margin: 10px 20px 0 2px`. A block box already fills its
+   container's content box on its own -- that IS "flows full width" -- while
+   still respecting its own margins. Forcing `width: 100%` on top of that
+   margin pushes the box's right/left edges past the container by exactly
+   the horizontal margins (measured 2026-09-18 in Chrome at 1905px:
+   #wpbody-content 180->1905, .wrap.mhmui-admin.mhmui-admin-page 182->1907 --
+   the fourth KPI card clipped, page grew a horizontal scrollbar). */
 .mhmui-admin-page {
-	width: 100%;
 	max-width: none;
 	box-sizing: border-box;
 }

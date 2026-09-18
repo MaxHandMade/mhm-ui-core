@@ -37,12 +37,12 @@ final class StatCard {
 	 *
 	 * `delta` is `{ direction: one of self::DIRECTIONS, text: string }`. Since
 	 * 0.12.0 `text` must be PLAIN -- no arrow, no sign -- because this method
-	 * itself renders the direction mark for every direction in DIRECTIONS
-	 * (`up`/`down`/`flat`, see DIRECTION_MARKS); a consumer that still puts
-	 * one in `text` will show two. This is a
-	 * breaking change from <=0.11.x, where the consumer's text was the only
-	 * non-colour cue (WCAG 1.4.1) and an unsigned text left up/down
-	 * distinguishable by colour alone.
+	 * itself renders the direction mark BEFORE the text, for every direction
+	 * in DIRECTIONS (`up`/`down`/`flat`, see DIRECTION_MARKS); a consumer
+	 * that still puts one in `text` will show two. This is a breaking change
+	 * from <=0.11.x, where the consumer's text was the only non-colour cue
+	 * (WCAG 1.4.1) and an unsigned text left up/down distinguishable by
+	 * colour alone.
 	 *
 	 * Since 0.13.0, `delta.label` is an optional accessible name for the delta
 	 * line: an already-translated string the CONSUMER supplies (e.g. "artış" /

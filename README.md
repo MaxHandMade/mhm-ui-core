@@ -445,7 +445,13 @@ none); a consumer still doing that after upgrading will show two marks.
 change" (a `flat` delta) are different facts, and a zero trend must not
 silently fall through to `sub` and lose its number. `flat` carries no colour
 of its own in either stylesheet (the base delta colour is already neutral);
-the → mark is its whole cue.
+the → mark is its whole cue. **Behaviour change from <=0.12.x:** a `flat`
+delta used to print no delta line at all, falling through to `sub` when one
+was given. **A card that passes a `flat` delta together with `sub` now
+silently loses its `sub` line** — the delta line always wins over `sub` once
+`delta.direction` is recognised, the same priority `up`/`down` already had.
+If you relied on `sub` showing through a `flat` delta, stop passing that
+`delta` (or move the same text into `sub` alone).
 
 **Since 0.13.0**, `delta.label` is how a consumer gives that direction cue an
 accessible name: an optional string, already translated by the CONSUMER (e.g.

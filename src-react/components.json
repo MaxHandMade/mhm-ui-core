@@ -17,7 +17,7 @@
       { "label": "Drafts", "value": "0", "tone": "neutral" },
       { "label": "Bookings", "value": "42", "delta": { "direction": "up", "text": "3 this month" } },
       { "label": "Bookings", "value": "40", "delta": { "direction": "down", "text": "2 this month" } },
-      { "label": "Vehicles", "value": "7", "sub": "12 total", "delta": { "direction": "flat", "text": "ignored" } },
+      { "label": "Vehicles", "value": "7", "sub": "12 total", "delta": { "direction": "flat", "text": "0 this month" } },
       { "label": "Vehicles", "value": "7", "sub": "12 total" },
       { "label": "Invalid", "value": "1", "tone": "purple", "sub": "fallback", "delta": { "direction": "sideways", "text": "x" } },
       { "label": "Balance", "value": "$0.00", "emphasis": true, "data": { "stat": "balance", "Bad Key": "x" } },

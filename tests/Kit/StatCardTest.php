@@ -187,6 +187,20 @@ final class StatCardTest extends TestCase {
 		self::assertStringContainsString( '<p class="mhmui-stat-card__label">esc_html()</p>', $html );
 	}
 
+	public function test_non_scalar_direction_falls_back_to_sub_like_the_jsx_twin(): void {
+		// self::text() -> is_scalar() -> '' for a non-scalar direction (an
+		// array here; JS's nearest equivalents are an array or an object with
+		// its own toString(), pinned in kit.test.jsx), which is not a
+		// DIRECTION_MARKS key, so this always falls through to sub. Pins the
+		// twins together on non-scalar input -- before this measured, the JSX
+		// side coerced the key via hasOwnProperty.call and could match here.
+		$html = StatCard::render_html(
+			array( 'label' => 'L', 'value' => '1', 'sub' => 'fallback', 'delta' => array( 'direction' => array( 'up' ), 'text' => 'x' ) )
+		);
+		self::assertStringContainsString( 'mhmui-stat-card__sub', $html );
+		self::assertStringNotContainsString( '__delta', $html );
+	}
+
 	public function test_icon_is_sanitised_and_empty_icon_prints_no_span(): void {
 		self::assertStringContainsString(
 			'<span class="dashicons dashicons-calendar-alt" aria-hidden="true"></span>',

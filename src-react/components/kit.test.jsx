@@ -372,6 +372,48 @@ describe( 'the visual kit renders only what it is given', () => {
 		expect( container.querySelector( '[class*="__delta"]' ) ).toBeNull();
 	} );
 
+	test( 'StatCard requires direction to be a string, like the PHP twin -- a coercible non-string falls back to sub', () => {
+		// hasOwnProperty.call coerces its key, so an array or an object with
+		// its own toString() would otherwise match a DIRECTION_MARKS key even
+		// though delta.direction is not that string. The PHP twin runs
+		// direction through self::text() (is_scalar() -> '' for both), which
+		// always falls through to sub -- the two must agree here too.
+		const arrayDirection = render(
+			<StatCard
+				label="L"
+				value="1"
+				sub="fallback"
+				delta={ { direction: [ 'up' ], text: 'x' } }
+			/>
+		);
+		expect(
+			arrayDirection.container.querySelector( '.mhmui-stat-card__sub' )
+				.textContent
+		).toBe( 'fallback' );
+		expect(
+			arrayDirection.container.querySelector( '[class*="__delta"]' )
+		).toBeNull();
+
+		const toStringDirection = render(
+			<StatCard
+				label="L"
+				value="1"
+				sub="fallback"
+				delta={ {
+					direction: { toString: () => 'down' },
+					text: 'x',
+				} }
+			/>
+		);
+		expect(
+			toStringDirection.container.querySelector( '.mhmui-stat-card__sub' )
+				.textContent
+		).toBe( 'fallback' );
+		expect(
+			toStringDirection.container.querySelector( '[class*="__delta"]' )
+		).toBeNull();
+	} );
+
 	test( 'StatCard emphasis is a modifier, and only for literal true', () => {
 		const on = render( <StatCard label="L" value="1" emphasis /> );
 		expect( on.container.firstChild.className ).toBe(
