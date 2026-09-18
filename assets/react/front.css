@@ -163,11 +163,18 @@
    font-variant-numeric): a same-page measurement against Astra found a
    0-0-1 CSS reset beats a 0-0-0 :where() rule every time (see the comment
    above) -- the value and its label rendered identically, 16px / 400, on a
-   real theme. That hierarchy now lives above, unwrapped, at 0-2-0. Colour
-   has no such problem: a theme NOT restyling it still inherits nothing from
-   a reset (resets do not set `color`), so zero specificity is safe here and
-   is the point -- a theme that DOES want a different value/label colour
-   only needs a real selector to win. */
+   real theme. That hierarchy now lives above, unwrapped, at 0-2-0. Zero
+   specificity for colour is a DELIBERATE choice, not a safe one -- themes
+   are meant to be able to restyle it, and the cost of that choice is that
+   ordinary content-colour rules absorb it too, not just deliberate
+   restyling: on the very page that motivated this fix, a WooCommerce My
+   Account content rule (`.woocommerce-account .woocommerce-MyAccount-
+   content p { color: … }`, 0-2-1) beat the label's muted colour, and a
+   theme's own `.entry-content p { color }` is just as common and would do
+   the same to a delta's up/down green and red. The up/down distinction
+   survives that because the kit also draws a non-colour direction mark
+   (`.mhmui-stat-card__delta-mark`, ↑/↓/→) -- that mark exists for exactly
+   this reason (WCAG 1.4.1: colour must never be the only cue). */
 :where( .mhmui-front .mhmui-stat-card__label ) { color: var( --mhmui-text-muted ); }
 :where( .mhmui-front .mhmui-stat-card__value ) { color: var( --mhmui-text ); }
 :where( .mhmui-front .mhmui-stat-card__sub ),
