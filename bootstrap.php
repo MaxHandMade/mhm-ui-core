@@ -255,8 +255,9 @@ if ( ! function_exists( 'mhmuicore_stat_card_html' ) ) {
 	 * wp_kses_post(): WP.org's Plugin Check never reads the consumer's
 	 * phpcs.xml, so a customEscapingFunctions entry there hides the echo from
 	 * local WPCS only (six Plugin Check errors in a consumer's CI, 2026-09-19).
-	 * Every branch of the markup survives wp_kses_post() byte for byte --
-	 * pinned by tests/Integration/KitEscapingTest.php.
+	 * With core's default allowlists every branch of the markup survives
+	 * wp_kses_post() byte for byte on WP 6.6+ -- pinned on CI's WordPress by
+	 * tests/Integration/KitEscapingTest.php; the README has the version detail.
 	 * Born in 0.11.0 -- guard calls with function_exists() while an older copy
 	 * can still win the loader.
 	 *

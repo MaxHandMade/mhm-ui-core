@@ -533,28 +533,36 @@ Wrap the strip in the surface scope and enqueue its stylesheet:
 `<div class="mhmui-admin">…</div>` + `mhmuicore_enqueue_kit( 'admin', $your_vendor_ui_core_root )`
 (front end: `mhmui-front` / `'front'`).
 
-Escape at the echo — the wrappers return escaped HTML, but no linter can be
-told so in a way the WordPress.org reviewer will see:
+Escape at the echo — the wrappers return escaped HTML, but no ruleset of
+yours can tell the WordPress.org reviewer so:
 
 ```php
-echo wp_kses_post( mhmuicore_stats_grid_html( $cards, 4 ) );
+if ( function_exists( 'mhmuicore_stats_grid_html' ) ) { // an older ui-core copy may have won the loader
+	echo wp_kses_post( mhmuicore_stats_grid_html( $cards, 4 ) );
+}
 ```
 
-**Do not list the wrappers under `customEscapingFunctions` in your own
-`phpcs.xml`.** That silences your local WPCS run and nothing else: Plugin
-Check — the tool WordPress.org reviews with — never reads your ruleset, so
-the same echo is still `EscapeOutput.OutputNotEscaped` to it. The gap is
-invisible until the acceptance gate runs (measured: six errors in a
-consumer's CI, 2026-09-19). A local gate more lenient than the acceptance
-bar only moves the failure later.
+**If your plugin goes through WordPress.org (or runs Plugin Check), do not
+list the wrappers under `customEscapingFunctions` in your `phpcs.xml`.**
+That silences your local WPCS run and nothing else: Plugin Check runs its
+own `WordPress` standard and never reads your ruleset, so the same echo is
+still `EscapeOutput.OutputNotEscaped` to it. The gap is invisible until the
+acceptance gate runs (measured: six errors in a consumer's CI, 2026-09-19).
+A plugin that never meets Plugin Check could use the ruleset entry, but
+escaping at the echo keeps one bar for every tree you ship.
 
-`wp_kses_post()` costs nothing here: every branch the kit renders (dashicon
-span, tone/emphasis classes, `data-*` hooks, the delta mark and accessible
-name, the grid's `style="--mhmui-columns:N"`) passes it byte for byte on
-WordPress 6.1+ — custom-property assignment in inline styles is allowed by
-`safecss_filter_attr()` since 6.1.0. The integration suite pins this
-(`tests/Integration/KitEscapingTest.php`), so a kit change that kses would
-strip fails here first.
+What `wp_kses_post()` keeps: with core's default allowlists, every branch
+the kit renders (dashicon span, tone/emphasis classes, `aria-hidden`,
+`data-*` hooks, the delta mark and accessible name, the grid's
+`style="--mhmui-columns:N"`) passes byte for byte on **WordPress 6.6+**.
+Custom-property assignment in inline styles is allowed by
+`safecss_filter_attr()` since 6.1.0; `data-*` names with a leading, trailing
+or doubled hyphen — which `data` keys matching `[a-z0-9-]` can produce —
+are kept only since 6.6, when core widened its `data-*` pattern. A plugin
+filtering `wp_kses_allowed_html` or `safe_style_css` can still strip them.
+The integration suite pins this on the WordPress version CI runs (7.1):
+`tests/Integration/KitEscapingTest.php`, so a kit change that kses would
+strip fails there first.
 
 ### Page layout (0.11.0+)
 

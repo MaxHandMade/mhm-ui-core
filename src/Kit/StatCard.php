@@ -20,7 +20,7 @@ namespace MHMUiCore\Kit;
  * Consumers call mhmuicore_stat_card_html(), not this class, and echo it
  * through wp_kses_post(). The wrapper was born so WPCS could be told it
  * escapes (WPCS reads a static call's class token as the function name --
- * measured 2026-09-17, spec §6), but that declaration lives in the
+ * measured 2026-09-17 on WPCS 3.3.0, spec §6), but that declaration lives in the
  * consumer's phpcs.xml, which WP.org's Plugin Check never reads; see
  * bootstrap.php.
  *

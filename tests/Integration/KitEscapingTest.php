@@ -88,11 +88,19 @@ final class KitEscapingTest extends WP_UnitTestCase {
 	 * echo unescaped to the reviewer (measured: six errors in Rentiva's PR #54,
 	 * 2026-09-19). That advice is only safe while wp_kses_post() keeps every byte
 	 * the kit emits, and this pins it for every branch: dashicon span, tone and
-	 * emphasis classes, data-* hooks, each delta direction with its mark and
-	 * accessible name, the sub line, and the grid's `style="--mhmui-columns:N"`
-	 * (custom-property assignment passes safecss_filter_attr() since WP 6.1.0, per
-	 * its own @since list). A kit change -- or a core change -- that kses would
-	 * strip turns this red instead of silently breaking every consumer's strip.
+	 * emphasis classes, aria-hidden, data-* hooks, each delta direction with its
+	 * mark and accessible name, the sub line, and the grid's
+	 * `style="--mhmui-columns:N"`.
+	 *
+	 * It measures the WordPress this suite runs on (CI: 7.1), with core's default
+	 * allowlists. Two version edges, both read from core source: custom-property
+	 * assignment passes safecss_filter_attr() since 6.1.0 (its own @since list);
+	 * a data-* name with a leading, trailing or doubled hyphen -- which DATA_KEY
+	 * `[a-z0-9-]{1,32}` accepts -- survives only since 6.6, when
+	 * wp_kses_attr_check() widened `^data(?:-[a-z0-9_]+)+$` to `^data-[a-z0-9_-]+$`
+	 * (6.5.5 vs 6.6 tags). The `edge-` key below pins the 6.6+ behaviour. A kit
+	 * change -- or a core change -- that kses would strip turns this red instead
+	 * of silently breaking every consumer's strip.
 	 */
 	public function test_every_kit_branch_survives_wp_kses_post_byte_for_byte(): void {
 		$cards = array(
@@ -102,7 +110,10 @@ final class KitEscapingTest extends WP_UnitTestCase {
 				'icon'     => 'calendar-alt',
 				'tone'     => 'success',
 				'emphasis' => true,
-				'data'     => array( 'stat' => 'total-bookings' ),
+				'data'     => array(
+					'stat'  => 'total-bookings',
+					'edge-' => 'trailing-hyphen key',
+				),
 				'delta'    => array(
 					'direction' => 'up',
 					'text'      => '12% this month',
@@ -139,7 +150,7 @@ final class KitEscapingTest extends WP_UnitTestCase {
 		$html = mhmuicore_stats_grid_html( $cards, 4 );
 
 		// The branches are really in the markup, so the equality below is not vacuous.
-		foreach ( array( 'style="--mhmui-columns:4"', 'dashicons-calendar-alt', 'mhmui-stat-card--emphasis', 'data-stat="total-bookings"', 'data-direction="up"', 'data-direction="down"', 'data-direction="flat"', 'mhmui-stat-card__delta-sr', 'mhmui-stat-card__sub' ) as $needle ) {
+		foreach ( array( 'style="--mhmui-columns:4"', 'dashicons-calendar-alt', 'aria-hidden="true"', 'mhmui-stat-card--success', 'mhmui-stat-card--emphasis', 'data-stat="total-bookings"', 'data-edge-="trailing-hyphen key"', 'data-direction="up"', 'data-direction="down"', 'data-direction="flat"', 'mhmui-stat-card__delta-sr', 'mhmui-stat-card__sub' ) as $needle ) {
 			self::assertStringContainsString( $needle, $html );
 		}
 		self::assertSame( $html, wp_kses_post( $html ) );
