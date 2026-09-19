@@ -378,19 +378,25 @@ enqueue edin ki yükleyici kazanan kopyayı sunsun; daha eski bir stil dosyasın
 `<div class="mhmui-admin">…</div>` + `mhmuicore_enqueue_kit( 'admin', $your_vendor_ui_core_root )`
 (ön yüz: `mhmui-front` / `'front'`).
 
-WPCS'e sarmalayıcıların escape ettiğini söyleyin — statik metotlar bildirilemez, sniff sınıf
-token'ını okur:
+Escape'i echo'da yapın — sarmalayıcılar escape edilmiş HTML döndürür, ama hiçbir linter'a
+bunu WordPress.org incelemecisinin göreceği biçimde söyleyemezsiniz:
 
-```xml
-<rule ref="WordPress.Security.EscapeOutput">
-  <properties>
-    <property name="customEscapingFunctions" type="array">
-      <element value="mhmuicore_stat_card_html"/>
-      <element value="mhmuicore_stats_grid_html"/>
-    </property>
-  </properties>
-</rule>
+```php
+echo wp_kses_post( mhmuicore_stats_grid_html( $cards, 4 ) );
 ```
+
+**Sarmalayıcıları kendi `phpcs.xml`'inizde `customEscapingFunctions` altına yazmayın.** Bu
+yalnız yerel WPCS koşumunuzu susturur: WordPress.org'un incelemede kullandığı Plugin Check
+sizin kural dosyanızı hiç okumaz, aynı echo ona göre hâlâ `EscapeOutput.OutputNotEscaped`'dır.
+Açık, kabul kapısı koşana kadar görünmez (ölçüldü: bir tüketicinin CI'ında altı hata,
+2026-09-19). Kabul çıtasından gevşek bir yerel kapı hatayı yalnızca sonraya taşır.
+
+`wp_kses_post()` burada bedelsizdir: kitin çizdiği her dal (dashicon span'ı, ton/vurgu
+sınıfları, `data-*` kancaları, delta işareti ve erişilebilir adı, ızgaranın
+`style="--mhmui-columns:N"`'i) WordPress 6.1+ üzerinde onu bayt bayt geçer — satır içi
+stilde özel özellik ataması `safecss_filter_attr()` tarafından 6.1.0'dan beri kabul edilir.
+Entegrasyon takımı bunu sabitler (`tests/Integration/KitEscapingTest.php`); kses'in sileceği
+bir kit değişikliği önce burada düşer.
 
 ### Sayfa düzeni (0.11.0+)
 

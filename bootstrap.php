@@ -251,10 +251,12 @@ if ( ! function_exists( 'mhmuicore_stat_card_html' ) ) {
 	/**
 	 * One key-figure card as escaped HTML. The public PHP kit API.
 	 *
-	 * A function, not the static method it wraps, because WPCS can only be told
-	 * a FUNCTION is an escaping function: for `StatCard::render_html()` the
-	 * sniff reads the token `StatCard` (measured 2026-09-17, WPCS 3.3.0). List
-	 * both wrappers under customEscapingFunctions in the consumer's ruleset.
+	 * The return value is escaped, but consumers still echo it through
+	 * wp_kses_post(): WP.org's Plugin Check never reads the consumer's
+	 * phpcs.xml, so a customEscapingFunctions entry there hides the echo from
+	 * local WPCS only (six Plugin Check errors in a consumer's CI, 2026-09-19).
+	 * Every branch of the markup survives wp_kses_post() byte for byte --
+	 * pinned by tests/Integration/KitEscapingTest.php.
 	 * Born in 0.11.0 -- guard calls with function_exists() while an older copy
 	 * can still win the loader.
 	 *

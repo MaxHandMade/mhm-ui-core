@@ -79,4 +79,69 @@ final class KitEscapingTest extends WP_UnitTestCase {
 	public function test_grid_style_attribute_is_an_integer_only(): void {
 		self::assertStringContainsString( 'style="--mhmui-columns:4"', mhmuicore_stats_grid_html( array(), '4;background:url(x)' ) );
 	}
+
+	/**
+	 * The contract the README gives consumers: `echo wp_kses_post( mhmuicore_*_html() )`.
+	 *
+	 * Consumers must escape at the echo -- WP.org's Plugin Check never reads their
+	 * phpcs.xml, so declaring the wrappers customEscapingFunctions there leaves the
+	 * echo unescaped to the reviewer (measured: six errors in Rentiva's PR #54,
+	 * 2026-09-19). That advice is only safe while wp_kses_post() keeps every byte
+	 * the kit emits, and this pins it for every branch: dashicon span, tone and
+	 * emphasis classes, data-* hooks, each delta direction with its mark and
+	 * accessible name, the sub line, and the grid's `style="--mhmui-columns:N"`
+	 * (custom-property assignment passes safecss_filter_attr() since WP 6.1.0, per
+	 * its own @since list). A kit change -- or a core change -- that kses would
+	 * strip turns this red instead of silently breaking every consumer's strip.
+	 */
+	public function test_every_kit_branch_survives_wp_kses_post_byte_for_byte(): void {
+		$cards = array(
+			array(
+				'label'    => 'Bookings',
+				'value'    => '1,204',
+				'icon'     => 'calendar-alt',
+				'tone'     => 'success',
+				'emphasis' => true,
+				'data'     => array( 'stat' => 'total-bookings' ),
+				'delta'    => array(
+					'direction' => 'up',
+					'text'      => '12% this month',
+					'label'     => 'rose',
+				),
+			),
+			array(
+				'label' => 'Refunds',
+				'value' => '3',
+				'tone'  => 'danger',
+				'delta' => array(
+					'direction' => 'down',
+					'text'      => '2',
+				),
+			),
+			array(
+				'label' => 'Pending',
+				'value' => '0',
+				'tone'  => 'warning',
+				'delta' => array(
+					'direction' => 'flat',
+					'text'      => '0',
+					'label'     => 'no change',
+				),
+			),
+			array(
+				'label' => 'Vehicles',
+				'value' => '42',
+				'tone'  => 'neutral',
+				'sub'   => 'No data yet',
+			),
+		);
+
+		$html = mhmuicore_stats_grid_html( $cards, 4 );
+
+		// The branches are really in the markup, so the equality below is not vacuous.
+		foreach ( array( 'style="--mhmui-columns:4"', 'dashicons-calendar-alt', 'mhmui-stat-card--emphasis', 'data-stat="total-bookings"', 'data-direction="up"', 'data-direction="down"', 'data-direction="flat"', 'mhmui-stat-card__delta-sr', 'mhmui-stat-card__sub' ) as $needle ) {
+			self::assertStringContainsString( $needle, $html );
+		}
+		self::assertSame( $html, wp_kses_post( $html ) );
+	}
 }

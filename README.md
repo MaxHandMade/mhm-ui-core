@@ -533,19 +533,28 @@ Wrap the strip in the surface scope and enqueue its stylesheet:
 `<div class="mhmui-admin">…</div>` + `mhmuicore_enqueue_kit( 'admin', $your_vendor_ui_core_root )`
 (front end: `mhmui-front` / `'front'`).
 
-Tell WPCS the wrappers escape — the static methods cannot be declared, the
-sniff reads the class token:
+Escape at the echo — the wrappers return escaped HTML, but no linter can be
+told so in a way the WordPress.org reviewer will see:
 
-```xml
-<rule ref="WordPress.Security.EscapeOutput">
-  <properties>
-    <property name="customEscapingFunctions" type="array">
-      <element value="mhmuicore_stat_card_html"/>
-      <element value="mhmuicore_stats_grid_html"/>
-    </property>
-  </properties>
-</rule>
+```php
+echo wp_kses_post( mhmuicore_stats_grid_html( $cards, 4 ) );
 ```
+
+**Do not list the wrappers under `customEscapingFunctions` in your own
+`phpcs.xml`.** That silences your local WPCS run and nothing else: Plugin
+Check — the tool WordPress.org reviews with — never reads your ruleset, so
+the same echo is still `EscapeOutput.OutputNotEscaped` to it. The gap is
+invisible until the acceptance gate runs (measured: six errors in a
+consumer's CI, 2026-09-19). A local gate more lenient than the acceptance
+bar only moves the failure later.
+
+`wp_kses_post()` costs nothing here: every branch the kit renders (dashicon
+span, tone/emphasis classes, `data-*` hooks, the delta mark and accessible
+name, the grid's `style="--mhmui-columns:N"`) passes it byte for byte on
+WordPress 6.1+ — custom-property assignment in inline styles is allowed by
+`safecss_filter_attr()` since 6.1.0. The integration suite pins this
+(`tests/Integration/KitEscapingTest.php`), so a kit change that kses would
+strip fails here first.
 
 ### Page layout (0.11.0+)
 
