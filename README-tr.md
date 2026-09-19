@@ -378,19 +378,33 @@ enqueue edin ki yükleyici kazanan kopyayı sunsun; daha eski bir stil dosyasın
 `<div class="mhmui-admin">…</div>` + `mhmuicore_enqueue_kit( 'admin', $your_vendor_ui_core_root )`
 (ön yüz: `mhmui-front` / `'front'`).
 
-WPCS'e sarmalayıcıların escape ettiğini söyleyin — statik metotlar bildirilemez, sniff sınıf
-token'ını okur:
+Escape'i echo'da yapın — sarmalayıcılar escape edilmiş HTML döndürür, ama hiçbir kural
+dosyanız bunu WordPress.org incelemecisine söyleyemez:
 
-```xml
-<rule ref="WordPress.Security.EscapeOutput">
-  <properties>
-    <property name="customEscapingFunctions" type="array">
-      <element value="mhmuicore_stat_card_html"/>
-      <element value="mhmuicore_stats_grid_html"/>
-    </property>
-  </properties>
-</rule>
+```php
+if ( function_exists( 'mhmuicore_stats_grid_html' ) ) { // yükleyiciyi daha eski bir ui-core kopyası kazanmış olabilir
+	echo wp_kses_post( mhmuicore_stats_grid_html( $cards, 4 ) );
+}
 ```
+
+**Eklentiniz WordPress.org'dan geçiyorsa (ya da Plugin Check koşuyorsa), sarmalayıcıları
+`phpcs.xml`'inizde `customEscapingFunctions` altına yazmayın.** Bu yalnız yerel WPCS
+koşumunuzu susturur: Plugin Check kendi `WordPress` standardını koşar ve sizin kural
+dosyanızı hiç okumaz, aynı echo ona göre hâlâ `EscapeOutput.OutputNotEscaped`'dır. Açık,
+kabul kapısı koşana kadar görünmez (ölçüldü: bir tüketicinin CI'ında altı hata, 2026-09-19).
+Plugin Check'le hiç karşılaşmayan bir eklenti bu girdiyi kullanabilir, ama echo'da escape
+etmek sevk ettiğiniz her ağaçta tek bir çıta tutar.
+
+`wp_kses_post()`'un koruduğu: çekirdeğin varsayılan izin listeleriyle, kitin çizdiği her dal
+(dashicon span'ı, ton/vurgu sınıfları, `aria-hidden`, `data-*` kancaları, delta işareti ve
+erişilebilir adı, ızgaranın `style="--mhmui-columns:N"`'i) **WordPress 6.6+** üzerinde onu
+bayt bayt geçer. Satır içi stilde özel özellik ataması `safecss_filter_attr()` tarafından
+6.1.0'dan beri kabul edilir; başında, sonunda ya da art arda tire olan `data-*` adları —
+`[a-z0-9-]` desenine uyan `data` anahtarları bunları üretebilir — ancak çekirdek `data-*`
+desenini genişlettiği 6.6'dan beri korunur. `wp_kses_allowed_html` ya da `safe_style_css`
+filtreleyen bir eklenti bunları yine silebilir. Entegrasyon takımı bunu CI'ın koştuğu
+WordPress sürümünde (7.1) sabitler: `tests/Integration/KitEscapingTest.php`; kses'in sileceği
+bir kit değişikliği önce orada düşer.
 
 ### Sayfa düzeni (0.11.0+)
 

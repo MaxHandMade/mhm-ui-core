@@ -17,9 +17,12 @@ namespace MHMUiCore\Kit;
  * registers nothing with WordPress (design standard v2 §8: a kit primitive is
  * not a content component, so it must not grow a shortcode or a block).
  *
- * Consumers call mhmuicore_stat_card_html(), not this class: WPCS reads the
- * class token of a static call as the function name, so a static call can
- * never be declared an escaping function (measured 2026-09-17, spec §6).
+ * Consumers call mhmuicore_stat_card_html(), not this class, and echo it
+ * through wp_kses_post(). The wrapper was born so WPCS could be told it
+ * escapes (WPCS reads a static call's class token as the function name --
+ * measured 2026-09-17 on WPCS 3.3.0, spec §6), but that declaration lives in the
+ * consumer's phpcs.xml, which WP.org's Plugin Check never reads; see
+ * bootstrap.php.
  *
  * Never throws: a wrong type prints an empty string in that slot, because one
  * key figure must not take a whole admin page down.
