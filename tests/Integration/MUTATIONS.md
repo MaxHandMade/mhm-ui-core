@@ -515,3 +515,74 @@ git checkout -- src/Kit/IconConceptScanner.php
 Mutate only on a committed tree, then `git checkout -- <file>` — same rule as M0-M16 above. M17b is a
 safe one-line `sed -i`; M17a is a multi-line block and was removed by hand (`sed -i '362,369d'` against
 commit `e6d8b6f`'s exact line numbers), then reverted with `git checkout`.
+
+## 2026-09-20 — icon-concept gate, fix round 5 (Task 4): a comment only starts where a comment is written
+
+Fix round 4 closed the two ESCAPED regex shapes and reported, honestly, the one it could not close.
+Measured on commit `dc5262a`, against a single anchored `.jsx` file:
+
+```
+import { StatCard } from 'ui-core/src-react/components/Stat';
+const re = /[/*]/;
+export const A = () => <StatCard icon={ 'money-alt' } />;
+/* an ordinary, properly closed comment */
+export const B = () => <StatCard icon={ 'revenue' } />;
+```
+
+```
+php bin/check-icon-concepts.php <that file>
+icon-concepts: 1 file(s), 1 concept call site(s), 0 raw, 0 unknown
+exit=0
+```
+
+`/[/*]/` carries no escape for fix round 4's escape rule to catch, so its `/*` opened a block comment —
+and, worse than the escaped shapes, the ordinary well-formed `/* */` on the next line CLOSED it again, so
+the unclosed-block guard never fired either. A real `money-alt` violation, swallowed in silence between
+two innocent lines, exit 0.
+
+Commit `0d57c69` narrows WHERE a comment may start instead of writing a JS lexer. `opens_a_comment()`:
+a `/` opens a comment only at the start of a line, after whitespace, or directly after `;`, `{` or `}`.
+A `/` glued to `[`, `(`, `=`, `,`, a letter or a digit is read as code. Same file, after:
+
+```
+RAW      <that file>:3  'money-alt' -- write 'revenue'
+icon-concepts: 1 file(s), 1 concept call site(s), 1 raw, 0 unknown
+exit=1
+```
+
+**Baseline (commit `0d57c69`):** `./vendor/bin/phpunit -c phpunit.xml --filter IconConceptScanner` →
+`OK (19 tests, 74 assertions)`. `composer check:icon-concepts` → `exit=0`,
+`icon-concepts: 5 file(s), 2 concept call site(s), 2 raw, 1 unknown` (unchanged; the three new cases use
+throwaway files the tests write and `unlink`, as in M17).
+
+| # | Mutation | Measured result |
+| --- | --- | --- |
+| M18 | `strip_js_comments()` — `&& $this->opens_a_comment( $source, $i )` dropped from the comment-start condition, so a `/` opens a comment anywhere again (escape rule and unclosed-block guard both intact) | **2 failures**: `test_an_unescaped_slash_star_in_a_regex_does_not_swallow_what_follows` (the `money-alt` between the regex and the real comment disappears again — `raw` 1→0) and `test_an_unrecognised_comment_position_is_SCANNED_not_swallowed` (the glued `f(/* ... */1)` form is stripped again instead of scanned) — the other 17 stayed green (`Tests: 19, Assertions: 70, Failures: 2`) |
+
+**Meaning, and what M18 deliberately does NOT break:** the positive control
+`test_POSITIVE_CONTROL_a_comment_in_every_position_it_is_written_stays_unscanned` stays **green** under
+M18, and that is correct rather than a gap — removing the narrowing only *widens* what counts as a
+comment, so every decoy in an allowed position is still stripped. That test is not there to catch M18; it
+is there to catch the opposite mistake, a narrowing written too tightly, which would lose fix round 3's
+win. The two mutations that would turn it red are M16a (stripping removed entirely) and any future
+over-tightening of `opens_a_comment()`.
+
+Note also which direction M18's first failure runs: without the narrowing the gate is **green on a file
+with a real violation in it**. That is the silent false negative this round exists to remove, and it is
+why the fix errs the other way — an unrecognised shape is scanned, so the worst case is noise. The second
+failure pins the price of that choice as a measurement rather than a surprise.
+
+### Running M18 again
+
+```bash
+cd C:/projects/mhm-ui-core
+./vendor/bin/phpunit -c phpunit.xml --filter IconConceptScanner   # baseline: OK (19 tests, 74 assertions)
+
+sed -i 's| \&\& \$this->opens_a_comment( \$source, \$i ) ) {| ) {|' src/Kit/IconConceptScanner.php
+./vendor/bin/phpunit -c phpunit.xml --filter IconConceptScanner   # 2 failures
+git checkout -- src/Kit/IconConceptScanner.php
+
+./vendor/bin/phpunit -c phpunit.xml --filter IconConceptScanner   # back to OK (19 tests, 74 assertions)
+```
+
+Mutate only on a committed tree, then `git checkout -- <file>` — same rule as M0-M17 above.
