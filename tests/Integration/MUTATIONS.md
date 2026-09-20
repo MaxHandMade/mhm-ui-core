@@ -103,3 +103,51 @@ docker compose -f docker/test/docker-compose.yml run --rm php bash -c "composer 
 
 Mutate `src/Kit/Icons.php` (and, for M6, `src-react/icons.js`), run, then
 `git checkout -- <file>` — same committed-tree rule as above.
+
+## 2026-09-20 — icon-concept convergence gate (Task 4)
+
+Three mutations, applied one at a time to commit `897907a` (task 4's own commit,
+already `git archive HEAD`-clean), run via `composer check:icon-concepts`, and
+reverted with `git checkout -- tests/Fixtures/icon-concepts/raw-suffix.php`.
+Unlike M0-M7, these measure `bin/check-icon-concepts.php`'s exit code directly
+(`echo "exit=$?"`, never through `| tail`) against the **anchored fixture
+tree** (`tests/Fixtures/icon-concepts/`), not the package's own `src/`/
+`src-react/` — measured 2026-09-20: not one anchored icon literal exists there,
+so a gate that scanned it could never go red. This is the v1 defect the gate
+was rewritten to close (see `IconConceptScanner`'s class docblock).
+
+Baseline (before any mutation): `composer check:icon-concepts` → STDOUT ends
+`icon-concepts: 5 file(s), 2 concept call site(s), 2 raw, 1 unknown`, **exit=0**
+(`--expect-raw=2` holds).
+
+| Mutation | Edit | Measured |
+|---|---|---|
+| M8 | `tests/Fixtures/icon-concepts/raw-suffix.php` — `'icon' => 'money-alt'` → `'icon' => 'revenue'` (the violation itself is removed) | **exit=2**. STDOUT: `icon-concepts: 5 file(s), 3 concept call site(s), 1 raw, 1 unknown`; STDERR: `EXPECT-RAW: wanted 2, measured 1` |
+| M9 | M8 reverted first, then `mhmuicore_stat_card_html` → `some_other_helper` in the same file (the anchor is removed, so the file is no longer a kit call site) | **exit=2**. STDOUT: `icon-concepts: 4 file(s), 2 concept call site(s), 1 raw, 1 unknown` (files 5→4); STDERR: `EXPECT-RAW: wanted 2, measured 1` |
+| — | `git checkout -- tests/Fixtures/icon-concepts/raw-suffix.php` (return to baseline) | **exit=0**, STDOUT identical to the baseline line above; `git diff` empty |
+
+**Meaning:** both mutations independently turn the gate red, and for different
+reasons — M8 by making the vocabulary violation disappear (raw count drops),
+M9 by making the *file itself* disappear from the scan (file count drops).
+Neither is caught by the other's mechanism: a gate that only compared file
+counts would miss M8, and one that only compared raw counts would miss a
+whole class of "the anchor silently stopped matching" failures, which is
+exactly what M9 stands in for. `--expect-raw=2` is what turns a merely-passing
+run into one that failed loudly the moment either invariant broke.
+
+### Running M8-M9 again
+
+```bash
+cd C:/projects/mhm-ui-core
+composer check:icon-concepts ; echo "exit=$?"            # exit=0 (baseline)
+sed -i "s/'icon' => 'money-alt'/'icon' => 'revenue'/" tests/Fixtures/icon-concepts/raw-suffix.php
+composer check:icon-concepts ; echo "exit=$?"            # exit=2 (M8)
+git checkout tests/Fixtures/icon-concepts/raw-suffix.php
+sed -i "s/mhmuicore_stat_card_html/some_other_helper/" tests/Fixtures/icon-concepts/raw-suffix.php
+composer check:icon-concepts ; echo "exit=$?"            # exit=2 (M9)
+git checkout tests/Fixtures/icon-concepts/raw-suffix.php
+composer check:icon-concepts ; echo "exit=$?"            # exit=0 (back to baseline)
+```
+
+Mutate only on a committed tree, then `git checkout -- <file>` — same rule as
+M0-M7 above.
