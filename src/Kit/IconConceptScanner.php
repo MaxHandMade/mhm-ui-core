@@ -23,9 +23,11 @@ namespace MHMUiCore\Kit;
  * This file is development tooling, not runtime code, and a free core that
  * publishes to WordPress.org MUST exclude it from its ZIP with a .distignore
  * line -- the same pattern already applied there to src/Cli/ and
- * PurityScanner.php -- because a reviewer greps a shipped tree. (Measured
- * 2026-09-20: that .distignore line for THIS file does not exist yet; adding
- * it is Task 6's job, not this class's.)
+ * PurityScanner.php -- because a reviewer greps a shipped tree. Task 6
+ * (2026-09-20) added that row to README.md's / README-tr.md's "What a free
+ * core must keep out of its ZIP" table, the authoritative list a consumer's
+ * own .distignore is derived from -- this repo ships no .distignore of its
+ * own, since it is the package, not a WordPress.org plugin.
  *
  * WHY CALL SITES ARE FOUND BY ANCHOR AND NOT BY 'icon' ALONE
  * Measured 2026-09-20 in Rentiva: three different vocabularies write
