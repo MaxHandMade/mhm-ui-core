@@ -73,6 +73,78 @@ final class IconConceptScannerTest extends TestCase {
 		self::assertCount( 1, $result['unknown'] );
 	}
 
+	public function test_a_commented_icon_example_is_never_reported(): void {
+		// Codex PR #32 finding, measured 2026-09-20: a bare per-line regex read
+		// `// icon: 'money-alt'` -- an explicit "do not write this" example --
+		// as a live call site and failed the gate over it. Both comment forms
+		// are covered here, each carrying the same decoy value on its own line.
+		$file = $this->dir() . '/commented-decoys.jsx';
+		file_put_contents(
+			$file,
+			"mhmuicore_stat_card_html;\n"
+				. "// legacy example: icon: 'money-alt' -- kept for reference, do not read this\n"
+				. "/*\n"
+				. " * another discarded shape:\n"
+				. " * icon: 'money-alt'\n"
+				. " */\n"
+		);
+
+		try {
+			$result = ( new IconConceptScanner( self::ANCHORS ) )->scan( array( $file ) );
+
+			self::assertSame( 1, $result['files'], 'the anchor alone still makes it a kit call site' );
+			self::assertCount( 0, $result['raw'], 'the // decoy must be silent' );
+			self::assertCount( 0, $result['unknown'], 'the /* */ decoy must be silent' );
+			self::assertSame( 0, $result['concepts'] );
+		} finally {
+			unlink( $file );
+		}
+	}
+
+	public function test_a_real_call_site_survives_next_to_commented_decoys(): void {
+		// Positive control for comment-stripping: kit-caller.jsx's real
+		// `icon: 'money-alt'` (line 9) sits right after a // comment (line 3)
+		// and a MULTI-LINE /* */ block (lines 4-7) that both write the same
+		// decoy string. Stripping must silence the decoys WITHOUT blinding the
+		// scanner to the real line that follows them, and without shifting its
+		// reported line number -- the same failure class this package's own
+		// ritual gate hit once before (a probe flagging its own explanation).
+		$raw = $this->scan()['raw'];
+
+		$real = array_values(
+			array_filter( $raw, static fn( $hit ): bool => str_contains( $hit['file'], 'kit-caller.jsx' ) )
+		);
+
+		self::assertCount( 1, $real, 'exactly the one real money-alt call site, not the two commented decoys' );
+		self::assertSame( 'money-alt', $real[0]['value'] );
+		self::assertContains( 'revenue', $real[0]['concepts'] );
+		self::assertSame( 9, $real[0]['line'], 'the line number after a multi-line block comment must still be correct' );
+	}
+
+	public function test_a_double_slash_inside_a_string_is_not_mistaken_for_a_comment(): void {
+		// 'https://example.com/icons' contains // but is not a comment start.
+		// A naive strip that ignores string boundaries would treat everything
+		// after that // as commentary, swallowing the real call site on the
+		// NEXT line along with it.
+		$file = $this->dir() . '/url-then-call.jsx';
+		file_put_contents(
+			$file,
+			"const DOCS_URL = 'https://example.com/icons';\n"
+				. "mhmuicore_stat_card_html( { icon: 'revenue' } );\n"
+		);
+
+		try {
+			$result = ( new IconConceptScanner( self::ANCHORS ) )->scan( array( $file ) );
+
+			self::assertSame( 1, $result['files'] );
+			self::assertSame( 1, $result['concepts'], 'the real call site after the URL must still be read' );
+			self::assertCount( 0, $result['raw'] );
+			self::assertCount( 0, $result['unknown'] );
+		} finally {
+			unlink( $file );
+		}
+	}
+
 	public function test_a_file_without_a_kit_anchor_is_never_scanned(): void {
 		// Olculdu 2026-09-20: Rentiva'nin agacinda 'icon' => yazan UC ayri
 		// sozluk var (kit karti, urunun SVG sozlugu, dashicons- onekli dugme

@@ -49,6 +49,19 @@ namespace MHMUiCore\Kit;
  * the arrow, see php_icons() ) and reports 'money' as an UNKNOWN suffix, a
  * false "register it as a concept" suggestion that --expect-raw's count does
  * not catch because it only counts the raw bucket.
+ *
+ * COMMENTS ARE NOT SCANNED, ON EITHER SIDE
+ * php_icons() was already immune to this: token_get_all() gives a `//` or
+ * `/* *\/` comment its own T_COMMENT token, never a T_CONSTANT_ENCAPSED_STRING,
+ * so a commented-out `'icon' => 'money-alt'` was never reachable there. The JS
+ * half had NO such immunity until this fix (Codex PR #32, measured
+ * 2026-09-20): a bare per-line regex over the raw source read
+ * `// icon: 'money-alt'` -- an explicit "do not write this" example -- as a
+ * live call site and failed the gate over it. js_icons() now runs the source
+ * through strip_js_comments() first, a small state machine that blanks
+ * comment text (both forms) while leaving every string literal and every
+ * newline untouched -- so a `//` inside a URL string is not mistaken for a
+ * comment, and a hit's reported line number still matches the file on disk.
  */
 final class IconConceptScanner {
 
@@ -283,6 +296,93 @@ final class IconConceptScanner {
 	}
 
 	/**
+	 * Strip `//` and `/* *\/` comments from JS/JSX source before the regex in
+	 * js_icons() ever sees it.
+	 *
+	 * A character-by-character state machine, not a strip-first regex: it
+	 * tracks single-, double- and backtick-quoted strings so a `//` inside a
+	 * URL literal is never mistaken for a comment start, and it replaces
+	 * comment TEXT with spaces rather than deleting it, so every newline
+	 * survives and a hit's reported line number still matches the untouched
+	 * file. Measured 2026-09-20 (Codex PR #32): without this, a discarded
+	 * example left in a `//` comment -- `// icon: 'money-alt'` -- was read as
+	 * a live call site and reported RAW, punishing the exact "do not write
+	 * this" comment it was written to prevent. php_icons() never had this
+	 * blind spot: token_get_all() already treats T_COMMENT as its own token,
+	 * never as a T_CONSTANT_ENCAPSED_STRING; this brings the JS half in line
+	 * with the PHP half's existing immunity, instead of leaving the two twins
+	 * disagreeing about what a comment is.
+	 *
+	 * @param string $source JS/JSX file contents.
+	 */
+	private function strip_js_comments( string $source ): string {
+		$out    = '';
+		$length = strlen( $source );
+		$state  = 'normal';
+		$quote  = '';
+
+		for ( $i = 0; $i < $length; $i++ ) {
+			$char = $source[ $i ];
+			$next = ( $i + 1 < $length ) ? $source[ $i + 1 ] : '';
+
+			if ( 'normal' === $state ) {
+				if ( ( '/' === $char ) && ( '/' === $next ) ) {
+					$state = 'line_comment';
+					$out  .= '  ';
+					++$i;
+					continue;
+				}
+				if ( ( '/' === $char ) && ( '*' === $next ) ) {
+					$state = 'block_comment';
+					$out  .= '  ';
+					++$i;
+					continue;
+				}
+				if ( ( "'" === $char ) || ( '"' === $char ) || ( '`' === $char ) ) {
+					$state = 'string';
+					$quote = $char;
+				}
+				$out .= $char;
+				continue;
+			}
+
+			if ( 'string' === $state ) {
+				if ( ( '\\' === $char ) && ( '' !== $next ) ) {
+					$out .= $char . $next;
+					++$i;
+					continue;
+				}
+				if ( $char === $quote ) {
+					$state = 'normal';
+				}
+				$out .= $char;
+				continue;
+			}
+
+			if ( 'line_comment' === $state ) {
+				if ( "\n" === $char ) {
+					$state = 'normal';
+					$out  .= $char;
+					continue;
+				}
+				$out .= ' ';
+				continue;
+			}
+
+			// 'block_comment' state.
+			if ( ( '*' === $char ) && ( '/' === $next ) ) {
+				$state = 'normal';
+				$out  .= '  ';
+				++$i;
+				continue;
+			}
+			$out .= ( "\n" === $char ) ? $char : ' ';
+		}
+
+		return $out;
+	}
+
+	/**
 	 * `icon: 'value'`, `icon="value"` and `icon={ 'value' }` in JS/JSX. Regex,
 	 * not a parser: the package ships no JS parser into a consumer's vendor
 	 * tree, and a dynamic prop is out of reach either way.
@@ -296,7 +396,7 @@ final class IconConceptScanner {
 		$pattern = '/(?<![\w-])icon\s*(?::\s*|=\s*\{?\s*)[\'"]([^\'"]+)[\'"]/';
 		$out     = array();
 
-		foreach ( explode( "\n", $source ) as $index => $line ) {
+		foreach ( explode( "\n", $this->strip_js_comments( $source ) ) as $index => $line ) {
 			if ( 0 === preg_match_all( $pattern, $line, $matches ) ) {
 				continue;
 			}
