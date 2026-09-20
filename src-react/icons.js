@@ -42,9 +42,12 @@ let registered = Object.create( null );
  * DIVERGENCE FROM PHP TWIN: numeric-keyed entries. In PHP, array( 42 =>
  * 'chart-pie' ) stores int 42, which is_string() rejects and the twin skips.
  * In JS, Object.entries() yields '42' (string), so the same entry registers.
- * This divergence cannot close: JavaScript converts numeric keys to strings,
- * a language invariant, not a choice here. In practice, concept names are
- * words (vehicles, revenue, ...), never numeric strings, so the risk is null.
+ * This divergence could be closed — we could reject numeric-keyed entries
+ * to mimic PHP's int/string distinction. We don't, because that rule would
+ * bind PHP's array-key behavior (a language artifact) into the vocabulary's
+ * design. The vocabulary owns what concept maps to what icon; PHP's array
+ * backend is not its concern. In practice, concept names are words
+ * (vehicles, revenue, ...), never numeric strings, so the risk is null.
  *
  * @param {Object} map Concept -> Dashicon suffix.
  */
