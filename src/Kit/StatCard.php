@@ -70,7 +70,12 @@ final class StatCard {
 
 		$html = '<div class="' . esc_attr( implode( ' ', $classes ) ) . '"' . self::data_attributes( $props['data'] ?? null ) . '>';
 
-		$icon = sanitize_html_class( self::presence_text( $props['icon'] ?? '' ) );
+		// Resolve the concept BEFORE sanitising: sanitize_html_class() is
+		// lossy (it strips %xx octets and everything outside [A-Za-z0-9_-]),
+		// so the reverse order would mangle a registered concept containing a
+		// space into a different key and miss it in silence. Both twins do it
+		// in this order.
+		$icon = sanitize_html_class( Icons::resolve( self::presence_text( $props['icon'] ?? '' ) ) );
 		if ( '' !== $icon ) {
 			$html .= '<span class="' . esc_attr( 'dashicons dashicons-' . $icon ) . '" aria-hidden="true"></span>';
 		}

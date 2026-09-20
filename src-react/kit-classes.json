@@ -166,6 +166,46 @@
             "mhmui-stat-card__delta-sr",
             "mhmui-stat-card__label",
             "mhmui-stat-card__value"
+        ],
+        [
+            "dashicons",
+            "dashicons-money-alt",
+            "mhmui-stat-card",
+            "mhmui-stat-card__body",
+            "mhmui-stat-card__label",
+            "mhmui-stat-card__value"
+        ],
+        [
+            "dashicons",
+            "dashicons-money-alt",
+            "mhmui-stat-card",
+            "mhmui-stat-card__body",
+            "mhmui-stat-card__label",
+            "mhmui-stat-card__value"
+        ],
+        [
+            "dashicons",
+            "dashicons-fuel",
+            "mhmui-stat-card",
+            "mhmui-stat-card__body",
+            "mhmui-stat-card__label",
+            "mhmui-stat-card__value"
+        ],
+        [
+            "dashicons",
+            "dashicons-location",
+            "mhmui-stat-card",
+            "mhmui-stat-card__body",
+            "mhmui-stat-card__label",
+            "mhmui-stat-card__value"
+        ],
+        [
+            "dashicons",
+            "dashicons-constructor",
+            "mhmui-stat-card",
+            "mhmui-stat-card__body",
+            "mhmui-stat-card__label",
+            "mhmui-stat-card__value"
         ]
     ],
     "StatsGrid": [

@@ -29,7 +29,12 @@
       { "label": "Bookings", "value": "45", "delta": { "direction": "up", "text": "3 this month", "label": "artış" } },
       { "label": "Bookings", "value": "38", "delta": { "direction": "down", "text": "2 this month", "label": "azalış" } },
       { "label": "Bookings", "value": "40", "delta": { "direction": "flat", "text": "0 this month" } },
-      { "label": "Bookings", "value": "40", "delta": { "direction": "flat", "text": "0 this month", "label": "değişmedi" } }
+      { "label": "Bookings", "value": "40", "delta": { "direction": "flat", "text": "0 this month", "label": "değişmedi" } },
+      { "label": "Concept", "value": "1", "icon": "revenue" },
+      { "label": "RawSuffix", "value": "1", "icon": "money-alt" },
+      { "label": "Unknown", "value": "1", "icon": "fuel" },
+      { "label": "Retired", "value": "1", "icon": "location" },
+      { "label": "Inherited", "value": "1", "icon": "constructor" }
     ]
   },
   "StatsGrid": {
@@ -64,6 +69,9 @@
   "Widget": {
     "interactive": false, "tone_semantics": false,
     "props": { "title": "string", "subtitle": "string?", "icon": "string?", "actions": "node?", "children": "node" },
-    "fixtures": [ { "title": "Recent", "icon": "chart-line", "children": "Body" } ]
+    "fixtures": [
+      { "title": "Recent", "icon": "chart-line", "children": "Body" },
+      { "title": "Concept", "icon": "rate", "children": "Body" }
+    ]
   }
 }

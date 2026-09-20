@@ -187,6 +187,7 @@ sınıfa yaptığı çağrı **fatal**dir.
 |---|---|
 | `src/Cli/` | `wp mhm-ui` komutları geliştirme aracıdır. Kayıt, komut sınıfının varlığına bağlıdır; dışarıda bırakmak yalnız komutlara mal olur. |
 | `src/Seam/PurityScanner.php` | Saflık kapısı. Sözlüğü, incelemecinin **grep'lediği listenin ta kendisidir** — `license_key`, `activate_license`, `upgrade_to_pro`, `pro_only` — yani önlemek için var olduğu şey gibi okunur. CI onu `vendor/`den çağırır, orada kalır; çalışma zamanı yolu yoktur. |
+| `src/Kit/IconConceptScanner.php` | İkon-kavram yakınsama kapısının motoru (aşağıda "İkon kavramları"). Çalışma zamanı yolu olmayan geliştirme aracıdır — bir tüketicinin kendi CI'ı onu doğrudan `vendor/mhm/ui-core`'dan `require` eder, bu yüzden orada sevk edilmek zorundadır, ama bir WordPress.org incelemecisi sevk edilen ağacı grep'ler ve sınıf adı + docblock'u `PurityScanner.php`'nin okunduğu şekilde okunur, kapı makinesi gibi. |
 | `src-react/` (**dizinin tamamı**) | Paketin JSX ve token **kaynağı**. Build girdisidir; kullanıcının sitesinde onu okuyan hiçbir şey yoktur — WordPress JSX çalıştırmaz, yüklenen şey senin build'inin ürettiği bundle'dır. Ayrıca katman kilidi bileşenini de barındırır; incelemeci onun sınıfını ücretli-özellik kilidi olarak okur. |
 | `assets/react/pro.css` | Aynı şeyin stil yarısı. Ücretsiz çekirdek yalnız `react/admin.css` enqueue eder. |
 | `README.md` · `README-tr.md` · `assets/README.md` · `package.json` | Geliştirici dokümanı ve build meta verisi. |
@@ -215,7 +216,7 @@ da bu tek yanlış cümle yüzünden taşıdı.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.13.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.14.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 `bootstrap.php`'yi doğrudan require etmek `MHMUICORE_VERSION`'ı anında tanımlar
@@ -432,6 +433,101 @@ bir elemana koyarsanız aynı taşma orada da tekrarlanır.
 konteyner koşulunda kullanılamaz): **narrow < 40rem ≤ medium < 64rem ≤ wide**. `position: fixed`
 kaplamaları kabuğun dışında tutun.
 
+### İkon kavramları (0.14.0+)
+
+`icon` bir KAVRAM alır; bilinmeyen bir değer yine de ham bir Dashicon soneki
+olarak basılır, yani her 0.13 çağrı yeri çalışmaya devam eder. Hiçbir kavram
+adı bir Dashicon adı **değildir** — bu kural kapıyla zorlanır
+(`tests/Integration/IconVocabularyTest.php`), çünkü gerçek bir ikonu gölgeleyen
+bir kavram, mevcut bir çağrı yerinin ne çizdiğini sessizce değiştirirdi.
+
+| Kavram | Dashicon | Kavram | Dashicon |
+|---|---|---|---|
+| `revenue` | `money-alt` | `pending` | `clock` |
+| `total` | `chart-bar` | `active` | `yes-alt` |
+| `count` | `list-view` | `new` | `plus-alt` |
+| `rate` | `chart-line` | `returning` | `update` |
+| `customers` | `admin-users` | `time` | `calendar-alt` |
+| `items` | `products` | `place` | `location-alt` |
+
+**İkonlar nerede çalışır:** yalnız yönetici ekranı. `mhmuicore_enqueue_kit('front')`
+`dashicons` bağımlılığı bildirmez ve `front.css` hiçbir ikon kaynağı sevk etmez,
+yani ön yüzde span render edilir ama glif çizilmez. Bilerek böyle: ücretsiz bir
+çekirdeğin her sayfası tek bir kart için çekirdeğin ikon fontunu taşımamalı.
+Ön yüz ikonları satır içi SVG katmanıyla gelecek.
+
+**Kendi kavramlarınızı kaydetmek** — `plugins_loaded` önceliği >= 1'de (paket
+0'da boot eder) ve **her bundle'da ayrı ayrı**:
+
+```php
+\MHMUiCore\Kit\Icons::register( array( 'vehicles' => 'car', 'bookings' => 'calendar' ) );
+```
+
+```js
+import { registerIcons } from '@mhm/ui-core';
+registerIcons( { vehicles: 'car', bookings: 'calendar' } );
+```
+
+🔴 **Kendi kavram adınız da bir Dashicon adı olamaz.** Yukarıdaki tablonun
+üstünde verilen kural — hiçbir kavram adı bir Dashicon adı değildir —
+`IconVocabularyTest` tarafından `Icons::map()` gezilerek zorlanır, ama bu
+paketin kendi CI'ında `$registered` boştur: kapı yalnız tohum tabloyu ölçer,
+sizinkini değil. `array( 'calendar' => 'calendar-alt' )` kaydederseniz —
+`.dashicons-calendar` gerçek bir Dashicon sonekidir — o andan sonra hâlâ
+`'icon' => 'calendar'` yazan her ham-sonek çağrı yeri sessizce başka bir ikon
+(`calendar-alt`) çizer, çünkü `resolveIcon()` ham soneke düşmeden önce sizin
+kaydınıza bakar. Bu, iki bağımsız denetimin `location` için bloke edici saydığı
+kırılmanın aynı sınıfı. **Kendi ağacınızda nasıl ölçersiniz:**
+`IconVocabularyTest`'i koşturmadan önce kendi `register()` çağrınızı
+(bootstrap'ınızdan ya da bir CI fixture'ından) yükleyin — test `Icons::map()`'i
+gezdiği için o an kayıtlı olanı da ölçer, yalnız tohumu değil.
+
+PHP registry'si kazanan ui-core kopyasına aittir ve sitedeki her eklenti
+tarafından paylaşılır. JS'inki **öyle değil**: onu import eden bundle'da yaşar,
+yani ikinci bir eklentinin bundle'ının kendi `registerIcons` çağrısına ihtiyacı
+vardır.
+
+**Yakınsama kapısı** — tarayıcı sevk edilir, `bin/` sevk edilmez:
+
+```php
+<?php // KENDİ deponuzdaki bin/check-icon-concepts.php
+require 'vendor/mhm/ui-core/src/Kit/Icons.php';
+require 'vendor/mhm/ui-core/src/Kit/IconConceptScanner.php';
+\MHMUiCore\Kit\Icons::register( require 'config/icon-concepts.php' );
+
+// KENDİ sarmalayıcı adlarınıza çıpalayın: bu paketin kendi fonksiyon adları,
+// kiti sarmalayan bir üründe sıfır çağrı yeri bulur (Rentiva'da ölçüldü, 2026-09-20).
+$r = ( new \MHMUiCore\Kit\IconConceptScanner( array( 'YourPlugin\\Kit::grid', 'ui-core/src-react/components/Stat' ) ) )
+	->scan( array( 'src', 'src-react' ) );
+
+if ( 0 === $r['files'] || 0 === $r['concepts'] + count( $r['raw'] ) + count( $r['unknown'] ) ) {
+	fwrite( STDERR, "EMPTY-SET: the gate measured nothing\n" );
+	exit( 2 );
+}
+exit( array() === $r['raw'] ? 0 : 1 );
+```
+
+**WordPress.org'a gönderiyorsanız:** tarayıcıyı son ZIP'ten çıkarın — o
+geliştirme aracıdır ve bir incelemeci sevk edilen ağacı grep'ler:
+
+```
+/vendor/mhm/ui-core/src/Kit/IconConceptScanner.php
+```
+
+Kör noktalar (tarayıcının kendi docblock'unda da var): bir değişkendeki ikon
+adı, `sprintf()` ile kurulmuş biri, dinamik bir JSX prop'u, çok satırlı bir
+nesne literali, bir template literal, tırnaklı bir anahtar ve hiçbir çıpadan
+söz etmeyen her dosya.
+
+### Dikey ritim (0.14.0+)
+
+`.mhmui-stats-grid` artık `margin-top` taşımıyor. Sayfa kabuğu
+(`.mhmui-admin-page` / `.mhmui-front-page`) kit üyesi çocuklarını
+`--mhmui-space-3` ile aralıyor. Çekirdeğin başlık, paragraf ve bildirim
+aralaması dokunulmadan kalıyor. Kabuğu kullanmayan bir yüzey ritim almaz;
+bir sarmalayıcı içine yerleşmiş bir ızgara kendi sarmalayıcısı tarafından
+aralanır.
+
 ### Bilerek yapılmayanlar
 
 - **Rentiva göç etmedi.** Paket ikinci bir tüketicinin sınamasından geçmeden Rentiva'nın 16 bloğunu
@@ -514,7 +610,7 @@ parite kapısı eşitlik arar, uyumluluk değil.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.13.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.14.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 🔴 Sürüm dizesi **elle yazılır** (kayıt, herhangi bir bootstrap yüklenmeden önce koşar) ve

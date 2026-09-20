@@ -246,4 +246,33 @@ final class StatCardTest extends TestCase {
 		preg_match( '/^<div class="([^"]*)"/', StatCard::render_html( $props ), $m );
 		return $m[1] ?? '';
 	}
+
+	public function test_a_concept_icon_renders_the_mapped_dashicon(): void {
+		$html = StatCard::render_html( array( 'label' => 'L', 'value' => '1', 'icon' => 'revenue' ) );
+
+		self::assertStringContainsString( 'dashicons dashicons-money-alt', $html );
+		self::assertStringNotContainsString( 'dashicons-revenue', $html );
+	}
+
+	public function test_a_raw_suffix_icon_still_renders_unchanged(): void {
+		$html = StatCard::render_html( array( 'label' => 'L', 'value' => '1', 'icon' => 'money-alt' ) );
+
+		self::assertStringContainsString( 'dashicons dashicons-money-alt', $html );
+	}
+
+	public function test_an_unknown_icon_is_printed_as_a_raw_suffix(): void {
+		$html = StatCard::render_html( array( 'label' => 'L', 'value' => '1', 'icon' => 'fuel' ) );
+
+		self::assertStringContainsString( 'dashicons dashicons-fuel', $html );
+	}
+
+	public function test_a_concept_is_resolved_BEFORE_sanitising(): void {
+		// Sira sozlesmedir: sanitize kayiplidir, ters sirada bosluk iceren
+		// kayitli bir kavram sessizce baska bir anahtara donusurdu.
+		\MHMUiCore\Kit\Icons::register( array( 'my concept' => 'car' ) );
+		$html = StatCard::render_html( array( 'label' => 'L', 'value' => '1', 'icon' => 'my concept' ) );
+		\MHMUiCore\Kit\Icons::reset();
+
+		self::assertStringContainsString( 'dashicons dashicons-car', $html );
+	}
 }

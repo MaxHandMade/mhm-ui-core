@@ -22,7 +22,7 @@ A consuming plugin `require_once`s `vendor/mhm/ui-core/register.php` from its
 main file and registers its own copy:
 
 ```php
-mhmuicore_register( '0.13.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.14.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 At `plugins_loaded` priority 0 the highest registered version boots; the rest
@@ -360,6 +360,7 @@ own **ZIP**, and only these, none of which any runtime path reaches:
 |---|---|
 | `src/Cli/` | `wp mhm-ui` commands are development tooling. Registration is guarded on the command class existing, so leaving them out costs the commands and nothing else. |
 | `src/Seam/PurityScanner.php` | The free-core purity gate. Its vocabulary IS the list a reviewer greps for — `license_key`, `activate_license`, `upgrade_to_pro`, `pro_only` — so it reads as the thing it exists to prevent. CI calls it from `vendor/`, where it stays; no runtime path touches it. |
+| `src/Kit/IconConceptScanner.php` | The icon-concept convergence gate's engine (see "Icon concepts" below). Development tooling with no runtime path — a consumer's own CI `require`s it directly from `vendor/mhm/ui-core`, so it must ship there, but a WordPress.org reviewer greps a shipped tree and its class name and docblock read as gate machinery, the same shape `PurityScanner.php` reads as. |
 | `src-react/` (the whole directory) | The package's JSX and token SOURCE. It is build-time input, and nothing on a user's site reads it -- WordPress does not execute JSX, and what loads is the bundle your build produced. It also holds the tier-lock component, whose class a reviewer reads as a paid-feature lock. |
 | `assets/react/pro.css` | The stylesheet half of the same thing. A free core enqueues `react/admin.css` only. |
 | `README.md` · `README-tr.md` · `assets/README.md` · `package.json` | Developer documentation and build metadata. |
@@ -389,7 +390,7 @@ build from.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.13.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.14.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 Requiring `bootstrap.php` directly defines `MHMUICORE_VERSION` immediately, which
@@ -588,3 +589,95 @@ Front-end layouts query the container, not the viewport:
 `@container mhmui-page (width < 40rem) { … }`. Thresholds are fixed numbers
 (custom properties are not allowed in a container condition): **narrow < 40rem ≤
 medium < 64rem ≤ wide**. Keep `position: fixed` overlays outside the shell.
+
+### Icon concepts (0.14.0+)
+
+`icon` takes a CONCEPT; an unknown value is still printed as a raw Dashicon
+suffix, so every 0.13 call site keeps working. No concept name is itself a
+Dashicon name -- that rule is gated (tests/Integration/IconVocabularyTest.php),
+because a concept that shadowed a real icon would silently change what an
+existing call site renders.
+
+| Concept | Dashicon | Concept | Dashicon |
+|---|---|---|---|
+| `revenue` | `money-alt` | `pending` | `clock` |
+| `total` | `chart-bar` | `active` | `yes-alt` |
+| `count` | `list-view` | `new` | `plus-alt` |
+| `rate` | `chart-line` | `returning` | `update` |
+| `customers` | `admin-users` | `time` | `calendar-alt` |
+| `items` | `products` | `place` | `location-alt` |
+
+**Where icons work:** the admin. `mhmuicore_enqueue_kit('front')` declares no
+`dashicons` dependency and `front.css` ships no icon source, so on the front end
+the span renders and no glyph is drawn. Deliberate: a free core's every page
+should not carry core's icon font for one card. Front-end icons arrive with the
+inline-SVG layer.
+
+**Registering your own concepts** -- at `plugins_loaded` priority >= 1 (the
+package boots at 0), and **in each bundle**:
+
+```php
+\MHMUiCore\Kit\Icons::register( array( 'vehicles' => 'car', 'bookings' => 'calendar' ) );
+```
+
+```js
+import { registerIcons } from '@mhm/ui-core';
+registerIcons( { vehicles: 'car', bookings: 'calendar' } );
+```
+
+🔴 **Your own concept name must not be a Dashicon name either.** The rule
+stated above the table -- no concept name is a Dashicon name -- is enforced by
+`IconVocabularyTest` walking `Icons::map()`, but in this package's own CI
+`$registered` is empty: the gate measures the seed table, not yours. Register
+`array( 'calendar' => 'calendar-alt' )` and `.dashicons-calendar` is a real
+Dashicon suffix -- from that call onward every raw-suffix call site still
+writing `'icon' => 'calendar'` silently draws a different icon
+(`calendar-alt`), because `resolveIcon()` checks your registration before
+falling through to a raw suffix. This is the same class of break two
+independent reviews flagged as blocking for `location`. **How to measure it in
+your own tree:** load your own `register()` call (from your bootstrap, or a CI
+fixture) before running `IconVocabularyTest` -- it walks `Icons::map()`, which
+includes whatever is currently registered, not just the seed.
+
+The PHP registry belongs to the winning ui-core copy and is shared by every
+plugin on the site. The JS one is NOT: it lives in the bundle that imports it,
+so a second plugin's bundle needs its own `registerIcons` call.
+
+**The convergence gate** -- the scanner ships, `bin/` does not:
+
+```php
+<?php // bin/check-icon-concepts.php in YOUR repo
+require 'vendor/mhm/ui-core/src/Kit/Icons.php';
+require 'vendor/mhm/ui-core/src/Kit/IconConceptScanner.php';
+\MHMUiCore\Kit\Icons::register( require 'config/icon-concepts.php' );
+
+// Anchor on YOUR wrapper names: this package's own function names find zero
+// call sites in a product that wraps the kit (measured in Rentiva, 2026-09-20).
+$r = ( new \MHMUiCore\Kit\IconConceptScanner( array( 'YourPlugin\\Kit::grid', 'ui-core/src-react/components/Stat' ) ) )
+	->scan( array( 'src', 'src-react' ) );
+
+if ( 0 === $r['files'] || 0 === $r['concepts'] + count( $r['raw'] ) + count( $r['unknown'] ) ) {
+	fwrite( STDERR, "EMPTY-SET: the gate measured nothing\n" );
+	exit( 2 );
+}
+exit( array() === $r['raw'] ? 0 : 1 );
+```
+
+**If you publish to WordPress.org:** exclude the scanner from the final ZIP --
+it is development tooling and a reviewer greps a shipped tree:
+
+```
+/vendor/mhm/ui-core/src/Kit/IconConceptScanner.php
+```
+
+Blind spots (also in the scanner's docblock): an icon name in a variable, one
+built with `sprintf()`, a dynamic JSX prop, a multi-line object literal, a
+template literal, a quoted key, and any file that mentions no anchor.
+
+### Vertical rhythm (0.14.0+)
+
+`.mhmui-stats-grid` no longer carries `margin-top`. The page shell
+(`.mhmui-admin-page` / `.mhmui-front-page`) spaces its kit-member children with
+`--mhmui-space-3`. Core's spacing of headings, paragraphs and notices is
+untouched. A surface that does not use the shell gets no rhythm, and a grid
+nested in a wrapper is spaced by its wrapper.

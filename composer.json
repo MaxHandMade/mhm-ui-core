@@ -41,6 +41,7 @@
         "check:no-i18n": "@php ./bin/check-no-i18n.php",
         "dump:kit-classes": "@php ./bin/dump-kit-classes.php",
         "check:kit-parity": "@php ./bin/dump-kit-classes.php --check",
+        "check:icon-concepts": "@php ./bin/check-icon-concepts.php --anchor=mhmuicore_stat_card_html --anchor=mhmuicore_stats_grid_html --anchor=ui-core/src-react/components/Stat --anchor=AssetManager::stats_grid_html --expect-raw=2 tests/Fixtures/icon-concepts",
         "check": [
             "@phpcs",
             "@phpstan",

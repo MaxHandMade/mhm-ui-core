@@ -54,6 +54,9 @@ jobs:
       - name: Kit PHP/JSX class parity snapshot (gate 6)
         run: composer check:kit-parity
 
+      - name: Icon concepts converge (three buckets, on the anchored fixtures)
+        run: composer check:icon-concepts
+
   js:
     name: JS checks
     runs-on: ubuntu-latest
