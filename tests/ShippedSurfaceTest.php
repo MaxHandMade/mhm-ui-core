@@ -91,11 +91,17 @@ final class ShippedSurfaceTest extends TestCase {
 		// export-ignored like the rest of that tooling. src/Kit/Icons.php
 		// (the icon vocabulary's PHP half, Task 1) moved the pin from 56/48/3
 		// to 57/49/3. src-react/icons.js (the icon vocabulary's JSX twin,
-		// Task 2) moved it from 57/49/3 to 58/50/3, caught the same way. This
-		// pin is a tripwire, not a target: it moves only with a commit that
-		// deliberately changes what ships, and the commit says which file.
-		self::assertCount( 58, $files, 'shipped file count changed' );
-		self::assertCount( 50, $p1, 'P1 file set changed' );
+		// Task 2) moved it from 57/49/3 to 58/50/3, caught the same way.
+		// src/Kit/IconConceptScanner.php (the icon-concept convergence gate's
+		// engine, Task 4) moved it from 58/50/3 to 59/51/3 -- it ships because
+		// a consumer's own CI must be able to `require` it directly (see its
+		// class docblock); bin/check-icon-concepts.php (the CLI wrapper) and
+		// tests/Fixtures/icon-concepts/ do NOT move this count, both are under
+		// export-ignored paths (/bin/, /tests/). This pin is a tripwire, not a
+		// target: it moves only with a commit that deliberately changes what
+		// ships, and the commit says which file.
+		self::assertCount( 59, $files, 'shipped file count changed' );
+		self::assertCount( 51, $p1, 'P1 file set changed' );
 		self::assertCount( 3, $p2, 'P2 file set changed' );
 	}
 }
