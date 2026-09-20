@@ -380,15 +380,30 @@
 /* Vertical rhythm, owned by the PAGE SHELL and targeted at KIT MEMBERS (design
    v2 K3/§5). Before 0.14.0 `.mhmui-stats-grid` carried `margin-top: 16px`
    while the front-end twin carried none, so one component had two rhythms and
-   every consumer added its own margin after a strip.
+   every consumer added its own margin after a strip. Fixed by removing that
+   declaration -- the only one of the rule's four targets that had it.
+
+   The other three targets -- `.mhmui-widget` (`margin-top: var(--mhmui-gap)`,
+   below), `.mhmui-pagination` (`margin-top: 12px`) and `.mhmui-notice`
+   (`margin: 12px 0`) -- still carry their own margin here in admin.css
+   (measured 2026-09-20; front.css defines none of the three at all, so this
+   overlap is admin-only). That is NOT an oversight: those declarations are
+   the only source of spacing for a shell-less surface (the same known limit
+   below), so removing them would regress every consumer that doesn't wrap in
+   `.mhmui-admin-page`. Inside the shell the rule below is (0,2,0) and always
+   outranks their (0,1,0), regardless of source order -- it's invisible today
+   only because `--mhmui-gap`, `12px` and `12px 0` all resolve to the same
+   12px as `--mhmui-space-3`; if any of those tokens diverge, the shell's
+   value governs inside the shell and the component's own value governs
+   outside it.
 
    The selector was MEASURED, not chosen (2026-09-20, Chrome, real wp-admin and
    a logged-out front end -- docs/superpowers/audits/2026-09-20-kit-icon-rhythm).
    A zero-specificity :where() loses to core's own p/h1/h2 element rules
-   (common.css), and a plain shell-plus-bare-sibling-combinator rule (0,1,0,
-   the shape `.shell > * + *`) loses to `.wrap h1` (0,1,1). Targeting the
-   kit's own members at (0,2,0) wins where it must and never competes with
-   core's spacing of headings, paragraphs and notices -- those stay core's.
+   (common.css), and a plain `.mhmui-admin-page > * + *` (0,1,0) loses to
+   `.wrap h1` (0,1,1). Targeting the kit's own members at (0,2,0) wins where it
+   must and never competes with core's spacing of headings, paragraphs and
+   notices -- those stay core's.
 
    Known limit, deliberate: a surface that does not use the shell gets no
    rhythm, and a grid nested inside a wrapper is spaced by its wrapper, not

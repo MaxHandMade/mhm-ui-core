@@ -98,16 +98,24 @@
 
 /* Vertical rhythm, owned by the PAGE SHELL and targeted at KIT MEMBERS (design
    v2 K3/§5). Before 0.14.0 `.mhmui-stats-grid` carried `margin-top: 16px`
-   while the front-end twin carried none, so one component had two rhythms and
-   every consumer added its own margin after a strip.
+   while the front-end twin (this file) carried none, so one component had
+   two rhythms and every consumer added its own margin after a strip. Fixed
+   on the admin side by removing that declaration -- there was nothing to
+   remove here.
+
+   Unlike admin.css, this file defines none of the rule's other three targets
+   (`.mhmui-widget`, `.mhmui-pagination`, `.mhmui-notice` have no base rules
+   here at all -- measured 2026-09-20), so there is no own-margin to conflict
+   with: the shell rule below is their only source of spacing on the front
+   end today.
 
    The selector was MEASURED, not chosen (2026-09-20, Chrome, real wp-admin and
    a logged-out front end -- docs/superpowers/audits/2026-09-20-kit-icon-rhythm).
    A zero-specificity :where() loses to core's own p/h1/h2 element rules
-   (common.css), and a plain shell-plus-bare-sibling-combinator rule (0,1,0,
-   the shape `.shell > * + *`) loses to `.wrap h1` (0,1,1). Targeting the
-   kit's own members at (0,2,0) wins where it must and never competes with
-   core's spacing of headings, paragraphs and notices -- those stay core's.
+   (common.css), and a plain `.mhmui-admin-page > * + *` (0,1,0) loses to
+   `.wrap h1` (0,1,1). Targeting the kit's own members at (0,2,0) wins where it
+   must and never competes with core's spacing of headings, paragraphs and
+   notices -- those stay core's.
 
    Known limit, deliberate: a surface that does not use the shell gets no
    rhythm, and a grid nested inside a wrapper is spaced by its wrapper, not

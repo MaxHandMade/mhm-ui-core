@@ -470,9 +470,14 @@ describe( 'vertical rhythm is owned by the page shell (0.14.0)', () => {
 
 	test( 'the rhythm never targets core-owned elements', () => {
 		// Ritim h1/p/.notice'e uygulanirsa core'un bosluklariyla yarisir ve
-		// tuketici ekraninda gorunmeyen bir catisma dogar.
+		// tuketici ekraninda gorunmeyen bir catisma dogar. Yorumlar taramadan
+		// ONCE cikarilir (ruleBody()'nin kendi basi, ve kit-parity.test.js'in
+		// classUniverse()'i ile ayni desen) -- yoksa bu kuralin NEDEN o sekli
+		// almadigini anlatan bir docblock, kendi yasagini ihlal ediyormus gibi
+		// okunur ve gercek bir kod duzeltmesini de kirmiziya dusurur.
 		for ( const css of [ admin, front ] ) {
-			expect( css ).not.toMatch( /mhmui-(admin|front)-page\s*>\s*\*\s*\+\s*\*/ );
+			const code = css.replace( /\/\*[\s\S]*?\*\//g, '' );
+			expect( code ).not.toMatch( /mhmui-(admin|front)-page\s*>\s*\*\s*\+\s*\*/ );
 		}
 	} );
 
