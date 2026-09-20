@@ -398,8 +398,8 @@
    outside it.
 
    The selector was MEASURED, not chosen (2026-09-20, Chrome, real wp-admin and
-   a logged-out front end -- docs/superpowers/audits/2026-09-20-kit-icon-rhythm).
-   A zero-specificity :where() loses to core's own p/h1/h2 element rules
+   a logged-out front end -- measurement notebook lives in this package's
+   private dev repo, not here). A zero-specificity :where() loses to core's own p/h1/h2 element rules
    (common.css), and a plain `.mhmui-admin-page > * + *` (0,1,0) loses to
    `.wrap h1` (0,1,1). Targeting the kit's own members at (0,2,0) wins where it
    must and never competes with core's spacing of headings, paragraphs and

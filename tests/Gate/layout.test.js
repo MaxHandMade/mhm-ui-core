@@ -468,20 +468,69 @@ describe( 'vertical rhythm is owned by the page shell (0.14.0)', () => {
 		}
 	} );
 
-	test( 'the rhythm never targets core-owned elements', () => {
-		// Ritim h1/p/.notice'e uygulanirsa core'un bosluklariyla yarisir ve
-		// tuketici ekraninda gorunmeyen bir catisma dogar. Yorumlar taramadan
-		// ONCE cikarilir (ruleBody()'nin kendi basi, ve kit-parity.test.js'in
-		// classUniverse()'i ile ayni desen) -- yoksa bu kuralin NEDEN o sekli
-		// almadigini anlatan bir docblock, kendi yasagini ihlal ediyormus gibi
-		// okunur ve gercek bir kod duzeltmesini de kirmiziya dusurur.
-		for ( const css of [ admin, front ] ) {
-			const code = css.replace( /\/\*[\s\S]*?\*\//g, '' );
-			expect( code ).not.toMatch( /mhmui-(admin|front)-page\s*>\s*\*\s*\+\s*\*/ );
+	/** Finding 7 (2026-09-20, final fix wave): the OLD check only banned the
+	 * literal shape `> * + *`, so `.mhmui-admin-page > * + p` or
+	 * `> *:not(h1) + *` still targeted a core-owned element (any `p`, any
+	 * unwrapped `*`) while staying green -- the gate's name promised more than
+	 * its regex measured. Narrowed the name, widened the ban: whatever the
+	 * LAST combinator in a shell-prefixed selector introduces must be a
+	 * `:is(...)` group -- exactly the shape the real rhythm rule already uses
+	 * (`.mhmui-admin-page > * + :is( .mhmui-stats-grid, … )`). Comments are
+	 * stripped first (ruleBody()'s own habit, and kit-parity.test.js's
+	 * classUniverse()) so a docblock describing the ban is never mistaken for
+	 * a violation of it. */
+	function rhythmTargetsAreWrapped( css ) {
+		const code = css.replace( /\/\*[\s\S]*?\*\//g, '' );
+		const ruleRe = /([^{}]+)\{[^}]*\}/g;
+		let m;
+		let found = 0;
+		while ( ( m = ruleRe.exec( code ) ) !== null ) {
+			for ( const raw of splitTopLevelCommas( m[ 1 ] ) ) {
+				const sel = raw.trim();
+				const shellMatch = sel.match( /mhmui-(?:admin|front)-page\s*>\s*[^+{}]*\+\s*(.*)$/ );
+				if ( ! shellMatch ) {
+					continue;
+				}
+				found++;
+				if ( ! shellMatch[ 1 ].startsWith( ':is(' ) ) {
+					return false;
+				}
+			}
 		}
+		return found >= 1;
+	}
+
+	test( 'the rhythm never targets core-owned elements', () => {
+		// The real rule wraps its target in :is(...) -- this must stay green
+		// for both shipped stylesheets.
+		for ( const css of [ admin, front ] ) {
+			expect( rhythmTargetsAreWrapped( css ) ).toBe( true );
+		}
+	} );
+
+	test( 'M15 mutation: `> * + p` (an unwrapped tag, the bypass the finding named) goes red', () => {
+		expect( rhythmTargetsAreWrapped(
+			'.mhmui-admin-page > * + p { margin-block-start: var( --mhmui-space-3 ); }'
+		) ).toBe( false );
+	} );
+
+	test( 'M15 mutation: `> * + *` (the OLD literal ban, still unwrapped) goes red', () => {
+		expect( rhythmTargetsAreWrapped(
+			'.mhmui-admin-page > * + * { margin-block-start: var( --mhmui-space-3 ); }'
+		) ).toBe( false );
+	} );
+
+	test( 'M15 baseline: the shipped shape (`+ :is(...)`) is green', () => {
+		expect( rhythmTargetsAreWrapped(
+			'.mhmui-admin-page > * + :is( .mhmui-stats-grid, .mhmui-widget ) { margin-block-start: var( --mhmui-space-3 ); }'
+		) ).toBe( true );
 	} );
 
 	test( 'the check is not vacuous: ruleBody finds nothing for an absent selector', () => {
 		expect( ruleBody( admin, '.mhmui-admin-page > * + * + *' ) ).toBeNull();
+	} );
+
+	test( 'rhythmTargetsAreWrapped is not vacuous: no shell-prefixed combinator selector at all', () => {
+		expect( rhythmTargetsAreWrapped( '.mhmui-stats-grid { margin: 0; }' ) ).toBe( false );
 	} );
 } );

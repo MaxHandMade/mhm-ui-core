@@ -468,6 +468,20 @@ import { registerIcons } from '@mhm/ui-core';
 registerIcons( { vehicles: 'car', bookings: 'calendar' } );
 ```
 
+🔴 **Kendi kavram adınız da bir Dashicon adı olamaz.** Yukarıdaki tablonun
+üstünde verilen kural — hiçbir kavram adı bir Dashicon adı değildir —
+`IconVocabularyTest` tarafından `Icons::map()` gezilerek zorlanır, ama bu
+paketin kendi CI'ında `$registered` boştur: kapı yalnız tohum tabloyu ölçer,
+sizinkini değil. `array( 'calendar' => 'calendar-alt' )` kaydederseniz —
+`.dashicons-calendar` gerçek bir Dashicon sonekidir — o andan sonra hâlâ
+`'icon' => 'calendar'` yazan her ham-sonek çağrı yeri sessizce başka bir ikon
+(`calendar-alt`) çizer, çünkü `resolveIcon()` ham soneke düşmeden önce sizin
+kaydınıza bakar. Bu, iki bağımsız denetimin `location` için bloke edici saydığı
+kırılmanın aynı sınıfı. **Kendi ağacınızda nasıl ölçersiniz:**
+`IconVocabularyTest`'i koşturmadan önce kendi `register()` çağrınızı
+(bootstrap'ınızdan ya da bir CI fixture'ından) yükleyin — test `Icons::map()`'i
+gezdiği için o an kayıtlı olanı da ölçer, yalnız tohumu değil.
+
 PHP registry'si kazanan ui-core kopyasına aittir ve sitedeki her eklenti
 tarafından paylaşılır. JS'inki **öyle değil**: onu import eden bundle'da yaşar,
 yani ikinci bir eklentinin bundle'ının kendi `registerIcons` çağrısına ihtiyacı

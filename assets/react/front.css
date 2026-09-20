@@ -109,13 +109,16 @@
    with: the shell rule below is their only source of spacing on the front
    end today.
 
-   The selector was MEASURED, not chosen (2026-09-20, Chrome, real wp-admin and
-   a logged-out front end -- docs/superpowers/audits/2026-09-20-kit-icon-rhythm).
-   A zero-specificity :where() loses to core's own p/h1/h2 element rules
-   (common.css), and a plain `.mhmui-admin-page > * + *` (0,1,0) loses to
-   `.wrap h1` (0,1,1). Targeting the kit's own members at (0,2,0) wins where it
-   must and never competes with core's spacing of headings, paragraphs and
-   notices -- those stay core's.
+   Front end has no rival core rule to out-rank: no admin wrapper class, and
+   no admin stylesheet's `p`/`h1`/`h2` element rules, load on a logged-out
+   page -- those are wp-admin's own furniture. (0,2,0) is kept here anyway, not for
+   specificity -- nothing on this surface would beat a lower one -- but for
+   SYMMETRY with admin.css: the same selector shape on both surfaces is one
+   rule to read and one rule to change, and a consumer who moves a strip
+   between admin and front keeps the same rhythm rather than re-deriving a
+   weaker selector that only happens to still win on an empty battlefield.
+   Measured logged out, on this file, in Tasks 5 and 7 (see admin.css for the
+   admin-side measurement against `.wrap`).
 
    Known limit, deliberate: a surface that does not use the shell gets no
    rhythm, and a grid nested inside a wrapper is spaced by its wrapper, not

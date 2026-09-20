@@ -40,9 +40,12 @@ describe( 'icon concepts (JSX twin of src/Kit/Icons.php)', () => {
 	test( 'DIVERGENCE: numeric-keyed entries register in JS (PHP skips int keys)', () => {
 		// In PHP, array( 42 => 'chart-pie' ) stores int 42, which is_string()
 		// rejects. In JS, Object.entries() yields '42' (string), so it
-		// registers. The divergence is unavoidable: JavaScript stringifies
-		// numeric keys. This test captures the difference so a future sync
-		// attempt will see the divergence in the test result.
+		// registers. This divergence could be closed -- registerIcons() could
+		// reject numeric-keyed entries to mimic PHP's int/string distinction --
+		// but isn't, on purpose: that rule would bind PHP's array-key
+		// behaviour, a language artifact, into the vocabulary's design (see
+		// icons.js). This test captures the difference so a future sync
+		// attempt will see it in the test result.
 		registerIcons( { 42: 'chart-pie' } );
 
 		expect( resolveIcon( '42' ) ).toBe( 'chart-pie' );

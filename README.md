@@ -625,6 +625,20 @@ import { registerIcons } from '@mhm/ui-core';
 registerIcons( { vehicles: 'car', bookings: 'calendar' } );
 ```
 
+🔴 **Your own concept name must not be a Dashicon name either.** The rule
+stated above the table -- no concept name is a Dashicon name -- is enforced by
+`IconVocabularyTest` walking `Icons::map()`, but in this package's own CI
+`$registered` is empty: the gate measures the seed table, not yours. Register
+`array( 'calendar' => 'calendar-alt' )` and `.dashicons-calendar` is a real
+Dashicon suffix -- from that call onward every raw-suffix call site still
+writing `'icon' => 'calendar'` silently draws a different icon
+(`calendar-alt`), because `resolveIcon()` checks your registration before
+falling through to a raw suffix. This is the same class of break two
+independent reviews flagged as blocking for `location`. **How to measure it in
+your own tree:** load your own `register()` call (from your bootstrap, or a CI
+fixture) before running `IconVocabularyTest` -- it walks `Icons::map()`, which
+includes whatever is currently registered, not just the seed.
+
 The PHP registry belongs to the winning ui-core copy and is shared by every
 plugin on the site. The JS one is NOT: it lives in the bundle that imports it,
 so a second plugin's bundle needs its own `registerIcons` call.

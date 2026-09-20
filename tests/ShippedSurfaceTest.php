@@ -81,7 +81,7 @@ final class ShippedSurfaceTest extends TestCase {
 		$p1 = array_filter( $files, static fn( $p ) => (bool) preg_match( '/\.(css|js|jsx|php)$/', $p ) );
 		$p2 = array_filter( $files, static fn( $p ) => str_ends_with( $p, '.css' ) );
 
-		// 58/50/3 — src/Kit/StatCard.php and src/Kit/StatsGrid.php (the PHP kit
+		// 59/51/3 — src/Kit/StatCard.php and src/Kit/StatsGrid.php (the PHP kit
 		// renderers, gate 6's PHP half) shipped in an earlier commit on this
 		// branch (a794305) without this pin being moved; caught while running
 		// `composer test` ahead of the gate-6 commit (Task 5). src-react/kit-

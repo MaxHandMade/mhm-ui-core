@@ -213,8 +213,11 @@ at `C:/projects/rentiva-dev/mu-plugins/ui-core-rhythm-probe/` (Chrome
 hard reload, no CSSOM): `.mhmui-stats-grid`/`.mhmui-widget` went from
 16px/12px (admin) and 0px/0px (front) to **12px/12px on both surfaces**, while
 `h1`/`.notice`/`p` stayed at their baseline (0px/5px/13px admin; 0px/0px/0px
-front) and neither page grew a horizontal scrollbar. Full numbers in
-`docs/superpowers/sdd/2026-09-20-kit-icon-vocabulary-and-rhythm-v2/task-5-report.md`.
+front) and neither page grew a horizontal scrollbar. Full numbers are the ones
+just given above; no report file backs them in this repository --
+`.superpowers/` is git-ignored, so a path under it (as an earlier draft of this
+line pointed to) does not exist in any clone. This paragraph is the durable
+record.
 
 | Mutation | Edit | Measured |
 |---|---|---|
@@ -335,3 +338,47 @@ Mutate only on a committed tree (or, when other uncommitted-but-intentional edit
 same file, restore by re-inserting the exact prior text rather than `git checkout`, and confirm with
 `git diff` that only the intended lines differ from the last commit afterward) -- same rule as M0-M13
 above.
+
+## 2026-09-20 — vertical rhythm, fix round 2 (final fix wave): the gate name outran what it measured (Finding 7)
+
+Independent review of the round-1 gate found it named itself `the rhythm never targets core-owned
+elements` but only ever banned the one literal shape `> * + *`: `.mhmui-admin-page > * + p` (a raw tag)
+or `.mhmui-admin-page > *:not(h1) + *` (a negated wildcard) still targeted a core-owned element while
+staying green. Fix: narrow the name, widen the ban -- `rhythmTargetsAreWrapped()` in
+`tests/Gate/layout.test.js` now requires that whatever the LAST combinator in a shell-prefixed selector
+(`mhmui-(admin|front)-page`) introduces is a `:is(...)` group, matching the shape the shipped rule
+already uses. Comments are stripped first, same as every other check in this file, so the gate cannot
+mistake a docblock describing the ban for a violation of it.
+
+**M15**, three mutations, applied one at a time to `assets/react/admin.css` on a tree with other
+uncommitted-but-intentional edits already present in the same file (this fix wave's own Finding-3 path
+correction), reverted by re-inserting the exact prior selector text (not `git checkout`, for the same
+reason as M14) and confirmed with `git diff` that only the intended lines differ from the last commit
+afterward:
+
+| Mutation | Edit | Measured |
+|---|---|---|
+| M15a | `.mhmui-admin-page > * + :is( .mhmui-stats-grid, .mhmui-widget, .mhmui-pagination, .mhmui-notice )` → `.mhmui-admin-page > * + p` (the finding's own named bypass: an unwrapped tag) | **2 failures**: `the rhythm never targets core-owned elements` and `both shells space their kit-member children with --mhmui-space-3` (the exact `:is(...)`-selector `ruleBody` looks for no longer exists) |
+| M15b | same rule → `.mhmui-admin-page > * + *` (the OLD literal ban's own shape, still unwrapped) | same **2 failures** as M15a |
+| M15c (baseline) | rule restored to the shipped `+ :is( .mhmui-stats-grid, .mhmui-widget, .mhmui-pagination, .mhmui-notice )` | **0 failures** -- full `tests/Gate/layout.test.js` green, 19/19 |
+
+```bash
+cd C:/projects/mhm-ui-core
+npx jest tests/Gate/layout.test.js            # baseline: 19/19 green
+
+# M15a -- edit admin.css: `> * + :is( .mhmui-stats-grid, .mhmui-widget, .mhmui-pagination, .mhmui-notice )` -> `> * + p`
+npx jest tests/Gate/layout.test.js -t "vertical rhythm"   # 2 failures
+# revert by restoring the exact selector text
+
+# M15b -- edit admin.css: same rule -> `> * + *`
+npx jest tests/Gate/layout.test.js -t "vertical rhythm"   # 2 failures
+# revert by restoring the exact selector text
+
+npx jest tests/Gate/layout.test.js            # M15c: back to 19/19 green
+git diff assets/react/admin.css assets/react/front.css   # only the intended doc fixes remain
+```
+
+Three inline unit tests pin the same three shapes directly against `rhythmTargetsAreWrapped()` without
+touching the shipped CSS (`M15 mutation: `> * + p` …`, `` M15 mutation: `> * + *` … ``, `` M15 baseline:
+… ``), so a future change to this function is caught even before anyone thinks to mutate the real
+stylesheet again.
