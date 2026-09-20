@@ -37,8 +37,14 @@ let registered = Object.create( null );
 
 /**
  * Register product concepts. The last registration of a concept wins; entries
- * that are not string => non-empty-string are skipped, exactly as the PHP twin
- * skips them.
+ * that are not string => non-empty-string are skipped.
+ *
+ * DIVERGENCE FROM PHP TWIN: numeric-keyed entries. In PHP, array( 42 =>
+ * 'chart-pie' ) stores int 42, which is_string() rejects and the twin skips.
+ * In JS, Object.entries() yields '42' (string), so the same entry registers.
+ * This divergence cannot close: JavaScript converts numeric keys to strings,
+ * a language invariant, not a choice here. In practice, concept names are
+ * words (vehicles, revenue, ...), never numeric strings, so the risk is null.
  *
  * @param {Object} map Concept -> Dashicon suffix.
  */
