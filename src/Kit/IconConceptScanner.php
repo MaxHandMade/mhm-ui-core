@@ -231,7 +231,11 @@ final class IconConceptScanner {
 
 			$value = $this->next_meaningful( $tokens, $arrow + 1 );
 			if ( ( null === $value ) || ( ! is_array( $tokens[ $value ] ) ) || ( T_CONSTANT_ENCAPSED_STRING !== $tokens[ $value ][0] ) ) {
-				// A variable, a sprintf(), a concatenation: out of reach.
+				// A variable or a sprintf() result: genuinely out of reach here.
+				// NOT a concatenation -- `'money' . '-alt'` does not land in this
+				// branch: the first operand IS a T_CONSTANT_ENCAPSED_STRING, so
+				// it is taken as the value below and misfiled as an 'unknown'
+				// suffix. See the class docblock's WHAT THIS CANNOT SEE note.
 				continue;
 			}
 
