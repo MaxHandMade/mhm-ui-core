@@ -58,14 +58,29 @@ namespace MHMUiCore\Kit;
  * block comment that never closed, the whole rest of the file was blanked, and
  * BOTH real violations vanished -- alone the run hit EMPTY-SET, but paired
  * with any other measuring file it exited 0, green and silent. The same
- * happened to the rest of a line holding `/https:\/\//`. Both are closed now
- * by honouring a backslash escape while in code state, so an escaped slash
- * cannot open a comment. That is a patch on a symptom, not a JS parser: the
- * next unparsed shape could swallow a file the same way. So the machine no
- * longer returns a swallowed file's text at all -- reaching EOF inside a block
- * comment yields NULL, which scan() records in the 'failed' bucket and the CLI
- * prints as MEASURE-FAILED, naming the file, exit 2. A gate may fail to
- * understand a structure; it may not turn that into a silent pass.
+ * happened to the rest of a line holding `/https:\/\//`. Both are closed by
+ * honouring a backslash escape while in code state, so an escaped slash cannot
+ * open a comment.
+ *
+ * A regex with no escape in it -- `const re = /[/*]/;` -- had no such handle,
+ * and measured the same day it was WORSE than the ones above: its `/*` opened
+ * a block comment, an ordinary well-formed `/* *\/` further down the file
+ * closed it again, so the unclosed-comment guard never fired and every call
+ * site between the two was swallowed in silence (`1 file(s), 1 concept call
+ * site(s), 0 raw, 0 unknown`, exit 0, with a real `money-alt` inside). The
+ * answer is NOT a JS lexer. It is to narrow WHERE a comment may start, in
+ * opens_a_comment(): a `/` opens one only at the start of a line, after
+ * whitespace, or directly after `;`, `{` or `}`. A `/` glued to `[`, `(`, `=`,
+ * `,`, a letter or a digit is read as code.
+ *
+ * WHICH WAY EVERY ONE OF THESE RULES ERRS, deliberately: a shape the machine
+ * does not recognise gets SCANNED, so the failure mode is a noisy false
+ * positive, never a silent false negative. And when even that is impossible --
+ * EOF reached while still inside a block comment -- the machine returns NULL
+ * rather than a swallowed file's text; scan() records it in the 'failed'
+ * bucket and the CLI prints MEASURE-FAILED, naming the file, exit 2. A gate
+ * may fail to understand a structure, and it may nag about one; it may not
+ * turn either into a silent pass.
  *
  * COMMENTS ARE NOT SCANNED, ON EITHER SIDE
  * php_icons() was already immune to this: token_get_all() gives a `//` or
@@ -326,6 +341,51 @@ final class IconConceptScanner {
 	}
 
 	/**
+	 * Whether a `/` at the given offset is allowed to START a comment.
+	 *
+	 * The narrow half of the "is this a comment or a regex literal?" question,
+	 * answered WITHOUT a JS lexer. A comment in real source is written at the
+	 * start of a line, after whitespace, or right after a `;`, `{` or `}`. A
+	 * `/` glued to anything else -- `[`, `(`, `=`, `,`, a letter, a digit -- is
+	 * far more likely to be inside a regex literal, so it is left alone and the
+	 * text is SCANNED. Measured 2026-09-20: `const re = /[/*]/;` has no escape
+	 * for the escape rule above to catch, so before this narrowing its `/*`
+	 * opened a block comment; a perfectly ordinary `/* *\/` later in the file
+	 * then closed it again, which means the unclosed-comment guard never fired
+	 * and every call site between the two was swallowed in silence -- the file
+	 * reported `1 concept, 0 raw`, exit 0, with a real `money-alt` violation
+	 * inside it.
+	 *
+	 * NOTE WHICH WAY THIS ERRS. A shape this rule does not recognise is read as
+	 * code, so the worst case is a NOISY FALSE POSITIVE -- an icon literal
+	 * inside an unrecognised comment reported as a call site. The case it
+	 * replaces was a SILENT FALSE NEGATIVE. For a gate that is the right
+	 * direction, and it is the whole premise of this slice: a gate may nag, it
+	 * may not lie. The concrete cost, measured: `foo(/* opts *\/x)` with no
+	 * space after `(` is now scanned rather than stripped. `foo( /* opts *\/ x )`
+	 * WITH the space still counts as a comment -- whitespace precedes it -- so
+	 * the common inline-comment shape is unaffected.
+	 *
+	 * @param string $source JS/JSX file contents.
+	 * @param int    $at     Offset of the `/`.
+	 */
+	private function opens_a_comment( string $source, int $at ): bool {
+		if ( 0 === $at ) {
+			return true;
+		}
+
+		$prev = $source[ $at - 1 ];
+
+		// Whitespace covers the line-start case too: the character before a `/`
+		// at the start of a line is the newline that ended the one above it.
+		if ( ( ' ' === $prev ) || ( "\t" === $prev ) || ( "\n" === $prev ) || ( "\r" === $prev ) ) {
+			return true;
+		}
+
+		return ( ';' === $prev ) || ( '{' === $prev ) || ( '}' === $prev );
+	}
+
+	/**
 	 * Strip `//` and `/* *\/` comments from JS/JSX source before the regex in
 	 * js_icons() ever sees it.
 	 *
@@ -333,7 +393,8 @@ final class IconConceptScanner {
 	 * tracks single-, double- and backtick-quoted strings so a `//` inside a
 	 * URL literal is never mistaken for a comment start, it honours a
 	 * backslash escape in CODE state so a regex literal's escaped slash cannot
-	 * open a comment, and it replaces comment TEXT with spaces rather than
+	 * open a comment, it asks opens_a_comment() whether the `/` even sits where
+	 * a comment gets written, and it replaces comment TEXT with spaces rather than
 	 * deleting it, so every newline survives and a hit's reported line number
 	 * still matches the untouched file. Returns NULL, never a string, when the
 	 * source ends while still inside a block comment -- see the bottom of the
@@ -367,14 +428,8 @@ final class IconConceptScanner {
 					++$i;
 					continue;
 				}
-				if ( ( '/' === $char ) && ( '/' === $next ) ) {
-					$state = 'line_comment';
-					$out  .= '  ';
-					++$i;
-					continue;
-				}
-				if ( ( '/' === $char ) && ( '*' === $next ) ) {
-					$state = 'block_comment';
+				if ( ( '/' === $char ) && ( ( '/' === $next ) || ( '*' === $next ) ) && $this->opens_a_comment( $source, $i ) ) {
+					$state = ( '/' === $next ) ? 'line_comment' : 'block_comment';
 					$out  .= '  ';
 					++$i;
 					continue;

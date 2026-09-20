@@ -268,6 +268,78 @@ final class IconConceptScannerTest extends TestCase {
 		self::assertSame( 1, $result['concepts'], "the 'revenue' call site on the last line" );
 	}
 
+	public function test_an_unescaped_slash_star_in_a_regex_does_not_swallow_what_follows(): void {
+		// Fix round 4 left this one open and said so. `/[/*]/` carries no
+		// escape for the escape rule to catch, so its `/*` opened a block
+		// comment -- and, worse than the escaped shapes, an ORDINARY well-formed
+		// comment further down closed it again, so the unclosed-block guard
+		// never fired either. Measured on commit dc5262a, this exact file
+		// reported `1 file(s), 1 concept call site(s), 0 raw, 0 unknown`,
+		// exit 0: a real money-alt violation swallowed in silence, between two
+		// perfectly innocent lines.
+		$result = $this->scan_throwaway(
+			'regex-char-class.jsx',
+			"import { StatCard } from 'ui-core/src-react/components/Stat';\n"
+				. "const re = /[/*]/;\n"
+				. "export const A = () => <StatCard icon={ 'money-alt' } />;\n"
+				. "/* an ordinary, properly closed comment */\n"
+				. "export const B = () => <StatCard icon={ 'revenue' } />;\n"
+		);
+
+		self::assertSame( array(), $result['failed'], 'the `/*` inside a character class must not open a comment at all' );
+		self::assertCount( 1, $result['raw'], 'the violation between the regex and the real comment must be reported' );
+		self::assertSame( 'money-alt', $result['raw'][0]['value'] );
+		self::assertSame( 3, $result['raw'][0]['line'] );
+		self::assertSame( 1, $result['concepts'], "and 'revenue' after the real comment is still read" );
+	}
+
+	public function test_POSITIVE_CONTROL_a_comment_in_every_position_it_is_written_stays_unscanned(): void {
+		// The narrowing in opens_a_comment() buys the test above by refusing to
+		// see a comment after `[`, `(`, `=`, a letter or a digit. It must not
+		// pay for it by losing fix round 3's win, so all THREE allowed
+		// positions are pinned here in one file, each carrying the same decoy:
+		// line start, after whitespace, and glued to `;` / `}`. If the
+		// narrowing is ever written too tightly, this test reports decoys.
+		$result = $this->scan_throwaway(
+			'comment-positions.jsx',
+			"import { StatCard } from 'ui-core/src-react/components/Stat';\n"
+				. "// line start: icon: 'money-alt'\n"
+				. "const a = 1;   // after whitespace: icon: 'money-alt'\n"
+				. "const b = 2;/* glued to a semicolon: icon: 'money-alt' */\n"
+				. "function f() { return 3; }/* glued to a brace: icon: 'money-alt' */\n"
+				. "export const A = () => <StatCard icon={ 'revenue' } />;\n"
+		);
+
+		self::assertSame( array(), $result['failed'] );
+		self::assertCount( 0, $result['raw'], 'all four commented decoys must stay silent' );
+		self::assertCount( 0, $result['unknown'] );
+		self::assertSame( 1, $result['concepts'], 'and the one real call site is still reported' );
+	}
+
+	public function test_an_unrecognised_comment_position_is_SCANNED_not_swallowed(): void {
+		// The deliberate cost of the narrowing, written down as a measurement
+		// rather than left as a surprise: a block comment glued to `(` is not
+		// recognised, so its contents are scanned and an icon literal inside it
+		// surfaces as a finding. That is a NOISY FALSE POSITIVE -- the failure
+		// direction this whole slice is built to prefer. The silent false
+		// negative it replaced (the test above) is the one a gate must never
+		// have. The `(` form with a space after it is NOT affected: whitespace
+		// precedes the slash, so the common inline shape still strips.
+		$glued = $this->scan_throwaway(
+			'glued-inline-comment.jsx',
+			"import { StatCard } from 'ui-core/src-react/components/Stat';\n"
+				. "f(/* icon: 'money-alt' */ 1);\n"
+		);
+		self::assertCount( 1, $glued['raw'], 'an unrecognised comment position is read as code -- noisy, never silent' );
+
+		$spaced = $this->scan_throwaway(
+			'spaced-inline-comment.jsx',
+			"import { StatCard } from 'ui-core/src-react/components/Stat';\n"
+				. "f( /* icon: 'money-alt' */ 1 );\n"
+		);
+		self::assertCount( 0, $spaced['raw'], 'the same comment with a space after ( is still stripped' );
+	}
+
 	public function test_a_file_without_a_kit_anchor_is_never_scanned(): void {
 		// Olculdu 2026-09-20: Rentiva'nin agacinda 'icon' => yazan UC ayri
 		// sozluk var (kit karti, urunun SVG sozlugu, dashicons- onekli dugme
