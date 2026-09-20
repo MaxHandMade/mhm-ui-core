@@ -123,14 +123,17 @@ final class IconConceptScannerTest extends TestCase {
 
 	public function test_a_double_slash_inside_a_string_is_not_mistaken_for_a_comment(): void {
 		// 'https://example.com/icons' contains // but is not a comment start.
-		// A naive strip that ignores string boundaries would treat everything
-		// after that // as commentary, swallowing the real call site on the
-		// NEXT line along with it.
+		// Both on the SAME line as the real call site: a strip that ignores
+		// string boundaries treats everything from that // to end-of-line as
+		// commentary -- which, on this line, IS the real call site -- and
+		// blanks it out. Splitting the URL and the call onto separate lines
+		// would not catch that regression: this scanner's line_comment state
+		// already resets at every "\n" regardless of string-awareness, so the
+		// failure only shows up when both share one line.
 		$file = $this->dir() . '/url-then-call.jsx';
 		file_put_contents(
 			$file,
-			"const DOCS_URL = 'https://example.com/icons';\n"
-				. "mhmuicore_stat_card_html( { icon: 'revenue' } );\n"
+			"const DOCS_URL = 'https://example.com/icons'; mhmuicore_stat_card_html( { icon: 'revenue' } );\n"
 		);
 
 		try {
