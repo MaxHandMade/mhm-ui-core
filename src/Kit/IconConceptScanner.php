@@ -74,13 +74,40 @@ namespace MHMUiCore\Kit;
  * `,`, a letter or a digit is read as code.
  *
  * WHICH WAY EVERY ONE OF THESE RULES ERRS, deliberately: a shape the machine
- * does not recognise gets SCANNED, so the failure mode is a noisy false
- * positive, never a silent false negative. And when even that is impossible --
- * EOF reached while still inside a block comment -- the machine returns NULL
- * rather than a swallowed file's text; scan() records it in the 'failed'
- * bucket and the CLI prints MEASURE-FAILED, naming the file, exit 2. A gate
- * may fail to understand a structure, and it may nag about one; it may not
- * turn either into a silent pass.
+ * does not recognise gets SCANNED, so its failure mode is a noisy false
+ * positive rather than a silent false negative. And when even that is
+ * impossible -- EOF reached while still inside a block comment -- the machine
+ * returns NULL rather than a swallowed file's text; scan() records it in the
+ * 'failed' bucket and the CLI prints MEASURE-FAILED, naming the file, exit 2.
+ *
+ * ONE MEASURED EXCEPTION TO THAT DIRECTION -- a known, accepted debt, not an
+ * oversight. The rule above is the direction, not a guarantee: a `/*` inside a
+ * regex body that happens to follow a SPACE satisfies opens_a_comment()'s own
+ * "after whitespace" clause, so it IS taken for a comment. If an ordinary
+ * well-formed `/* *\/` later in the file then closes it, the unclosed-block
+ * guard never fires either, and the call sites in between go silently.
+ * Measured 2026-09-20 on the tree that introduced the narrowing:
+ *
+ *   const re = /a /*b/;
+ *   const cards = [ { icon: "money-alt" } ];
+ *   /* ordinary comment *\/
+ *   -> icon-concepts: 1 file(s), 1 concept call site(s), 0 raw, 0 unknown
+ *      exit=0
+ *
+ * A real `money-alt` swallowed, gate green. It is left open because the only
+ * way to close it is to recognise a regex literal as a state of its own, and
+ * JS's division-versus-regex ambiguity cannot be resolved without parser
+ * context -- a road measured twice in this slice, each attempt at reading that
+ * `/` by local shape alone producing a NEW blind spot (the escape rule, then
+ * the position rule). The blanket "never a silent false negative" that stood
+ * here before was disproved by the run above; it is written as a direction
+ * with a named exception now, because in this package a docblock carries a
+ * measurement, not an intention.
+ *
+ * The same reservation applies to the template literal already listed under
+ * WHAT THIS CANNOT SEE: on its own an unread file hits EMPTY-SET and exits 2,
+ * but next to any other file that does measure something, that protection does
+ * not fire and the unread value is simply absent from a green run.
  *
  * COMMENTS ARE NOT SCANNED, ON EITHER SIDE
  * php_icons() was already immune to this: token_get_all() gives a `//` or
