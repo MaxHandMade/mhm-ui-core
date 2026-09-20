@@ -444,3 +444,39 @@ describe( 'page layout standard (spec §3.5)', () => {
 		) ).toBe( false );
 	} );
 } );
+
+describe( 'vertical rhythm is owned by the page shell (0.14.0)', () => {
+	const admin = read( 'admin.css' );
+	const front = read( 'front.css' );
+
+	const RHYTHM = '> * + :is( .mhmui-stats-grid, .mhmui-widget, .mhmui-pagination, .mhmui-notice )';
+
+	test( 'the stats grid no longer carries its own outer margin', () => {
+		const body = ruleBody( admin, '.mhmui-stats-grid' );
+		expect( body ).not.toBeNull();
+		expect( body ).not.toMatch( /margin(-top|-block-start)?\s*:/ );
+	} );
+
+	test( 'both shells space their kit-member children with --mhmui-space-3', () => {
+		for ( const [ name, css, shell ] of [
+			[ 'admin.css', admin, '.mhmui-admin-page' ],
+			[ 'front.css', front, '.mhmui-front-page' ],
+		] ) {
+			const body = ruleBody( css, `${ shell } ${ RHYTHM }` );
+			expect( [ name, body ] ).not.toEqual( [ name, null ] );
+			expect( body ).toMatch( /margin-block-start:\s*var\(\s*--mhmui-space-3\s*\)/ );
+		}
+	} );
+
+	test( 'the rhythm never targets core-owned elements', () => {
+		// Ritim h1/p/.notice'e uygulanirsa core'un bosluklariyla yarisir ve
+		// tuketici ekraninda gorunmeyen bir catisma dogar.
+		for ( const css of [ admin, front ] ) {
+			expect( css ).not.toMatch( /mhmui-(admin|front)-page\s*>\s*\*\s*\+\s*\*/ );
+		}
+	} );
+
+	test( 'the check is not vacuous: ruleBody finds nothing for an absent selector', () => {
+		expect( ruleBody( admin, '.mhmui-admin-page > * + * + *' ) ).toBeNull();
+	} );
+} );

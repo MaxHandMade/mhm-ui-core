@@ -96,6 +96,27 @@
 	box-sizing: border-box;
 }
 
+/* Vertical rhythm, owned by the PAGE SHELL and targeted at KIT MEMBERS (design
+   v2 K3/§5). Before 0.14.0 `.mhmui-stats-grid` carried `margin-top: 16px`
+   while the front-end twin carried none, so one component had two rhythms and
+   every consumer added its own margin after a strip.
+
+   The selector was MEASURED, not chosen (2026-09-20, Chrome, real wp-admin and
+   a logged-out front end -- docs/superpowers/audits/2026-09-20-kit-icon-rhythm).
+   A zero-specificity :where() loses to core's own p/h1/h2 element rules
+   (common.css), and a plain shell-plus-bare-sibling-combinator rule (0,1,0,
+   the shape `.shell > * + *`) loses to `.wrap h1` (0,1,1). Targeting the
+   kit's own members at (0,2,0) wins where it must and never competes with
+   core's spacing of headings, paragraphs and notices -- those stay core's.
+
+   Known limit, deliberate: a surface that does not use the shell gets no
+   rhythm, and a grid nested inside a wrapper is spaced by its wrapper, not
+   itself. Rentiva has five shell-less strips today; that debt is written in
+   its own notebook, not papered over here. */
+.mhmui-front-page > * + :is( .mhmui-stats-grid, .mhmui-widget, .mhmui-pagination, .mhmui-notice ) {
+	margin-block-start: var( --mhmui-space-3 );
+}
+
 /* Key-figure grid -- same ceiling formula as admin.css. */
 .mhmui-front .mhmui-stats-grid {
 	--mhmui-columns: 4;
