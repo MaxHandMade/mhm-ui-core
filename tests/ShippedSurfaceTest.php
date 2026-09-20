@@ -81,7 +81,7 @@ final class ShippedSurfaceTest extends TestCase {
 		$p1 = array_filter( $files, static fn( $p ) => (bool) preg_match( '/\.(css|js|jsx|php)$/', $p ) );
 		$p2 = array_filter( $files, static fn( $p ) => str_ends_with( $p, '.css' ) );
 
-		// 57/49/3 — src/Kit/StatCard.php and src/Kit/StatsGrid.php (the PHP kit
+		// 58/50/3 — src/Kit/StatCard.php and src/Kit/StatsGrid.php (the PHP kit
 		// renderers, gate 6's PHP half) shipped in an earlier commit on this
 		// branch (a794305) without this pin being moved; caught while running
 		// `composer test` ahead of the gate-6 commit (Task 5). src-react/kit-
@@ -90,11 +90,12 @@ final class ShippedSurfaceTest extends TestCase {
 		// classes.php (writer) and the two gate tests (readers), so it is
 		// export-ignored like the rest of that tooling. src/Kit/Icons.php
 		// (the icon vocabulary's PHP half, Task 1) moved the pin from 56/48/3
-		// to 57/49/3, caught the same way. This pin is a tripwire, not a
-		// target: it moves only with a commit that deliberately changes what
-		// ships, and the commit says which file.
-		self::assertCount( 57, $files, 'shipped file count changed' );
-		self::assertCount( 49, $p1, 'P1 file set changed' );
+		// to 57/49/3. src-react/icons.js (the icon vocabulary's JSX twin,
+		// Task 2) moved it from 57/49/3 to 58/50/3, caught the same way. This
+		// pin is a tripwire, not a target: it moves only with a commit that
+		// deliberately changes what ships, and the commit says which file.
+		self::assertCount( 58, $files, 'shipped file count changed' );
+		self::assertCount( 50, $p1, 'P1 file set changed' );
 		self::assertCount( 3, $p2, 'P2 file set changed' );
 	}
 }
