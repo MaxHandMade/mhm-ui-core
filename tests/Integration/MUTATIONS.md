@@ -151,3 +151,47 @@ composer check:icon-concepts ; echo "exit=$?"            # exit=0 (back to basel
 
 Mutate only on a committed tree, then `git checkout -- <file>` — same rule as
 M0-M7 above.
+
+## 2026-09-20 — icon-concept gate, fix round 1 (Task 4): the untested exit-1 path
+
+Fix round 1 added `tests/Kit/IconConceptScannerCliTest.php`, which runs
+`bin/check-icon-concepts.php` as a real process (`exec()`), with **no**
+`--expect-raw` flag — the flag `composer.json`'s `check:icon-concepts` script
+always passes, and therefore the only invocation any CI step or prior test
+ever exercised. Before this file existed, the CLI's actual consumer-facing
+line — `exit( array() === $result['raw'] ? 0 : 1 )` — had never been run with
+`$expect_raw === null`.
+
+Applied to commit `feefc56` (this fix round's own commit, `git archive
+HEAD`-clean), run, and reverted.
+
+Baseline: `./vendor/bin/phpunit -c phpunit.xml --filter IconConceptScannerCliTest`
+→ `OK (2 tests, 3 assertions)`.
+
+| Mutation | Edit | Measured |
+|---|---|---|
+| M10 | `bin/check-icon-concepts.php` — `exit( array() === $result['raw'] ? 0 : 1 )` → `? 1 : 0` (the exit-code ternary inverted) | **2 failures**, both in `IconConceptScannerCliTest`: `test_a_raw_suffix_exits_1_with_no_expect_raw_flag` (`Failed asserting that 0 is identical to 1`) and `test_a_clean_input_exits_0_with_no_expect_raw_flag` (`Failed asserting that 1 is identical to 0`) — every other test in the suite (373 total, including `IconConceptScannerTest`'s 6 and every `--expect-raw`-based measurement) stayed green, because `--expect-raw` never reaches this ternary |
+
+Reverted with `git checkout -- bin/check-icon-concepts.php`; re-ran
+`IconConceptScannerCliTest` → `OK (2 tests, 3 assertions)` again; `git diff
+bin/check-icon-concepts.php` empty.
+
+**Meaning:** M10 is the mutation none of M8/M9/`--expect-raw` could ever
+catch, by construction — they all run through the `--expect-raw` branch,
+which returns before reaching the plain `? 0 : 1` line. Only a test that
+invokes the CLI without that flag exercises the line a real consumer's CI
+actually depends on.
+
+### Running M10 again
+
+```bash
+cd C:/projects/mhm-ui-core
+./vendor/bin/phpunit -c phpunit.xml --filter IconConceptScannerCliTest   # OK (2 tests, 3 assertions)
+sed -i "s/? 0 : 1 );/? 1 : 0 );/" bin/check-icon-concepts.php
+./vendor/bin/phpunit -c phpunit.xml --filter IconConceptScannerCliTest   # 2 failures
+git checkout bin/check-icon-concepts.php
+./vendor/bin/phpunit -c phpunit.xml --filter IconConceptScannerCliTest   # OK (2 tests, 3 assertions)
+```
+
+Mutate only on a committed tree, then `git checkout -- <file>` — same rule as
+M0-M9 above.
