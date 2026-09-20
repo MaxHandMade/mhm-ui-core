@@ -52,6 +52,27 @@ final class IconConceptScannerTest extends TestCase {
 		self::assertSame( 'fuel', $unknown[0]['value'] );
 	}
 
+	public function test_a_data_attribute_is_not_mistaken_for_the_icon_prop(): void {
+		// kit-caller.jsx carries `data-icon="not-a-kit-icon-prop"` alongside its
+		// real `icon: 'money-alt'` -- the js_icons() lookbehind ( (?<![\w-]) )
+		// exists to keep a DOM attribute like this out of every bucket. A
+		// distinctive, unregisterable value makes a regression unambiguous: if
+		// the lookbehind breaks, this string surfaces as a spurious 'unknown'.
+		$result = $this->scan();
+
+		foreach ( array_merge( $result['raw'], $result['unknown'] ) as $hit ) {
+			self::assertNotSame( 'not-a-kit-icon-prop', $hit['value'], "data-icon leaked into bucket for {$hit['file']}:{$hit['line']}" );
+		}
+
+		// The data attribute must not have moved any of the totals either:
+		// same five files, same two concepts, same two raw, same one unknown
+		// ('fuel') as before this fixture line existed.
+		self::assertSame( 5, $result['files'] );
+		self::assertSame( 2, $result['concepts'] );
+		self::assertCount( 2, $result['raw'] );
+		self::assertCount( 1, $result['unknown'] );
+	}
+
 	public function test_a_file_without_a_kit_anchor_is_never_scanned(): void {
 		// Olculdu 2026-09-20: Rentiva'nin agacinda 'icon' => yazan UC ayri
 		// sozluk var (kit karti, urunun SVG sozlugu, dashicons- onekli dugme

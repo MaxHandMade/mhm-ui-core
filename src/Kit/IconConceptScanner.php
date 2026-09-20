@@ -20,9 +20,12 @@ namespace MHMUiCore\Kit;
  * CONSUMER's CI has to be a shipped class. It calls no WordPress function, so
  * a plain `require` of Icons.php then this file is enough -- no autoloader.
  *
- * A free core that publishes to WordPress.org excludes this file from its ZIP
- * (one .distignore line, as it already does for src/Cli/ and PurityScanner):
- * it is development tooling, and a reviewer greps a shipped tree.
+ * This file is development tooling, not runtime code, and a free core that
+ * publishes to WordPress.org MUST exclude it from its ZIP with a .distignore
+ * line -- the same pattern already applied there to src/Cli/ and
+ * PurityScanner.php -- because a reviewer greps a shipped tree. (Measured
+ * 2026-09-20: that .distignore line for THIS file does not exist yet; adding
+ * it is Task 6's job, not this class's.)
  *
  * WHY CALL SITES ARE FOUND BY ANCHOR AND NOT BY 'icon' ALONE
  * Measured 2026-09-20 in Rentiva: three different vocabularies write
@@ -35,10 +38,15 @@ namespace MHMUiCore\Kit;
  * (AssetManager::stats_grid_html, ProKit).
  *
  * WHAT THIS CANNOT SEE -- a clean run does NOT mean "no raw suffixes exist":
- * an icon name in a variable; one built with sprintf() or concatenation; a
- * dynamic JSX prop ( icon={ x } ); a multi-line object literal whose value sits
- * on the next line; a template literal; a quoted key ( 'icon': 'x' ); and every
- * call site in a file that mentions no anchor.
+ * an icon name in a variable; one built with sprintf(); a dynamic JSX prop
+ * ( icon={ x } ); a multi-line object literal whose value sits on the next
+ * line; a template literal; a quoted key ( 'icon': 'x' ); and every call site
+ * in a file that mentions no anchor. A value built with `.` CONCATENATION is
+ * NOT silently skipped -- measured 2026-09-20: `'icon' => 'money' . '-alt'`
+ * reads only the first operand ( T_CONSTANT_ENCAPSED_STRING immediately after
+ * the arrow, see php_icons() ) and reports 'money' as an UNKNOWN suffix, a
+ * false "register it as a concept" suggestion that --expect-raw's count does
+ * not catch because it only counts the raw bucket.
  */
 final class IconConceptScanner {
 
