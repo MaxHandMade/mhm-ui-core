@@ -8,7 +8,8 @@
  *
  * exit 1  a call site writes a raw suffix the vocabulary already has a concept for
  * exit 2  the run measured NOTHING (no anchored file, or no readable icon value),
- *         or --expect-raw was given and the count did not match: an empty gate is
+ *         or a file could not be read to its end (MEASURE-FAILED, named), or
+ *         --expect-raw was given and the count did not match: an empty gate is
  *         a broken gate, not a clean one
  * exit 0  otherwise; unknown suffixes are listed
  */
@@ -46,6 +47,15 @@ if ( array() === $paths ) {
 
 $result    = ( new \MHMUiCore\Kit\IconConceptScanner( $anchors ) )->scan( $paths );
 $measured  = $result['concepts'] + count( $result['raw'] ) + count( $result['unknown'] );
+
+// FIRST, before every other verdict -- including --expect-raw's, which would
+// otherwise exit 0 on a count that happened to match while a file went unread.
+if ( array() !== $result['failed'] ) {
+	foreach ( $result['failed'] as $failure ) {
+		fwrite( STDERR, sprintf( "MEASURE-FAILED: %s -- %s\n", $failure['file'], $failure['reason'] ) );
+	}
+	exit( 2 );
+}
 
 if ( 0 === $result['files'] ) {
 	fwrite( STDERR, "EMPTY-SET: no file mentioned any anchor -- the gate measured nothing\n" );

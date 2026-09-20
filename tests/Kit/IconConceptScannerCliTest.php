@@ -32,15 +32,18 @@ final class IconConceptScannerCliTest extends TestCase {
 	);
 
 	/**
-	 * Run the CLI against one path, with no --expect-raw, and capture its exit
-	 * code and combined STDOUT+STDERR.
+	 * Run the CLI against one path and capture its exit code and combined
+	 * STDOUT+STDERR.
 	 *
+	 * @param string             $path  File or directory to scan.
+	 * @param array<int, string> $flags Extra CLI flags; empty means no --expect-raw.
 	 * @return array{code: int, output: array<int, string>}
 	 */
-	private function run_cli( string $path ): array {
+	private function run_cli( string $path, array $flags = array() ): array {
 		$root = dirname( __DIR__, 2 );
 		$cmd  = escapeshellarg( PHP_BINARY ) . ' ' . escapeshellarg( $root . '/bin/check-icon-concepts.php' )
 			. ' ' . implode( ' ', array_map( 'escapeshellarg', self::ANCHOR_ARGS ) )
+			. ( array() === $flags ? '' : ' ' . implode( ' ', array_map( 'escapeshellarg', $flags ) ) )
 			. ' ' . escapeshellarg( $path ) . ' 2>&1';
 
 		exec( $cmd, $output, $code );
@@ -64,6 +67,40 @@ final class IconConceptScannerCliTest extends TestCase {
 			array_filter( $run['output'], static fn( $line ): bool => str_starts_with( $line, 'RAW' ) ),
 			'STDERR must still name the raw suffix: ' . implode( "\n", $run['output'] )
 		);
+	}
+
+	public function test_an_unmeasured_file_exits_2_with_MEASURE_FAILED(): void {
+		// The class-level half of this lives in IconConceptScannerTest (the
+		// 'failed' bucket). What is measured HERE is the translation into this
+		// package's own loud-failure idiom -- the same MEASURE-FAILED + exit 2
+		// that bin/dump-kit-classes.php and bin/check-php-namespace.php use --
+		// and, crucially, that the failure is printed BEFORE --expect-raw can
+		// answer. --expect-raw=0 is exactly the count an unread file produces,
+		// so without the ordering this run would exit 0: the gate agreeing with
+		// itself about a file it never read.
+		$file = dirname( __DIR__ ) . '/Fixtures/icon-concepts/cli-unterminated-block.jsx';
+		file_put_contents(
+			$file,
+			"import { StatCard } from 'ui-core/src-react/components/Stat';\n"
+				. "/* never closed\n"
+				. "export const F = () => <StatCard icon={ 'money-alt' } />;\n"
+		);
+
+		try {
+			$run = $this->run_cli( $file, array( '--expect-raw=0' ) );
+
+			self::assertSame( 2, $run['code'], 'an unread file must be exit 2: ' . implode( "\n", $run['output'] ) );
+			self::assertNotEmpty(
+				array_filter(
+					$run['output'],
+					static fn( $line ): bool => str_starts_with( $line, 'MEASURE-FAILED' )
+						&& str_contains( $line, 'cli-unterminated-block.jsx' )
+				),
+				'STDERR must name the file it could not read: ' . implode( "\n", $run['output'] )
+			);
+		} finally {
+			unlink( $file );
+		}
 	}
 
 	public function test_a_clean_input_exits_0_with_no_expect_raw_flag(): void {

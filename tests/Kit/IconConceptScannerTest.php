@@ -19,9 +19,33 @@ final class IconConceptScannerTest extends TestCase {
 		return dirname( __DIR__ ) . '/Fixtures/icon-concepts';
 	}
 
-	/** @return array{raw: list<array<string, mixed>>, unknown: list<array<string, mixed>>, concepts: int, files: int} */
+	/** @return array{raw: list<array<string, mixed>>, unknown: list<array<string, mixed>>, failed: list<array<string, mixed>>, concepts: int, files: int} */
 	private function scan(): array {
 		return ( new IconConceptScanner( self::ANCHORS ) )->scan( array( $this->dir() ) );
+	}
+
+	/**
+	 * Scan one throwaway source file and delete it again.
+	 *
+	 * Deliberately NOT a committed fixture: these are pathological JS shapes,
+	 * and adding them to tests/Fixtures/icon-concepts would move the tree's
+	 * measured 5/2/2/1 totals and composer.json's --expect-raw=2 pin along
+	 * with them. The precedent is this file's own
+	 * test_an_ambiguous_suffix_lists_EVERY_candidate_concept.
+	 *
+	 * @param string $name   File name to create inside the fixture directory.
+	 * @param string $source Contents to scan.
+	 * @return array{raw: list<array<string, mixed>>, unknown: list<array<string, mixed>>, failed: list<array<string, mixed>>, concepts: int, files: int}
+	 */
+	private function scan_throwaway( string $name, string $source ): array {
+		$file = $this->dir() . '/' . $name;
+		file_put_contents( $file, $source );
+
+		try {
+			return ( new IconConceptScanner( self::ANCHORS ) )->scan( array( $file ) );
+		} finally {
+			unlink( $file );
+		}
 	}
 
 	public function test_POSITIVE_CONTROL_the_scanner_reaches_anchored_files(): void {
@@ -146,6 +170,102 @@ final class IconConceptScannerTest extends TestCase {
 		} finally {
 			unlink( $file );
 		}
+	}
+
+	public function test_an_escaped_slash_star_in_a_regex_does_not_swallow_the_file(): void {
+		// Measured 2026-09-20 on the fix-round-3 tree: `/\/*abc/` is a regex
+		// literal, but the comment stripper saw `\/*` and read `/*` as a block
+		// comment that never closes -- so the WHOLE REST OF THE FILE was
+		// blanked and both real violations below it disappeared. Alone that hit
+		// EMPTY-SET; next to any other measuring file the gate exited 0, green
+		// and silent. A false negative is the gate lying; a false positive is
+		// only the gate nagging.
+		$result = $this->scan_throwaway(
+			'regex-escaped-slash-star.jsx',
+			"import { StatCard } from 'ui-core/src-react/components/Stat';\n"
+				. "const trim = ( s ) => s.replace( /\\/*abc/, '' );\n"
+				. "export const A = () => <StatCard icon={ 'money-alt' } />;\n"
+				. "export const B = () => <StatCard icon={ 'calendar-alt' } />;\n"
+		);
+
+		self::assertSame( array(), $result['failed'], 'an escaped slash must not be read as an unclosed block comment' );
+		self::assertCount( 2, $result['raw'], 'both raw suffixes after the regex literal must still be reported' );
+		self::assertSame( 'money-alt', $result['raw'][0]['value'] );
+		self::assertSame( 3, $result['raw'][0]['line'] );
+		self::assertSame( 'calendar-alt', $result['raw'][1]['value'] );
+		self::assertSame( 4, $result['raw'][1]['line'] );
+	}
+
+	public function test_an_escaped_slash_pair_in_a_regex_does_not_hide_the_rest_of_its_line(): void {
+		// Same root cause, the `//` half of it: in `/https:\/\//` the escaped
+		// slashes are NOT a comment start, but a stripper that ignores escapes
+		// reads one and blanks the rest of the line -- which here carries the
+		// real call site. Both must share ONE line: line_comment state already
+		// resets at every "\n", so a split fixture proves nothing (the lesson
+		// commit c2bdd6d paid for once already).
+		$result = $this->scan_throwaway(
+			'regex-escaped-slash-pair.jsx',
+			"import { StatCard } from 'ui-core/src-react/components/Stat';\n"
+				. "const re = /https:\\/\\//; const c = { icon: 'money-alt' };\n"
+		);
+
+		self::assertSame( array(), $result['failed'] );
+		self::assertCount( 1, $result['raw'], 'the call site sharing a line with the regex must still be read' );
+		self::assertSame( 'money-alt', $result['raw'][0]['value'] );
+		self::assertSame( 2, $result['raw'][0]['line'] );
+	}
+
+	public function test_an_unterminated_block_comment_fails_loudly_instead_of_reporting_clean(): void {
+		// The escape rule above fixes two MEASURED shapes; it does not turn
+		// this stripper into a JS parser, so the next unknown shape could
+		// swallow a file the same way. This is the backstop: reaching EOF
+		// inside a block comment is not a clean file, it is an unmeasured one,
+		// and the scanner must say which file rather than return a confident
+		// zero. Note the real call site on line 2, BEFORE the bad comment --
+		// even a partial reading is dropped, because half a measurement
+		// reported as a whole one is how a gate learns to lie.
+		$result = $this->scan_throwaway(
+			'unterminated-block.jsx',
+			"import { StatCard } from 'ui-core/src-react/components/Stat';\n"
+				. "export const E = () => <StatCard icon={ 'money-alt' } />;\n"
+				. "/* this block comment is never closed\n"
+				. "export const F = () => <StatCard icon={ 'calendar-alt' } />;\n"
+		);
+
+		self::assertCount( 1, $result['failed'], 'an unread file must be reported, not silently skipped' );
+		self::assertStringContainsString( 'unterminated-block.jsx', $result['failed'][0]['file'] );
+		self::assertStringContainsString( 'block comment', $result['failed'][0]['reason'] );
+		self::assertSame( 1, $result['files'], 'it is still an anchored file -- it just was not measured' );
+		self::assertCount( 0, $result['raw'], 'a partial reading must not be reported as a measurement' );
+		self::assertCount( 0, $result['unknown'] );
+		self::assertSame( 0, $result['concepts'] );
+	}
+
+	public function test_POSITIVE_CONTROL_comments_stay_unscanned_while_real_call_sites_report(): void {
+		// Fix round 3's win must survive fix round 4's escape rule: the two
+		// commented decoys stay silent, and the real call sites on either side
+		// of a regex literal are still both reported, with correct line
+		// numbers. Without this, "nothing is reported" would look like a pass
+		// for the two tests above.
+		$result = $this->scan_throwaway(
+			'escapes-and-comments.jsx',
+			"import { StatCard } from 'ui-core/src-react/components/Stat';\n"
+				. "// discarded example: icon: 'money-alt' -- do not write this\n"
+				. "/*\n"
+				. " * another discarded shape:\n"
+				. " * icon: 'calendar-alt'\n"
+				. " */\n"
+				. "const trim = ( s ) => s.replace( /\\/*abc/, '' );\n"
+				. "export const A = () => <StatCard icon={ 'money-alt' } />;\n"
+				. "export const B = () => <StatCard icon={ 'revenue' } />;\n"
+		);
+
+		self::assertSame( array(), $result['failed'] );
+		self::assertCount( 1, $result['raw'], 'exactly the one real money-alt, not the two commented decoys' );
+		self::assertSame( 'money-alt', $result['raw'][0]['value'] );
+		self::assertSame( 8, $result['raw'][0]['line'], 'line numbers survive both the block comment and the regex' );
+		self::assertCount( 0, $result['unknown'] );
+		self::assertSame( 1, $result['concepts'], "the 'revenue' call site on the last line" );
 	}
 
 	public function test_a_file_without_a_kit_anchor_is_never_scanned(): void {

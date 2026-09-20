@@ -50,6 +50,23 @@ namespace MHMUiCore\Kit;
  * false "register it as a concept" suggestion that --expect-raw's count does
  * not catch because it only counts the raw bucket.
  *
+ * A JS REGEX LITERAL IS NOT PARSED AS ONE -- AND THE GATE SAYS SO OUT LOUD
+ * strip_js_comments() has no notion of a regex literal: it cannot tell
+ * `/\/*abc/` from a division sign followed by the start of a block comment.
+ * Measured 2026-09-20, before the escape rule existed: in a file holding
+ * `s.replace( /\/*abc/, '' )` and two real raw suffixes, the `\/*` opened a
+ * block comment that never closed, the whole rest of the file was blanked, and
+ * BOTH real violations vanished -- alone the run hit EMPTY-SET, but paired
+ * with any other measuring file it exited 0, green and silent. The same
+ * happened to the rest of a line holding `/https:\/\//`. Both are closed now
+ * by honouring a backslash escape while in code state, so an escaped slash
+ * cannot open a comment. That is a patch on a symptom, not a JS parser: the
+ * next unparsed shape could swallow a file the same way. So the machine no
+ * longer returns a swallowed file's text at all -- reaching EOF inside a block
+ * comment yields NULL, which scan() records in the 'failed' bucket and the CLI
+ * prints as MEASURE-FAILED, naming the file, exit 2. A gate may fail to
+ * understand a structure; it may not turn that into a silent pass.
+ *
  * COMMENTS ARE NOT SCANNED, ON EITHER SIDE
  * php_icons() was already immune to this: token_get_all() gives a `//` or
  * `/* *\/` comment its own T_COMMENT token, never a T_CONSTANT_ENCAPSED_STRING,
@@ -94,13 +111,14 @@ final class IconConceptScanner {
 	 * Scan the given paths and sort every `icon` value found into buckets.
 	 *
 	 * @param array<int, string> $paths Files or directories to scan.
-	 * @return array{raw: array<int, array{file: string, line: int, value: string, concepts: array<int, string>}>, unknown: array<int, array{file: string, line: int, value: string}>, concepts: int, files: int}
+	 * @return array{raw: array<int, array{file: string, line: int, value: string, concepts: array<int, string>}>, unknown: array<int, array{file: string, line: int, value: string}>, failed: array<int, array{file: string, reason: string}>, concepts: int, files: int}
 	 */
 	public function scan( array $paths ): array {
 		$map = Icons::map();
 
 		$raw      = array();
 		$unknown  = array();
+		$failed   = array();
 		$concepts = 0;
 		$files    = 0;
 
@@ -114,6 +132,17 @@ final class IconConceptScanner {
 
 			$extension = strtolower( (string) pathinfo( $file, PATHINFO_EXTENSION ) );
 			$icons     = ( 'php' === $extension ) ? $this->php_icons( $source ) : $this->js_icons( $source );
+
+			if ( null === $icons ) {
+				// This file was not measured. Its partial hits are dropped on
+				// purpose: half a reading reported as a whole one is how a gate
+				// learns to lie.
+				$failed[] = array(
+					'file'   => $file,
+					'reason' => 'a block comment is never closed -- everything after it was swallowed, so this file was not measured',
+				);
+				continue;
+			}
 
 			foreach ( $icons as $hit ) {
 				if ( isset( $map[ $hit['value'] ] ) ) {
@@ -147,6 +176,7 @@ final class IconConceptScanner {
 		return array(
 			'raw'      => $raw,
 			'unknown'  => $unknown,
+			'failed'   => $failed,
 			'concepts' => $concepts,
 			'files'    => $files,
 		);
@@ -301,10 +331,13 @@ final class IconConceptScanner {
 	 *
 	 * A character-by-character state machine, not a strip-first regex: it
 	 * tracks single-, double- and backtick-quoted strings so a `//` inside a
-	 * URL literal is never mistaken for a comment start, and it replaces
-	 * comment TEXT with spaces rather than deleting it, so every newline
-	 * survives and a hit's reported line number still matches the untouched
-	 * file. Measured 2026-09-20 (Codex PR #32): without this, a discarded
+	 * URL literal is never mistaken for a comment start, it honours a
+	 * backslash escape in CODE state so a regex literal's escaped slash cannot
+	 * open a comment, and it replaces comment TEXT with spaces rather than
+	 * deleting it, so every newline survives and a hit's reported line number
+	 * still matches the untouched file. Returns NULL, never a string, when the
+	 * source ends while still inside a block comment -- see the bottom of the
+	 * method. Measured 2026-09-20 (Codex PR #32): without this, a discarded
 	 * example left in a `//` comment -- `// icon: 'money-alt'` -- was read as
 	 * a live call site and reported RAW, punishing the exact "do not write
 	 * this" comment it was written to prevent. php_icons() never had this
@@ -315,7 +348,7 @@ final class IconConceptScanner {
 	 *
 	 * @param string $source JS/JSX file contents.
 	 */
-	private function strip_js_comments( string $source ): string {
+	private function strip_js_comments( string $source ): ?string {
 		$out    = '';
 		$length = strlen( $source );
 		$state  = 'normal';
@@ -326,6 +359,14 @@ final class IconConceptScanner {
 			$next = ( $i + 1 < $length ) ? $source[ $i + 1 ] : '';
 
 			if ( 'normal' === $state ) {
+				if ( ( '\\' === $char ) && ( '' !== $next ) ) {
+					// An escape in CODE state, which is where a regex literal's
+					// body lives: consume both characters so the escaped slash
+					// in /\/*abc/ or /https:\/\// can never open a comment.
+					$out .= $char . $next;
+					++$i;
+					continue;
+				}
 				if ( ( '/' === $char ) && ( '/' === $next ) ) {
 					$state = 'line_comment';
 					$out  .= '  ';
@@ -379,7 +420,14 @@ final class IconConceptScanner {
 			$out .= ( "\n" === $char ) ? $char : ' ';
 		}
 
-		return $out;
+		// Reaching EOF still inside a block comment means this machine read a
+		// structure it does not understand -- most likely something that is not
+		// a comment at all. Everything from that point on was blanked, so the
+		// rest of the file was NOT measured. Returning the blanked text here
+		// would hand js_icons() a silent, confident zero: the gate's worst
+		// possible answer. Null is the signal; scan() turns it into a named
+		// entry in the 'failed' bucket and the CLI into MEASURE-FAILED + exit 2.
+		return ( 'block_comment' === $state ) ? null : $out;
 	}
 
 	/**
@@ -387,16 +435,25 @@ final class IconConceptScanner {
 	 * not a parser: the package ships no JS parser into a consumer's vendor
 	 * tree, and a dynamic prop is out of reach either way.
 	 *
+	 * Returns null when strip_js_comments() could not finish the file -- NOT an
+	 * empty array, which would read as "scanned, found nothing".
+	 *
 	 * @param string $source File contents.
-	 * @return array<int, array{line: int, value: string}>
+	 * @return array<int, array{line: int, value: string}>|null
 	 */
-	private function js_icons( string $source ): array {
+	private function js_icons( string $source ): ?array {
+		$stripped = $this->strip_js_comments( $source );
+
+		if ( null === $stripped ) {
+			return null;
+		}
+
 		// The lookbehind keeps `data-icon="x"` and `my-icon: 'y'` out: without
 		// it the scanner reports a product's own attributes as kit call sites.
 		$pattern = '/(?<![\w-])icon\s*(?::\s*|=\s*\{?\s*)[\'"]([^\'"]+)[\'"]/';
 		$out     = array();
 
-		foreach ( explode( "\n", $this->strip_js_comments( $source ) ) as $index => $line ) {
+		foreach ( explode( "\n", $stripped ) as $index => $line ) {
 			if ( 0 === preg_match_all( $pattern, $line, $matches ) ) {
 				continue;
 			}
