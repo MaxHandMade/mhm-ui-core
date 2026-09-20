@@ -195,3 +195,59 @@ git checkout bin/check-icon-concepts.php
 
 Mutate only on a committed tree, then `git checkout -- <file>` — same rule as
 M0-M9 above.
+
+## 2026-09-20 — vertical rhythm ownership moves to the page shell (Task 5)
+
+Three mutations, applied one at a time to commit `9761d56` (this task's own
+commit, `git archive HEAD`-clean), run, and reverted. All three are caught by
+the new `tests/Gate/layout.test.js` describe block `vertical rhythm is owned
+by the page shell (0.14.0)`.
+
+Baseline (green before any mutation): `npx jest tests/Gate/layout.test.js` →
+19 tests green (15 pre-existing + 4 new).
+
+Before the CSS was written, the rule was measured in the browser on both
+surfaces (admin `wp-admin`, logged in; front, logged out) with a probe mu-plugin
+at `C:/projects/rentiva-dev/mu-plugins/ui-core-rhythm-probe/` (Chrome
+`HeadlessChrome/153.0.0.0`, WordPress 7.1.1, puppeteer-core, disk-edited CSS +
+hard reload, no CSSOM): `.mhmui-stats-grid`/`.mhmui-widget` went from
+16px/12px (admin) and 0px/0px (front) to **12px/12px on both surfaces**, while
+`h1`/`.notice`/`p` stayed at their baseline (0px/5px/13px admin; 0px/0px/0px
+front) and neither page grew a horizontal scrollbar. Full numbers in
+`docs/superpowers/sdd/2026-09-20-kit-icon-vocabulary-and-rhythm-v2/task-5-report.md`.
+
+| Mutation | Edit | Measured |
+|---|---|---|
+| M11 | `assets/react/admin.css` — `.mhmui-stats-grid` regains `margin-top: 16px;` | **1 failure**: `the stats grid no longer carries its own outer margin` (`ruleBody` for `.mhmui-stats-grid` matches `/margin(-top\|-block-start)?\s*:/`) — the other 3 rhythm tests and all 15 pre-existing tests stay green |
+| M12 | `assets/react/admin.css` — the rhythm selector `.mhmui-admin-page > * + :is( .mhmui-stats-grid, .mhmui-widget, .mhmui-pagination, .mhmui-notice )` → `.mhmui-admin-page > * + *` (bare sibling combinator, no `:is()` guard) | **2 failures**: `the rhythm never targets core-owned elements` (the file now matches the banned `mhmui-(admin\|front)-page > * + *` shape) **and** `both shells space their kit-member children with --mhmui-space-3` (the exact `:is(...)`-qualified selector `ruleBody` looks for no longer exists in admin.css) |
+| M13 | `assets/react/admin.css` — the whole rhythm rule block deleted | **1 failure**: `both shells space their kit-member children with --mhmui-space-3` (admin.css half: `ruleBody` returns `null` for the shell+`:is(...)` selector) — the front.css half of the same test stays green, confirming the check inspects each file independently |
+
+Reverted with targeted `Edit` calls restoring the exact committed text after
+M11 and M12, and `git checkout -- assets/react/admin.css` after M13; `git diff
+assets/react/admin.css assets/react/front.css` empty afterward; full suite
+(`npm test`) green again (185/185).
+
+### Running M11-M13 again
+
+```bash
+cd C:/projects/mhm-ui-core
+npx jest tests/Gate/layout.test.js -t "vertical rhythm"   # baseline: 4/4 green
+
+# M11 -- put the grid's own margin back
+sed -i "s/\tgap: var( --mhmui-gap );\n/&\tmargin-top: 16px;\n/" assets/react/admin.css   # or edit by hand
+npx jest tests/Gate/layout.test.js -t "vertical rhythm"   # 1 failure
+git checkout -- assets/react/admin.css
+
+# M12 -- widen the rhythm selector to a bare sibling combinator
+# (edit admin.css: replace `> * + :is( .mhmui-stats-grid, .mhmui-widget, .mhmui-pagination, .mhmui-notice )` with `> * + *`)
+npx jest tests/Gate/layout.test.js -t "vertical rhythm"   # 2 failures
+git checkout -- assets/react/admin.css
+
+# M13 -- delete the rhythm rule entirely
+# (edit admin.css: remove the `.mhmui-admin-page > * + :is(...)` block)
+npx jest tests/Gate/layout.test.js -t "vertical rhythm"   # 1 failure
+git checkout -- assets/react/admin.css
+```
+
+Mutate only on a committed tree, then `git checkout -- <file>` — same rule as
+M0-M10 above.
