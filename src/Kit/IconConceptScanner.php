@@ -387,8 +387,14 @@ final class IconConceptScanner {
 	 * code, so the worst case is a NOISY FALSE POSITIVE -- an icon literal
 	 * inside an unrecognised comment reported as a call site. The case it
 	 * replaces was a SILENT FALSE NEGATIVE. For a gate that is the right
-	 * direction, and it is the whole premise of this slice: a gate may nag, it
-	 * may not lie. The concrete cost, measured: `foo(/* opts *\/x)` with no
+	 * direction, and it is the whole premise of this slice: a gate should nag
+	 * before it lies. "Should", not "does not" -- this rule moves the odds, it
+	 * does not close the class. The class docblock's ONE MEASURED EXCEPTION
+	 * section names the case that still gets through, and it gets through via
+	 * THIS method's own "after whitespace" clause: `const re = /a /*b/;`, whose
+	 * `/*` follows a space, is taken for a comment and swallows what comes
+	 * after it in silence. Read that section before trusting this one.
+	 * The concrete cost, measured: `foo(/* opts *\/x)` with no
 	 * space after `(` is now scanned rather than stripped. `foo( /* opts *\/ x )`
 	 * WITH the space still counts as a comment -- whitespace precedes it -- so
 	 * the common inline-comment shape is unaffected.
