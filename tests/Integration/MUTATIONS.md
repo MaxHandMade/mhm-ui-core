@@ -251,3 +251,87 @@ git checkout -- assets/react/admin.css
 
 Mutate only on a committed tree, then `git checkout -- <file>` — same rule as
 M0-M10 above.
+
+## 2026-09-20 — vertical rhythm, fix round 1 (Task 5): a comment-blind gate + the untested front.css leg
+
+Two findings from independent review of the Task 5 commit (`9761d56`), fixed together on top of it.
+
+### Finding 1 — the gate scanned raw CSS text, comments included
+
+`the rhythm never targets core-owned elements` matched its banned-shape regex against the RAW file
+string, never stripped of comments -- unlike every other check in this file (`ruleBody()`'s own head,
+and `classUniverse()` in `tests/Gate/kit-parity.test.js`, both strip `/* ... */` before matching). The
+original Task 5 commit's docblock explained the selector choice with prose that happened to spell out
+the banned shape literally (`` `.mhmui-admin-page > * + *` ``) as a counter-example -- the gate read its
+own explanatory comment as a violation. The wrong fix (what the first pass did, and review rejected) is
+rewording the comment to dodge the regex; the right fix is narrowing the gate to code, matching this
+file's own established pattern: `const code = css.replace( /\/\*[\s\S]*?\*\//g, '' );` before the
+`toMatch`. Applied; the docblock's literal counter-example text was restored verbatim (the reword from
+the first pass reverted) as the POSITIVE control.
+
+**Positive control** (comment restored to contain the literal banned shape, admin.css and front.css
+both): `npx jest tests/Gate/layout.test.js -t "vertical rhythm"` → **4/4 green**, including `the rhythm
+never targets core-owned elements` -- confirms the narrowed gate no longer treats its own documentation
+as a violation.
+
+**Blindness check** (M12 re-run against the fixed gate, LIVE CODE this time, not a comment): `admin.css`
+`.mhmui-admin-page > * + :is( .mhmui-stats-grid, .mhmui-widget, .mhmui-pagination, .mhmui-notice )` →
+`.mhmui-admin-page > * + *` (the same edit as M12): **2 failures** -- `the rhythm never targets
+core-owned elements` (the intended catch, still fires after comment-stripping) and `both shells space
+their kit-member children with --mhmui-space-3` (the exact `:is(...)`-selector no longer exists).
+Reverted (`Edit` restoring the exact committed rule text); `git diff` on the rule itself empty afterward.
+Confirms stripping comments did not blind the gate to the real defect it exists to catch.
+
+### Finding 2 — the docblock overclaimed: only one of four targets actually lost its own margin
+
+`.mhmui-stats-grid`'s own `margin-top: 16px` was removed, but `.mhmui-widget`
+(`margin-top: var(--mhmui-gap)`), `.mhmui-pagination` (`margin-top: 12px`) and `.mhmui-notice`
+(`margin: 12px 0`) all still carry their own margin declarations in `admin.css` -- measured by reading
+the file, not assumed. The shell rule (0,2,0) always outranks these (0,1,0) declarations inside the
+shell regardless of source order, but the override is invisible today because `--mhmui-gap`, the two
+literals, and `--mhmui-space-3` all resolve to the same 12px. **No code changed** -- those own-margins
+are the only spacing source for a shell-less surface (the existing "known limit" paragraph), so removing
+them would be an unmeasured regression. Both docblocks (`admin.css`, `front.css`) rewritten to state the
+measured fact: admin.css's three other targets keep their own margins and the shell overrides them only
+inside the shell (today invisibly, since the values match); front.css defines none of the three targets
+at all, so there is no overlap there -- the shell rule is their sole spacing source on the front end.
+
+### Finding 3 (M14) — front.css's half of the rhythm rule had never been mutated
+
+M11-M13 (Task 5's own commit) only touched `admin.css`. The `for` loop in `both shells space their
+kit-member children with --mhmui-space-3` covers `front.css` by construction, but that coverage had
+only been read, not measured.
+
+**M14** — `front.css`: the whole `.mhmui-front-page > * + :is( .mhmui-stats-grid, .mhmui-widget,
+.mhmui-pagination, .mhmui-notice )` rule block deleted:
+```
+npx jest tests/Gate/layout.test.js -t "vertical rhythm"
+```
+→ **1 failure**: `both shells space their kit-member children with --mhmui-space-3` (front.css half:
+`ruleBody` returns `null` for `.mhmui-front-page` + the rhythm selector) -- the admin.css half of the
+same test, and all three other rhythm tests, stayed green. Reverted by re-inserting the exact committed
+rule text (not `git checkout`, since the docblock fix above was uncommitted at the same time and had to
+be kept); `git diff` on the rule text itself empty afterward (only the docblock prose differs from
+`9761d56`, as intended).
+
+### Re-running (fix round 1)
+
+```bash
+cd C:/projects/mhm-ui-core
+npx jest tests/Gate/layout.test.js -t "vertical rhythm"   # baseline: 4/4 green
+
+# Finding 1 blindness check -- mutate LIVE CODE, not a comment
+# (edit admin.css: replace `> * + :is( .mhmui-stats-grid, .mhmui-widget, .mhmui-pagination, .mhmui-notice )` with `> * + *`)
+npx jest tests/Gate/layout.test.js -t "vertical rhythm"   # 2 failures
+# revert by restoring the exact selector text
+
+# M14 -- delete the front.css leg of the rhythm rule
+# (edit front.css: remove the `.mhmui-front-page > * + :is(...)` block)
+npx jest tests/Gate/layout.test.js -t "vertical rhythm"   # 1 failure
+# revert by restoring the exact rule block
+```
+
+Mutate only on a committed tree (or, when other uncommitted-but-intentional edits are present in the
+same file, restore by re-inserting the exact prior text rather than `git checkout`, and confirm with
+`git diff` that only the intended lines differ from the last commit afterward) -- same rule as M0-M13
+above.
