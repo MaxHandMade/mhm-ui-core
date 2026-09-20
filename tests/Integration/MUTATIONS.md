@@ -382,3 +382,63 @@ Three inline unit tests pin the same three shapes directly against `rhythmTarget
 touching the shipped CSS (`M15 mutation: `> * + p` …`, `` M15 mutation: `> * + *` … ``, `` M15 baseline:
 … ``), so a future change to this function is caught even before anyone thinks to mutate the real
 stylesheet again.
+
+## 2026-09-20 — icon-concept gate, fix round 3 (Task 4): js_icons() stops reading comments
+
+Codex PR #32 measured a real false positive: `js_icons()`'s bare per-line regex read a `//`-commented
+example (`// icon: 'money-alt'`) as a live call site. The fix added `strip_js_comments()`, a small
+character state machine run before the regex — it tracks single/double/backtick strings (so a `//`
+inside a URL literal is not mistaken for a comment start) and blanks comment text with spaces rather
+than deleting it (so every newline survives and reported line numbers stay correct). `php_icons()` was
+never affected — `token_get_all()` already gives a comment its own `T_COMMENT` token — so both mutations
+below are JS-only, applied one at a time to commit `e98a58a` (this fix round's own commit, `git archive
+HEAD`-clean), run via `./vendor/bin/phpunit -c phpunit.xml --filter IconConceptScannerTest`, and reverted
+with `git checkout -- src/Kit/IconConceptScanner.php`.
+
+Baseline: `OK (9 tests, 35 assertions)`. Fixture-tree regression fence: `kit-caller.jsx` carries both a
+`//` and a `/* */` decoy next to its real `money-alt` call site — with the fix in place,
+`composer check:icon-concepts` still measures `5 file(s), 2 concept call site(s), 2 raw, 1 unknown`
+(`--expect-raw=2` unchanged); the table below is what breaks if the fix is removed.
+
+| Mutation | Edit | Measured |
+|---|---|---|
+| M16a | `js_icons()` — `explode( "\n", $this->strip_js_comments( $source ) )` → `explode( "\n", $source )` (comment-stripping call removed entirely) | **4 failures**: `test_a_raw_suffix_with_a_concept_is_reported_in_both_languages` (`raw` count 2→4 — both decoys in `kit-caller.jsx` are now read as raw hits), `test_a_data_attribute_is_not_mistaken_for_the_icon_prop` (same count assertion), `test_a_commented_icon_example_is_never_reported` (the isolated `//`+`/* */` fixture now reports 2 raw instead of 0), `test_a_real_call_site_survives_next_to_commented_decoys` (3 `money-alt` hits in `kit-caller.jsx` instead of 1) — the other 5 tests (including the URL test) stayed green |
+| M16b | `strip_js_comments()` — the `if ( ( "'" === $char) \|\| ('"' === $char) \|\| ('`' === $char) ) { $state = 'string'; $quote = $char; }` block removed (string-awareness disabled, comments still stripped) | **1 failure, isolated**: `test_a_double_slash_inside_a_string_is_not_mistaken_for_a_comment` (`Failed asserting that 0 is identical to 1`) — the `//` inside `'https://example.com/icons'` is now read as a real comment start and blanks the rest of the line, including the real `mhmuicore_stat_card_html( { icon: 'revenue' } )` call sharing that line; the other 8 tests, including the two comment-decoy tests, stayed green because M16b does not touch comment-detection itself, only string-boundary tracking |
+
+**Meaning:** M16a and M16b are caught by disjoint test sets — M16a breaks every test that depends on
+comments actually being stripped, M16b breaks only the one test that depends on strings being respected
+*while* stripping. Neither mutation is covered by the other's failure set, so both halves of the fix are
+independently pinned.
+
+**A fixture design note, measured while writing M16b's test:** the URL and the real call site were first
+written on two separate lines. M16b did not turn that version red — `line_comment` already resets at
+every `"\n"` regardless of string-awareness, so an unterminated `//` inside a URL only ever corrupts the
+*rest of that same line*, never a later one. The test only exercises what it claims once the URL and the
+real call share one line (see the `c2bdd6d` follow-up commit) — a reminder that a mutation test proves
+nothing about a fixture it was never run against.
+
+### Running M16 again
+
+```bash
+cd C:/projects/mhm-ui-core
+./vendor/bin/phpunit -c phpunit.xml --filter IconConceptScannerTest   # baseline: OK (9 tests, 35 assertions)
+
+# M16a
+git diff --stat src/Kit/IconConceptScanner.php   # confirm clean before mutating
+sed -n '399p' src/Kit/IconConceptScanner.php     # explode( "\n", $this->strip_js_comments( $source ) )
+# edit that line by hand to: explode( "\n", $source )
+./vendor/bin/phpunit -c phpunit.xml --filter IconConceptScannerTest   # 4 failures
+git checkout -- src/Kit/IconConceptScanner.php
+
+# M16b -- remove the `if ( ( "'" === $char ) || ... ) { $state = 'string'; $quote = $char; }` block
+# from strip_js_comments()'s 'normal' branch by hand
+./vendor/bin/phpunit -c phpunit.xml --filter IconConceptScannerTest   # 1 failure
+git checkout -- src/Kit/IconConceptScanner.php
+
+./vendor/bin/phpunit -c phpunit.xml --filter IconConceptScannerTest   # back to OK (9 tests, 35 assertions)
+```
+
+Mutate only on a committed tree, then `git checkout -- <file>` — same rule as M0-M10 above. (`sed -i`
+could not express M16a/M16b safely as one-liners against this multi-line method, so both were applied by
+hand with the Edit tool and reverted with `git checkout`, per the house rule that the measurement matters,
+not the tool.)
