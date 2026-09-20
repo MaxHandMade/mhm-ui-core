@@ -9,6 +9,7 @@ import {
 	Widget,
 	tokens,
 } from '../index';
+import { registerIcons, resetIcons } from '../icons';
 
 describe( 'the visual kit renders only what it is given', () => {
 	test( 'StatCard shows label, value and a delta line in the delta direction', () => {
@@ -521,5 +522,20 @@ describe( 'the visual kit renders only what it is given', () => {
 			container.querySelector( '.dashicons-chart-line' )
 		).not.toBeNull();
 		expect( container.querySelector( '.dashicons-rate' ) ).toBeNull();
+	} );
+
+	test( 'StatCard: a concept is resolved BEFORE sanitising, the JSX twin of the PHP order test', () => {
+		// Sira sozlesmedir: sanitizeIconClass lossy'dir (boslugu siler), ters
+		// sirada kayitli 'my concept' kavramindan 'myconcept' turer ve sozlukte
+		// bulunmaz -- kayitli kavramin ikonu yerine ham bir suffix basardi. PHP
+		// ikizi (StatCardTest::test_a_concept_is_resolved_BEFORE_sanitising)
+		// ayni boslukla ayni sirayi kirar; bu test onun JSX karsiligi.
+		registerIcons( { 'my concept': 'car' } );
+		const { container } = render(
+			<StatCard label="L" value="1" icon="my concept" />
+		);
+		resetIcons();
+
+		expect( container.querySelector( '.dashicons-car' ) ).not.toBeNull();
 	} );
 } );

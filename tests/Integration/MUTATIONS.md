@@ -66,3 +66,40 @@ Mutate, run, then `git checkout -- <file>`.
 🔴 **Only on a committed tree.** During the round that produced this file a
 mutation was applied to a tree with uncommitted work, and the revert threw that
 work away — the rule is here because it was broken once.
+
+## 2026-09-20 — icon vocabulary (Task 3: three renderers + gate 6 dictionary + K5)
+
+Three mutations, applied one at a time to commit `8216f54` (task 3's own commit,
+which is already `git archive HEAD`-clean), run, and reverted. Unlike M0-M4
+above, these three do not all measure the same suite — two of them (M5, M6)
+are caught by the JS gate 6 file and the PHP snapshot check, not by
+`tests/Integration/`; M7 is the only one caught inside this directory. They are
+recorded here anyway, at the same home as M0-M4, per the round's decision.
+
+Baselines (all green before any mutation):
+- `npx jest tests/Gate/kit-parity.test.js` → 7 tests green (includes the new
+  `gate 6 -- the icon vocabulary is one table with two copies` describe block).
+- `composer check:kit-parity` → `kit-parity: 2 PHP renderer(s), snapshot in sync`.
+- `docker compose -f docker/test/docker-compose.yml run --rm php bash -c "composer test:wp"`
+  → `OK (17 tests, 90 assertions)`, STDERR prints
+  `IconVocabularyTest: WordPress 7.1, 350 dashicons`.
+
+| Mutation | Edit | Measured |
+|---|---|---|
+| M5 | `src/Kit/Icons.php` — `SEED`'in `'revenue' => 'money-alt'` satırı → `'revenue' => 'money'` | **1 failure**, isolated: `npx jest tests/Gate/kit-parity.test.js -t "every seed concept"` red (`SEED` ≠ `PHP_SEED`, diff shows `"revenue": "money"` vs `"money-alt"`); the other six tests in that file (EMPTY-SET guards, fixture snapshot, branch coverage, DIRECTIONS pin) stay green |
+| M6 | M5 kept, **plus** the same edit mirrored in `src-react/icons.js` (`revenue: 'money-alt'` → `revenue: 'money'`) — the two twins agree with each other again | The dictionary test itself goes **green** (`SEED` now equals `PHP_SEED` again, both say `money`) — a mutation that stays vacuously invisible to gate 6's own table comparison. But `composer check:kit-parity` → **red**: `kit-parity: src-react/kit-classes.json is stale -- run composer dump:kit-classes` (the committed snapshot still has `money-alt`). And `npx jest tests/Gate/kit-parity.test.js -t "every fixture"` → **red**: fixture 21 (`Concept`) renders `dashicons-money` against a committed snapshot of `dashicons-money-alt`. **Meaning:** breaking both twins identically hides the change from the table-vs-table test, but the committed snapshot and the JSX-vs-snapshot fixture test are a second, independent measurement of the same fact — the two protections do not mask each other |
+| M7 | `src/Kit/Icons.php` — `SEED`'in `'place' => 'location-alt'` anahtarı → `'location' => 'location-alt'` (K5 ihlali: anahtar artık gerçek bir Dashicon adı) | Docker `composer test:wp` → **1 failure**: `IconVocabularyTest::test_no_concept_KEY_is_a_real_dashicon` — *"concept 'location' is ALSO a dashicon name: a consumer writing it as a raw suffix would silently get a different icon"*. The other 16 tests (including `test_every_concept_VALUE_is_a_real_dashicon` and the positive control) stay green; `WordPress 7.1, 350 dashicons` still printed to STDERR |
+
+Reverted with `git checkout -- src/Kit/Icons.php src-react/icons.js` after each
+step; `git diff src/Kit/Icons.php src-react/icons.js` empty afterward.
+
+### Running M5-M7 again
+
+```bash
+npx jest tests/Gate/kit-parity.test.js   # M5, M6 (dictionary + fixture halves)
+composer check:kit-parity                # M6 (snapshot half)
+docker compose -f docker/test/docker-compose.yml run --rm php bash -c "composer test:wp"   # M7
+```
+
+Mutate `src/Kit/Icons.php` (and, for M6, `src-react/icons.js`), run, then
+`git checkout -- <file>` — same committed-tree rule as above.
