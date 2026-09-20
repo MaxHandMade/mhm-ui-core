@@ -1,3 +1,5 @@
+import { resolveIcon } from '../icons';
+
 /**
  * One statistic: label, value, optional icon, delta or sub line.
  *
@@ -180,7 +182,12 @@ export default function StatCard( {
 
 	// A sanitised-away icon ( e.g. "%%" ) renders no span, matching the PHP
 	// twin's '' !== $icon check on its own sanitize_html_class() output.
-	const iconClass = present( icon ) ? sanitizeIconClass( icon ) : '';
+	// Resolved BEFORE sanitising, same order as the PHP twin: sanitizeIconClass
+	// is lossy, so the reverse order would mangle a registered concept
+	// containing a space into a different key and miss it in silence.
+	const iconClass = present( icon )
+		? sanitizeIconClass( resolveIcon( icon ) )
+		: '';
 
 	return (
 		<div className={ classes.join( ' ' ) } { ...dataAttributes( data ) }>

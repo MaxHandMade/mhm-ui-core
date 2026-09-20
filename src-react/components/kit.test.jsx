@@ -487,4 +487,39 @@ describe( 'the visual kit renders only what it is given', () => {
 			container.querySelector( '[class*="dashicons-41"]' )
 		).toBeNull();
 	} );
+
+	test( 'StatCard: a concept icon renders the mapped dashicon', () => {
+		const { container } = render(
+			<StatCard label="L" value="1" icon="revenue" />
+		);
+		expect(
+			container.querySelector( '.dashicons-money-alt' )
+		).not.toBeNull();
+		expect( container.querySelector( '.dashicons-revenue' ) ).toBeNull();
+	} );
+
+	test( 'StatCard: a raw suffix icon still renders unchanged', () => {
+		const { container } = render(
+			<StatCard label="L" value="1" icon="money-alt" />
+		);
+		expect(
+			container.querySelector( '.dashicons-money-alt' )
+		).not.toBeNull();
+	} );
+
+	test( 'Widget: the third icon consumer resolves concepts too', () => {
+		// Widget.jsx printed `dashicons-${icon}` with no resolution; the first
+		// draft of this slice changed only StatCard, so a Widget written with
+		// a concept name would have rendered an empty square while the gate
+		// counted it as clean.
+		const { container } = render(
+			<Widget title="T" icon="rate">
+				body
+			</Widget>
+		);
+		expect(
+			container.querySelector( '.dashicons-chart-line' )
+		).not.toBeNull();
+		expect( container.querySelector( '.dashicons-rate' ) ).toBeNull();
+	} );
 } );
