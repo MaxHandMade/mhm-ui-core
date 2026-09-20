@@ -12,6 +12,11 @@ export { default as ProLock } from './components/ProLock';
 export { default as Notice } from './components/Notice';
 export { default as Widget } from './components/Widget';
 
+// The semantic icon vocabulary (0.14.0+). A NAMED export on purpose: the
+// manifest gate counts `export { default as X }` to find components, and a
+// vocabulary is not a component. resetIcons stays out -- it is a test seam.
+export { registerIcons } from './icons';
+
 // The single token source, for consumers that need the raw values in JS
 // (charts, inline styles). The CSS custom properties are generated from it.
 // Use named export, not default; a later task counts export { default as X } to
