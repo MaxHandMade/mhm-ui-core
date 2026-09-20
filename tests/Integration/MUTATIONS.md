@@ -442,3 +442,76 @@ Mutate only on a committed tree, then `git checkout -- <file>` — same rule as 
 could not express M16a/M16b safely as one-liners against this multi-line method, so both were applied by
 hand with the Edit tool and reverted with `git checkout`, per the house rule that the measurement matters,
 not the tool.)
+
+## 2026-09-20 — icon-concept gate, fix round 4 (Task 4): a regex literal stops swallowing files
+
+Fix round 3's `strip_js_comments()` had no notion of a JS regex literal. Measured on the fix-round-3
+tree (commit `7ca0730`), against a single anchored `.jsx` file holding
+`const trim = ( s ) => s.replace( /\/*abc/, '' );` and two real raw suffixes:
+
+```
+php bin/check-icon-concepts.php <that file>
+EMPTY-SET: 1 anchored file(s) but not one readable icon value -- green here proves nothing
+exit=2
+```
+
+and, with one additional clean file that does measure something — the shape a real consumer tree has:
+
+```
+php bin/check-icon-concepts.php <that file> <a clean file>
+icon-concepts: 2 file(s), 1 concept call site(s), 0 raw, 0 unknown
+exit=0
+```
+
+Two real violations gone, gate green, not one warning: `\/*` was read as `/*`, the block comment never
+closed, and the rest of the file was blanked. `EMPTY-SET` only caught the first run because nothing else
+measured anything. A second shape, `const re = /https:\/\//; const c = { icon: 'money-alt' };`, lost the
+rest of its line the same way.
+
+Commit `e6d8b6f` fixes both by honouring a backslash escape in CODE state, and — because that is a patch
+on two measured symptoms, not a JS parser — makes an unreadable file loud instead of silent: reaching EOF
+inside a block comment returns `null`, `scan()` files it under a new `failed` bucket, and the CLI prints
+`MEASURE-FAILED: <file> -- ...` and exits 2 **before** `--expect-raw` can answer.
+
+**Baseline (commit `e6d8b6f`):** `./vendor/bin/phpunit -c phpunit.xml --filter IconConceptScanner` →
+`OK (16 tests, 63 assertions)`. `composer check:icon-concepts` → `exit=0`,
+`icon-concepts: 5 file(s), 2 concept call site(s), 2 raw, 1 unknown` (the fixture tree's totals and
+`--expect-raw=2` are unchanged by this round — the four new cases use throwaway files the tests write
+and `unlink`, so the committed tree never grows a pathological fixture).
+
+| # | Mutation | Measured result |
+| --- | --- | --- |
+| M17a | `strip_js_comments()` — the `if ( ( '\' === $char ) && ( '' !== $next ) ) { $out .= $char . $next; ++$i; continue; }` block removed from the `'normal'` branch (escape-tracking gone, everything else intact) | **3 failures**: `test_an_escaped_slash_star_in_a_regex_does_not_swallow_the_file`, `test_an_escaped_slash_pair_in_a_regex_does_not_hide_the_rest_of_its_line`, `test_POSITIVE_CONTROL_comments_stay_unscanned_while_real_call_sites_report` — the other 13 stayed green (`Tests: 16, Assertions: 51, Failures: 3`) |
+| M17b | `strip_js_comments()` — `return ( 'block_comment' === $state ) ? null : $out;` → `return $out;` (the unterminated-block guard gone, escape-tracking intact) | **2 failures**: `IconConceptScannerTest::test_an_unterminated_block_comment_fails_loudly_instead_of_reporting_clean` and `IconConceptScannerCliTest::test_an_unmeasured_file_exits_2_with_MEASURE_FAILED` — the other 14 stayed green (`Tests: 16, Assertions: 57, Failures: 2`) |
+
+**Meaning:** the two failure sets are disjoint, so neither half of the fix rides on the other's tests.
+M17a pins the part that closes the two shapes that were actually measured; M17b pins the part that keeps
+the *next* unparsed shape from being silent. Note what M17b's failures do **not** include: with the guard
+removed, the gate on an unterminated-block file reports `1 raw` and exits 1 — red, but for the wrong
+reason and from a file it only half read. Its CLI test deliberately passes `--expect-raw=0`, the count an
+unread file produces, so the mutation is caught as a *silent pass* (exit 0) rather than as an accidental
+red.
+
+### Running M17 again
+
+```bash
+cd C:/projects/mhm-ui-core
+./vendor/bin/phpunit -c phpunit.xml --filter IconConceptScanner   # baseline: OK (16 tests, 63 assertions)
+
+# M17a -- delete the 8-line escape block from strip_js_comments()'s 'normal' branch
+grep -n "An escape in CODE state" src/Kit/IconConceptScanner.php   # comment sits inside the block
+# remove the enclosing `if ( ( '\' === $char ) && ( '' !== $next ) ) { ... }` by hand
+./vendor/bin/phpunit -c phpunit.xml --filter IconConceptScanner   # 3 failures
+git checkout -- src/Kit/IconConceptScanner.php
+
+# M17b
+sed -i "s|return ( 'block_comment' === \$state ) ? null : \$out;|return \$out;|" src/Kit/IconConceptScanner.php
+./vendor/bin/phpunit -c phpunit.xml --filter IconConceptScanner   # 2 failures
+git checkout -- src/Kit/IconConceptScanner.php
+
+./vendor/bin/phpunit -c phpunit.xml --filter IconConceptScanner   # back to OK (16 tests, 63 assertions)
+```
+
+Mutate only on a committed tree, then `git checkout -- <file>` — same rule as M0-M16 above. M17b is a
+safe one-line `sed -i`; M17a is a multi-line block and was removed by hand (`sed -i '362,369d'` against
+commit `e6d8b6f`'s exact line numbers), then reverted with `git checkout`.
