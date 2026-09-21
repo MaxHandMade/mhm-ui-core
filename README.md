@@ -22,7 +22,7 @@ A consuming plugin `require_once`s `vendor/mhm/ui-core/register.php` from its
 main file and registers its own copy:
 
 ```php
-mhmuicore_register( '0.14.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.14.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 At `plugins_loaded` priority 0 the highest registered version boots; the rest
@@ -390,13 +390,50 @@ build from.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.14.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.14.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 Requiring `bootstrap.php` directly defines `MHMUICORE_VERSION` immediately, which
 makes every other copy's bootstrap a no-op: the first plugin loaded wins instead
 of the highest version. The literal must match this package's own version --
 pin it with a check in your own gates, as the existing consumer does.
+
+## The legacy `.mhm-*` block, and when it goes
+
+`assets/react/admin.css` carries two class vocabularies. `.mhmui-*` is this
+package's. `.mhm-*` is a consumer's, and it is there because this file did not
+grow a legacy half — it **began** as one: 188 of those lines arrived in
+`ba0e8ea` (2026-08-26), whose commit message says *"admin.css -> copied, not
+moved"*, and the `.mhmui-*` kit was added beside it eight days later in
+v0.8.0. Nobody has taken the first half out since.
+
+It cannot simply be taken out now, and **scoping it under `.mhmui-admin` is
+the same act**: a released consumer emits those classes on page roots that
+carry no such ancestor, so both deletion and scoping leave real screens
+unstyled. That is the permanent rule already written for CSS class names — an
+alias's life is tied to the life of the old bundles in the field, not to
+semver.
+
+**What was missing until 0.14.1 is the exit condition.** The note inside
+`admin.css` says the product keeps its `.mhm-*` rules until it migrates; that
+sentence is about the *product's* copy and never said when *this package's*
+copy goes. It goes when both of these hold:
+
+1. **No released consumer emits those classes.** Measure it against the
+   released tag, never a working tree — the tree can be migrated while the
+   artifact in the field is not:
+   `git -C <consumer> grep -l 'mhm-stats-grid\|mhm-stat-card\|mhm-widget' <released-tag>`
+2. **The support window for the last release that did emit them has closed**,
+   so the loader can no longer be asked to serve one.
+
+Measured 2026-09-21: Rentiva's `main` emits none of them; its released v6.1.5
+emits `.mhm-stats-grid` in 6 files, `.mhm-stat-card` in 7 and `.mhm-widget` in
+14. Condition 1 is therefore **not** met, and the block stays.
+
+The block is fenced with `stylelint-disable selector-class-pattern` so the rest
+of the file is gated: a new `.mhm-*` rule written *outside* the fence fails CI
+(`npm run check:css-namespace`). Do not widen the fence — that is how a debt
+stops being visible.
 
 ## Admin React kit
 

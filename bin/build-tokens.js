@@ -28,11 +28,32 @@ const END = '/* mhmui:tokens:end */';
 /**
  * Selectors a scope's block is written under.
  *
- * `.mhm-stats-grid` is a legacy selector Rentiva still relies on (six files).
+ * `.mhm-stats-grid` is a legacy selector a RELEASED consumer still emits.
  * Dropping it would silently unstyle those grids, so the scope carries it as
  * a second selector rather than losing it in the schema change.
+ *
+ * 🔴 MEASURE IT, DO NOT QUOTE IT. This comment used to read "(six files)" with
+ * no version attached, which made it read as a fact about the consumer's
+ * current tree. It is not: measured 2026-09-21, Rentiva's `main` emits the
+ * class in ZERO files, while its RELEASED tag v6.1.5 -- the version on
+ * WordPress.org, and the one the loader serves when a newer sibling wins --
+ * emits it in SIX. The number that matters is the released one, and it changes
+ * only when a release changes it:
+ *   git -C <rentiva> grep -l mhm-stats-grid <released-tag> -- 'src/*' 'src-react/*'
  */
 const LEGACY_SELECTORS = { '.mhmui-admin': [ '.mhmui-admin', '.mhm-stats-grid' ] };
+
+/**
+ * The fence the generated block carries when it includes a legacy selector.
+ *
+ * selector-class-pattern forbids .mhm-* in this package (see .stylelintrc.json).
+ * The token scope is the one place the package writes a legacy class on
+ * purpose, so the fence is generated with it rather than bolted on by hand --
+ * the block says "do not edit by hand", and a fence a human has to re-add
+ * after every `npm run tokens:build` is a fence that disappears.
+ */
+const FENCE_OPEN = '/* stylelint-disable selector-class-pattern -- legacy scope selector, see LEGACY_SELECTORS in bin/build-tokens.js */';
+const FENCE_CLOSE = '/* stylelint-enable selector-class-pattern */';
 
 /**
  * Render the custom-property block for one scope of a tokens.json document.
@@ -52,8 +73,14 @@ function renderTokensBlock( doc, selector ) {
 		const prop = `--mhmui-${ name }:`;
 		return `\t${ prop.padEnd( width + 1 ) }${ map[ name ] };`;
 	} );
-	const selectors = ( LEGACY_SELECTORS[ selector ] || [ selector ] ).join( ',\n' );
-	return [ START, `${ selectors } {`, ...lines, '}', END ].join( '\n' );
+	const list = LEGACY_SELECTORS[ selector ] || [ selector ];
+	const selectors = list.join( ',\n' );
+	// Fence only when a legacy selector is actually present: a scope that has
+	// migrated must not keep carrying a disable comment for a rule it no longer
+	// breaks, or the fence outlives the debt and nobody notices.
+	const fenced = list.some( ( s ) => ! s.startsWith( '.mhmui-' ) );
+	const block = [ `${ selectors } {`, ...lines, '}' ];
+	return [ START, ...( fenced ? [ FENCE_OPEN ] : [] ), ...block, ...( fenced ? [ FENCE_CLOSE ] : [] ), END ].join( '\n' );
 }
 
 /**
