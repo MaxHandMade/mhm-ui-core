@@ -4,6 +4,7 @@
    ============================================================================= */
 
 /* mhmui:tokens:start -- generated from src-react/tokens.json by bin/build-tokens.js; do not edit by hand */
+/* stylelint-disable selector-class-pattern -- legacy scope selector, see LEGACY_SELECTORS in bin/build-tokens.js */
 .mhmui-admin,
 .mhm-stats-grid {
 	--mhmui-info:           #2271b1;
@@ -42,7 +43,44 @@
 	--mhmui-measure:        48rem;
 	--mhmui-card-min:       11rem;
 }
+/* stylelint-enable selector-class-pattern */
 /* mhmui:tokens:end */
+
+/* =============================================================================
+   LEGACY VOCABULARY — .mhm-*, the consumer's prefix, not this package's.
+   Everything from here to the matching stylelint-enable below is fenced.
+
+   WHY IT IS HERE AT ALL. This file did not grow a legacy half; it BEGAN as
+   one. Measured 2026-09-21 with git blame: 188 of the 211 lines below came
+   from ba0e8ea (2026-08-26), whose own commit message says "admin.css ->
+   copied, not moved" -- Rentiva's src-react/shared/admin.css was copied in
+   whole. The .mhmui-* kit was added BESIDE it eight days later (3e7cb27,
+   v0.8.0). So these rules are not an accommodation the package granted; they
+   are its birth state, and nobody has taken them out since.
+
+   WHY THE FENCE AND NOT A DELETION. Removing or scoping them is the same act
+   from an old bundle's point of view: a released consumer emits these classes
+   with no .mhmui-admin ancestor, so both deletion AND scoping leave those
+   screens unstyled. The permanent rule (project_ui_core_kalici_kurallar.md)
+   already says so: an alias's life is tied to the life of the old bundles in
+   the field, not to semver. Measured 2026-09-21: Rentiva's released v6.1.5
+   emits .mhm-stats-grid in 6 files, .mhm-stat-card in 7, .mhm-widget in 14,
+   and its About and Dashboard page roots carry NO .mhmui-admin.
+
+   THE EXIT CONDITION -- the thing that was missing until now. The package's
+   own note below says "the product keeps its .mhm-* rules until it migrates",
+   which is a sentence about the PRODUCT's copy. It never said when the
+   PACKAGE's copy goes. It goes when BOTH hold:
+     1. No RELEASED consumer emits these classes any more. Measure, do not
+        assume -- against the released tag, never the working tree:
+          git -C <consumer> grep -l 'mhm-stats-grid\|mhm-stat-card\|mhm-widget' <tag>
+     2. The support window for the last release that did emit them has closed,
+        so the loader can no longer be asked to serve one.
+   Until then this fence stays and the debt stays visible. Do not widen the
+   fence to cover a new rule: a new .mhm-* rule in this package is a defect,
+   and selector-class-pattern is there to say so.
+   ============================================================================= */
+/* stylelint-disable selector-class-pattern -- legacy consumer vocabulary; exit condition above */
 
 /* -----------------------------------------------------------------------------
    Stats cards — StatsCards component (dashboard Row 1 + reports header)
@@ -257,6 +295,10 @@
 	font-size: 10px;
 	color: var( --mhmui-text-muted );
 }
+
+/* stylelint-enable selector-class-pattern */
+/* ^ end of the legacy .mhm-* vocabulary. Everything below is this package's
+   own namespace and the gate is live again. */
 
 /* =============================================================================
    Visual kit — StatCard · StatsGrid · StatusBadge · Pagination ·

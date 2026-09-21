@@ -8,6 +8,13 @@
     "custom-property-pattern": [
       "^mhmui-[a-z0-9]+(-[a-z0-9]+)*$",
       { "message": "This package may only define --mhmui-* custom properties; --mhm-* belongs to the products." }
+    ],
+    "selector-class-pattern": [
+      "^(mhmui-[a-z0-9]+(-[a-z0-9]+)*(__[a-z0-9-]+)?(--[a-z0-9-]+)?|dashicons)$",
+      {
+        "resolveNestedSelectors": true,
+        "message": "This package may only style .mhmui-* classes; .mhm-* belongs to the products -- the same boundary custom-property-pattern draws for tokens, which this package drew for tokens and forgot to draw for class names (measured 2026-09-21: 51 selectors slipped through three release rounds). `dashicons` is the one exception and it is core's, not ours: the kit targets it inside its own cards. The legacy .mhm-* block in admin.css is fenced with stylelint-disable and carries its exit condition there; do not extend the fence, and do not add a new .mhm-* rule outside it."
+      }
     ]
   }
 }
