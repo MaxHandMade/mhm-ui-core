@@ -101,5 +101,13 @@
       { "emptyText": "Not entered", "items": [ { "label": "City", "value": "Muğla" }, { "label": "Tax office", "value": "" } ] },
       { "emptyText": "Not entered", "layout": "inline", "items": [ { "label": "Documents", "value": "2 missing", "tone": "warning" } ] }
     ]
+  },
+  "DetailLayout": {
+    "interactive": false, "tone_semantics": false,
+    "props": { "children": "node", "aside": "node?", "asideLabel": "string?" },
+    "fixtures": [
+      { "children": "Details", "aside": "Decision", "asideLabel": "Decision" },
+      { "children": "Details" }
+    ]
   }
 }

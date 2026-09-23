@@ -629,3 +629,33 @@
 .mhmui-detail-list__mark--danger { background: var( --mhmui-danger-strong ); }
 .mhmui-detail-list__mark--info { background: var( --mhmui-info-strong ); }
 .mhmui-detail-list__mark--neutral { background: var( --mhmui-neutral-strong ); }
+
+/* DetailLayout (0.15.0). Wraps below ~800px of container: main basis 420px +
+   aside basis 360px + gap. min-width: 0 so an unbroken IBAN/URL cannot grow a
+   column's basis and force the wrap early. The sticky top is the 32px admin
+   bar; at <= 782px the bar is 46px, but the columns are already stacked there
+   and sticky has no effect -- so a fixed 32px is enough. */
+.mhmui-detail-layout {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-start;
+	gap: var( --mhmui-space-4 );
+}
+.mhmui-detail-layout__main,
+.mhmui-detail-layout__aside {
+	display: flex;
+	flex-direction: column;
+	gap: var( --mhmui-space-4 );
+	min-width: 0;
+}
+.mhmui-detail-layout__main {
+	flex: 1 1 420px;
+}
+.mhmui-detail-layout__aside {
+	flex: 0 1 360px;
+	position: sticky;
+	top: calc( 32px + var( --mhmui-space-4 ) );
+}
+.mhmui-detail-layout .mhmui-widget {
+	margin-top: 0;
+}
