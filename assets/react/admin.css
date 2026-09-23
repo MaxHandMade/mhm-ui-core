@@ -669,15 +669,23 @@
 }
 
 /* ConfirmButton (0.15.0). Targets are at least 44px (WCAG 2.2 SC 2.5.8 asks
-   for 24px; 44px is deliberately stricter -- layout.test.js pins it). */
+   for 24px; 44px is deliberately stricter -- layout.test.js pins it).
+   0.15.1: the buttons are WordPress `.button`s in wp-admin, so every rule on
+   them must outrank core's buttons.css -- `.wp-core-ui .button` (0,2,0) sets
+   size and colour, `.wp-core-ui .button:hover/:focus/:active` (0,3,0) the
+   states. At (0,1,0)/(0,2,0) the 0.15.0 rules lost: 40px targets, and a
+   focused primary confirm drawn as an outline (measured in Rentiva). The
+   extra weight comes from the `button` type and the root's own two classes --
+   this package styles no class outside .mhmui-*, `.button` included.
+   layout.test.js computes the specificity against core's and fails below it. */
 .mhmui-confirm {
 	display: flex;
 	flex-direction: column;
 	gap: var( --mhmui-space-2 );
 }
-.mhmui-confirm__trigger,
-.mhmui-confirm__confirm,
-.mhmui-confirm__cancel {
+.mhmui-confirm button.mhmui-confirm__trigger,
+.mhmui-confirm button.mhmui-confirm__confirm,
+.mhmui-confirm button.mhmui-confirm__cancel {
 	min-height: 44px;
 }
 .mhmui-confirm__prompt {
@@ -711,16 +719,28 @@
 .mhmui-confirm--secondary {
 	--mhmui-confirm-ink: var( --mhmui-text );
 }
-.mhmui-confirm--primary :is( .mhmui-confirm__trigger, .mhmui-confirm__confirm ) {
+.mhmui-confirm.mhmui-confirm--primary button:is( .mhmui-confirm__trigger, .mhmui-confirm__confirm ),
+.mhmui-confirm.mhmui-confirm--primary button:is( .mhmui-confirm__trigger, .mhmui-confirm__confirm ):is( :hover, :focus, :active ) {
 	background: var( --mhmui-confirm-fill );
 	border-color: var( --mhmui-confirm-fill );
 	color: var( --mhmui-confirm-ink );
 }
-.mhmui-confirm--danger :is( .mhmui-confirm__trigger, .mhmui-confirm__confirm ) {
+/* Core's focus ring is one ring in the accent colour -- invisible around an
+   accent fill. Two rings, the inner one the surface, as core does for
+   .button-primary. */
+.mhmui-confirm.mhmui-confirm--primary button:is( .mhmui-confirm__trigger, .mhmui-confirm__confirm ):focus {
+	box-shadow: 0 0 0 2px var( --mhmui-surface ), 0 0 0 4px var( --mhmui-confirm-fill );
+}
+.mhmui-confirm.mhmui-confirm--danger button:is( .mhmui-confirm__trigger, .mhmui-confirm__confirm ),
+.mhmui-confirm.mhmui-confirm--danger button:is( .mhmui-confirm__trigger, .mhmui-confirm__confirm ):is( :hover, :focus, :active ) {
 	border-color: var( --mhmui-confirm-ink );
 	color: var( --mhmui-confirm-ink );
 }
-.mhmui-confirm--secondary .mhmui-confirm__trigger {
+.mhmui-confirm.mhmui-confirm--danger button:is( .mhmui-confirm__trigger, .mhmui-confirm__confirm ):focus {
+	box-shadow: 0 0 0 1.5px var( --mhmui-confirm-ink );
+}
+.mhmui-confirm.mhmui-confirm--secondary button.mhmui-confirm__trigger,
+.mhmui-confirm.mhmui-confirm--secondary button.mhmui-confirm__trigger:is( :hover, :focus, :active ) {
 	color: var( --mhmui-confirm-ink );
 }
 .mhmui-confirm [aria-disabled="true"] {
