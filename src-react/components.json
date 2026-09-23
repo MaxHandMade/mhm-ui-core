@@ -93,5 +93,13 @@
       { "title": "Marmaris Cars" },
       { "title": "Marmaris Cars", "back": { "label": "Pending applications", "href": "?tab=pending" }, "badge": { "text": "Pending", "tone": "warning" }, "meta": "#9292 · 23/09/2026 07:26", "level": 2 }
     ]
+  },
+  "DetailList": {
+    "interactive": false, "tone_semantics": false,
+    "props": { "items": "array", "emptyText": "string", "columns": "number?", "layout": "stacked|inline?" },
+    "fixtures": [
+      { "emptyText": "Not entered", "items": [ { "label": "City", "value": "Muğla" }, { "label": "Tax office", "value": "" } ] },
+      { "emptyText": "Not entered", "layout": "inline", "items": [ { "label": "Documents", "value": "2 missing", "tone": "warning" } ] }
+    ]
   }
 }

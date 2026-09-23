@@ -13,7 +13,7 @@ describe( 'components.json kapilarin girdisidir', () => {
 		// metni olcuyor demektir.
 		const code = barrel.replace( /\/\/.*$/gm, '' ).replace( /\/\*[\s\S]*?\*\//g, '' );
 		const exported = [ ...code.matchAll( /export \{ default as (\w+) \}/g ) ].map( ( m ) => m[ 1 ] );
-		expect( exported ).toHaveLength( 10 );
+		expect( exported ).toHaveLength( 11 );
 		expect( Object.keys( manifest ).sort() ).toEqual( exported.sort() );
 	} );
 

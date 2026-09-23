@@ -580,3 +580,52 @@
 	margin: 0;
 	color: var( --mhmui-text-muted );
 }
+
+/* DetailList (0.15.0): the StatsGrid ceiling formula, so it folds on its own. */
+.mhmui-detail-list {
+	--mhmui-columns: 2;
+	display: grid;
+	gap: var( --mhmui-space-3 ) var( --mhmui-space-4 );
+	margin: 0;
+	grid-template-columns: repeat( auto-fit, minmax( max( var( --mhmui-card-min ), calc( ( 100% - ( var( --mhmui-columns ) - 1 ) * var( --mhmui-space-4 ) ) / var( --mhmui-columns ) ) ), 1fr ) );
+}
+.mhmui-detail-list__label {
+	font-size: 12px;
+	color: var( --mhmui-text-muted );
+}
+.mhmui-detail-list__value {
+	margin: 2px 0 0;
+	font-size: 14px;
+	color: var( --mhmui-text );
+	overflow-wrap: anywhere;
+}
+.mhmui-detail-list__value--empty {
+	color: var( --mhmui-text-muted );
+}
+.mhmui-detail-list--inline {
+	display: flex;
+	flex-direction: column;
+	gap: var( --mhmui-space-2 );
+}
+.mhmui-detail-list--inline .mhmui-detail-list__item {
+	display: flex;
+	justify-content: space-between;
+	gap: var( --mhmui-space-3 );
+}
+.mhmui-detail-list--inline .mhmui-detail-list__value {
+	margin: 0;
+	text-align: end;
+}
+.mhmui-detail-list__mark {
+	display: inline-block;
+	width: 8px;
+	height: 8px;
+	margin-inline-end: 6px;
+	border-radius: 50%;
+	vertical-align: middle;
+}
+.mhmui-detail-list__mark--success { background: var( --mhmui-success-strong ); }
+.mhmui-detail-list__mark--warning { background: var( --mhmui-warning-strong ); }
+.mhmui-detail-list__mark--danger { background: var( --mhmui-danger-strong ); }
+.mhmui-detail-list__mark--info { background: var( --mhmui-info-strong ); }
+.mhmui-detail-list__mark--neutral { background: var( --mhmui-neutral-strong ); }
