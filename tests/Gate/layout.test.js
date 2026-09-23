@@ -449,7 +449,8 @@ describe( 'vertical rhythm is owned by the page shell (0.14.0)', () => {
 	const admin = read( 'admin.css' );
 	const front = read( 'front.css' );
 
-	const RHYTHM = '> * + :is( .mhmui-stats-grid, .mhmui-widget, .mhmui-pagination, .mhmui-notice )';
+	const RHYTHM =
+		'> * + :is( .mhmui-stats-grid, .mhmui-widget, .mhmui-pagination, .mhmui-notice, .mhmui-tabs, .mhmui-page-header, .mhmui-detail-layout )';
 
 	test( 'the stats grid no longer carries its own outer margin', () => {
 		const body = ruleBody( admin, '.mhmui-stats-grid' );
@@ -466,6 +467,15 @@ describe( 'vertical rhythm is owned by the page shell (0.14.0)', () => {
 			expect( [ name, body ] ).not.toEqual( [ name, null ] );
 			expect( body ).toMatch( /margin-block-start:\s*var\(\s*--mhmui-space-3\s*\)/ );
 		}
+	} );
+
+	test( 'ConfirmButton targets are at least 44px (WCAG 2.2 2.5.8 asks 24; the kit asks 44)', () => {
+		const body = ruleBody(
+			admin,
+			'.mhmui-confirm__trigger,\n.mhmui-confirm__confirm,\n.mhmui-confirm__cancel'
+		);
+		expect( body ).not.toBeNull();
+		expect( body ).toMatch( /min-height:\s*44px/ );
 	} );
 
 	/** Finding 7 (2026-09-20, final fix wave): the OLD check only banned the
