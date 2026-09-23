@@ -100,8 +100,12 @@ final class ShippedSurfaceTest extends TestCase {
 		// export-ignored paths (/bin/, /tests/). This pin is a tripwire, not a
 		// target: it moves only with a commit that deliberately changes what
 		// ships, and the commit says which file.
-		self::assertCount( 59, $files, 'shipped file count changed' );
-		self::assertCount( 51, $p1, 'P1 file set changed' );
+		// 0.15.0 src-react/components/Tabs.jsx moved it from 59/51/3 to 60/52/3
+		// (one P1 file); src/Kit/Tabs.php (its PHP twin) to 61/53/3;
+		// PageHeader.jsx to 62/54/3; DetailList.jsx to 63/55/3;
+		// DetailLayout.jsx to 64/56/3; ConfirmButton.jsx to 65/57/3.
+		self::assertCount( 65, $files, 'shipped file count changed' );
+		self::assertCount( 57, $p1, 'P1 file set changed' );
 		self::assertCount( 3, $p2, 'P2 file set changed' );
 	}
 }

@@ -188,6 +188,21 @@ if ( ! function_exists( 'esc_html' ) ) {
 	}
 }
 
+if ( ! function_exists( 'esc_url' ) ) {
+	/**
+	 * Marking stub, like esc_html: proves the call happens. It does NOT model
+	 * core's protocol filtering -- that is measured on real WordPress only
+	 * (tests/Integration/KitEscapingTest.php). An empty input is NOT special-
+	 * cased here: the Tabs twin skips a raw empty href before it escapes.
+	 *
+	 * @param string $url Raw URL.
+	 * @return string
+	 */
+	function esc_url( string $url ): string {
+		return 'esc_url(' . $url . ')';
+	}
+}
+
 if ( ! function_exists( 'plugins_url' ) ) {
 	/**
 	 * Stub mirroring the real plugins_url() shape closely enough to test ours.

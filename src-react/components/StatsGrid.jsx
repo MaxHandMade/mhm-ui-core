@@ -18,7 +18,7 @@
  */
 import StatCard from './StatCard';
 
-function ceiling( columns ) {
+export function columnCeiling( columns ) {
 	const parsed = Number.parseInt( columns, 10 );
 	return Number.isNaN( parsed ) ? 4 : Math.max( 1, parsed );
 }
@@ -27,7 +27,7 @@ export default function StatsGrid( { cards, columns = 4 } ) {
 	return (
 		<div
 			className="mhmui-stats-grid"
-			style={ { '--mhmui-columns': ceiling( columns ) } }
+			style={ { '--mhmui-columns': columnCeiling( columns ) } }
 		>
 			{ cards.map( ( card ) => (
 				<StatCard key={ card.label } { ...card } />

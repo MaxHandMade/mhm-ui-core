@@ -73,5 +73,49 @@
       { "title": "Recent", "icon": "chart-line", "children": "Body" },
       { "title": "Concept", "icon": "rate", "children": "Body" }
     ]
+  },
+  "Tabs": {
+    "interactive": true, "tone_semantics": false, "php": "mhmuicore_tabs_html",
+    "props": { "label": "string", "current": "string?", "items": "array", "onSelect": "function?" },
+    "fixtures": [
+      { "label": "Sections", "current": "a", "items": [
+        { "id": "a", "label": "A", "href": "?tab=a", "badge": 2, "badgeLabel": "2 pending" },
+        { "id": "b", "label": "B", "href": "?tab=b", "badge": 3 },
+        { "id": "c", "label": "C", "href": "?tab=c", "badge": 0 } ] },
+      { "label": "Sections", "current": "none", "items": [ { "id": "a", "label": "A", "href": "?tab=a" } ] },
+      { "label": "Sections", "current": "a", "items": [ { "id": "a", "label": "A", "href": "" } ] }
+    ]
+  },
+  "PageHeader": {
+    "interactive": true, "tone_semantics": false,
+    "props": { "title": "string", "back": "{ label: string, href: string, onClick: function? }?", "badge": "{ text: string, tone: role? }?", "meta": "string?", "actions": "node?", "level": "number?" },
+    "fixtures": [
+      { "title": "Marmaris Cars" },
+      { "title": "Marmaris Cars", "back": { "label": "Pending applications", "href": "?tab=pending" }, "badge": { "text": "Pending", "tone": "warning" }, "meta": "#9292 · 23/09/2026 07:26", "level": 2 }
+    ]
+  },
+  "DetailList": {
+    "interactive": false, "tone_semantics": false,
+    "props": { "items": "array", "emptyText": "string", "columns": "number?", "layout": "stacked|inline?" },
+    "fixtures": [
+      { "emptyText": "Not entered", "items": [ { "label": "City", "value": "Muğla" }, { "label": "Tax office", "value": "" } ] },
+      { "emptyText": "Not entered", "layout": "inline", "items": [ { "label": "Documents", "value": "2 missing", "tone": "warning" } ] }
+    ]
+  },
+  "DetailLayout": {
+    "interactive": false, "tone_semantics": false,
+    "props": { "children": "node", "aside": "node?", "asideLabel": "string?" },
+    "fixtures": [
+      { "children": "Details", "aside": "Decision", "asideLabel": "Decision" },
+      { "children": "Details" }
+    ]
+  },
+  "ConfirmButton": {
+    "interactive": true, "tone_semantics": false,
+    "props": { "label": "string", "confirmText": "string", "confirmLabel": "string", "cancelLabel": "string", "busyText": "string", "onConfirm": "function", "variant": "primary|secondary|danger?", "confirmDisabled": "boolean?", "disabled": "boolean?", "describedBy": "string?", "children": "node?" },
+    "fixtures": [
+      { "label": "Approve", "confirmText": "Approve this application?", "confirmLabel": "Yes, approve", "cancelLabel": "Cancel", "busyText": "Working…", "onConfirm": "function", "variant": "primary" },
+      { "label": "Reject", "confirmText": "Reject it?", "confirmLabel": "Yes, reject", "cancelLabel": "Cancel", "busyText": "Working…", "onConfirm": "function", "variant": "danger", "confirmDisabled": true }
+    ]
   }
 }

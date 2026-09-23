@@ -450,8 +450,11 @@
    Known limit, deliberate: a surface that does not use the shell gets no
    rhythm, and a grid nested inside a wrapper is spaced by its wrapper, not
    itself. Rentiva has five shell-less strips today; that debt is written in
-   its own notebook, not papered over here. */
-.mhmui-admin-page > * + :is( .mhmui-stats-grid, .mhmui-widget, .mhmui-pagination, .mhmui-notice ) {
+   its own notebook, not papered over here.
+
+   0.15.0: tabs, page header and detail layout join the list; they are spaced
+   only as DIRECT children of the shell. */
+.mhmui-admin-page > * + :is( .mhmui-stats-grid, .mhmui-widget, .mhmui-pagination, .mhmui-notice, .mhmui-tabs, .mhmui-page-header, .mhmui-detail-layout ) {
 	margin-block-start: var( --mhmui-space-3 );
 }
 
@@ -495,3 +498,232 @@
 .mhmui-widget__title { margin: 0; font-size: 14px; display: flex; align-items: center; gap: 8px; color: var( --mhmui-text ); }
 .mhmui-widget__subtitle { font-weight: 400; color: var( --mhmui-text-muted ); font-size: 12px; }
 .mhmui-widget__body { padding: 16px; }
+
+/* Tabs (0.15.0): page sections as links. Segmented strip; the current tab is
+   told apart by a 2px accent underline as well as colour (WCAG 1.4.1/1.4.11 --
+   background alone measured 1.14:1). The badge chip stays visible on both
+   backgrounds: surface on the strip, sunken on the current (white) tab. */
+.mhmui-tabs {
+	display: inline-flex;
+	flex-wrap: wrap;
+	gap: var( --mhmui-space-2 );
+	padding: var( --mhmui-space-1 );
+	border-radius: var( --mhmui-radius );
+	background: var( --mhmui-surface-sunken );
+}
+.mhmui-tabs__tab {
+	display: inline-flex;
+	align-items: center;
+	gap: var( --mhmui-space-2 );
+	padding: var( --mhmui-space-2 ) var( --mhmui-space-4 );
+	border-radius: var( --mhmui-radius );
+	color: var( --mhmui-text-muted );
+	font-weight: 600;
+	text-decoration: none;
+}
+.mhmui-tabs__tab--current {
+	background: var( --mhmui-surface );
+	color: var( --mhmui-accent );
+	box-shadow: inset 0 -2px 0 var( --mhmui-accent );
+}
+.mhmui-tabs__tab:focus-visible {
+	outline: 2px solid var( --mhmui-accent );
+	outline-offset: 2px;
+}
+.mhmui-tabs__badge {
+	padding: 1px var( --mhmui-space-2 );
+	border-radius: 999px;
+	background: var( --mhmui-surface );
+	font-size: 11px;
+}
+.mhmui-tabs__tab--current .mhmui-tabs__badge {
+	background: var( --mhmui-surface-sunken );
+}
+.mhmui-tabs__badge-sr {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect( 0, 0, 0, 0 );
+	white-space: nowrap;
+	border: 0;
+}
+
+/* PageHeader (0.15.0) */
+.mhmui-page-header {
+	display: flex;
+	flex-direction: column;
+	gap: var( --mhmui-space-1 );
+}
+.mhmui-page-header__back {
+	align-self: flex-start;
+	text-decoration: none;
+}
+.mhmui-page-header__title-row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var( --mhmui-space-3 );
+}
+.mhmui-page-header__title {
+	margin: 0;
+	font-size: 23px;
+	font-weight: 600;
+	line-height: 1.3;
+	color: var( --mhmui-text );
+}
+.mhmui-page-header__actions {
+	margin-inline-start: auto;
+	display: flex;
+	gap: var( --mhmui-space-2 );
+}
+.mhmui-page-header__meta {
+	margin: 0;
+	color: var( --mhmui-text-muted );
+}
+
+/* DetailList (0.15.0): the StatsGrid ceiling formula, so it folds on its own. */
+.mhmui-detail-list {
+	--mhmui-columns: 2;
+	display: grid;
+	gap: var( --mhmui-space-3 ) var( --mhmui-space-4 );
+	margin: 0;
+	grid-template-columns: repeat( auto-fit, minmax( max( var( --mhmui-card-min ), calc( ( 100% - ( var( --mhmui-columns ) - 1 ) * var( --mhmui-space-4 ) ) / var( --mhmui-columns ) ) ), 1fr ) );
+}
+.mhmui-detail-list__label {
+	font-size: 12px;
+	color: var( --mhmui-text-muted );
+}
+.mhmui-detail-list__value {
+	margin: 2px 0 0;
+	font-size: 14px;
+	color: var( --mhmui-text );
+	overflow-wrap: anywhere;
+}
+.mhmui-detail-list__value--empty {
+	color: var( --mhmui-text-muted );
+}
+.mhmui-detail-list--inline {
+	display: flex;
+	flex-direction: column;
+	gap: var( --mhmui-space-2 );
+}
+.mhmui-detail-list--inline .mhmui-detail-list__item {
+	display: flex;
+	justify-content: space-between;
+	gap: var( --mhmui-space-3 );
+}
+.mhmui-detail-list--inline .mhmui-detail-list__value {
+	margin: 0;
+	text-align: end;
+}
+.mhmui-detail-list__mark {
+	display: inline-block;
+	width: 8px;
+	height: 8px;
+	margin-inline-end: 6px;
+	border-radius: 50%;
+	vertical-align: middle;
+}
+.mhmui-detail-list__mark--success { background: var( --mhmui-success-strong ); }
+.mhmui-detail-list__mark--warning { background: var( --mhmui-warning-strong ); }
+.mhmui-detail-list__mark--danger { background: var( --mhmui-danger-strong ); }
+.mhmui-detail-list__mark--info { background: var( --mhmui-info-strong ); }
+.mhmui-detail-list__mark--neutral { background: var( --mhmui-neutral-strong ); }
+
+/* DetailLayout (0.15.0). Wraps below ~800px of container: main basis 420px +
+   aside basis 360px + gap. min-width: 0 so an unbroken IBAN/URL cannot grow a
+   column's basis and force the wrap early. The sticky top is the 32px admin
+   bar; at <= 782px the bar is 46px, but the columns are already stacked there
+   and sticky has no effect -- so a fixed 32px is enough. */
+.mhmui-detail-layout {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-start;
+	gap: var( --mhmui-space-4 );
+}
+.mhmui-detail-layout__main,
+.mhmui-detail-layout__aside {
+	display: flex;
+	flex-direction: column;
+	gap: var( --mhmui-space-4 );
+	min-width: 0;
+}
+.mhmui-detail-layout__main {
+	flex: 1 1 420px;
+}
+.mhmui-detail-layout__aside {
+	flex: 0 1 360px;
+	position: sticky;
+	top: calc( 32px + var( --mhmui-space-4 ) );
+	/* Never taller than the viewport: a pinned aside longer than the screen
+	   hides its own bottom (the decision buttons) until the main column ends,
+	   and focus landing there is not scrolled into view. It scrolls itself. */
+	max-height: calc( 100vh - 32px - 2 * var( --mhmui-space-4 ) );
+	overflow-y: auto;
+}
+.mhmui-detail-layout .mhmui-widget {
+	margin-top: 0;
+}
+
+/* ConfirmButton (0.15.0). Targets are at least 44px (WCAG 2.2 SC 2.5.8 asks
+   for 24px; 44px is deliberately stricter -- layout.test.js pins it). */
+.mhmui-confirm {
+	display: flex;
+	flex-direction: column;
+	gap: var( --mhmui-space-2 );
+}
+.mhmui-confirm__trigger,
+.mhmui-confirm__confirm,
+.mhmui-confirm__cancel {
+	min-height: 44px;
+}
+.mhmui-confirm__prompt {
+	display: flex;
+	flex-direction: column;
+	gap: var( --mhmui-space-2 );
+}
+.mhmui-confirm__text {
+	margin: 0;
+	font-weight: 600;
+	color: var( --mhmui-text );
+}
+.mhmui-confirm__body {
+	display: flex;
+	flex-direction: column;
+	gap: var( --mhmui-space-1 );
+}
+.mhmui-confirm__actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var( --mhmui-space-2 );
+}
+/* The variant is a palette on the root; the buttons read it. */
+.mhmui-confirm--primary {
+	--mhmui-confirm-fill: var( --mhmui-accent );
+	--mhmui-confirm-ink: var( --mhmui-on-accent );
+}
+.mhmui-confirm--danger {
+	--mhmui-confirm-ink: var( --mhmui-danger-strong );
+}
+.mhmui-confirm--secondary {
+	--mhmui-confirm-ink: var( --mhmui-text );
+}
+.mhmui-confirm--primary :is( .mhmui-confirm__trigger, .mhmui-confirm__confirm ) {
+	background: var( --mhmui-confirm-fill );
+	border-color: var( --mhmui-confirm-fill );
+	color: var( --mhmui-confirm-ink );
+}
+.mhmui-confirm--danger :is( .mhmui-confirm__trigger, .mhmui-confirm__confirm ) {
+	border-color: var( --mhmui-confirm-ink );
+	color: var( --mhmui-confirm-ink );
+}
+.mhmui-confirm--secondary .mhmui-confirm__trigger {
+	color: var( --mhmui-confirm-ink );
+}
+.mhmui-confirm [aria-disabled="true"] {
+	opacity: 0.6;
+	cursor: not-allowed;
+}

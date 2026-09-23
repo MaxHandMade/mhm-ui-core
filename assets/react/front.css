@@ -123,8 +123,11 @@
    Known limit, deliberate: a surface that does not use the shell gets no
    rhythm, and a grid nested inside a wrapper is spaced by its wrapper, not
    itself. Rentiva has five shell-less strips today; that debt is written in
-   its own notebook, not papered over here. */
-.mhmui-front-page > * + :is( .mhmui-stats-grid, .mhmui-widget, .mhmui-pagination, .mhmui-notice ) {
+   its own notebook, not papered over here.
+
+   0.15.0: tabs, page header and detail layout join the list; they are spaced
+   only as DIRECT children of the shell. */
+.mhmui-front-page > * + :is( .mhmui-stats-grid, .mhmui-widget, .mhmui-pagination, .mhmui-notice, .mhmui-tabs, .mhmui-page-header, .mhmui-detail-layout ) {
 	margin-block-start: var( --mhmui-space-3 );
 }
 

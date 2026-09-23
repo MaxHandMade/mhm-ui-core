@@ -17,7 +17,7 @@ if ( defined( 'MHMUICORE_VERSION' ) ) {
 	return;
 }
 
-define( 'MHMUICORE_VERSION', '0.14.1' );
+define( 'MHMUICORE_VERSION', '0.15.0' );
 define( 'MHMUICORE_DIR', __DIR__ );
 
 /*
@@ -279,6 +279,23 @@ if ( ! function_exists( 'mhmuicore_stats_grid_html' ) ) {
 	 */
 	function mhmuicore_stats_grid_html( array $cards, $columns = 4 ): string {
 		return \MHMUiCore\Kit\StatsGrid::render_html( $cards, $columns );
+	}
+}
+
+if ( ! function_exists( 'mhmuicore_tabs_html' ) ) {
+	/**
+	 * Page-section tabs as escaped HTML. See MHMUiCore\Kit\Tabs::render_html().
+	 *
+	 * Born in 0.15.0 -- guard calls with function_exists() while an older copy
+	 * can still win the loader. Consumers echo it through wp_kses_post(), like
+	 * mhmuicore_stat_card_html(); tests/Integration/KitEscapingTest.php pins
+	 * that the markup survives it byte for byte.
+	 *
+	 * @param array<string, mixed> $props { label, current, items }.
+	 * @return string
+	 */
+	function mhmuicore_tabs_html( array $props ): string {
+		return \MHMUiCore\Kit\Tabs::render_html( $props );
 	}
 }
 
