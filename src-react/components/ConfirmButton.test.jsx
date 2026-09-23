@@ -20,6 +20,10 @@ function deferred() {
 	return { promise, resolve, reject };
 }
 
+// The element holding focus, read through a node's ownerDocument (the
+// @wordpress/no-global-active-element rule).
+const focused = () => document.body.ownerDocument.activeElement;
+
 const open = () =>
 	fireEvent.click( screen.getByRole( 'button', { name: 'Approve' } ) );
 
@@ -28,7 +32,7 @@ describe( 'ConfirmButton -- two steps, in the page', () => {
 		render( <ConfirmButton { ...BASE } onConfirm={ jest.fn() } /> );
 		open();
 		const confirm = screen.getByRole( 'button', { name: 'Yes, approve' } );
-		expect( document.activeElement ).toBe( confirm );
+		expect( focused() ).toBe( confirm );
 		expect( screen.getByText( 'Approve this application?' ) ).toBeTruthy();
 		expect(
 			screen.queryByRole( 'button', { name: 'Approve' } )
@@ -75,7 +79,7 @@ describe( 'ConfirmButton -- two steps, in the page', () => {
 		render( <ConfirmButton { ...BASE } onConfirm={ jest.fn() } /> );
 		open();
 		fireEvent.click( screen.getByRole( 'button', { name: 'Cancel' } ) );
-		expect( document.activeElement ).toBe(
+		expect( focused() ).toBe(
 			screen.getByRole( 'button', { name: 'Approve' } )
 		);
 		open();
@@ -83,7 +87,7 @@ describe( 'ConfirmButton -- two steps, in the page', () => {
 			screen.getByRole( 'button', { name: 'Yes, approve' } ),
 			{ key: 'Escape' }
 		);
-		expect( document.activeElement ).toBe(
+		expect( focused() ).toBe(
 			screen.getByRole( 'button', { name: 'Approve' } )
 		);
 	} );
@@ -96,9 +100,7 @@ describe( 'ConfirmButton -- two steps, in the page', () => {
 			</ConfirmButton>
 		);
 		open();
-		expect( document.activeElement ).toBe(
-			screen.getByLabelText( 'Reason' )
-		);
+		expect( focused() ).toBe( screen.getByLabelText( 'Reason' ) );
 	} );
 
 	test( 'confirmDisabled: aria-disabled, click does not confirm and focuses the body', () => {
@@ -115,9 +117,7 @@ describe( 'ConfirmButton -- two steps, in the page', () => {
 		confirm.focus();
 		fireEvent.click( confirm );
 		expect( onConfirm ).not.toHaveBeenCalled();
-		expect( document.activeElement ).toBe(
-			screen.getByLabelText( 'Reason' )
-		);
+		expect( focused() ).toBe( screen.getByLabelText( 'Reason' ) );
 	} );
 
 	test( 'while busy: both buttons aria-disabled, focus kept, Escape and cancel do nothing', async () => {
@@ -134,7 +134,7 @@ describe( 'ConfirmButton -- two steps, in the page', () => {
 				.getByRole( 'button', { name: 'Cancel' } )
 				.getAttribute( 'aria-disabled' )
 		).toBe( 'true' );
-		expect( document.activeElement ).toBe( busy );
+		expect( focused() ).toBe( busy );
 		fireEvent.keyDown( busy, { key: 'Escape' } );
 		fireEvent.click( screen.getByRole( 'button', { name: 'Cancel' } ) );
 		fireEvent.click( busy );
@@ -146,7 +146,7 @@ describe( 'ConfirmButton -- two steps, in the page', () => {
 			d.resolve();
 			await d.promise;
 		} );
-		expect( document.activeElement ).toBe(
+		expect( focused() ).toBe(
 			screen.getByRole( 'button', { name: 'Approve' } )
 		);
 	} );
@@ -184,7 +184,7 @@ describe( 'ConfirmButton -- two steps, in the page', () => {
 			d.resolve();
 			await d.promise;
 		} );
-		expect( document.activeElement ).toBe( elsewhere );
+		expect( focused() ).toBe( elsewhere );
 		elsewhere.remove();
 	} );
 
