@@ -75,7 +75,7 @@
     ]
   },
   "Tabs": {
-    "interactive": true, "tone_semantics": false,
+    "interactive": true, "tone_semantics": false, "php": "mhmuicore_tabs_html",
     "props": { "label": "string", "current": "string?", "items": "array", "onSelect": "function?" },
     "fixtures": [
       { "label": "Sections", "current": "a", "items": [

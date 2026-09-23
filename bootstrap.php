@@ -282,6 +282,23 @@ if ( ! function_exists( 'mhmuicore_stats_grid_html' ) ) {
 	}
 }
 
+if ( ! function_exists( 'mhmuicore_tabs_html' ) ) {
+	/**
+	 * Page-section tabs as escaped HTML. See MHMUiCore\Kit\Tabs::render_html().
+	 *
+	 * Born in 0.15.0 -- guard calls with function_exists() while an older copy
+	 * can still win the loader. Consumers echo it through wp_kses_post(), like
+	 * mhmuicore_stat_card_html(); tests/Integration/KitEscapingTest.php pins
+	 * that the markup survives it byte for byte.
+	 *
+	 * @param array<string, mixed> $props { label, current, items }.
+	 * @return string
+	 */
+	function mhmuicore_tabs_html( array $props ): string {
+		return \MHMUiCore\Kit\Tabs::render_html( $props );
+	}
+}
+
 /*
  * ─── React admin page loader ─────────────────────────────────────────────────
  *

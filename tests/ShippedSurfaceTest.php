@@ -101,9 +101,9 @@ final class ShippedSurfaceTest extends TestCase {
 		// target: it moves only with a commit that deliberately changes what
 		// ships, and the commit says which file.
 		// 0.15.0 src-react/components/Tabs.jsx moved it from 59/51/3 to 60/52/3
-		// (one P1 file).
-		self::assertCount( 60, $files, 'shipped file count changed' );
-		self::assertCount( 52, $p1, 'P1 file set changed' );
+		// (one P1 file); src/Kit/Tabs.php (its PHP twin) to 61/53/3.
+		self::assertCount( 61, $files, 'shipped file count changed' );
+		self::assertCount( 53, $p1, 'P1 file set changed' );
 		self::assertCount( 3, $p2, 'P2 file set changed' );
 	}
 }

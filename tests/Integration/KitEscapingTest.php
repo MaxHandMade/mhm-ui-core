@@ -155,4 +155,70 @@ final class KitEscapingTest extends WP_UnitTestCase {
 		}
 		self::assertSame( $html, wp_kses_post( $html ) );
 	}
+
+	public function test_tabs_hostile_props_come_out_inert(): void {
+		self::assertTrue( function_exists( 'mhmuicore_tabs_html' ), 'an older ui-core copy booted first; this test cannot measure 0.15.0' );
+		$html = mhmuicore_tabs_html(
+			array(
+				'label'   => '"><script>alert(1)</script>',
+				'current' => 'a',
+				'items'   => array(
+					array(
+						'id'         => 'a',
+						'label'      => '<script>alert(2)</script>',
+						'href'       => '?tab=a',
+						'badge'      => 1,
+						'badgeLabel' => '<b>1</b>',
+					),
+					array(
+						'id'    => 'x',
+						'label' => 'Hostile',
+						'href'  => 'javascript:alert(3)',
+					),
+				),
+			)
+		);
+
+		self::assertStringNotContainsString( '<script', $html );
+		self::assertStringNotContainsString( '<b>', $html );
+		self::assertStringContainsString( '&lt;script&gt;alert(2)&lt;/script&gt;', $html );
+		// esc_url() empties javascript: -- the item is skipped, not drawn as href="".
+		self::assertStringNotContainsString( 'Hostile', $html );
+		self::assertStringNotContainsString( 'href=""', $html );
+		self::assertStringNotContainsString( 'javascript', $html );
+	}
+
+	public function test_tabs_survive_wp_kses_post_byte_for_byte(): void {
+		$html = mhmuicore_tabs_html(
+			array(
+				'label'   => 'Sections',
+				'current' => 'a',
+				'items'   => array(
+					array(
+						'id'         => 'a',
+						'label'      => 'Pending',
+						'href'       => 'admin.php?page=x&tab=a',
+						'badge'      => 2,
+						'badgeLabel' => '2 pending',
+					),
+					array(
+						'id'    => 'b',
+						'label' => 'Vendors',
+						'href'  => 'admin.php?page=x&tab=b',
+						'badge' => 3,
+					),
+				),
+			)
+		);
+		foreach ( array( '<nav class="mhmui-tabs" aria-label="Sections">', 'aria-current="page"', 'aria-hidden="true"', 'mhmui-tabs__badge-sr', 'mhmui-tabs__tab--current' ) as $needle ) {
+			self::assertStringContainsString( $needle, $html );
+		}
+		// Measured 2026-09-23 on WP 7.1: kses normalises the entity esc_url()
+		// writes for '&' (&#038;) to &amp; -- the same character, spelled
+		// differently. Nothing is stripped: after that one respelling the
+		// markup is byte-identical, which is what this test guards (an
+		// attribute or element kses dropped would still fail it).
+		self::assertStringContainsString( '&#038;tab=', $html );
+		self::assertSame( str_replace( '&#038;', '&amp;', $html ), wp_kses_post( $html ) );
+	}
 }

@@ -56,7 +56,7 @@ describe( 'components.json kapilarin girdisidir', () => {
 
 	test( 'php alani, PHP rendereri olan uyeleri bir fonksiyon adiyla isaretler', () => {
 		const withPhp = Object.entries( manifest ).filter( ( [ , e ] ) => e.php !== undefined );
-		expect( withPhp.map( ( [ n ] ) => n ).sort() ).toEqual( [ 'StatCard', 'StatsGrid' ] );
+		expect( withPhp.map( ( [ n ] ) => n ).sort() ).toEqual( [ 'StatCard', 'StatsGrid', 'Tabs' ] );
 		for ( const [ , entry ] of withPhp ) {
 			expect( entry.php ).toMatch( /^mhmuicore_[a-z_]+_html$/ );
 		}
