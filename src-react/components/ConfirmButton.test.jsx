@@ -151,14 +151,66 @@ describe( 'ConfirmButton -- two steps, in the page', () => {
 		);
 	} );
 
-	// No Jest test for a REJECTED or THROWING onConfirm, on purpose. Spec
-	// §3.5-5: settle is Promise.resolve( onConfirm() ).finally( reset ) with no
-	// catch, so that path always leaves an unhandled rejection -- and Jest
-	// fails any test that produces one, from the PARENT process: measured
-	// 2026-09-23, the test's own `process` has 0 unhandledRejection listeners,
-	// so a test cannot detach the trap. The lock releasing and the error
-	// reaching the console are measured in the browser (spec §7.3, the REST
-	// 500 row).
+	// A REJECTED or THROWING onConfirm. Spec §3.5-5: settle is
+	// Promise.resolve( onConfirm() ).finally( reset ) with no catch, so the
+	// promise .finally() returns rejects and nobody handles it -- in a browser
+	// that is the console's "Uncaught (in promise)". Jest fails a test on it
+	// from the PARENT process (the test's own `process` has 0
+	// unhandledRejection listeners; measured 2026-09-23), so the trap cannot be
+	// detached. What a test CAN do is observe that derived promise: wrap
+	// Promise.prototype.finally for the duration of one test and attach a
+	// handler to what it returns. The component keeps no catch; the test
+	// proves the rejection is still there (not swallowed) AND the lock opens.
+	async function settleWithObservedRejection( run ) {
+		const original = Promise.prototype.finally;
+		const seen = [];
+		// eslint-disable-next-line no-extend-native -- one test, restored in finally.
+		Promise.prototype.finally = function ( callback ) {
+			const derived = original.call( this, callback );
+			derived.catch( ( error ) => seen.push( error ) );
+			return derived;
+		};
+		try {
+			await act( async () => {
+				run();
+				await new Promise( ( resolve ) => setTimeout( resolve, 0 ) );
+			} );
+		} finally {
+			// eslint-disable-next-line no-extend-native -- restoring the original.
+			Promise.prototype.finally = original;
+		}
+		return seen;
+	}
+
+	test.each( [
+		[
+			'throws synchronously (Review Focus 2)',
+			() => {
+				throw new Error( 'boom' );
+			},
+		],
+		[
+			'rejects (the REST 500 shape)',
+			() => Promise.reject( new Error( 'boom' ) ),
+		],
+	] )(
+		'onConfirm %s: the lock opens and the error is not swallowed',
+		async ( _name, onConfirm ) => {
+			render( <ConfirmButton { ...BASE } onConfirm={ onConfirm } /> );
+			open();
+			const seen = await settleWithObservedRejection( () =>
+				fireEvent.click(
+					screen.getByRole( 'button', { name: 'Yes, approve' } )
+				)
+			);
+			const trigger = screen.getByRole( 'button', { name: 'Approve' } );
+			expect( trigger.hasAttribute( 'aria-disabled' ) ).toBe( false );
+			expect( focused() ).toBe( trigger );
+			expect( seen.map( ( error ) => error.message ) ).toEqual( [
+				'boom',
+			] );
+		}
+	);
 
 	test( 'unmounting while busy leaves focus to the consumer (Review Focus 3)', async () => {
 		// React 18 dropped the "state update on an unmounted component" warning,

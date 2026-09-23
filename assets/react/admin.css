@@ -658,6 +658,11 @@
 	flex: 0 1 360px;
 	position: sticky;
 	top: calc( 32px + var( --mhmui-space-4 ) );
+	/* Never taller than the viewport: a pinned aside longer than the screen
+	   hides its own bottom (the decision buttons) until the main column ends,
+	   and focus landing there is not scrolled into view. It scrolls itself. */
+	max-height: calc( 100vh - 32px - 2 * var( --mhmui-space-4 ) );
+	overflow-y: auto;
 }
 .mhmui-detail-layout .mhmui-widget {
 	margin-top: 0;

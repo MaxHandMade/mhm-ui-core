@@ -469,6 +469,19 @@ describe( 'vertical rhythm is owned by the page shell (0.14.0)', () => {
 		}
 	} );
 
+	/** Branch audit 2026-09-23 (M-5, re-graded Important): a sticky aside
+	 * taller than the viewport stays pinned at its top, so its bottom -- the
+	 * decision buttons under an open reason field -- sits off screen until the
+	 * main column ends, and keyboard focus landing there is not scrolled into
+	 * view. The aside is capped at the viewport and scrolls on its own. */
+	test( 'the sticky detail aside never outgrows the viewport', () => {
+		const body = ruleBody( admin, '.mhmui-detail-layout__aside' );
+		expect( body ).not.toBeNull();
+		expect( body ).toMatch( /position:\s*sticky/ );
+		expect( body ).toMatch( /max-height:\s*calc\(\s*100vh\s*-/ );
+		expect( body ).toMatch( /overflow-y:\s*auto/ );
+	} );
+
 	test( 'ConfirmButton targets are at least 44px (WCAG 2.2 2.5.8 asks 24; the kit asks 44)', () => {
 		const body = ruleBody(
 			admin,
