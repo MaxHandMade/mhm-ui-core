@@ -657,7 +657,12 @@ describe( 'ConfirmButton wins the cascade against WordPress core buttons', () =>
 
 	test.each( [
 		[ 'primary', 'background' ],
+		[ 'primary', 'border-color' ],
 		[ 'danger', 'color' ],
+		[ 'danger', 'border-color' ],
+		// Core tints a hovered/active .button with the theme colour; a danger
+		// button must not turn blue-ish (audit of #36, B-2).
+		[ 'danger', 'background' ],
 	] )( 'the %s variant keeps its %s on :focus, :hover and :active', ( variant, prop ) => {
 		for ( const state of [ 'focus', 'hover', 'active' ] ) {
 			const winners = all.filter(
@@ -669,6 +674,54 @@ describe( 'ConfirmButton wins the cascade against WordPress core buttons', () =>
 					compareSpecificity( specificity( sel ), CORE_STATE ) > 0
 			);
 			expect( [ variant, state, winners.length > 0 ] ).toEqual( [ variant, state, true ] );
+		}
+	} );
+
+	// The ring is the visible half of focus: core's :focus box-shadow (0,3,0)
+	// must not win (audit of #36, B-4).
+	test.each( [ [ 'primary' ], [ 'danger' ] ] )( 'the %s focus ring outranks core', ( variant ) => {
+		const ring = all.filter(
+			( [ sel, body ] ) =>
+				sel.includes( `mhmui-confirm--${ variant }` ) &&
+				sel.includes( 'mhmui-confirm__confirm' ) &&
+				sel.includes( ':focus' ) &&
+				/(^|[;\s])box-shadow\s*:/.test( body ) &&
+				compareSpecificity( specificity( sel ), CORE_STATE ) > 0
+		);
+		expect( [ variant, ring.length > 0 ] ).toEqual( [ variant, true ] );
+	} );
+
+	/**
+	 * Busy and locked buttons are aria-disabled, focusable, and show busyText.
+	 * Core forces their text to #8a8a8a !important (buttons.css:224-228) --
+	 * a !important the kit cannot and must not fight. So the fill has to move
+	 * instead, as core does for .button-primary[disabled]: grey text on the
+	 * accent fill measured 1.50:1, and 1.26:1 under the old opacity (audit of
+	 * #36, B-1/B-5).
+	 */
+	test( 'an aria-disabled button carries no opacity', () => {
+		const faded = all.filter( ( [ sel, body ] ) => sel.includes( 'aria-disabled' ) && /(^|[;\s])opacity\s*:/.test( body ) );
+		expect( faded.map( ( [ sel ] ) => sel ) ).toEqual( [] );
+	} );
+
+	test( 'a locked primary drops its fill, and that rule wins over the primary state rules', () => {
+		const order = all.map( ( [ sel ] ) => sel );
+		const stateRules = all.filter(
+			( [ sel, body ] ) => sel.includes( 'mhmui-confirm--primary' ) && ! sel.includes( 'aria-disabled' ) && /(^|[;\s])background\s*:/.test( body )
+		);
+		const locked = all.filter(
+			( [ sel, body ] ) =>
+				sel.includes( 'mhmui-confirm--primary' ) &&
+				sel.includes( 'aria-disabled="true"' ) &&
+				/(^|[;\s])background\s*:\s*var\(\s*--mhmui-surface\s*\)/.test( body )
+		);
+		expect( locked.length ).toBeGreaterThan( 0 );
+		expect( stateRules.length ).toBeGreaterThan( 0 );
+		const [ lockedSel ] = locked[ locked.length - 1 ];
+		for ( const [ sel ] of stateRules ) {
+			const cmp = compareSpecificity( specificity( lockedSel ), specificity( sel ) );
+			const later = order.lastIndexOf( lockedSel ) > order.indexOf( sel );
+			expect( [ sel, cmp > 0 || ( cmp === 0 && later ) ] ).toEqual( [ sel, true ] );
 		}
 	} );
 } );

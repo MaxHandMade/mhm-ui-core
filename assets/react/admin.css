@@ -733,6 +733,8 @@
 }
 .mhmui-confirm.mhmui-confirm--danger button:is( .mhmui-confirm__trigger, .mhmui-confirm__confirm ),
 .mhmui-confirm.mhmui-confirm--danger button:is( .mhmui-confirm__trigger, .mhmui-confirm__confirm ):is( :hover, :focus, :active ) {
+	/* Core tints a hovered/active .button with the theme colour. */
+	background: transparent;
 	border-color: var( --mhmui-confirm-ink );
 	color: var( --mhmui-confirm-ink );
 }
@@ -743,7 +745,16 @@
 .mhmui-confirm.mhmui-confirm--secondary button.mhmui-confirm__trigger:is( :hover, :focus, :active ) {
 	color: var( --mhmui-confirm-ink );
 }
-.mhmui-confirm [aria-disabled="true"] {
-	opacity: 0.6;
+/* Locked and busy buttons stay focusable (aria-disabled, not disabled) and a
+   busy confirm shows busyText. Core forces their text to #8a8a8a !important
+   (buttons.css .button[aria-disabled="true"]); the kit cannot fight that and
+   must not. So nothing is faded -- opacity took the grey text to 1.26:1 on the
+   accent fill -- and a locked primary gives up its fill instead, as core's own
+   .button-primary[disabled] does. (0,3,1) outranks core's (0,3,0) cursor. */
+.mhmui-confirm button:is( .mhmui-confirm__trigger, .mhmui-confirm__confirm, .mhmui-confirm__cancel )[aria-disabled="true"] {
 	cursor: not-allowed;
+}
+.mhmui-confirm.mhmui-confirm--primary button:is( .mhmui-confirm__trigger, .mhmui-confirm__confirm )[aria-disabled="true"] {
+	background: var( --mhmui-surface );
+	border-color: var( --mhmui-border );
 }
