@@ -212,6 +212,85 @@ files["components/widget.html"] = page(
     width=720,
 )
 
+files["components/tabs.html"] = page(
+    "Components", "Tabs",
+    "<b>Tabs</b> — sayfa bölümleri, gerçek bağlantılar. Etkin sekme 2px vurgu çizgisiyle de ayrılır. Rozet: sayı aria-hidden, anlam görünmez metinde. Prop'lar: label, current, items{id,label,href,badge,badgeLabel}, onSelect.",
+    '<nav class="mhmui-tabs" aria-label="Bayi yönetimi bölümleri">'
+    '<a class="mhmui-tabs__tab mhmui-tabs__tab--current" href="#" aria-current="page">Bekleyen Başvurular<span class="mhmui-tabs__badge"><span aria-hidden="true">1</span><span class="mhmui-tabs__badge-sr">1 bekleyen</span></span></a>'
+    '<a class="mhmui-tabs__tab" href="#">Aktif Bayiler</a>'
+    '<a class="mhmui-tabs__tab" href="#">IBAN Talepleri<span class="mhmui-tabs__badge">3</span></a>'
+    '<a class="mhmui-tabs__tab" href="#">Komisyon</a></nav>',
+    width=720,
+)
+
+files["components/page-header.html"] = page(
+    "Components", "PageHeader",
+    "<b>PageHeader</b> — detay görünümünün başlığı. Varsayılan h2 (sayfanın h1'i WordPress'in). Prop'lar: back{label,href,onClick}, title, badge{text,tone}, meta, actions, level.",
+    '<div class="mhmui-page-header"><a class="mhmui-page-header__back" href="#"><span aria-hidden="true">← </span>Bekleyen başvurular</a>'
+    '<div class="mhmui-page-header__title-row"><h2 class="mhmui-page-header__title">Marmaris Cars</h2><span class="mhmui-status mhmui-status--warning">Beklemede</span>'
+    '<div class="mhmui-page-header__actions"><a href="#" class="button">Profil</a></div></div>'
+    '<p class="mhmui-page-header__meta">Bayi başvurusu #9292 · 23/09/2026 07:26</p></div>',
+    width=720,
+)
+
+files["components/detail-list.html"] = page(
+    "Components", "DetailList",
+    "<b>DetailList</b> — etiket/değer çiftleri. Boş değer gri metin; ton metni boyamaz, önüne nokta koyar. Prop'lar: items{label,value,tone}, emptyText, columns, layout (stacked|inline).",
+    '<dl class="mhmui-detail-list" style="--mhmui-columns:2">'
+    '<div class="mhmui-detail-list__item"><dt class="mhmui-detail-list__label">Hizmet şehri</dt><dd class="mhmui-detail-list__value">Muğla</dd></div>'
+    '<div class="mhmui-detail-list__item"><dt class="mhmui-detail-list__label">Vergi dairesi</dt><dd class="mhmui-detail-list__value mhmui-detail-list__value--empty">Girilmemiş</dd></div>'
+    '</dl><hr>'
+    '<dl class="mhmui-detail-list mhmui-detail-list--inline">'
+    + "".join(
+        '<div class="mhmui-detail-list__item"><dt class="mhmui-detail-list__label">%s</dt><dd class="mhmui-detail-list__value"><span class="mhmui-detail-list__mark mhmui-detail-list__mark--%s" aria-hidden="true"></span>%s</dd></div>'
+        % (label, tone, value)
+        for label, tone, value in (
+            ("Belgeler", "warning", "2 eksik"),
+            ("Ödeme", "success", "Tamam"),
+            ("Risk", "danger", "Yüksek"),
+            ("Kaynak", "info", "Form"),
+            ("Not", "neutral", "Yok"),
+        )
+    )
+    + "</dl>",
+    width=620,
+)
+
+files["components/detail-layout.html"] = page(
+    "Components", "DetailLayout",
+    "<b>DetailLayout</b> — ana sütun + yapışkan yan sütun; kap ~800px altına inince yan sütun alta iner. Prop'lar: children, aside, asideLabel.",
+    '<div class="mhmui-detail-layout"><div class="mhmui-detail-layout__main">'
+    '<section class="mhmui-widget"><header class="mhmui-widget__header"><h3 class="mhmui-widget__title">Başvuran</h3></header><div class="mhmui-widget__body">…</div></section>'
+    '<section class="mhmui-widget"><header class="mhmui-widget__header"><h3 class="mhmui-widget__title">Belgeler</h3></header><div class="mhmui-widget__body">…</div></section>'
+    '</div><aside class="mhmui-detail-layout__aside" aria-label="Karar">'
+    '<section class="mhmui-widget"><header class="mhmui-widget__header"><h3 class="mhmui-widget__title">Karar</h3></header><div class="mhmui-widget__body">…</div></section>'
+    "</aside></div>",
+    width=1100,
+)
+
+files["components/confirm-button.html"] = page(
+    "Components", "ConfirmButton",
+    "<b>ConfirmButton</b> — sayfa içi iki adımlı onay (window.confirm yerine). Kapalı/açık × primary/secondary/danger; gövdeli (gerekçe) ve onay kilitli hâl. Hedefler ≥44px.",
+    "".join(
+        '<div class="%s"><button type="button" class="button mhmui-confirm__trigger">%s</button></div>' % (cls, text)
+        for cls, text in (
+            ("mhmui-confirm mhmui-confirm--primary", "Bayiyi onayla ve etkinleştir"),
+            ("mhmui-confirm mhmui-confirm--secondary", "Askıya al"),
+            ("mhmui-confirm mhmui-confirm--danger", "Başvuruyu reddet"),
+        )
+    )
+    + '<div class="mhmui-confirm mhmui-confirm--danger"><div class="mhmui-confirm__prompt">'
+    '<p class="mhmui-confirm__text" id="q1">Başvuru reddedilsin mi?</p>'
+    '<div class="mhmui-confirm__body"><label for="r1">Ret gerekçesi (zorunlu)</label><textarea id="r1" rows="3"></textarea></div>'
+    '<div class="mhmui-confirm__actions"><button type="button" class="button mhmui-confirm__confirm" aria-describedby="q1" aria-disabled="true">Evet, reddet</button>'
+    '<button type="button" class="button mhmui-confirm__cancel" aria-describedby="q1">Vazgeç</button></div></div></div>'
+    + '<div class="mhmui-confirm mhmui-confirm--primary"><div class="mhmui-confirm__prompt">'
+    '<p class="mhmui-confirm__text" id="q2">Bu başvuru onaylansın mı?</p>'
+    '<div class="mhmui-confirm__actions"><button type="button" class="button mhmui-confirm__confirm" aria-describedby="q2">Evet, onayla</button>'
+    '<button type="button" class="button mhmui-confirm__cancel" aria-describedby="q2">Vazgeç</button></div></div></div>',
+    width=620,
+)
+
 # ---- README for the designers ---------------------------------------------
 files["README.md"] = u"""# mhm-ui-core — tasarım sistemi (v%s)
 
@@ -228,7 +307,7 @@ Burada çizilen, WordPress'te aynen render olur.
 - Claude Design **üretim kodu üretmez**; devir paketi üretir, kodu Claude Code yazar.
 
 ## Bileşenler
-StatCard · StatsGrid · StatusBadge · Pagination · ProLock · Notice · Widget
+StatCard · StatsGrid · StatusBadge · Pagination · ProLock · Notice · Widget · Tabs · PageHeader · DetailList · DetailLayout · ConfirmButton
 (+ görünmeyenler: ErrorBoundary, createApiClient, useApi, createFormatter)
 
 ## Senkron

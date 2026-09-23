@@ -22,7 +22,7 @@ A consuming plugin `require_once`s `vendor/mhm/ui-core/register.php` from its
 main file and registers its own copy:
 
 ```php
-mhmuicore_register( '0.14.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.15.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 At `plugins_loaded` priority 0 the highest registered version boots; the rest
@@ -390,7 +390,7 @@ build from.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.14.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.15.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 Requiring `bootstrap.php` directly defines `MHMUICORE_VERSION` immediately, which
@@ -438,7 +438,8 @@ stops being visible.
 ## Admin React kit
 
 `src-react/index.js` exports `StatCard`, `StatsGrid`, `StatusBadge`,
-`Pagination`, `ProLock`, `Notice`, `Widget`, `ErrorBoundary`, `createApiClient`,
+`Pagination`, `ProLock`, `Notice`, `Widget`, `Tabs`, `PageHeader`, `DetailList`,
+`DetailLayout`, `ConfirmButton`, `ErrorBoundary`, `createApiClient`,
 `useApi`, `createFormatter` and `tokens`. Every string is a prop: this package
 has no text domain. `src-react/tokens.json` is the single token source;
 `npm run tokens:build` regenerates the `--mhmui-*` block in
@@ -718,3 +719,21 @@ template literal, a quoted key, and any file that mentions no anchor.
 `--mhmui-space-3`. Core's spacing of headings, paragraphs and notices is
 untouched. A surface that does not use the shell gets no rhythm, and a grid
 nested in a wrapper is spaced by its wrapper.
+
+### Detail views (0.15.0+)
+
+Five members for a detail screen: `Tabs` (page sections as real links,
+`aria-current="page"`, a badge whose digit is `aria-hidden` and whose meaning
+is `badgeLabel`), `PageHeader` (back link, an `h2` by default -- the page's
+`h1` is WordPress's), `DetailList` (a `<dl>`; `''`/`null`/`undefined` show
+`emptyText`, `0` is a value; a tone adds a dot, never colours the text),
+`DetailLayout` (main column + sticky aside that drops below on a narrow
+container) and `ConfirmButton` (a two-step confirmation in the page, in place of
+`window.confirm`; the consumer catches errors inside `onConfirm`, a rejection is
+not swallowed). The shell's rhythm now spaces `.mhmui-tabs`,
+`.mhmui-page-header` and `.mhmui-detail-layout` too.
+
+`Tabs` has a PHP twin, `mhmuicore_tabs_html( array $props )`: guard the call
+with `function_exists()` while an older copy can still win the loader, and echo
+it through `wp_kses_post()`. As with 0.11.0, the new JSX needs the new
+stylesheet -- load it through `mhmuicore_enqueue_kit()`.

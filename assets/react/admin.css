@@ -695,19 +695,28 @@
 	flex-wrap: wrap;
 	gap: var( --mhmui-space-2 );
 }
-.mhmui-confirm--primary .mhmui-confirm__trigger,
-.mhmui-confirm--primary .mhmui-confirm__confirm {
-	background: var( --mhmui-accent );
-	border-color: var( --mhmui-accent );
-	color: var( --mhmui-on-accent );
+/* The variant is a palette on the root; the buttons read it. */
+.mhmui-confirm--primary {
+	--mhmui-confirm-fill: var( --mhmui-accent );
+	--mhmui-confirm-ink: var( --mhmui-on-accent );
 }
-.mhmui-confirm--danger .mhmui-confirm__trigger,
-.mhmui-confirm--danger .mhmui-confirm__confirm {
-	border-color: var( --mhmui-danger-strong );
-	color: var( --mhmui-danger-strong );
+.mhmui-confirm--danger {
+	--mhmui-confirm-ink: var( --mhmui-danger-strong );
+}
+.mhmui-confirm--secondary {
+	--mhmui-confirm-ink: var( --mhmui-text );
+}
+.mhmui-confirm--primary :is( .mhmui-confirm__trigger, .mhmui-confirm__confirm ) {
+	background: var( --mhmui-confirm-fill );
+	border-color: var( --mhmui-confirm-fill );
+	color: var( --mhmui-confirm-ink );
+}
+.mhmui-confirm--danger :is( .mhmui-confirm__trigger, .mhmui-confirm__confirm ) {
+	border-color: var( --mhmui-confirm-ink );
+	color: var( --mhmui-confirm-ink );
 }
 .mhmui-confirm--secondary .mhmui-confirm__trigger {
-	color: var( --mhmui-text );
+	color: var( --mhmui-confirm-ink );
 }
 .mhmui-confirm [aria-disabled="true"] {
 	opacity: 0.6;

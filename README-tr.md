@@ -216,7 +216,7 @@ da bu tek yanlış cümle yüzünden taşıdı.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.14.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.15.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 `bootstrap.php`'yi doğrudan require etmek `MHMUICORE_VERSION`'ı anında tanımlar
@@ -528,6 +528,23 @@ aralaması dokunulmadan kalıyor. Kabuğu kullanmayan bir yüzey ritim almaz;
 bir sarmalayıcı içine yerleşmiş bir ızgara kendi sarmalayıcısı tarafından
 aralanır.
 
+### Detay görünümleri (0.15.0+)
+
+Bir detay ekranı için beş üye: `Tabs` (sayfa bölümleri gerçek bağlantılar,
+`aria-current="page"`; rozetin rakamı `aria-hidden`, anlamı `badgeLabel`),
+`PageHeader` (geri bağlantısı; varsayılan `h2` — sayfanın `h1`'i WordPress'in),
+`DetailList` (`<dl>`; `''`/`null`/`undefined` `emptyText` gösterir, `0` bir
+değerdir; ton metni boyamaz, önüne nokta koyar), `DetailLayout` (ana sütun +
+dar kapta alta inen yapışkan yan sütun) ve `ConfirmButton` (`window.confirm`
+yerine sayfa içi iki adımlı onay; hatayı tüketici `onConfirm` içinde yakalar,
+red yutulmaz). Kabuğun ritmi artık `.mhmui-tabs`, `.mhmui-page-header` ve
+`.mhmui-detail-layout`'u da aralıyor.
+
+`Tabs`'ın PHP ikizi var: `mhmuicore_tabs_html( array $props )`. Daha eski bir
+kopya yükleyiciyi kazanabildiği sürece çağrıyı `function_exists()` ile koru ve
+çıktıyı `wp_kses_post()` ile bas. 0.11.0'daki gibi yeni JSX yeni stil dosyasını
+ister — `mhmuicore_enqueue_kit()` ile yükle.
+
 ### Bilerek yapılmayanlar
 
 - **Rentiva göç etmedi.** Paket ikinci bir tüketicinin sınamasından geçmeden Rentiva'nın 16 bloğunu
@@ -610,7 +627,7 @@ parite kapısı eşitlik arar, uyumluluk değil.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.14.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.15.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 🔴 Sürüm dizesi **elle yazılır** (kayıt, herhangi bir bootstrap yüklenmeden önce koşar) ve
