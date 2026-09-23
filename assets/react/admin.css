@@ -495,3 +495,55 @@
 .mhmui-widget__title { margin: 0; font-size: 14px; display: flex; align-items: center; gap: 8px; color: var( --mhmui-text ); }
 .mhmui-widget__subtitle { font-weight: 400; color: var( --mhmui-text-muted ); font-size: 12px; }
 .mhmui-widget__body { padding: 16px; }
+
+/* Tabs (0.15.0): page sections as links. Segmented strip; the current tab is
+   told apart by a 2px accent underline as well as colour (WCAG 1.4.1/1.4.11 --
+   background alone measured 1.14:1). The badge chip stays visible on both
+   backgrounds: surface on the strip, sunken on the current (white) tab. */
+.mhmui-tabs {
+	display: inline-flex;
+	flex-wrap: wrap;
+	gap: var( --mhmui-space-2 );
+	padding: var( --mhmui-space-1 );
+	border-radius: var( --mhmui-radius );
+	background: var( --mhmui-surface-sunken );
+}
+.mhmui-tabs__tab {
+	display: inline-flex;
+	align-items: center;
+	gap: var( --mhmui-space-2 );
+	padding: var( --mhmui-space-2 ) var( --mhmui-space-4 );
+	border-radius: var( --mhmui-radius );
+	color: var( --mhmui-text-muted );
+	font-weight: 600;
+	text-decoration: none;
+}
+.mhmui-tabs__tab--current {
+	background: var( --mhmui-surface );
+	color: var( --mhmui-accent );
+	box-shadow: inset 0 -2px 0 var( --mhmui-accent );
+}
+.mhmui-tabs__tab:focus-visible {
+	outline: 2px solid var( --mhmui-accent );
+	outline-offset: 2px;
+}
+.mhmui-tabs__badge {
+	padding: 1px var( --mhmui-space-2 );
+	border-radius: 999px;
+	background: var( --mhmui-surface );
+	font-size: 11px;
+}
+.mhmui-tabs__tab--current .mhmui-tabs__badge {
+	background: var( --mhmui-surface-sunken );
+}
+.mhmui-tabs__badge-sr {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect( 0, 0, 0, 0 );
+	white-space: nowrap;
+	border: 0;
+}

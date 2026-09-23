@@ -73,5 +73,17 @@
       { "title": "Recent", "icon": "chart-line", "children": "Body" },
       { "title": "Concept", "icon": "rate", "children": "Body" }
     ]
+  },
+  "Tabs": {
+    "interactive": true, "tone_semantics": false,
+    "props": { "label": "string", "current": "string?", "items": "array", "onSelect": "function?" },
+    "fixtures": [
+      { "label": "Sections", "current": "a", "items": [
+        { "id": "a", "label": "A", "href": "?tab=a", "badge": 2, "badgeLabel": "2 pending" },
+        { "id": "b", "label": "B", "href": "?tab=b", "badge": 3 },
+        { "id": "c", "label": "C", "href": "?tab=c", "badge": 0 } ] },
+      { "label": "Sections", "current": "none", "items": [ { "id": "a", "label": "A", "href": "?tab=a" } ] },
+      { "label": "Sections", "current": "a", "items": [ { "id": "a", "label": "A", "href": "" } ] }
+    ]
   }
 }

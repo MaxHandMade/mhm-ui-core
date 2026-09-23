@@ -19,24 +19,31 @@ const ROOT = join( __dirname, '..', '..' );
 const eslint = new ESLint( { cwd: ROOT } );
 
 const PROBES = {
-	'no-restricted-imports': "import { __ } from '@wordpress/i18n';\nexport const a = __( 'x' );\n",
+	'no-restricted-imports':
+		"import { __ } from '@wordpress/i18n';\nexport const a = __( 'x' );\n",
 	'no-restricted-globals': "export const a = wp.i18n.__( 'x' );\n",
 	'no-restricted-properties': "export const a = window.wp.i18n.__( 'x' );\n",
 };
 
 async function rulesHit( code, virtualPath ) {
-	const [ result ] = await eslint.lintText( code, { filePath: join( ROOT, virtualPath ) } );
+	const [ result ] = await eslint.lintText( code, {
+		filePath: join( ROOT, virtualPath ),
+	} );
 	return result.messages.map( ( m ) => m.ruleId );
 }
 
 describe( 'src-react/ carries no translation call -- strings are props', () => {
 	for ( const [ rule, code ] of Object.entries( PROBES ) ) {
 		test( `${ rule } fires inside src-react/`, async () => {
-			expect( await rulesHit( code, 'src-react/components/__probe__.jsx' ) ).toContain( rule );
+			expect(
+				await rulesHit( code, 'src-react/components/__probe__.jsx' )
+			).toContain( rule );
 		} );
 
 		test( `${ rule } does not fire outside src-react/ (the override is what catches it)`, async () => {
-			expect( await rulesHit( code, 'tests/Gate/__probe__.js' ) ).not.toContain( rule );
+			expect(
+				await rulesHit( code, 'tests/Gate/__probe__.js' )
+			).not.toContain( rule );
 		} );
 	}
 } );
