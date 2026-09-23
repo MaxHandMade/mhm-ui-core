@@ -659,3 +659,54 @@
 .mhmui-detail-layout .mhmui-widget {
 	margin-top: 0;
 }
+
+/* ConfirmButton (0.15.0). Targets are at least 44px (WCAG 2.2 SC 2.5.8 asks
+   for 24px; 44px is deliberately stricter -- layout.test.js pins it). */
+.mhmui-confirm {
+	display: flex;
+	flex-direction: column;
+	gap: var( --mhmui-space-2 );
+}
+.mhmui-confirm__trigger,
+.mhmui-confirm__confirm,
+.mhmui-confirm__cancel {
+	min-height: 44px;
+}
+.mhmui-confirm__prompt {
+	display: flex;
+	flex-direction: column;
+	gap: var( --mhmui-space-2 );
+}
+.mhmui-confirm__text {
+	margin: 0;
+	font-weight: 600;
+	color: var( --mhmui-text );
+}
+.mhmui-confirm__body {
+	display: flex;
+	flex-direction: column;
+	gap: var( --mhmui-space-1 );
+}
+.mhmui-confirm__actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var( --mhmui-space-2 );
+}
+.mhmui-confirm--primary .mhmui-confirm__trigger,
+.mhmui-confirm--primary .mhmui-confirm__confirm {
+	background: var( --mhmui-accent );
+	border-color: var( --mhmui-accent );
+	color: var( --mhmui-on-accent );
+}
+.mhmui-confirm--danger .mhmui-confirm__trigger,
+.mhmui-confirm--danger .mhmui-confirm__confirm {
+	border-color: var( --mhmui-danger-strong );
+	color: var( --mhmui-danger-strong );
+}
+.mhmui-confirm--secondary .mhmui-confirm__trigger {
+	color: var( --mhmui-text );
+}
+.mhmui-confirm [aria-disabled="true"] {
+	opacity: 0.6;
+	cursor: not-allowed;
+}

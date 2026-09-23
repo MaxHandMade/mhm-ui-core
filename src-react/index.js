@@ -15,6 +15,7 @@ export { default as Tabs } from './components/Tabs';
 export { default as PageHeader } from './components/PageHeader';
 export { default as DetailList } from './components/DetailList';
 export { default as DetailLayout } from './components/DetailLayout';
+export { default as ConfirmButton } from './components/ConfirmButton';
 
 // The semantic icon vocabulary (0.14.0+). A NAMED export on purpose: the
 // manifest gate counts `export { default as X }` to find components, and a

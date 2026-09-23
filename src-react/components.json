@@ -109,5 +109,13 @@
       { "children": "Details", "aside": "Decision", "asideLabel": "Decision" },
       { "children": "Details" }
     ]
+  },
+  "ConfirmButton": {
+    "interactive": true, "tone_semantics": false,
+    "props": { "label": "string", "confirmText": "string", "confirmLabel": "string", "cancelLabel": "string", "busyText": "string", "onConfirm": "function", "variant": "primary|secondary|danger?", "confirmDisabled": "boolean?", "disabled": "boolean?", "describedBy": "string?", "children": "node?" },
+    "fixtures": [
+      { "label": "Approve", "confirmText": "Approve this application?", "confirmLabel": "Yes, approve", "cancelLabel": "Cancel", "busyText": "Working…", "onConfirm": "function", "variant": "primary" },
+      { "label": "Reject", "confirmText": "Reject it?", "confirmLabel": "Yes, reject", "cancelLabel": "Cancel", "busyText": "Working…", "onConfirm": "function", "variant": "danger", "confirmDisabled": true }
+    ]
   }
 }
