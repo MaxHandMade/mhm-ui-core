@@ -12,6 +12,7 @@ export { default as ProLock } from './components/ProLock';
 export { default as Notice } from './components/Notice';
 export { default as Widget } from './components/Widget';
 export { default as Tabs } from './components/Tabs';
+export { default as PageHeader } from './components/PageHeader';
 
 // The semantic icon vocabulary (0.14.0+). A NAMED export on purpose: the
 // manifest gate counts `export { default as X }` to find components, and a
