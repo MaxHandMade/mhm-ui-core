@@ -485,7 +485,7 @@ describe( 'vertical rhythm is owned by the page shell (0.14.0)', () => {
 	test( 'ConfirmButton targets are at least 44px (WCAG 2.2 2.5.8 asks 24; the kit asks 44)', () => {
 		const body = ruleBody(
 			admin,
-			'.mhmui-confirm__trigger,\n.mhmui-confirm__confirm,\n.mhmui-confirm__cancel'
+			'.mhmui-confirm button.mhmui-confirm__trigger,\n.mhmui-confirm button.mhmui-confirm__confirm,\n.mhmui-confirm button.mhmui-confirm__cancel'
 		);
 		expect( body ).not.toBeNull();
 		expect( body ).toMatch( /min-height:\s*44px/ );
@@ -555,5 +555,173 @@ describe( 'vertical rhythm is owned by the page shell (0.14.0)', () => {
 
 	test( 'rhythmTargetsAreWrapped is not vacuous: no shell-prefixed combinator selector at all', () => {
 		expect( rhythmTargetsAreWrapped( '.mhmui-stats-grid { margin: 0; }' ) ).toBe( false );
+	} );
+} );
+
+/**
+ * Specificity [ids, classes, types] of one complex selector. :where() counts
+ * zero; :is()/:not()/:has() count their most specific argument; any other
+ * pseudo-class counts as a class; pseudo-elements count as a type.
+ */
+function specificity( selector ) {
+	let s = selector;
+	const score = [ 0, 0, 0 ];
+	const add = ( v ) => {
+		score[ 0 ] += v[ 0 ];
+		score[ 1 ] += v[ 1 ];
+		score[ 2 ] += v[ 2 ];
+	};
+	const re = /:(where|is|not|has)\(/;
+	let m;
+	while ( ( m = re.exec( s ) ) !== null ) {
+		let depth = 1;
+		let i = m.index + m[ 0 ].length;
+		for ( ; i < s.length && depth > 0; i++ ) {
+			depth += s[ i ] === '(' ? 1 : s[ i ] === ')' ? -1 : 0;
+		}
+		const inner = s.slice( m.index + m[ 0 ].length, i - 1 );
+		if ( m[ 1 ] !== 'where' ) {
+			const best = splitTopLevelCommas( inner )
+				.map( ( a ) => specificity( a.trim() ) )
+				.sort( compareSpecificity )
+				.pop();
+			add( best );
+		}
+		s = s.slice( 0, m.index ) + ' ' + s.slice( i );
+	}
+	s = s.replace( /\[[^\]]*\]/g, () => {
+		score[ 1 ]++;
+		return ' ';
+	} );
+	s = s.replace( /::[\w-]+/g, () => {
+		score[ 2 ]++;
+		return ' ';
+	} );
+	score[ 0 ] += ( s.match( /#[\w-]+/g ) || [] ).length;
+	score[ 1 ] += ( s.match( /\.[\w-]+/g ) || [] ).length;
+	score[ 1 ] += ( s.match( /:[\w-]+/g ) || [] ).length;
+	score[ 2 ] += ( s.replace( /[#.:][\w-]+/g, ' ' ).match( /(^|[\s>+~])[a-z][\w-]*/gi ) || [] ).length;
+	return score;
+}
+
+function compareSpecificity( a, b ) {
+	return a[ 0 ] - b[ 0 ] || a[ 1 ] - b[ 1 ] || a[ 2 ] - b[ 2 ];
+}
+
+/** Every [ selector, body ] pair in a stylesheet, comments stripped. */
+function rules( css ) {
+	const code = css.replace( /\/\*[\s\S]*?\*\//g, '' );
+	const out = [];
+	const re = /([^{}]+)\{([^}]*)\}/g;
+	let m;
+	while ( ( m = re.exec( code ) ) !== null ) {
+		for ( const sel of splitTopLevelCommas( m[ 1 ] ) ) {
+			out.push( [ sel.trim(), m[ 2 ] ] );
+		}
+	}
+	return out;
+}
+
+/**
+ * ConfirmButton renders WordPress's `.button` and lives in wp-admin, so every
+ * rule the kit sets on it competes with core's buttons.css. Measured on WP
+ * 7.1.2 (wp-includes/css/buttons.css): `.wp-core-ui .button` (0,2,0) sets
+ * min-height 40px and a transparent background; `.wp-core-ui .button:hover`,
+ * `:focus`, `:active` (0,3,0) set background, border and colour. The 0.15.0
+ * kit rules were (0,1,0) and (0,2,0): in the browser the targets measured 40px
+ * and a focused primary confirm lost its fill (Rentiva consumer check,
+ * 2026-09-24). The layout test above read the CSS TEXT and stayed green.
+ * These tests read what decides the cascade: specificity.
+ */
+describe( 'ConfirmButton wins the cascade against WordPress core buttons', () => {
+	const admin = read( 'admin.css' );
+	const all = rules( admin );
+	const CORE_BASE = [ 0, 2, 0 ]; // .wp-core-ui .button
+	const CORE_STATE = [ 0, 3, 0 ]; // .wp-core-ui .button:focus (and :hover, :active)
+
+	test( 'the specificity helper agrees with the spec on known selectors', () => {
+		expect( specificity( '.wp-core-ui .button' ) ).toEqual( [ 0, 2, 0 ] );
+		expect( specificity( '.wp-core-ui .button:focus' ) ).toEqual( [ 0, 3, 0 ] );
+		expect( specificity( '.a :is( .b, #c )' ) ).toEqual( [ 1, 1, 0 ] );
+		expect( specificity( ':where( .a ) .b' ) ).toEqual( [ 0, 1, 0 ] );
+		expect( specificity( 'input#publish' ) ).toEqual( [ 1, 0, 1 ] );
+	} );
+
+	test( 'every 44px target rule outranks core\'s .button', () => {
+		const targets = all.filter( ( [ sel, body ] ) => /min-height:\s*44px/.test( body ) && /mhmui-confirm__/.test( sel ) );
+		expect( targets.length ).toBeGreaterThanOrEqual( 3 );
+		for ( const [ sel ] of targets ) {
+			expect( [ sel, compareSpecificity( specificity( sel ), CORE_BASE ) > 0 ] ).toEqual( [ sel, true ] );
+		}
+	} );
+
+	test.each( [
+		[ 'primary', 'background' ],
+		[ 'primary', 'border-color' ],
+		[ 'danger', 'color' ],
+		[ 'danger', 'border-color' ],
+		// Core tints a hovered/active .button with the theme colour; a danger
+		// button must not turn blue-ish (audit of #36, B-2).
+		[ 'danger', 'background' ],
+	] )( 'the %s variant keeps its %s on :focus, :hover and :active', ( variant, prop ) => {
+		for ( const state of [ 'focus', 'hover', 'active' ] ) {
+			const winners = all.filter(
+				( [ sel, body ] ) =>
+					sel.includes( `mhmui-confirm--${ variant }` ) &&
+					sel.includes( 'mhmui-confirm__confirm' ) &&
+					sel.includes( `:${ state }` ) &&
+					new RegExp( `(^|[;\\s])${ prop }\\s*:` ).test( body ) &&
+					compareSpecificity( specificity( sel ), CORE_STATE ) > 0
+			);
+			expect( [ variant, state, winners.length > 0 ] ).toEqual( [ variant, state, true ] );
+		}
+	} );
+
+	// The ring is the visible half of focus: core's :focus box-shadow (0,3,0)
+	// must not win (audit of #36, B-4).
+	test.each( [ [ 'primary' ], [ 'danger' ] ] )( 'the %s focus ring outranks core', ( variant ) => {
+		const ring = all.filter(
+			( [ sel, body ] ) =>
+				sel.includes( `mhmui-confirm--${ variant }` ) &&
+				sel.includes( 'mhmui-confirm__confirm' ) &&
+				sel.includes( ':focus' ) &&
+				/(^|[;\s])box-shadow\s*:/.test( body ) &&
+				compareSpecificity( specificity( sel ), CORE_STATE ) > 0
+		);
+		expect( [ variant, ring.length > 0 ] ).toEqual( [ variant, true ] );
+	} );
+
+	/**
+	 * Busy and locked buttons are aria-disabled, focusable, and show busyText.
+	 * Core forces their text to #8a8a8a !important (buttons.css:224-228) --
+	 * a !important the kit cannot and must not fight. So the fill has to move
+	 * instead, as core does for .button-primary[disabled]: grey text on the
+	 * accent fill measured 1.50:1, and 1.26:1 under the old opacity (audit of
+	 * #36, B-1/B-5).
+	 */
+	test( 'an aria-disabled button carries no opacity', () => {
+		const faded = all.filter( ( [ sel, body ] ) => sel.includes( 'aria-disabled' ) && /(^|[;\s])opacity\s*:/.test( body ) );
+		expect( faded.map( ( [ sel ] ) => sel ) ).toEqual( [] );
+	} );
+
+	test( 'a locked primary drops its fill, and that rule wins over the primary state rules', () => {
+		const order = all.map( ( [ sel ] ) => sel );
+		const stateRules = all.filter(
+			( [ sel, body ] ) => sel.includes( 'mhmui-confirm--primary' ) && ! sel.includes( 'aria-disabled' ) && /(^|[;\s])background\s*:/.test( body )
+		);
+		const locked = all.filter(
+			( [ sel, body ] ) =>
+				sel.includes( 'mhmui-confirm--primary' ) &&
+				sel.includes( 'aria-disabled="true"' ) &&
+				/(^|[;\s])background\s*:\s*var\(\s*--mhmui-surface\s*\)/.test( body )
+		);
+		expect( locked.length ).toBeGreaterThan( 0 );
+		expect( stateRules.length ).toBeGreaterThan( 0 );
+		const [ lockedSel ] = locked[ locked.length - 1 ];
+		for ( const [ sel ] of stateRules ) {
+			const cmp = compareSpecificity( specificity( lockedSel ), specificity( sel ) );
+			const later = order.lastIndexOf( lockedSel ) > order.indexOf( sel );
+			expect( [ sel, cmp > 0 || ( cmp === 0 && later ) ] ).toEqual( [ sel, true ] );
+		}
 	} );
 } );

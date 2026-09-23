@@ -22,7 +22,7 @@ A consuming plugin `require_once`s `vendor/mhm/ui-core/register.php` from its
 main file and registers its own copy:
 
 ```php
-mhmuicore_register( '0.15.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.15.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 At `plugins_loaded` priority 0 the highest registered version boots; the rest
@@ -390,7 +390,7 @@ build from.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.15.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.15.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 Requiring `bootstrap.php` directly defines `MHMUICORE_VERSION` immediately, which
@@ -721,6 +721,10 @@ untouched. A surface that does not use the shell gets no rhythm, and a grid
 nested in a wrapper is spaced by its wrapper.
 
 ### Detail views (0.15.0+)
+
+0.15.1: ConfirmButton's rules outrank WordPress core's `.wp-core-ui .button`
+(0,2,0) and its `:hover/:focus/:active` (0,3,0) -- in 0.15.0 they lost in
+wp-admin (40px targets, a focused primary confirm drawn as an outline).
 
 Five members for a detail screen: `Tabs` (page sections as real links,
 `aria-current="page"`, a badge whose digit is `aria-hidden` and whose meaning
