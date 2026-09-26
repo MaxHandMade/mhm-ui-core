@@ -767,6 +767,40 @@ describe( 'ConfirmButton wins the cascade against WordPress core buttons', () =>
 			expect( [ sel, cmp > 0 || ( cmp === 0 && later ) ] ).toEqual( [ sel, true ] );
 		}
 	} );
+
+	/**
+	 * A locked danger confirm kept the danger border and differed from the
+	 * live one by text colour alone (core's #8a8a8a). The border goes neutral
+	 * too, so the lock has a second cue (audit of #36 round 2, N-2). The
+	 * danger state rules are (0,4,1) as well, so the locked rule must come
+	 * later in the source.
+	 */
+	test( 'a locked danger drops its border colour, and that rule wins over the danger state rules', () => {
+		const order = all.map( ( [ sel ] ) => sel );
+		const stateRules = all.filter(
+			( [ sel, body, at ] ) =>
+				at.length === 0 &&
+				sel.includes( 'mhmui-confirm--danger' ) &&
+				! sel.includes( 'aria-disabled' ) &&
+				/(^|[;\s])border-color\s*:/.test( body )
+		);
+		const locked = all.filter(
+			( [ sel, body, at ] ) =>
+				at.length === 0 &&
+				sel.includes( 'mhmui-confirm--danger' ) &&
+				sel.includes( 'mhmui-confirm__confirm' ) &&
+				sel.includes( 'aria-disabled="true"' ) &&
+				/(^|[;\s])border-color\s*:\s*var\(\s*--mhmui-border\s*\)/.test( body )
+		);
+		expect( locked.length ).toBeGreaterThan( 0 );
+		expect( stateRules.length ).toBeGreaterThan( 0 );
+		const [ lockedSel ] = locked[ locked.length - 1 ];
+		for ( const [ sel ] of stateRules ) {
+			const cmp = compareSpecificity( specificity( lockedSel ), specificity( sel ) );
+			const later = order.lastIndexOf( lockedSel ) > order.indexOf( sel );
+			expect( [ sel, cmp > 0 || ( cmp === 0 && later ) ] ).toEqual( [ sel, true ] );
+		}
+	} );
 } );
 
 /**

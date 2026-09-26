@@ -766,3 +766,10 @@
 	background: var( --mhmui-surface );
 	border-color: var( --mhmui-border );
 }
+/* A locked danger keeps no danger border: with core's grey text alone the
+   lock was one cue (colour). Same (0,4,1) as the danger state rules above,
+   so this rule must stay after them. The focus ring stays in the danger
+   colour on purpose -- focus must stay visible (WCAG 2.4.7). */
+.mhmui-confirm.mhmui-confirm--danger button:is( .mhmui-confirm__trigger, .mhmui-confirm__confirm )[aria-disabled="true"] {
+	border-color: var( --mhmui-border );
+}
