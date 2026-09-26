@@ -113,6 +113,38 @@ describe( 'DetailList -- label/value pairs', () => {
 		expect( dl.style.gridTemplateColumns ).toBe( '' );
 	} );
 
+	test.each( [ [ 'two' ], [ undefined ], [ null ], [ '' ] ] )(
+		'a columns value of %p with no leading number falls back to its own default, 2 (M-4)',
+		( columns ) => {
+			const { container } = render(
+				<DetailList emptyText="—" columns={ columns } items={ [] } />
+			);
+			expect(
+				container
+					.querySelector( 'dl' )
+					.style.getPropertyValue( '--mhmui-columns' )
+			).toBe( '2' );
+		}
+	);
+
+	test.each( [ [ true ], [ false ] ] )(
+		'a boolean value %p is empty -- React draws neither, the consumer formats it (M-8)',
+		( value ) => {
+			const { container } = render(
+				<DetailList
+					emptyText="—"
+					items={ [ { label: 'Verified', value } ] }
+				/>
+			);
+			expect( values( container ) ).toEqual( [
+				[
+					'—',
+					'mhmui-detail-list__value mhmui-detail-list__value--empty',
+				],
+			] );
+		}
+	);
+
 	test( 'inline layout has its modifier and no column variable', () => {
 		const { container } = render(
 			<DetailList emptyText="—" layout="inline" items={ [] } />
