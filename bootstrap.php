@@ -17,7 +17,7 @@ if ( defined( 'MHMUICORE_VERSION' ) ) {
 	return;
 }
 
-define( 'MHMUICORE_VERSION', '0.15.1' );
+define( 'MHMUICORE_VERSION', '0.15.2' );
 define( 'MHMUICORE_DIR', __DIR__ );
 
 /*
@@ -289,7 +289,8 @@ if ( ! function_exists( 'mhmuicore_tabs_html' ) ) {
 	 * Born in 0.15.0 -- guard calls with function_exists() while an older copy
 	 * can still win the loader. Consumers echo it through wp_kses_post(), like
 	 * mhmuicore_stat_card_html(); tests/Integration/KitEscapingTest.php pins
-	 * that the markup survives it byte for byte.
+	 * that the markup survives it byte for byte once kses has respelled
+	 * esc_url()'s &#038; as &amp; -- the one change core makes to it.
 	 *
 	 * @param array<string, mixed> $props { label, current, items }.
 	 * @return string

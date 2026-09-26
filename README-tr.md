@@ -216,7 +216,7 @@ da bu tek yanlış cümle yüzünden taşıdı.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.15.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.15.2', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 `bootstrap.php`'yi doğrudan require etmek `MHMUICORE_VERSION`'ı anında tanımlar
@@ -533,6 +533,16 @@ aralanır.
 0.15.1: ConfirmButton'ın kuralları WordPress çekirdeğinin `.wp-core-ui .button`
 (0,2,0) ve `:hover/:focus/:active` (0,3,0) kurallarını geçiyor -- 0.15.0'da
 wp-admin'de kaybediyordu (40px hedef, odakta dolgusunu kaybeden birincil onay).
+Görünür değişiklik: kilitli ya da meşgul birincil onay, soluk accent dolgu
+yerine yüzey renginde ve çekirdeğin gri metniyle çizilir; artık hiçbir şey
+soluklaştırılmaz.
+
+0.15.2: 44px hedefler liste tablosunun `.tablenav`'ında ve `.button-small`
+yanında da korunur; kilitli danger onay kırmızı kenarlığını da bırakır.
+`PageHeader`, `back.label` yoksa ya da boş dizgeyse geri bağlantı çizmez;
+`id`'siz `Tabs` öğeleri artık React anahtarı paylaşmaz; `DetailList`, `columns`
+sayıyla başlamıyorsa 2 sütuna düşer ve boolean değerde `emptyText` gösterir --
+boolean'ı kendiniz biçimlendirin.
 
 Bir detay ekranı için beş üye: `Tabs` (sayfa bölümleri gerçek bağlantılar,
 `aria-current="page"`; rozetin rakamı `aria-hidden`, anlamı `badgeLabel`),
@@ -631,7 +641,7 @@ parite kapısı eşitlik arar, uyumluluk değil.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.15.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.15.2', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 🔴 Sürüm dizesi **elle yazılır** (kayıt, herhangi bir bootstrap yüklenmeden önce koşar) ve
