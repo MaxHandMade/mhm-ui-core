@@ -473,7 +473,7 @@ describe( 'vertical rhythm is owned by the page shell (0.14.0)', () => {
 	test( 'ConfirmButton targets are at least 44px (WCAG 2.2 2.5.8 asks 24; the kit asks 44)', () => {
 		const body = ruleBody(
 			admin,
-			'.mhmui-confirm button.mhmui-confirm__trigger,\n.mhmui-confirm button.mhmui-confirm__confirm,\n.mhmui-confirm button.mhmui-confirm__cancel'
+			'.mhmui-confirm:is( .mhmui-confirm--primary, .mhmui-confirm--secondary, .mhmui-confirm--danger ) button[type="button"].mhmui-confirm__trigger,\n.mhmui-confirm:is( .mhmui-confirm--primary, .mhmui-confirm--secondary, .mhmui-confirm--danger ) button[type="button"].mhmui-confirm__confirm,\n.mhmui-confirm:is( .mhmui-confirm--primary, .mhmui-confirm--secondary, .mhmui-confirm--danger ) button[type="button"].mhmui-confirm__cancel'
 		);
 		expect( body ).not.toBeNull();
 		expect( body ).toMatch( /min-height:\s*44px/ );
@@ -650,6 +650,14 @@ describe( 'ConfirmButton wins the cascade against WordPress core buttons', () =>
 	const all = rules( admin );
 	const CORE_BASE = [ 0, 2, 0 ]; // .wp-core-ui .button
 	const CORE_STATE = [ 0, 3, 0 ]; // .wp-core-ui .button:focus (and :hover, :active)
+	// The heaviest rule core sizes a .button with, measured on WP 7.1.2:
+	// `.wp-core-ui .button-group.button-{compact,small,large,hero} .button`
+	// (buttons.css:74-104) at (0,4,0) -- the small group sets 24px. Below
+	// that: `.wp-core-ui .tablenav .button` (forms.css:564, 32px; 40px under
+	// 782px, :1774) and `.wp-core-ui .button.button-small` (buttons.css:82)
+	// at (0,3,0). A ConfirmButton in a list table's tablenav fell to 32px at
+	// (0,2,1) (audit of #36, B-6; plan audit, Codex F1).
+	const CORE_CONTEXT = [ 0, 4, 0 ];
 
 	test( 'the specificity helper agrees with the spec on known selectors', () => {
 		expect( specificity( '.wp-core-ui .button' ) ).toEqual( [ 0, 2, 0 ] );
@@ -657,15 +665,33 @@ describe( 'ConfirmButton wins the cascade against WordPress core buttons', () =>
 		expect( specificity( '.a :is( .b, #c )' ) ).toEqual( [ 1, 1, 0 ] );
 		expect( specificity( ':where( .a ) .b' ) ).toEqual( [ 0, 1, 0 ] );
 		expect( specificity( 'input#publish' ) ).toEqual( [ 1, 0, 1 ] );
+		expect( specificity( '.wp-core-ui .tablenav .button' ) ).toEqual( [ 0, 3, 0 ] );
+		expect( specificity( '.wp-core-ui .button-group.button-small .button' ) ).toEqual( [ 0, 4, 0 ] );
+		expect(
+			specificity(
+				'.mhmui-confirm:is( .mhmui-confirm--primary, .mhmui-confirm--danger ) button[type="button"].mhmui-confirm__trigger'
+			)
+		).toEqual( [ 0, 4, 1 ] );
 	} );
 
 	// A rule inside @media/@container wins only under its condition, so it
 	// never counts as the rule that beats core everywhere (B-3).
-	test( 'every 44px target rule outranks core\'s .button', () => {
-		const targets = all.filter( ( [ sel, body, at ] ) => at.length === 0 && /min-height:\s*44px/.test( body ) && /mhmui-confirm__/.test( sel ) );
-		expect( targets.length ).toBeGreaterThanOrEqual( 3 );
+	test( 'every 44px target outranks core, in every context core sizes a .button', () => {
+		const targets = all.filter(
+			( [ sel, body, at ] ) =>
+				at.length === 0 &&
+				/min-height:\s*44px/.test( body ) &&
+				/mhmui-confirm__/.test( sel )
+		);
+		for ( const part of [
+			'mhmui-confirm__trigger',
+			'mhmui-confirm__confirm',
+			'mhmui-confirm__cancel',
+		] ) {
+			expect( [ part, targets.some( ( [ sel ] ) => sel.includes( part ) ) ] ).toEqual( [ part, true ] );
+		}
 		for ( const [ sel ] of targets ) {
-			expect( [ sel, compareSpecificity( specificity( sel ), CORE_BASE ) > 0 ] ).toEqual( [ sel, true ] );
+			expect( [ sel, compareSpecificity( specificity( sel ), CORE_CONTEXT ) > 0 ] ).toEqual( [ sel, true ] );
 		}
 	} );
 
