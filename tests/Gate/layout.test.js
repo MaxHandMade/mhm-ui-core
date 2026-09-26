@@ -1,5 +1,6 @@
 const { readFileSync } = require( 'node:fs' );
 const { join } = require( 'node:path' );
+const postcss = require( 'postcss' );
 
 const ROOT = join( __dirname, '..', '..' );
 const read = ( f ) => readFileSync( join( ROOT, 'assets', 'react', f ), 'utf8' );
@@ -159,22 +160,17 @@ function isFullyWrappedInWhere( selector ) {
  * (true over an empty set) even though the six skin rules this gate exists
  * to police had silently gone missing. Default 1 rejects that empty case for
  * any caller; the real front.css assertion below raises it to 6, the actual
- * count of skin rules (measured 2026-09-17). */
+ * count of skin rules (measured 2026-09-17).
+ * Reads through rules() (B-3), so a rule inside an at-rule is seen too. */
 function allWhereSelectorsFullyWrapped( css, minCount = 1 ) {
-	const code = css.replace( /\/\*[\s\S]*?\*\//g, '' );
-	const ruleRe = /([^{}]+)\{[^}]*\}/g;
-	let m;
 	let found = 0;
-	while ( ( m = ruleRe.exec( code ) ) !== null ) {
-		for ( const raw of splitTopLevelCommas( m[ 1 ] ) ) {
-			const sel = raw.trim();
-			if ( ! sel.includes( ':where(' ) ) {
-				continue;
-			}
-			found++;
-			if ( ! isFullyWrappedInWhere( sel ) ) {
-				return false;
-			}
+	for ( const [ sel ] of rules( css ) ) {
+		if ( ! sel.includes( ':where(' ) ) {
+			continue;
+		}
+		found++;
+		if ( ! isFullyWrappedInWhere( sel ) ) {
+			return false;
 		}
 	}
 	return found >= minCount;
@@ -184,20 +180,12 @@ function allWhereSelectorsFullyWrapped( css, minCount = 1 ) {
  * EXACTLY as one top-level item of a possibly comma-separated selector list)
  * whose selector equals `selector` -- ALL of them, in source order, not just
  * the first. Reused by `hierarchyDeclaredExactlyOnce` below; see that
- * function's comment for why "just the first" was the bug. */
+ * function's comment for why "just the first" was the bug.
+ * Reads through rules() (B-3), so a rule inside an at-rule is seen too. */
 function unwrappedRuleBodiesForSelector( css, selector ) {
-	const code = css.replace( /\/\*[\s\S]*?\*\//g, '' );
-	const ruleRe = /([^{}]+)\{([^}]*)\}/g;
-	const bodies = [];
-	let m;
-	while ( ( m = ruleRe.exec( code ) ) !== null ) {
-		for ( const raw of splitTopLevelCommas( m[ 1 ] ) ) {
-			if ( raw.trim() === selector ) {
-				bodies.push( m[ 2 ] );
-			}
-		}
-	}
-	return bodies;
+	return rules( css )
+		.filter( ( [ sel ] ) => sel === selector )
+		.map( ( [ , body ] ) => body );
 }
 
 /** L2 (2026-09-18), fix round 1 / F1 (reviewer-found regression in the gate
@@ -501,23 +489,18 @@ describe( 'vertical rhythm is owned by the page shell (0.14.0)', () => {
 	 * (`.mhmui-admin-page > * + :is( .mhmui-stats-grid, … )`). Comments are
 	 * stripped first (ruleBody()'s own habit, and kit-parity.test.js's
 	 * classUniverse()) so a docblock describing the ban is never mistaken for
-	 * a violation of it. */
+	 * a violation of it.
+	 * Reads through rules() (B-3), so a rule inside an at-rule is seen too. */
 	function rhythmTargetsAreWrapped( css ) {
-		const code = css.replace( /\/\*[\s\S]*?\*\//g, '' );
-		const ruleRe = /([^{}]+)\{[^}]*\}/g;
-		let m;
 		let found = 0;
-		while ( ( m = ruleRe.exec( code ) ) !== null ) {
-			for ( const raw of splitTopLevelCommas( m[ 1 ] ) ) {
-				const sel = raw.trim();
-				const shellMatch = sel.match( /mhmui-(?:admin|front)-page\s*>\s*[^+{}]*\+\s*(.*)$/ );
-				if ( ! shellMatch ) {
-					continue;
-				}
-				found++;
-				if ( ! shellMatch[ 1 ].startsWith( ':is(' ) ) {
-					return false;
-				}
+		for ( const [ sel ] of rules( css ) ) {
+			const shellMatch = sel.match( /mhmui-(?:admin|front)-page\s*>\s*[^+{}]*\+\s*(.*)$/ );
+			if ( ! shellMatch ) {
+				continue;
+			}
+			found++;
+			if ( ! shellMatch[ 1 ].startsWith( ':is(' ) ) {
+				return false;
 			}
 		}
 		return found >= 1;
@@ -608,17 +591,46 @@ function compareSpecificity( a, b ) {
 	return a[ 0 ] - b[ 0 ] || a[ 1 ] - b[ 1 ] || a[ 2 ] - b[ 2 ];
 }
 
-/** Every [ selector, body ] pair in a stylesheet, comments stripped. */
+/**
+ * Every [ selector, body, atRules ] triple in a stylesheet, in source order.
+ *
+ * Reads through postcss (audit of #36, B-3; plan audit Codex F2): a rule
+ * inside @media / @container / @supports / @keyframes comes back with the
+ * at-rule chain in `atRules`, outermost first; an unconditional rule has
+ * `[]`. `body` is the rule's declarations as `prop: value;`, one space apart,
+ * `!important` kept. CSS postcss cannot parse, and a style rule nested in
+ * another (CSS nesting, which this package does not write), THROW: a gate
+ * that cannot read its input fails loudly instead of measuring nothing.
+ */
 function rules( css ) {
-	const code = css.replace( /\/\*[\s\S]*?\*\//g, '' );
-	const out = [];
-	const re = /([^{}]+)\{([^}]*)\}/g;
-	let m;
-	while ( ( m = re.exec( code ) ) !== null ) {
-		for ( const sel of splitTopLevelCommas( m[ 1 ] ) ) {
-			out.push( [ sel.trim(), m[ 2 ] ] );
-		}
+	let root;
+	try {
+		root = postcss.parse( css );
+	} catch ( error ) {
+		throw new Error( `rules(): ${ error.message }` );
 	}
+	const out = [];
+	root.walkRules( ( rule ) => {
+		const atRules = [];
+		for ( let p = rule.parent; p && p.type !== 'root'; p = p.parent ) {
+			if ( p.type === 'rule' ) {
+				throw new Error(
+					`rules(): nested style rule under "${ p.selector }" is not supported`
+				);
+			}
+			atRules.unshift( `@${ p.name } ${ p.params }`.trim() );
+		}
+		const body = rule.nodes
+			.filter( ( n ) => n.type === 'decl' )
+			.map(
+				( d ) =>
+					`${ d.prop }: ${ d.value }${ d.important ? ' !important' : '' };`
+			)
+			.join( ' ' );
+		for ( const sel of rule.selectors ) {
+			out.push( [ sel.trim(), body, atRules ] );
+		}
+	} );
 	return out;
 }
 
@@ -647,8 +659,10 @@ describe( 'ConfirmButton wins the cascade against WordPress core buttons', () =>
 		expect( specificity( 'input#publish' ) ).toEqual( [ 1, 0, 1 ] );
 	} );
 
+	// A rule inside @media/@container wins only under its condition, so it
+	// never counts as the rule that beats core everywhere (B-3).
 	test( 'every 44px target rule outranks core\'s .button', () => {
-		const targets = all.filter( ( [ sel, body ] ) => /min-height:\s*44px/.test( body ) && /mhmui-confirm__/.test( sel ) );
+		const targets = all.filter( ( [ sel, body, at ] ) => at.length === 0 && /min-height:\s*44px/.test( body ) && /mhmui-confirm__/.test( sel ) );
 		expect( targets.length ).toBeGreaterThanOrEqual( 3 );
 		for ( const [ sel ] of targets ) {
 			expect( [ sel, compareSpecificity( specificity( sel ), CORE_BASE ) > 0 ] ).toEqual( [ sel, true ] );
@@ -666,7 +680,8 @@ describe( 'ConfirmButton wins the cascade against WordPress core buttons', () =>
 	] )( 'the %s variant keeps its %s on :focus, :hover and :active', ( variant, prop ) => {
 		for ( const state of [ 'focus', 'hover', 'active' ] ) {
 			const winners = all.filter(
-				( [ sel, body ] ) =>
+				( [ sel, body, at ] ) =>
+					at.length === 0 &&
 					sel.includes( `mhmui-confirm--${ variant }` ) &&
 					sel.includes( 'mhmui-confirm__confirm' ) &&
 					sel.includes( `:${ state }` ) &&
@@ -681,7 +696,8 @@ describe( 'ConfirmButton wins the cascade against WordPress core buttons', () =>
 	// must not win (audit of #36, B-4).
 	test.each( [ [ 'primary' ], [ 'danger' ] ] )( 'the %s focus ring outranks core', ( variant ) => {
 		const ring = all.filter(
-			( [ sel, body ] ) =>
+			( [ sel, body, at ] ) =>
+				at.length === 0 &&
 				sel.includes( `mhmui-confirm--${ variant }` ) &&
 				sel.includes( 'mhmui-confirm__confirm' ) &&
 				sel.includes( ':focus' ) &&
@@ -710,7 +726,8 @@ describe( 'ConfirmButton wins the cascade against WordPress core buttons', () =>
 			( [ sel, body ] ) => sel.includes( 'mhmui-confirm--primary' ) && ! sel.includes( 'aria-disabled' ) && /(^|[;\s])background\s*:/.test( body )
 		);
 		const locked = all.filter(
-			( [ sel, body ] ) =>
+			( [ sel, body, at ] ) =>
+				at.length === 0 &&
 				sel.includes( 'mhmui-confirm--primary' ) &&
 				sel.includes( 'aria-disabled="true"' ) &&
 				/(^|[;\s])background\s*:\s*var\(\s*--mhmui-surface\s*\)/.test( body )
@@ -723,5 +740,91 @@ describe( 'ConfirmButton wins the cascade against WordPress core buttons', () =>
 			const later = order.lastIndexOf( lockedSel ) > order.indexOf( sel );
 			expect( [ sel, cmp > 0 || ( cmp === 0 && later ) ] ).toEqual( [ sel, true ] );
 		}
+	} );
+} );
+
+/**
+ * The parser every cascade check below stands on (audit of #36, B-3). The
+ * first version matched `sel { body }` with one flat regex: a rule inside
+ * @media/@container came back as the "selector" `@media ( … )` with a torn
+ * body, and the rule itself vanished from every check -- measured 2026-09-26
+ * on the two legacy .mhm-stats-grid rules in admin.css. A hand-counted
+ * replacement was then measured wrong on braces inside strings and a stray
+ * `}` (plan audit, Codex F2 / Fable m-1), so this reads through postcss.
+ */
+describe( 'rules() reads the stylesheet the way the cascade does', () => {
+	test( 'a rule inside an at-rule comes back, with the at-rule prelude', () => {
+		const css =
+			'.a { color: red; }\n@container ( min-width: 1px ) {\n\t.b, .c { min-height: 44px; }\n}\n.d { color: blue; }';
+		expect( rules( css ) ).toEqual( [
+			[ '.a', 'color: red;', [] ],
+			[ '.b', 'min-height: 44px;', [ '@container ( min-width: 1px )' ] ],
+			[ '.c', 'min-height: 44px;', [ '@container ( min-width: 1px )' ] ],
+			[ '.d', 'color: blue;', [] ],
+		] );
+	} );
+
+	test( 'nested at-rules stack outermost first', () => {
+		expect(
+			rules(
+				'@media print { @supports ( display: grid ) { .a { x: y; } } }'
+			).map( ( [ sel, , at ] ) => [ sel, at ] )
+		).toEqual( [
+			[ '.a', [ '@media print', '@supports ( display: grid )' ] ],
+		] );
+	} );
+
+	test( 'a statement at-rule before a rule is not part of its selector', () => {
+		expect(
+			rules( '@import url( x.css );\n.a { color: red; }' ).map(
+				( [ sel ] ) => sel
+			)
+		).toEqual( [ '.a' ] );
+	} );
+
+	test( 'a brace inside a string is text, not structure', () => {
+		expect(
+			rules( '.a { content: "}"; min-height: 44px; }\n.b { content: "{"; }' )
+		).toEqual( [
+			[ '.a', 'content: "}"; min-height: 44px;', [] ],
+			[ '.b', 'content: "{";', [] ],
+		] );
+	} );
+
+	test( '@keyframes steps come back inside their at-rule, so they never count as unconditional', () => {
+		expect(
+			rules( '@keyframes spin { from { x: 0; } to { x: 1; } }' ).map(
+				( [ sel, , at ] ) => [ sel, at ]
+			)
+		).toEqual( [
+			[ 'from', [ '@keyframes spin' ] ],
+			[ 'to', [ '@keyframes spin' ] ],
+		] );
+	} );
+
+	test( 'the shipped stylesheets: no at-rule is read as a selector', () => {
+		for ( const f of [ 'admin.css', 'front.css', 'pro.css' ] ) {
+			const torn = rules( read( f ) )
+				.map( ( [ sel ] ) => sel )
+				.filter( ( sel ) => sel.startsWith( '@' ) );
+			expect( [ f, torn ] ).toEqual( [ f, [] ] );
+		}
+		const inMedia = rules( read( 'admin.css' ) )
+			.filter( ( [ , , at ] ) => at.length > 0 )
+			.map( ( [ sel, , at ] ) => [ sel, at ] );
+		expect( inMedia ).toEqual(
+			expect.arrayContaining( [
+				[ '.mhm-stats-grid', [ '@media ( max-width: 782px )' ] ],
+				[ '.mhm-stats-grid', [ '@media ( max-width: 480px )' ] ],
+			] )
+		);
+	} );
+
+	test.each( [
+		[ 'an unclosed block', '.a { color: red;' ],
+		[ 'a stray closing brace', '.a { color: red; } }' ],
+		[ 'a nested style rule', '.a { color: red; .b { color: blue; } }' ],
+	] )( '%s throws instead of measuring nothing', ( _name, css ) => {
+		expect( () => rules( css ) ).toThrow( /rules\(\)/ );
 	} );
 } );
