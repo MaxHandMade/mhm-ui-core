@@ -66,6 +66,26 @@ describe( 'PageHeader -- back link, title, badge, meta, actions', () => {
 		expect( screen.queryByRole( 'link' ) ).toBeNull();
 	} );
 
+	test.each( [ [ '' ], [ '   ' ], [ null ], [ undefined ] ] )(
+		'no back link when its label is %p -- a link with no accessible name is worse than none (M-2)',
+		( label ) => {
+			render( <PageHeader title="T" back={ { label, href: '?b' } } /> );
+			expect( screen.queryByRole( 'link' ) ).toBeNull();
+		}
+	);
+
+	test( 'a node label still draws the back link (R-12: no tightening beyond M-2)', () => {
+		render(
+			<PageHeader
+				title="T"
+				back={ { label: <span>Back to vendors</span>, href: '?b' } }
+			/>
+		);
+		expect(
+			screen.getByRole( 'link', { name: 'Back to vendors' } )
+		).toBeTruthy();
+	} );
+
 	test( 'badge renders the kit StatusBadge with its tone', () => {
 		const { container } = render(
 			<PageHeader

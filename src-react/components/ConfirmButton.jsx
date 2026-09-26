@@ -41,6 +41,13 @@ const FOCUSABLE =
  * @param {string}   props.confirmLabel
  * @param {string}   props.cancelLabel
  * @param {string}   props.busyText          Confirm text while busy.
+ *                                           Known limit: an empty label,
+ *                                           confirmLabel, cancelLabel or
+ *                                           busyText draws a nameless button
+ *                                           and no gate catches it (as Tabs'
+ *                                           empty label); the trigger is not
+ *                                           hidden -- a silently missing
+ *                                           action is worse.
  * @param {Function} props.onConfirm         () => void | Promise.
  * @param {string}   [props.variant]         primary | secondary | danger.
  * @param {boolean}  [props.confirmDisabled]

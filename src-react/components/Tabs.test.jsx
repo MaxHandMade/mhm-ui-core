@@ -101,6 +101,21 @@ describe( 'Tabs -- page sections as real links', () => {
 		).toEqual( [ 'B' ] );
 	} );
 
+	test( 'items without an id render without a React key warning, even on a shared href (M-3)', () => {
+		render(
+			<Tabs
+				label="Sections"
+				items={ [
+					{ label: 'A', href: '?a' },
+					{ label: 'B', href: '?b' },
+					{ label: 'B again', href: '?b' },
+				] }
+			/>
+		);
+		expect( screen.getAllByRole( 'link' ) ).toHaveLength( 3 );
+		expect( console ).not.toHaveErrored();
+	} );
+
 	test( 'onSelect intercepts a plain left click', () => {
 		const onSelect = jest.fn();
 		render(

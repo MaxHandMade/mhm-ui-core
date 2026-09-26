@@ -63,7 +63,7 @@ export default function Tabs( { label, current, items = [], onSelect } ) {
 						typeof item.href === 'string' &&
 						item.href !== ''
 				)
-				.map( ( item ) => {
+				.map( ( item, index ) => {
 					const isCurrent = hasCurrent && item.id === current;
 					const count = badgeCount( item.badge );
 					const hasBadgeLabel =
@@ -80,7 +80,7 @@ export default function Tabs( { label, current, items = [], onSelect } ) {
 
 					return (
 						<a
-							key={ item.id }
+							key={ item.id || `${ index }:${ item.href }` }
 							href={ item.href }
 							className={
 								isCurrent
