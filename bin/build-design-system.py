@@ -42,8 +42,10 @@ WP_CHROME = """
      forms.css:564-568). The kit's rules compete with these in wp-admin, so a
      card drawn without them cannot show the cascade (audit of #36, B-7) -- a
      locked danger confirm looked live (N-1). forms.css:1774 (40px under
-     782px) is not quoted: the cards are wider. Update the quote when the
-     pinned core version moves. ---- */
+     782px) is not quoted, nor is buttons.css's <=782px responsive block: at
+     (0,3,0) and (0,2,0) they sit under the kit's (0,4,1) 44px rules, so they
+     change nothing a kit card shows. Update the quote when the pinned core
+     version moves. ---- */
   .wp-core-ui .button, .wp-core-ui .button-primary, .wp-core-ui .button-secondary { display: inline-block; text-decoration: none; font-size: 13px; font-weight: 500; line-height: 2.92307692; min-height: 40px; margin: 0; padding: 0 16px; cursor: pointer; border-width: 1px; border-style: solid; -webkit-appearance: none; border-radius: 2px; white-space: nowrap; box-sizing: border-box; }
   .wp-core-ui .button.button-compact, .wp-core-ui .button-group.button-compact .button { line-height: 2.30769231; min-height: 32px; padding: 0 12px; }
   .wp-core-ui .button.button-small, .wp-core-ui .button-group.button-small .button { line-height: 2; min-height: 24px; padding: 0 8px; font-size: 11px; }

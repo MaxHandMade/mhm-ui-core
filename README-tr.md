@@ -537,12 +537,13 @@ Görünür değişiklik: kilitli ya da meşgul birincil onay, soluk accent dolgu
 yerine yüzey renginde ve çekirdeğin gri metniyle çizilir; artık hiçbir şey
 soluklaştırılmaz.
 
-0.15.2: 44px hedefler liste tablosunun `.tablenav`'ında ve `.button-small`
-yanında da korunur; kilitli danger onay kırmızı kenarlığını da bırakır.
-`PageHeader`, `back.label` yoksa ya da boş dizgeyse geri bağlantı çizmez;
-`id`'siz `Tabs` öğeleri artık React anahtarı paylaşmaz; `DetailList`, `columns`
-sayıyla başlamıyorsa 2 sütuna düşer ve boolean değerde `emptyText` gösterir --
-boolean'ı kendiniz biçimlendirin.
+0.15.2: 44px hedefler liste tablosunun `.tablenav`'ında ve bir
+`.button-group.button-small` içinde de korunur; kilitli danger onay kırmızı
+kenarlığını da bırakır. `PageHeader`, `back.label` yoksa, boolean ise ya da
+boş/boşluk dizgeyse geri bağlantı çizmez; `id`'siz `Tabs` öğeleri artık React
+anahtarı paylaşmaz; `DetailList`, `columns` sayıyla başlamıyorsa 2 sütuna
+düşer ve boolean değerde `emptyText` gösterir -- boolean'ı kendiniz
+biçimlendirin.
 
 Bir detay ekranı için beş üye: `Tabs` (sayfa bölümleri gerçek bağlantılar,
 `aria-current="page"`; rozetin rakamı `aria-hidden`, anlamı `badgeLabel`),

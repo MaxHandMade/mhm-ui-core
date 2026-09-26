@@ -729,12 +729,13 @@ Visible change: a locked or busy primary confirm is drawn on the surface
 colour with core's grey text instead of a faded accent fill, and nothing is
 faded any more.
 
-0.15.2: the 44px targets hold inside a list table's `.tablenav` and next to
-`.button-small` too; a locked danger confirm also drops its red border.
-`PageHeader` draws no back link when `back.label` is missing or an empty
-string; `Tabs` items without an `id` no longer share a React key; `DetailList`
-falls back to 2 columns when `columns` has no leading number and shows
-`emptyText` for a boolean value -- format booleans yourself.
+0.15.2: the 44px targets hold inside a list table's `.tablenav` and inside a
+`.button-group.button-small` too; a locked danger confirm also drops its red
+border. `PageHeader` draws no back link when `back.label` is missing, a
+boolean, or an empty or blank string; `Tabs` items without an `id` no longer
+share a React key; `DetailList` falls back to 2 columns when `columns` has no
+leading number and shows `emptyText` for a boolean value -- format booleans
+yourself.
 
 Five members for a detail screen: `Tabs` (page sections as real links,
 `aria-current="page"`, a badge whose digit is `aria-hidden` and whose meaning

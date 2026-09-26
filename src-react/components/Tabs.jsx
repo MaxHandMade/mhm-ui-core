@@ -80,7 +80,11 @@ export default function Tabs( { label, current, items = [], onSelect } ) {
 
 					return (
 						<a
-							key={ item.id || `${ index }:${ item.href }` }
+							key={
+								item.id
+									? `id:${ item.id }`
+									: `at:${ index }:${ item.href }`
+							}
 							href={ item.href }
 							className={
 								isCurrent

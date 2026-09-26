@@ -648,7 +648,6 @@ function rules( css ) {
 describe( 'ConfirmButton wins the cascade against WordPress core buttons', () => {
 	const admin = read( 'admin.css' );
 	const all = rules( admin );
-	const CORE_BASE = [ 0, 2, 0 ]; // .wp-core-ui .button
 	const CORE_STATE = [ 0, 3, 0 ]; // .wp-core-ui .button:focus (and :hover, :active)
 	// The heaviest rule core sizes a .button with, measured on WP 7.1.2:
 	// `.wp-core-ui .button-group.button-{compact,small,large,hero} .button`

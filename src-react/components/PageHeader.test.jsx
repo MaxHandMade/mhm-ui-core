@@ -66,7 +66,14 @@ describe( 'PageHeader -- back link, title, badge, meta, actions', () => {
 		expect( screen.queryByRole( 'link' ) ).toBeNull();
 	} );
 
-	test.each( [ [ '' ], [ '   ' ], [ null ], [ undefined ] ] )(
+	test.each( [
+		[ '' ],
+		[ '   ' ],
+		[ null ],
+		[ undefined ],
+		[ false ],
+		[ true ],
+	] )(
 		'no back link when its label is %p -- a link with no accessible name is worse than none (M-2)',
 		( label ) => {
 			render( <PageHeader title="T" back={ { label, href: '?b' } } /> );

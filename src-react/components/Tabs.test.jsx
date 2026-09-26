@@ -116,6 +116,20 @@ describe( 'Tabs -- page sections as real links', () => {
 		expect( console ).not.toHaveErrored();
 	} );
 
+	test( 'an explicit id never collides with a fallback key (plan audit, Codex F-A)', () => {
+		render(
+			<Tabs
+				label="Sections"
+				items={ [
+					{ id: '1:?b', label: 'A', href: '?a' },
+					{ label: 'B', href: '?b' },
+				] }
+			/>
+		);
+		expect( screen.getAllByRole( 'link' ) ).toHaveLength( 2 );
+		expect( console ).not.toHaveErrored();
+	} );
+
 	test( 'onSelect intercepts a plain left click', () => {
 		const onSelect = jest.fn();
 		render(
