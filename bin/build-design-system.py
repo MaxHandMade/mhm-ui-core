@@ -37,8 +37,27 @@ version = json.loads(io.open(ROOT + "/package.json", encoding="utf-8").read())["
 # by a labelled box so the preview needs no font download).
 WP_CHROME = """
   body { margin: 0; padding: 24px; background: #f0f0f1; color: #1d2327; font: 13px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif; }
-  .button { display: inline-block; padding: 0 10px; min-height: 30px; line-height: 2.15384615; font-size: 13px; border: 1px solid #2271b1; border-radius: 3px; background: #f6f7f7; color: #2271b1; cursor: pointer; }
-  .button:disabled { color: #a7aaad; border-color: #dcdcde; background: #f6f7f7; cursor: default; }
+  /* ---- WordPress 7.1.2 core, values verbatim, reflowed one rule per line
+     (buttons.css:43-61, 74-104, 148-154, 160-188, 209-222, 224-228;
+     forms.css:564-568). The kit's rules compete with these in wp-admin, so a
+     card drawn without them cannot show the cascade (audit of #36, B-7) -- a
+     locked danger confirm looked live (N-1). forms.css:1774 (40px under
+     782px) is not quoted, nor is buttons.css's <=782px responsive block: at
+     (0,3,0) and (0,2,0) they sit under the kit's (0,4,1) 44px rules, so they
+     change nothing a kit card shows. Update the quote when the pinned core
+     version moves. ---- */
+  .wp-core-ui .button, .wp-core-ui .button-primary, .wp-core-ui .button-secondary { display: inline-block; text-decoration: none; font-size: 13px; font-weight: 500; line-height: 2.92307692; min-height: 40px; margin: 0; padding: 0 16px; cursor: pointer; border-width: 1px; border-style: solid; -webkit-appearance: none; border-radius: 2px; white-space: nowrap; box-sizing: border-box; }
+  .wp-core-ui .button.button-compact, .wp-core-ui .button-group.button-compact .button { line-height: 2.30769231; min-height: 32px; padding: 0 12px; }
+  .wp-core-ui .button.button-small, .wp-core-ui .button-group.button-small .button { line-height: 2; min-height: 24px; padding: 0 8px; font-size: 11px; }
+  .wp-core-ui .button.button-large, .wp-core-ui .button-group.button-large .button { line-height: 2.92307692; min-height: 40px; padding: 0 16px; }
+  .wp-core-ui .button.button-hero, .wp-core-ui .button-group.button-hero .button { font-size: 14px; line-height: 3.28571429; min-height: 48px; padding: 0 36px; }
+  .wp-core-ui .button, .wp-core-ui .button-secondary { color: var(--wp-admin-theme-color, #3858e9); border-color: var(--wp-admin-theme-color, #3858e9); background: transparent; vertical-align: top; }
+  .wp-core-ui .button.hover, .wp-core-ui .button:hover, .wp-core-ui .button-secondary:hover { background: rgba(var(--wp-admin-theme-color--rgb, 56, 88, 233), 0.04); border-color: var(--wp-admin-theme-color-darker-20, #183ad6); color: var(--wp-admin-theme-color-darker-20, #183ad6); }
+  .wp-core-ui .button.focus, .wp-core-ui .button:focus, .wp-core-ui .button-secondary:focus { background: transparent; border-color: var(--wp-admin-theme-color, #3858e9); color: var(--wp-admin-theme-color, #3858e9); box-shadow: 0 0 0 var(--wp-admin-border-width-focus, 1.5px) var(--wp-admin-theme-color, #3858e9); outline: 1px solid transparent; outline-offset: 0; }
+  .wp-core-ui .button:active, .wp-core-ui .button-secondary:active { background: rgba(var(--wp-admin-theme-color--rgb, 56, 88, 233), 0.08); border-color: var(--wp-admin-theme-color-darker-20, #183ad6); color: var(--wp-admin-theme-color-darker-20, #183ad6); box-shadow: none; }
+  .wp-core-ui .button[disabled], .wp-core-ui .button:disabled, .wp-core-ui .button.disabled, .wp-core-ui .button-secondary[disabled], .wp-core-ui .button-secondary:disabled, .wp-core-ui .button-secondary.disabled, .wp-core-ui .button-disabled { color: #8a8a8a !important; border-color: #d8d8d8 !important; background: transparent !important; box-shadow: none !important; cursor: default; transform: none !important; }
+  .wp-core-ui .button[aria-disabled="true"], .wp-core-ui .button-secondary[aria-disabled="true"] { color: #8a8a8a !important; cursor: default; }
+  .wp-core-ui .tablenav .button { min-height: 32px; line-height: 2.30769231; padding: 0 12px; }
   .notice { background: #fff; border: 1px solid #c3c4c7; border-left-width: 4px; box-shadow: 0 1px 1px rgba(0,0,0,.04); padding: 1px 12px; position: relative; }
   .notice p { margin: .5em 0; padding: 2px; }
   .notice-success { border-left-color: #00a32a; } .notice-warning { border-left-color: #dba617; }
@@ -61,7 +80,7 @@ def page(group, title, note, body, width=760):
         + "\n/* ---- assets/react/admin.css (v%s), inlined verbatim ---- */\n" % version + css
         + "\n/* ---- assets/react/pro.css (v%s), inlined verbatim ---- */\n" % version + pro_css
         + "\n</style></head>\n"
-        + "<body class=\"mhmui-admin\">\n<p class=\"ds-note\">%s</p>\n%s\n</body></html>\n" % (note, body)
+        + "<body class=\"wp-core-ui mhmui-admin\">\n<p class=\"ds-note\">%s</p>\n%s\n</body></html>\n" % (note, body)
     )
 
 files = {}
@@ -270,7 +289,7 @@ files["components/detail-layout.html"] = page(
 
 files["components/confirm-button.html"] = page(
     "Components", "ConfirmButton",
-    "<b>ConfirmButton</b> — sayfa içi iki adımlı onay (window.confirm yerine). Kapalı/açık × primary/secondary/danger; gövdeli (gerekçe) ve onay kilitli hâl. Hedefler ≥44px.",
+    "<b>ConfirmButton</b> — sayfa içi iki adımlı onay (window.confirm yerine). Kapalı/açık × primary/secondary/danger; gövdeli (gerekçe) ve onay kilitli hâl. Hedefler ≥44px. Kartlar WordPress 7.1.2 çekirdek düğme kurallarıyla çizilir (kaskad dahil).",
     "".join(
         '<div class="%s"><button type="button" class="button mhmui-confirm__trigger">%s</button></div>' % (cls, text)
         for cls, text in (
@@ -287,7 +306,13 @@ files["components/confirm-button.html"] = page(
     + '<div class="mhmui-confirm mhmui-confirm--primary"><div class="mhmui-confirm__prompt">'
     '<p class="mhmui-confirm__text" id="q2">Bu başvuru onaylansın mı?</p>'
     '<div class="mhmui-confirm__actions"><button type="button" class="button mhmui-confirm__confirm" aria-describedby="q2">Evet, onayla</button>'
-    '<button type="button" class="button mhmui-confirm__cancel" aria-describedby="q2">Vazgeç</button></div></div></div>',
+    '<button type="button" class="button mhmui-confirm__cancel" aria-describedby="q2">Vazgeç</button></div></div></div>'
+    + '<p class="ds-label">Liste tablosunun .tablenav\'ında (çekirdek 32px der; kit 44px)</p>'
+    '<div class="tablenav"><div class="mhmui-confirm mhmui-confirm--secondary">'
+    '<button type="button" class="button mhmui-confirm__trigger">Seçilenleri askıya al</button></div></div>'
+    + '<p class="ds-label">Küçük düğme grubunda (çekirdek 24px der; kit 44px)</p>'
+    '<div class="button-group button-small"><div class="mhmui-confirm mhmui-confirm--danger">'
+    '<button type="button" class="button mhmui-confirm__trigger">Kaldır</button></div></div>',
     width=620,
 )
 

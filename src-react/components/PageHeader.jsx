@@ -28,7 +28,10 @@ function isPlainLeftClick( event ) {
  *
  * @param {Object} props
  * @param {string} props.title
- * @param {Object} [props.back]    { label, href, onClick? }.
+ * @param {Object} [props.back]    { label, href, onClick? }. Skipped when href
+ *                                 is empty or label is missing, a boolean or
+ *                                 an empty/blank string -- no nameless link.
+ *                                 A node label is drawn as given.
  * @param {Object} [props.badge]   { text, tone? } -> StatusBadge.
  * @param {string} [props.meta]
  * @param {*}      [props.actions]
@@ -43,7 +46,14 @@ export default function PageHeader( {
 	level = 2,
 } ) {
 	const Heading = `h${ LEVELS.includes( level ) ? level : 2 }`;
-	const hasBack = back && typeof back.href === 'string' && back.href !== '';
+	const hasBack =
+		back &&
+		typeof back.href === 'string' &&
+		back.href !== '' &&
+		back.label !== null &&
+		back.label !== undefined &&
+		typeof back.label !== 'boolean' &&
+		( typeof back.label !== 'string' || back.label.trim() !== '' );
 	const handleBack =
 		hasBack && back.onClick
 			? ( event ) => {

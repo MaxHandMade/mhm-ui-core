@@ -22,7 +22,7 @@ A consuming plugin `require_once`s `vendor/mhm/ui-core/register.php` from its
 main file and registers its own copy:
 
 ```php
-mhmuicore_register( '0.15.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.15.2', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 At `plugins_loaded` priority 0 the highest registered version boots; the rest
@@ -390,7 +390,7 @@ build from.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.15.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.15.2', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 Requiring `bootstrap.php` directly defines `MHMUICORE_VERSION` immediately, which
@@ -725,6 +725,17 @@ nested in a wrapper is spaced by its wrapper.
 0.15.1: ConfirmButton's rules outrank WordPress core's `.wp-core-ui .button`
 (0,2,0) and its `:hover/:focus/:active` (0,3,0) -- in 0.15.0 they lost in
 wp-admin (40px targets, a focused primary confirm drawn as an outline).
+Visible change: a locked or busy primary confirm is drawn on the surface
+colour with core's grey text instead of a faded accent fill, and nothing is
+faded any more.
+
+0.15.2: the 44px targets hold inside a list table's `.tablenav` and inside a
+`.button-group.button-small` too; a locked danger confirm also drops its red
+border. `PageHeader` draws no back link when `back.label` is missing, a
+boolean, or an empty or blank string; `Tabs` items without an `id` no longer
+share a React key; `DetailList` falls back to 2 columns when `columns` has no
+leading number and shows `emptyText` for a boolean value -- format booleans
+yourself.
 
 Five members for a detail screen: `Tabs` (page sections as real links,
 `aria-current="page"`, a badge whose digit is `aria-hidden` and whose meaning

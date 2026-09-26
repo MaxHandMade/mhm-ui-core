@@ -677,15 +677,23 @@
    focused primary confirm drawn as an outline (measured in Rentiva). The
    extra weight comes from the `button` type and the root's own two classes --
    this package styles no class outside .mhmui-*, `.button` included.
-   layout.test.js computes the specificity against core's and fails below it. */
+   layout.test.js computes the specificity against core's and fails below it.
+   0.15.2: the 44px rules are (0,4,1). Core sizes a .button at (0,4,0) inside
+   a .button-group of a size class (24px in a small one) and at (0,3,0) in
+   a list table's .tablenav (32px) or as .button-small. The root always
+   carries one of the three variant classes (an unknown variant falls back
+   to secondary) and every kit button is type="button", so the :is() and
+   the attribute add weight, never a condition. In a hero button group the
+   min-height resolves to 44px but core's 46px line-height still draws the
+   box at 48px. */
 .mhmui-confirm {
 	display: flex;
 	flex-direction: column;
 	gap: var( --mhmui-space-2 );
 }
-.mhmui-confirm button.mhmui-confirm__trigger,
-.mhmui-confirm button.mhmui-confirm__confirm,
-.mhmui-confirm button.mhmui-confirm__cancel {
+.mhmui-confirm:is( .mhmui-confirm--primary, .mhmui-confirm--secondary, .mhmui-confirm--danger ) button[type="button"].mhmui-confirm__trigger,
+.mhmui-confirm:is( .mhmui-confirm--primary, .mhmui-confirm--secondary, .mhmui-confirm--danger ) button[type="button"].mhmui-confirm__confirm,
+.mhmui-confirm:is( .mhmui-confirm--primary, .mhmui-confirm--secondary, .mhmui-confirm--danger ) button[type="button"].mhmui-confirm__cancel {
 	min-height: 44px;
 }
 .mhmui-confirm__prompt {
@@ -756,5 +764,12 @@
 }
 .mhmui-confirm.mhmui-confirm--primary button:is( .mhmui-confirm__trigger, .mhmui-confirm__confirm )[aria-disabled="true"] {
 	background: var( --mhmui-surface );
+	border-color: var( --mhmui-border );
+}
+/* A locked danger keeps no danger border: with core's grey text alone the
+   lock was one cue (colour). Same (0,4,1) as the danger state rules above,
+   so this rule must stay after them. The focus ring stays in the danger
+   colour on purpose -- focus must stay visible (WCAG 2.4.7). */
+.mhmui-confirm.mhmui-confirm--danger button:is( .mhmui-confirm__trigger, .mhmui-confirm__confirm )[aria-disabled="true"] {
 	border-color: var( --mhmui-border );
 }

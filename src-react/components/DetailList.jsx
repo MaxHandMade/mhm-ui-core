@@ -2,13 +2,26 @@ import { TONES } from './StatCard';
 import { columnCeiling } from './StatsGrid';
 
 const isEmpty = ( value ) =>
-	value === undefined || value === null || value === '';
+	value === undefined ||
+	value === null ||
+	value === '' ||
+	typeof value === 'boolean';
+
+// columnCeiling() falls back to StatsGrid's 4; this member's default is 2.
+// Same parse as columnCeiling (parseInt): '3cats' reads as 3; only a value
+// with no leading number falls back.
+const ceiling = ( columns ) =>
+	Number.isNaN( Number.parseInt( columns, 10 ) )
+		? 2
+		: columnCeiling( columns );
 
 /**
  * Label/value pairs: a real <dl>, each pair in a <div>.
  *
- * Empty means '' / null / undefined -- 0 and '0' are values (the same
- * presence rule as StatCard). A tone never colours the value text: the
+ * Empty means '' / null / undefined, and a boolean -- React draws neither
+ * true nor false, so a raw REST boolean would leave a blank <dd>; format it
+ * ("Yes"/"No", consumer-translated) before passing it. 0 and '0' are values
+ * (the same presence rule as StatCard). A tone never colours the value text: the
  * warning role's strong colour is 3.5:1 on white, below AA for text. It adds
  * an aria-hidden dot instead (graphic, >= 3:1); the meaning must be in the
  * text itself. That is also why this member declares no tone semantics.
@@ -20,7 +33,7 @@ const isEmpty = ( value ) =>
  * @param {Object} props
  * @param {Array}  props.items     { label, value, tone? }.
  * @param {string} props.emptyText Shown for an empty value (consumer-translated).
- * @param {number} [props.columns] Column ceiling, default 2 (stacked only).
+ * @param {number} [props.columns] Column ceiling, default 2 (stacked only); a value with no leading number falls back to 2 (parsed like StatsGrid: '3cats' is 3).
  * @param {string} [props.layout]  "stacked" (default) | "inline".
  */
 export default function DetailList( {
@@ -39,9 +52,7 @@ export default function DetailList( {
 					: 'mhmui-detail-list'
 			}
 			style={
-				inline
-					? undefined
-					: { '--mhmui-columns': columnCeiling( columns ) }
+				inline ? undefined : { '--mhmui-columns': ceiling( columns ) }
 			}
 		>
 			{ items.map( ( item, index ) => {
