@@ -71,9 +71,11 @@
   },
   "Widget": {
     "interactive": false, "tone_semantics": false,
-    "props": { "title": "string", "subtitle": "string?", "icon": "string?", "actions": "node?", "children": "node" },
+    "props": { "title": "string", "subtitle": "string?", "icon": "string?", "actions": "node?", "level": "2|3?", "variant": "card|plain?", "children": "node" },
     "fixtures": [
       { "title": "Recent", "icon": "chart-line", "children": "Body" },
+      { "title": "Message", "level": 2, "children": "Body" },
+      { "title": "Customer", "level": 2, "variant": "plain", "children": "Body" },
       { "title": "Concept", "icon": "rate", "children": "Body" }
     ]
   },

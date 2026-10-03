@@ -515,6 +515,24 @@
 .mhmui-widget__subtitle { font-weight: 400; color: var( --mhmui-text-muted ); font-size: 12px; }
 .mhmui-widget__body { padding: 16px; }
 
+/* Widget level 2 / plain (0.16.0). Level 2 is a page section: 15px/600 title.
+   The banded card (AB/Thread "Yazisma") draws a 14px 20px header over a divider;
+   the plain card (AB/Thread aside, AB/ContactDetail "Teknik kayit") has no band --
+   the root carries 18px 20px and a 14px gap, `actions` stay at the right. */
+.mhmui-widget--level-2 .mhmui-widget__title { font-size: 15px; font-weight: 600; }
+.mhmui-widget--level-2:not( .mhmui-widget--plain ) .mhmui-widget__header {
+	padding: 14px 20px;
+	border-bottom-color: var( --mhmui-border-divider );
+}
+.mhmui-widget--plain {
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+	padding: 18px 20px;
+}
+.mhmui-widget--plain .mhmui-widget__header { padding: 0; border-bottom: 0; }
+.mhmui-widget--plain .mhmui-widget__body { padding: 0; }
+
 /* Tabs (0.15.0): page sections as links. Segmented strip; the current tab is
    told apart by a 2px accent underline as well as colour (WCAG 1.4.1/1.4.11 --
    background alone measured 1.14:1). The badge chip stays visible on both
