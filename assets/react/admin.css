@@ -775,3 +775,118 @@
 .mhmui-confirm.mhmui-confirm--danger button:is( .mhmui-confirm__trigger, .mhmui-confirm__confirm )[aria-disabled="true"] {
 	border-color: var( --mhmui-border );
 }
+
+/* Button (0.16.0). One button or link in four variants and two sizes, measured
+   from the Mesajlar artboards: 13px text, 1px border, 3px radius (the drawn
+   value -- the kit's --mhmui-radius is 4px and stays untouched), md 36px /
+   sm 32px, both 44px at 782px and below (15px text there, as the narrow
+   artboard). The element carries no WordPress `.button` class, so core's
+   button sizing does not apply; the rules are still written as
+   `.mhmui-button.mhmui-button--x` (0,2,0) so core's link states
+   (`a:hover`, `a:focus` at (0,1,1)) cannot recolour a linked Button.
+   Danger uses the artboard's #b32d2e, which no kit token holds
+   (--mhmui-danger-strong is #a02224). */
+.mhmui-button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	box-sizing: border-box;
+	margin: 0;
+	border: 1px solid transparent;
+	border-radius: 3px;
+	font-family: inherit;
+	font-size: 13px;
+	line-height: 1.4;
+	text-decoration: none;
+	cursor: pointer;
+}
+.mhmui-button__icon {
+	display: inline-flex;
+	align-items: center;
+}
+.mhmui-button--md {
+	min-height: 36px;
+	padding: 4px 14px;
+}
+.mhmui-button--sm {
+	min-height: 32px;
+	padding: 0 12px;
+}
+.mhmui-button.mhmui-button--primary,
+.mhmui-button.mhmui-button--primary:is( :hover, :focus, :active ) {
+	background: var( --mhmui-accent );
+	border-color: var( --mhmui-accent );
+	color: var( --mhmui-on-accent );
+}
+.mhmui-button.mhmui-button--primary:is( :hover, :active ) {
+	background: var( --mhmui-accent-strong );
+	border-color: var( --mhmui-accent-strong );
+}
+.mhmui-button.mhmui-button--secondary,
+.mhmui-button.mhmui-button--secondary:is( :hover, :focus, :active ) {
+	background: var( --mhmui-surface );
+	border-color: var( --mhmui-accent );
+	color: var( --mhmui-accent );
+}
+.mhmui-button.mhmui-button--secondary:is( :hover, :active ) {
+	background: var( --mhmui-neutral-soft );
+	border-color: var( --mhmui-accent-strong );
+	color: var( --mhmui-accent-strong );
+}
+.mhmui-button.mhmui-button--danger,
+.mhmui-button.mhmui-button--danger:is( :hover, :focus, :active ) {
+	background: var( --mhmui-surface );
+	border-color: #b32d2e;
+	color: #b32d2e;
+}
+.mhmui-button.mhmui-button--danger:is( :hover, :active ) {
+	background: var( --mhmui-danger-soft );
+}
+.mhmui-button.mhmui-button--plain,
+.mhmui-button.mhmui-button--plain:is( :hover, :focus, :active ) {
+	background: transparent;
+	border-width: 0;
+	color: var( --mhmui-accent );
+}
+.mhmui-button.mhmui-button--plain.mhmui-button--md {
+	padding-inline: 10px;
+}
+.mhmui-button.mhmui-button--plain:is( :hover, :active ) {
+	color: var( --mhmui-accent-strong );
+	text-decoration: underline;
+}
+/* Focus: the ring core draws around .button-primary -- a surface gap, then
+   the ring, as ConfirmButton does. The transparent outline stays visible in
+   forced-colors mode. */
+.mhmui-button.mhmui-button:focus-visible {
+	outline: 2px solid transparent;
+	box-shadow: 0 0 0 2px var( --mhmui-surface ), 0 0 0 4px var( --mhmui-accent );
+}
+.mhmui-button.mhmui-button--danger:focus-visible {
+	box-shadow: 0 0 0 2px var( --mhmui-surface ), 0 0 0 4px #b32d2e;
+}
+/* Disabled: aria-disabled (the component) and native `disabled` (a plain
+   <button> wearing the classes, e.g. the pagination footer) look the same.
+   Kept after the variant rules at equal weight so it wins over :hover.
+   The ring stays: a locked button is still focusable. */
+.mhmui-button:is( .mhmui-button--primary, .mhmui-button--secondary, .mhmui-button--danger, .mhmui-button--plain ):disabled,
+.mhmui-button:is( .mhmui-button--primary, .mhmui-button--secondary, .mhmui-button--danger, .mhmui-button--plain )[aria-disabled="true"],
+.mhmui-button:is( .mhmui-button--primary, .mhmui-button--secondary, .mhmui-button--danger, .mhmui-button--plain ):is( :disabled, [aria-disabled="true"] ):is( :hover, :active ) {
+	background: var( --mhmui-neutral-soft );
+	border-color: var( --mhmui-border-divider );
+	color: #a7aaad;
+	text-decoration: none;
+	cursor: not-allowed;
+}
+.mhmui-button--secondary:disabled,
+.mhmui-button--secondary[aria-disabled="true"] {
+	border-style: solid;
+}
+@media ( max-width: 782px ) {
+	.mhmui-button--md,
+	.mhmui-button--sm {
+		min-height: 44px;
+		font-size: 15px;
+	}
+}

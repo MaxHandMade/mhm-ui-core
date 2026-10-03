@@ -795,6 +795,30 @@ describe( 'ConfirmButton wins the cascade against WordPress core buttons', () =>
 	} );
 } );
 
+describe( 'Button sizes (0.16.0)', () => {
+	const all = rules( read( 'admin.css' ) );
+	const MOBILE = '@media ( max-width: 782px )';
+	const minHeight = ( sel, at ) => {
+		const row = all.find( ( [ s, b, a ] ) => s === sel && a.join( '|' ) === at.join( '|' ) && /min-height:/.test( b ) );
+		return row ? /min-height:\s*([\d.]+px)/.exec( row[ 1 ] )[ 1 ] : null;
+	};
+
+	test( 'button sizes: md 36px, sm 32px, both 44px at 782px and below', () => {
+		expect( minHeight( '.mhmui-button--md', [] ) ).toBe( '36px' );
+		expect( minHeight( '.mhmui-button--sm', [] ) ).toBe( '32px' );
+		expect( minHeight( '.mhmui-button--md', [ MOBILE ] ) ).toBe( '44px' );
+		expect( minHeight( '.mhmui-button--sm', [ MOBILE ] ) ).toBe( '44px' );
+	} );
+
+	test( 'a natively disabled button is drawn like an aria-disabled one', () => {
+		for ( const state of [ ':disabled', '[aria-disabled="true"]' ] ) {
+			const row = all.find( ( [ s, , a ] ) => a.length === 0 && s.includes( 'mhmui-button--secondary' ) && s.includes( state ) );
+			expect( [ state, !! row ] ).toEqual( [ state, true ] );
+		}
+	} );
+} );
+
+
 /**
  * The parser every cascade check below stands on (audit of #36, B-3). The
  * first version matched `sel { body }` with one flat regex: a rule inside
