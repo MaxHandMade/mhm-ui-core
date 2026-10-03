@@ -175,3 +175,87 @@ describe( 'Tabs -- page sections as real links', () => {
 		).toBe( true );
 	} );
 } );
+
+describe( 'Tabs -- underline variant (0.16.0)', () => {
+	test( 'Tabs without variant renders the 0.15.2 markup byte for byte', () => {
+		const { container } = render(
+			<Tabs
+				label="S"
+				current="a"
+				items={ [
+					{ id: 'a', label: 'A', href: '?a', badge: 2 },
+					{ id: 'b', label: 'B', href: '?b', badge: 0 },
+				] }
+			/>
+		);
+		expect( container.innerHTML ).toBe(
+			'<nav class="mhmui-tabs" aria-label="S"><a href="?a" class="mhmui-tabs__tab mhmui-tabs__tab--current" aria-current="page">A<span class="mhmui-tabs__badge">2</span></a><a href="?b" class="mhmui-tabs__tab">B</a></nav>'
+		);
+	} );
+	test( 'underline variant, a zero count shown on request, a warning chip', () => {
+		const { container } = render(
+			<Tabs
+				label="S"
+				variant="underline"
+				showZero
+				current="all"
+				items={ [
+					{ id: 'all', label: 'All', href: '?', badge: 7 },
+					{
+						id: 'p',
+						label: 'Pending',
+						href: '?p',
+						badge: 2,
+						badgeTone: 'warning',
+					},
+					{ id: 'c', label: 'Closed', href: '?c', badge: 0 },
+				] }
+			/>
+		);
+		expect( container.querySelector( 'nav' ).className ).toBe(
+			'mhmui-tabs mhmui-tabs--underline'
+		);
+		expect(
+			[ ...container.querySelectorAll( '.mhmui-tabs__badge' ) ].map(
+				( b ) => [ b.textContent, b.className ]
+			)
+		).toEqual( [
+			[ '7', 'mhmui-tabs__badge' ],
+			[ '2', 'mhmui-tabs__badge mhmui-tabs__badge--warning' ],
+			[ '0', 'mhmui-tabs__badge' ],
+		] );
+	} );
+	test( 'an unknown variant or tone falls back silently', () => {
+		const { container } = render(
+			<Tabs
+				label="S"
+				variant="x"
+				items={ [
+					{
+						id: 'a',
+						label: 'A',
+						href: '?a',
+						badge: 1,
+						badgeTone: 'purple',
+					},
+				] }
+			/>
+		);
+		expect( container.querySelector( 'nav' ).className ).toBe(
+			'mhmui-tabs'
+		);
+		expect(
+			container.querySelector( '.mhmui-tabs__badge' ).className
+		).toBe( 'mhmui-tabs__badge' );
+	} );
+	test( 'a negative count never draws a chip, even with showZero', () => {
+		const { container } = render(
+			<Tabs
+				label="S"
+				showZero
+				items={ [ { id: 'a', label: 'A', href: '?a', badge: -3 } ] }
+			/>
+		);
+		expect( container.querySelector( '.mhmui-tabs__badge' ) ).toBeNull();
+	} );
+} );

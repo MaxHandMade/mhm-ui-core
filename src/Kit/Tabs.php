@@ -28,7 +28,7 @@ final class Tabs {
 	/**
 	 * Render the tabs.
 	 *
-	 * @param array<string, mixed> $props { label, current, items: list<{ id, label, href, badge?, badgeLabel? }> }.
+	 * @param array<string, mixed> $props { label, current, items: list<{ id, label, href, badge?, badgeLabel?, badgeTone? }>, variant?, showZero? }.
 	 * @return string Escaped HTML.
 	 */
 	public static function render_html( array $props ): string {
@@ -36,7 +36,10 @@ final class Tabs {
 		$current = self::text( $props['current'] ?? '' );
 		$items   = is_array( $props['items'] ?? null ) ? $props['items'] : array();
 
-		$html = '<nav class="mhmui-tabs"' . ( '' !== $label ? ' aria-label="' . esc_attr( $label ) . '"' : '' ) . '>';
+		$underline = 'underline' === self::text( $props['variant'] ?? '' );
+		$show_zero = ! empty( $props['showZero'] );
+
+		$html = '<nav class="' . ( $underline ? 'mhmui-tabs mhmui-tabs--underline' : 'mhmui-tabs' ) . '"' . ( '' !== $label ? ' aria-label="' . esc_attr( $label ) . '"' : '' ) . '>';
 
 		foreach ( $items as $item ) {
 			if ( ! is_array( $item ) ) {
@@ -57,7 +60,7 @@ final class Tabs {
 				. ' href="' . $href . '"'
 				. ( $is_current ? ' aria-current="page"' : '' ) . '>'
 				. esc_html( self::text( $item['label'] ?? '' ) )
-				. self::badge( $item )
+				. self::badge( $item, $show_zero )
 				. '</a>';
 		}
 
@@ -67,20 +70,28 @@ final class Tabs {
 	/**
 	 * The count chip, or '' when there is nothing to count.
 	 *
-	 * @param array<mixed> $item Tab item.
+	 * @param array<mixed> $item      Tab item.
+	 * @param bool         $show_zero Draw a chip for a count of 0.
 	 * @return string
 	 */
-	private static function badge( array $item ): string {
-		$raw   = $item['badge'] ?? null;
-		$count = is_numeric( $raw ) ? (int) $raw : 0;
-		if ( $count <= 0 ) {
+	private static function badge( array $item, bool $show_zero ): string {
+		$raw = $item['badge'] ?? null;
+		if ( ! is_numeric( $raw ) ) {
 			return '';
 		}
-		$sr = self::text( $item['badgeLabel'] ?? '' );
-		if ( '' === $sr ) {
-			return '<span class="mhmui-tabs__badge">' . esc_html( (string) $count ) . '</span>';
+		$count = (int) $raw;
+		if ( $count < 0 || ( 0 === $count && ! $show_zero ) ) {
+			return '';
 		}
-		return '<span class="mhmui-tabs__badge"><span aria-hidden="true">' . esc_html( (string) $count ) . '</span>'
+		$tone  = self::text( $item['badgeTone'] ?? '' );
+		$class = in_array( $tone, array( 'success', 'warning', 'danger', 'info', 'neutral' ), true )
+			? 'mhmui-tabs__badge mhmui-tabs__badge--' . $tone
+			: 'mhmui-tabs__badge';
+		$sr    = self::text( $item['badgeLabel'] ?? '' );
+		if ( '' === $sr ) {
+			return '<span class="' . $class . '">' . esc_html( (string) $count ) . '</span>';
+		}
+		return '<span class="' . $class . '"><span aria-hidden="true">' . esc_html( (string) $count ) . '</span>'
 			. '<span class="mhmui-tabs__badge-sr">' . esc_html( $sr ) . '</span></span>';
 	}
 

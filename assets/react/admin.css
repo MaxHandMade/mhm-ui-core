@@ -541,6 +541,73 @@
 .mhmui-tabs__tab--current .mhmui-tabs__badge {
 	background: var( --mhmui-surface-sunken );
 }
+/* Tabs underline variant + bar (0.16.0; AB/Main, AB/Contact): a transparent row,
+   2px accent underline on the current tab, 44px tall, 14px, 20px count chips.
+   Added rules only; the tone rules use three classes so they win over the
+   current-tab chip background. */
+.mhmui-tabs--underline {
+	display: flex;
+	flex-wrap: nowrap;
+	gap: var( --mhmui-space-1 );
+	padding: 0;
+	border-radius: 0;
+	background: transparent;
+}
+.mhmui-tabs--underline .mhmui-tabs__tab {
+	box-sizing: border-box;
+	min-height: 44px;
+	margin-bottom: -1px;
+	padding: 0 16px;
+	border-radius: 0;
+	border-bottom: 2px solid transparent;
+	color: var( --mhmui-text-muted );
+	font-size: 14px;
+	font-weight: 400;
+}
+.mhmui-tabs--underline .mhmui-tabs__tab--current {
+	background: transparent;
+	border-bottom-color: var( --mhmui-accent );
+	box-shadow: none;
+	color: var( --mhmui-accent );
+	font-weight: 600;
+}
+.mhmui-tabs--underline .mhmui-tabs__badge {
+	box-sizing: border-box;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 20px;
+	height: 20px;
+	padding: 0 6px;
+	border-radius: 10px;
+	background: var( --mhmui-surface-sunken );
+	color: var( --mhmui-text-muted );
+	font-size: 12px;
+	font-weight: 600;
+}
+.mhmui-tabs--underline .mhmui-tabs__tab--current .mhmui-tabs__badge {
+	background: var( --mhmui-info-soft );
+	color: var( --mhmui-accent-strong );
+}
+.mhmui-tabs .mhmui-tabs__tab .mhmui-tabs__badge--success { background: var( --mhmui-success-soft ); color: var( --mhmui-success-strong ); }
+.mhmui-tabs .mhmui-tabs__tab .mhmui-tabs__badge--warning { background: var( --mhmui-warning-soft ); color: var( --mhmui-warning-ink ); }
+.mhmui-tabs .mhmui-tabs__tab .mhmui-tabs__badge--danger  { background: var( --mhmui-danger-soft );  color: var( --mhmui-danger-strong ); }
+.mhmui-tabs .mhmui-tabs__tab .mhmui-tabs__badge--info    { background: var( --mhmui-info-soft );    color: var( --mhmui-info-strong ); }
+.mhmui-tabs .mhmui-tabs__tab .mhmui-tabs__badge--neutral { background: var( --mhmui-neutral-soft ); color: var( --mhmui-text ); }
+.mhmui-tabs-bar {
+	display: flex;
+	align-items: flex-end;
+	justify-content: space-between;
+	gap: var( --mhmui-space-4 );
+	border-bottom: 1px solid var( --mhmui-border );
+}
+.mhmui-tabs-bar > a {
+	display: inline-flex;
+	align-items: center;
+	gap: var( --mhmui-space-1 );
+	padding-bottom: 12px;
+	font-size: 13px;
+}
 .mhmui-tabs__badge-sr {
 	position: absolute;
 	width: 1px;

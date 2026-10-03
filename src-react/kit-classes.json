@@ -239,6 +239,19 @@
         ],
         [
             "mhmui-tabs"
+        ],
+        [
+            "mhmui-tabs",
+            "mhmui-tabs--underline",
+            "mhmui-tabs__badge",
+            "mhmui-tabs__badge--warning",
+            "mhmui-tabs__tab",
+            "mhmui-tabs__tab--current"
+        ],
+        [
+            "mhmui-tabs",
+            "mhmui-tabs__badge",
+            "mhmui-tabs__tab"
         ]
     ]
 }
