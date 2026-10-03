@@ -480,6 +480,19 @@
 
 .mhmui-pagination { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
 .mhmui-pagination__status { color: var( --mhmui-text-muted ); font-variant-numeric: tabular-nums; }
+/* Footer variant: the table card's bottom bar (artboards Main/Contact) --
+   inside the card, soft grey, top rule, range left / controls right. The
+   doubled class beats the `.mhmui-admin-page > * + .mhmui-pagination` margin. */
+.mhmui-pagination.mhmui-pagination--footer {
+	justify-content: space-between;
+	margin-top: 0;
+	padding: 10px 16px;
+	border-top: 1px solid var( --mhmui-border-divider );
+	background: var( --mhmui-neutral-soft );
+}
+.mhmui-pagination__summary { color: var( --mhmui-text-muted ); }
+.mhmui-pagination__controls { display: flex; align-items: center; gap: 8px; }
+.mhmui-pagination--footer .mhmui-pagination__status { color: #50575e; }
 
 .mhmui-notice { margin: 12px 0; }
 

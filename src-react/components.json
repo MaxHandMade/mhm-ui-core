@@ -53,8 +53,11 @@
   },
   "Pagination": {
     "interactive": true, "tone_semantics": false,
-    "props": { "page": "number", "totalPages": "number", "onChange": "function", "labels": "{ previous: string, of: string, next: string, navigation: string }" },
-    "fixtures": [ { "page": 1, "totalPages": 3, "onChange": "function", "labels": { "previous": "Prev", "next": "Next", "of": "of", "navigation": "Pagination" } } ]
+    "props": { "page": "number", "totalPages": "number", "onChange": "function", "labels": "{ previous: string, of: string, next: string, navigation: string, page: string? }", "variant": "inline|footer?", "summary": "string?" },
+    "fixtures": [
+      { "page": 1, "totalPages": 3, "onChange": "function", "labels": { "previous": "Prev", "next": "Next", "of": "of", "navigation": "Pagination" } },
+      { "page": 1, "totalPages": 3, "onChange": "function", "variant": "footer", "summary": "1-10 / 25", "labels": { "previous": "Prev", "next": "Next", "of": "/", "navigation": "Pagination", "page": "Page" } }
+    ]
   },
   "ProLock": {
     "interactive": false, "tone_semantics": false,
