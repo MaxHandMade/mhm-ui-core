@@ -23,6 +23,7 @@
 	--mhmui-border-divider: #dcdcde;
 	--mhmui-text:           #1d2327;
 	--mhmui-text-muted:     #646970;
+	--mhmui-text-secondary: #50575e;
 	--mhmui-surface-sunken: #f0f0f1;
 	--mhmui-surface:        #ffffff;
 	--mhmui-gap:            12px;
@@ -492,7 +493,7 @@
 }
 .mhmui-pagination__summary { color: var( --mhmui-text-muted ); }
 .mhmui-pagination__controls { display: flex; align-items: center; gap: 8px; }
-.mhmui-pagination--footer .mhmui-pagination__status { color: #50575e; }
+.mhmui-pagination--footer .mhmui-pagination__status { color: var( --mhmui-text-secondary ); }
 
 .mhmui-notice { margin: 12px 0; }
 
@@ -573,7 +574,7 @@
 	padding: 0 16px;
 	border-radius: 0;
 	border-bottom: 2px solid transparent;
-	color: var( --mhmui-text-muted );
+	color: var( --mhmui-text-secondary );
 	font-size: 14px;
 	font-weight: 400;
 }
@@ -594,7 +595,7 @@
 	padding: 0 6px;
 	border-radius: 10px;
 	background: var( --mhmui-surface-sunken );
-	color: var( --mhmui-text-muted );
+	color: var( --mhmui-text-secondary );
 	font-size: 12px;
 	font-weight: 600;
 }

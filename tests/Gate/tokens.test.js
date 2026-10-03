@@ -136,3 +136,19 @@ describe( 'warning-ink and border-divider (kit 0.16.0, ruling R-A2)', () => {
 		expect( ruleBody( css, '.mhmui-status--warning' ) ).toMatch( /color:\s*var\(\s*--mhmui-warning-ink\s*\)/ );
 	} );
 } );
+
+describe( 'text-secondary (kit 0.16.0, the drawn secondary ink)', () => {
+	const doc = JSON.parse( readFileSync( join( ROOT, 'src-react', 'tokens.json' ), 'utf8' ) );
+
+	test( 'text-secondary reads at 4.5:1 on neutral-soft and surface in every scope', () => {
+		for ( const [ scope, t ] of Object.entries( doc.scopes ) ) {
+			expect( [ scope, contrastRatio( t[ 'text-secondary' ], t[ 'neutral-soft' ] ) >= 4.5 ] ).toEqual( [ scope, true ] );
+			expect( [ scope, contrastRatio( t[ 'text-secondary' ], t.surface ) >= 4.5 ] ).toEqual( [ scope, true ] );
+		}
+	} );
+
+	test( 'the admin scope pins the artboard value and the flat mirror agrees', () => {
+		expect( doc.scopes[ '.mhmui-admin' ][ 'text-secondary' ] ).toBe( '#50575e' );
+		expect( doc.tokens[ 'text-secondary' ] ).toBe( '#50575e' );
+	} );
+} );
