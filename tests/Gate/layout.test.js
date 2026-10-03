@@ -845,6 +845,37 @@ describe( 'ConfirmButton compact size (0.16.0)', () => {
 		expect( box[ 1 ] ).toMatch( /background:\s*var\(\s*--mhmui-neutral-soft\s*\)/ );
 		expect( box[ 1 ] ).toMatch( /border:\s*1px solid var\(\s*--mhmui-border-divider\s*\)/ );
 	} );
+
+	test( 'the compact prompt box stretches while the root keeps the trigger at the start', () => {
+		const box = all.find( ( [ s, , a ] ) => a.length === 0 && s.includes( '--compact' ) && s.includes( 'mhmui-confirm__prompt' ) );
+		expect( box[ 1 ] ).toMatch( /align-self:\s*stretch/ );
+	} );
+
+	test( 'a focused filled danger confirm has a ring that is not the fill colour alone', () => {
+		const focus = all.filter(
+			( [ s, b, a ] ) =>
+				a.length === 0 &&
+				s.includes( 'mhmui-confirm--compact' ) &&
+				s.includes( 'mhmui-confirm--danger' ) &&
+				s.includes( 'mhmui-confirm__confirm' ) &&
+				/:focus$/.test( s ) &&
+				/box-shadow:\s*0 0 0 2px var\(\s*--mhmui-surface\s*\),\s*0 0 0 4px var\(\s*--mhmui-danger-ink\s*\)/.test( b )
+		);
+		expect( focus.length ).toBeGreaterThan( 0 );
+		const rival = all.filter(
+			( [ s, b, a ] ) =>
+				a.length === 0 &&
+				s.includes( 'mhmui-confirm--danger' ) &&
+				! s.includes( '--compact' ) &&
+				s.includes( ':focus' ) &&
+				/box-shadow/.test( b )
+		);
+		const order = all.map( ( [ s ] ) => s );
+		for ( const [ r ] of rival ) {
+			const cmp = compareSpecificity( specificity( focus[ 0 ][ 0 ] ), specificity( r ) );
+			expect( [ r, cmp > 0 || ( cmp === 0 && order.indexOf( focus[ 0 ][ 0 ] ) > order.indexOf( r ) ) ] ).toEqual( [ r, true ] );
+		}
+	} );
 } );
 
 describe( 'Button sizes (0.16.0)', () => {

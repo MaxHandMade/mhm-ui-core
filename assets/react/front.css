@@ -40,11 +40,13 @@
 	--mhmui-warning-ink:    #9a6700;
 	--mhmui-danger:         #cf222e;
 	--mhmui-danger-strong:  #a40e26;
+	--mhmui-danger-ink:     #a40e26;
 	--mhmui-neutral:        #57606a;
 	--mhmui-neutral-strong: #424a53;
 	--mhmui-border:         #d0d7de;
 	--mhmui-border-light:   #eaeef2;
 	--mhmui-border-divider: #d0d7de;
+	--mhmui-border-strong:  #8c959f;
 	--mhmui-text:           #1f2328;
 	--mhmui-text-muted:     #57606a;
 	--mhmui-text-secondary: #4a525b;

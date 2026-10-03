@@ -16,11 +16,13 @@
 	--mhmui-warning-ink:    #8a6100;
 	--mhmui-danger:         #d63638;
 	--mhmui-danger-strong:  #a02224;
+	--mhmui-danger-ink:     #b32d2e;
 	--mhmui-neutral:        #646970;
 	--mhmui-neutral-strong: #3c3f44;
 	--mhmui-border:         #c3c4c7;
 	--mhmui-border-light:   #f0f0f1;
 	--mhmui-border-divider: #dcdcde;
+	--mhmui-border-strong:  #8c8f94;
 	--mhmui-text:           #1d2327;
 	--mhmui-text-muted:     #646970;
 	--mhmui-text-secondary: #50575e;
@@ -882,9 +884,10 @@
    danger confirm and a grey-bordered cancel. The default size is untouched.
    The target rules are (0,5,1): the :is() carries the variant class every
    root has, so they outrank both core's (0,4,0) and this file's own 44px
-   (0,4,1) rules. Drawn values with no token: danger #b32d2e (the nearest,
-   --mhmui-danger-strong #a02224, is used) and the cancel border #8c8f94
-   (--mhmui-border #c3c4c7 is used). */
+   (0,4,1) rules. The drawn danger red is --mhmui-danger-ink and the drawn
+   cancel border --mhmui-border-strong. The prompt stretches to the card's
+   width (the artboard box is a stretch child; only the trigger hugs the
+   start). */
 .mhmui-confirm.mhmui-confirm--compact {
 	align-items: flex-start;
 }
@@ -901,6 +904,7 @@
 	}
 }
 .mhmui-confirm--compact .mhmui-confirm__prompt {
+	align-self: stretch;
 	box-sizing: border-box;
 	padding: 12px;
 	background: var( --mhmui-neutral-soft );
@@ -913,15 +917,23 @@
 .mhmui-confirm.mhmui-confirm--compact button.mhmui-confirm__cancel,
 .mhmui-confirm.mhmui-confirm--compact button.mhmui-confirm__cancel:is( :hover, :focus, :active ) {
 	background: var( --mhmui-surface );
-	border-color: var( --mhmui-border );
+	border-color: var( --mhmui-border-strong );
 	color: var( --mhmui-text-secondary );
 }
 /* A filled danger confirm (the artboard's "Evet, sil"). */
+.mhmui-confirm.mhmui-confirm--danger.mhmui-confirm--compact {
+	--mhmui-confirm-ink: var( --mhmui-danger-ink );
+}
 .mhmui-confirm.mhmui-confirm--danger.mhmui-confirm--compact button.mhmui-confirm__confirm,
 .mhmui-confirm.mhmui-confirm--danger.mhmui-confirm--compact button.mhmui-confirm__confirm:is( :hover, :focus, :active ) {
-	background: var( --mhmui-danger-strong );
-	border-color: var( --mhmui-danger-strong );
+	background: var( --mhmui-danger-ink );
+	border-color: var( --mhmui-danger-ink );
 	color: var( --mhmui-on-accent );
+}
+/* The default danger ring is one ring in the fill's own colour -- invisible
+   on a filled button. Two rings, the inner one the surface. */
+.mhmui-confirm.mhmui-confirm--danger.mhmui-confirm--compact button.mhmui-confirm__confirm:focus {
+	box-shadow: 0 0 0 2px var( --mhmui-surface ), 0 0 0 4px var( --mhmui-danger-ink );
 }
 /* Locked or busy: like the other fills, it gives the fill up -- core forces
    grey text on an aria-disabled .button, and grey on red is unreadable. */
@@ -938,8 +950,8 @@
    button sizing does not apply; the rules are still written as
    `.mhmui-button.mhmui-button--x` (0,2,0) so core's link states
    (`a:hover`, `a:focus` at (0,1,1)) cannot recolour a linked Button.
-   Danger uses the artboard's #b32d2e, which no kit token holds
-   (--mhmui-danger-strong is #a02224). */
+   Danger uses the artboard's red, --mhmui-danger-ink (#b32d2e in the admin
+   scope; --mhmui-danger-strong is #a02224). */
 .mhmui-button {
 	display: inline-flex;
 	align-items: center;
@@ -1001,8 +1013,8 @@
 .mhmui-button.mhmui-button--danger,
 .mhmui-button.mhmui-button--danger:is( :hover, :focus, :active ) {
 	background: var( --mhmui-surface );
-	border-color: #b32d2e;
-	color: #b32d2e;
+	border-color: var( --mhmui-danger-ink );
+	color: var( --mhmui-danger-ink );
 }
 .mhmui-button.mhmui-button--danger:is( :hover, :active ) {
 	background: var( --mhmui-danger-soft );
@@ -1028,7 +1040,7 @@
 	box-shadow: 0 0 0 2px var( --mhmui-surface ), 0 0 0 4px var( --mhmui-accent );
 }
 .mhmui-button.mhmui-button--danger:focus-visible {
-	box-shadow: 0 0 0 2px var( --mhmui-surface ), 0 0 0 4px #b32d2e;
+	box-shadow: 0 0 0 2px var( --mhmui-surface ), 0 0 0 4px var( --mhmui-danger-ink );
 }
 /* Disabled: aria-disabled (the component) and native `disabled` (a plain
    <button> wearing the classes, e.g. the pagination footer) look the same.

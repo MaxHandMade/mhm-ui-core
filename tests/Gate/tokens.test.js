@@ -152,3 +152,21 @@ describe( 'text-secondary (kit 0.16.0, the drawn secondary ink)', () => {
 		expect( doc.tokens[ 'text-secondary' ] ).toBe( '#50575e' );
 	} );
 } );
+
+describe( 'danger-ink and border-strong (kit 0.16.0, the drawn red and cancel border)', () => {
+	const doc = JSON.parse( readFileSync( join( ROOT, 'src-react', 'tokens.json' ), 'utf8' ) );
+
+	test( 'danger-ink reads at 4.5:1 and border-strong at 3:1 on the surface in every scope', () => {
+		for ( const [ scope, t ] of Object.entries( doc.scopes ) ) {
+			expect( [ scope, contrastRatio( t[ 'danger-ink' ], t.surface ) >= 4.5 ] ).toEqual( [ scope, true ] );
+			expect( [ scope, contrastRatio( t[ 'border-strong' ], t.surface ) >= 3 ] ).toEqual( [ scope, true ] );
+		}
+	} );
+
+	test( 'the admin scope pins the artboard values and the flat mirror agrees', () => {
+		expect( doc.scopes[ '.mhmui-admin' ][ 'danger-ink' ] ).toBe( '#b32d2e' );
+		expect( doc.scopes[ '.mhmui-admin' ][ 'border-strong' ] ).toBe( '#8c8f94' );
+		expect( doc.tokens[ 'danger-ink' ] ).toBe( '#b32d2e' );
+		expect( doc.tokens[ 'border-strong' ] ).toBe( '#8c8f94' );
+	} );
+} );
