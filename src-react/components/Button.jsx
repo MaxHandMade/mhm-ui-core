@@ -1,4 +1,4 @@
-const VARIANTS = [ 'primary', 'secondary', 'danger', 'plain' ];
+const VARIANTS = [ 'primary', 'secondary', 'danger', 'plain', 'neutral' ];
 const SIZES = [ 'md', 'sm' ];
 
 /**
@@ -26,7 +26,7 @@ function passThrough( rest ) {
  *
  * @param {Object}   props
  * @param {*}        props.children
- * @param {string}   [props.variant]  primary | secondary | danger | plain;
+ * @param {string}   [props.variant]  primary | secondary | danger | plain | neutral;
  *                                    anything else is secondary.
  * @param {string}   [props.size]     md | sm; anything else is md.
  * @param {string}   [props.href]     Renders an <a> instead of a <button>.
@@ -79,6 +79,7 @@ export default function Button( {
 			<a
 				href={ disabled ? undefined : href }
 				role={ disabled ? 'link' : undefined }
+				tabIndex={ disabled ? 0 : undefined }
 				{ ...common }
 			>
 				{ content }

@@ -834,6 +834,16 @@
 	border-color: var( --mhmui-accent-strong );
 	color: var( --mhmui-accent-strong );
 }
+.mhmui-button.mhmui-button--neutral,
+.mhmui-button.mhmui-button--neutral:is( :hover, :focus, :active ) {
+	background: var( --mhmui-surface );
+	border-color: var( --mhmui-border );
+	color: var( --mhmui-accent );
+}
+.mhmui-button.mhmui-button--neutral:is( :hover, :active ) {
+	background: var( --mhmui-neutral-soft );
+	color: var( --mhmui-accent-strong );
+}
 .mhmui-button.mhmui-button--danger,
 .mhmui-button.mhmui-button--danger:is( :hover, :focus, :active ) {
 	background: var( --mhmui-surface );
@@ -870,9 +880,9 @@
    <button> wearing the classes, e.g. the pagination footer) look the same.
    Kept after the variant rules at equal weight so it wins over :hover.
    The ring stays: a locked button is still focusable. */
-.mhmui-button:is( .mhmui-button--primary, .mhmui-button--secondary, .mhmui-button--danger, .mhmui-button--plain ):disabled,
-.mhmui-button:is( .mhmui-button--primary, .mhmui-button--secondary, .mhmui-button--danger, .mhmui-button--plain )[aria-disabled="true"],
-.mhmui-button:is( .mhmui-button--primary, .mhmui-button--secondary, .mhmui-button--danger, .mhmui-button--plain ):is( :disabled, [aria-disabled="true"] ):is( :hover, :active ) {
+.mhmui-button:is( .mhmui-button--primary, .mhmui-button--secondary, .mhmui-button--danger, .mhmui-button--plain, .mhmui-button--neutral ):disabled,
+.mhmui-button:is( .mhmui-button--primary, .mhmui-button--secondary, .mhmui-button--danger, .mhmui-button--plain, .mhmui-button--neutral )[aria-disabled="true"],
+.mhmui-button:is( .mhmui-button--primary, .mhmui-button--secondary, .mhmui-button--danger, .mhmui-button--plain, .mhmui-button--neutral ):is( :disabled, [aria-disabled="true"] ):is( :hover, :active ) {
 	background: var( --mhmui-neutral-soft );
 	border-color: var( --mhmui-border-divider );
 	color: #a7aaad;

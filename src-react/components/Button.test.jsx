@@ -39,6 +39,23 @@ describe( 'Button', () => {
 			false
 		);
 	} );
+	test( 'a disabled link stays focusable', () => {
+		const { container } = render(
+			<Button disabled href="?y">
+				Go
+			</Button>
+		);
+		const a = container.querySelector( 'a' );
+		a.focus();
+		expect( a.tabIndex ).toBe( 0 );
+		expect( a.ownerDocument.activeElement ).toBe( a );
+	} );
+	test( 'the neutral variant gets its class', () => {
+		const { container } = render( <Button variant="neutral">Copy</Button> );
+		expect( container.firstChild.className ).toBe(
+			'mhmui-button mhmui-button--neutral mhmui-button--md'
+		);
+	} );
 	test( 'only id, aria-* and data-* pass through', () => {
 		const { getByRole } = render(
 			<Button
