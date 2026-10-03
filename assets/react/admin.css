@@ -13,12 +13,14 @@
 	--mhmui-success-strong: #007a1f;
 	--mhmui-warning:        #dba617;
 	--mhmui-warning-strong: #b08000;
+	--mhmui-warning-ink:    #8a6100;
 	--mhmui-danger:         #d63638;
 	--mhmui-danger-strong:  #a02224;
 	--mhmui-neutral:        #646970;
 	--mhmui-neutral-strong: #3c3f44;
 	--mhmui-border:         #c3c4c7;
 	--mhmui-border-light:   #f0f0f1;
+	--mhmui-border-divider: #dcdcde;
 	--mhmui-text:           #1d2327;
 	--mhmui-text-muted:     #646970;
 	--mhmui-surface-sunken: #f0f0f1;
@@ -471,7 +473,7 @@
 	color: var( --mhmui-text );
 }
 .mhmui-status--success { background: var( --mhmui-success-soft ); color: var( --mhmui-success-strong ); }
-.mhmui-status--warning { background: var( --mhmui-warning-soft ); color: var( --mhmui-warning-strong ); }
+.mhmui-status--warning { background: var( --mhmui-warning-soft ); color: var( --mhmui-warning-ink ); }
 .mhmui-status--danger  { background: var( --mhmui-danger-soft );  color: var( --mhmui-danger-strong ); }
 .mhmui-status--info    { background: var( --mhmui-info-soft );    color: var( --mhmui-info-strong ); }
 .mhmui-status--neutral { background: var( --mhmui-neutral-soft ); color: var( --mhmui-text ); }

@@ -1,5 +1,6 @@
 const { readFileSync, existsSync } = require( 'node:fs' );
 const { join } = require( 'node:path' );
+const { ruleBody, contrastRatio } = require( './helpers' );
 const { renderTokensBlock, replaceBlock, flatTokens, START, END } = require( '../../bin/build-tokens.js' );
 
 const ROOT = join( __dirname, '..', '..' );
@@ -107,5 +108,31 @@ describe( 'iki hedef, iki blok', () => {
 	// keeps that reopened.
 	test( 'doc.scopes ve doc.targets ayni kapsam kumesini tasir', () => {
 		expect( Object.keys( doc.scopes ).sort() ).toEqual( Object.keys( doc.targets ).sort() );
+	} );
+} );
+
+describe( 'warning-ink and border-divider (kit 0.16.0, ruling R-A2)', () => {
+	const doc = JSON.parse( readFileSync( join( ROOT, 'src-react', 'tokens.json' ), 'utf8' ) );
+	const css = readFileSync( join( ROOT, 'assets', 'react', 'admin.css' ), 'utf8' );
+
+	test( 'warning ink reads at 4.5:1 on warning soft in every scope', () => {
+		for ( const [ scope, t ] of Object.entries( doc.scopes ) ) {
+			expect( [ scope, contrastRatio( t[ 'warning-ink' ], t[ 'warning-soft' ] ) >= 4.5 ] ).toEqual( [ scope, true ] );
+		}
+	} );
+
+	test( 'the admin scope pins the artboard values', () => {
+		expect( doc.scopes[ '.mhmui-admin' ][ 'warning-ink' ] ).toBe( '#8a6100' );
+		expect( doc.scopes[ '.mhmui-admin' ][ 'border-divider' ] ).toBe( '#dcdcde' );
+	} );
+
+	test( 'every scope carries a border-divider', () => {
+		for ( const [ scope, t ] of Object.entries( doc.scopes ) ) {
+			expect( [ scope, /^#[0-9a-f]{6}$/i.test( t[ 'border-divider' ] ) ] ).toEqual( [ scope, true ] );
+		}
+	} );
+
+	test( 'a warning badge reads the ink token', () => {
+		expect( ruleBody( css, '.mhmui-status--warning' ) ).toMatch( /color:\s*var\(\s*--mhmui-warning-ink\s*\)/ );
 	} );
 } );

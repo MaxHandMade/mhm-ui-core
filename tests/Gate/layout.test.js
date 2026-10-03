@@ -1,17 +1,10 @@
 const { readFileSync } = require( 'node:fs' );
 const { join } = require( 'node:path' );
 const postcss = require( 'postcss' );
+const { ruleBody } = require( './helpers' );
 
 const ROOT = join( __dirname, '..', '..' );
 const read = ( f ) => readFileSync( join( ROOT, 'assets', 'react', f ), 'utf8' );
-
-/** Body of the first rule whose selector list is exactly `selector`. */
-function ruleBody( css, selector ) {
-	const code = css.replace( /\/\*[\s\S]*?\*\//g, '' );
-	const esc = selector.replace( /[.*+?^${}()|[\]\\]/g, '\\$&' );
-	const m = code.match( new RegExp( `(^|})\\s*${ esc }\\s*{([^}]*)}` ) );
-	return m ? m[ 2 ] : null;
-}
 
 /** No `width` declaration on the admin shell: it sits on the SAME element as
  * WP core's own `.wrap` (margin: 10px 20px 0 2px), and a block box already

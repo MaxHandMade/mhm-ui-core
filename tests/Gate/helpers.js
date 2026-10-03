@@ -62,4 +62,34 @@ function runGateOut( repo, gate = CSS_GATE ) {
 	}
 }
 
-module.exports = { fixtureRepo, runGate, runGateOut, CSS_GATE, PHP_GATE };
+/** Body of the first rule whose selector list is exactly `selector`. */
+function ruleBody( css, selector ) {
+	const code = css.replace( /\/\*[\s\S]*?\*\//g, '' );
+	const esc = selector.replace( /[.*+?^${}()|[\]\\]/g, '\\$&' );
+	const m = code.match( new RegExp( `(^|})\\s*${ esc }\\s*{([^}]*)}` ) );
+	return m ? m[ 2 ] : null;
+}
+
+/** WCAG 2.x relative luminance of a #rgb / #rrggbb colour. */
+function luminance( hex ) {
+	let h = String( hex ).replace( '#', '' );
+	if ( 3 === h.length ) {
+		h = h.replace( /./g, '$&$&' );
+	}
+	if ( ! /^[0-9a-f]{6}$/i.test( h ) ) {
+		throw new Error( `contrastRatio: not a hex colour: ${ hex }` );
+	}
+	const [ r, g, b ] = [ 0, 2, 4 ].map( ( i ) => {
+		const c = parseInt( h.slice( i, i + 2 ), 16 ) / 255;
+		return c <= 0.03928 ? c / 12.92 : Math.pow( ( c + 0.055 ) / 1.055, 2.4 );
+	} );
+	return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+/** WCAG 2.x contrast ratio of two hex colours (1..21). */
+function contrastRatio( fgHex, bgHex ) {
+	const [ a, b ] = [ luminance( fgHex ), luminance( bgHex ) ];
+	return ( Math.max( a, b ) + 0.05 ) / ( Math.min( a, b ) + 0.05 );
+}
+
+module.exports = { fixtureRepo, runGate, runGateOut, ruleBody, contrastRatio, CSS_GATE, PHP_GATE };
