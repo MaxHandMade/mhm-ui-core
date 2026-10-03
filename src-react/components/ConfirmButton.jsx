@@ -50,6 +50,10 @@ const FOCUSABLE =
  *                                           action is worse.
  * @param {Function} props.onConfirm         () => void | Promise.
  * @param {string}   [props.variant]         primary | secondary | danger.
+ * @param {string}   [props.size]            default | compact (36px targets,
+ *                                           44px at 782px and below; the
+ *                                           prompt is a box). Anything else
+ *                                           is default. No effect on focus.
  * @param {boolean}  [props.confirmDisabled]
  * @param {boolean}  [props.disabled]
  * @param {string}   [props.describedBy]     Id of a hint for the trigger.
@@ -63,6 +67,7 @@ export default function ConfirmButton( {
 	busyText,
 	onConfirm,
 	variant = 'secondary',
+	size = 'default',
 	confirmDisabled = false,
 	disabled = false,
 	describedBy,
@@ -152,7 +157,9 @@ export default function ConfirmButton( {
 
 	return (
 		<div
-			className={ VARIANT_CLASS[ variant ] || VARIANT_CLASS.secondary }
+			className={ `${
+				VARIANT_CLASS[ variant ] || VARIANT_CLASS.secondary
+			}${ size === 'compact' ? ' mhmui-confirm--compact' : '' }` }
 			ref={ rootRef }
 		>
 			{ ! open ? (

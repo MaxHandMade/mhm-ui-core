@@ -875,6 +875,61 @@
 	border-color: var( --mhmui-border );
 }
 
+/* ConfirmButton compact (0.16.0), measured from the Mesajlar artboards
+   (Thread "Yazışmayı sil", ContactDetail "Mesajı sil"): 36px targets, 44px at
+   782px and below; a start-aligned trigger; the open prompt is a box (12px
+   padding, 1px divider border, 3px radius) holding a bold question, a filled
+   danger confirm and a grey-bordered cancel. The default size is untouched.
+   The target rules are (0,5,1): the :is() carries the variant class every
+   root has, so they outrank both core's (0,4,0) and this file's own 44px
+   (0,4,1) rules. Drawn values with no token: danger #b32d2e (the nearest,
+   --mhmui-danger-strong #a02224, is used) and the cancel border #8c8f94
+   (--mhmui-border #c3c4c7 is used). */
+.mhmui-confirm.mhmui-confirm--compact {
+	align-items: flex-start;
+}
+.mhmui-confirm.mhmui-confirm--compact:is( .mhmui-confirm--primary, .mhmui-confirm--secondary, .mhmui-confirm--danger ) button[type="button"].mhmui-confirm__trigger,
+.mhmui-confirm.mhmui-confirm--compact:is( .mhmui-confirm--primary, .mhmui-confirm--secondary, .mhmui-confirm--danger ) button[type="button"].mhmui-confirm__confirm,
+.mhmui-confirm.mhmui-confirm--compact:is( .mhmui-confirm--primary, .mhmui-confirm--secondary, .mhmui-confirm--danger ) button[type="button"].mhmui-confirm__cancel {
+	min-height: 36px;
+}
+@media ( max-width: 782px ) {
+	.mhmui-confirm.mhmui-confirm--compact:is( .mhmui-confirm--primary, .mhmui-confirm--secondary, .mhmui-confirm--danger ) button[type="button"].mhmui-confirm__trigger,
+	.mhmui-confirm.mhmui-confirm--compact:is( .mhmui-confirm--primary, .mhmui-confirm--secondary, .mhmui-confirm--danger ) button[type="button"].mhmui-confirm__confirm,
+	.mhmui-confirm.mhmui-confirm--compact:is( .mhmui-confirm--primary, .mhmui-confirm--secondary, .mhmui-confirm--danger ) button[type="button"].mhmui-confirm__cancel {
+		min-height: 44px;
+	}
+}
+.mhmui-confirm--compact .mhmui-confirm__prompt {
+	box-sizing: border-box;
+	padding: 12px;
+	background: var( --mhmui-neutral-soft );
+	border: 1px solid var( --mhmui-border-divider );
+	border-radius: 3px;
+}
+.mhmui-confirm--compact .mhmui-confirm__text {
+	font-size: 13px;
+}
+.mhmui-confirm.mhmui-confirm--compact button.mhmui-confirm__cancel,
+.mhmui-confirm.mhmui-confirm--compact button.mhmui-confirm__cancel:is( :hover, :focus, :active ) {
+	background: var( --mhmui-surface );
+	border-color: var( --mhmui-border );
+	color: var( --mhmui-text-secondary );
+}
+/* A filled danger confirm (the artboard's "Evet, sil"). */
+.mhmui-confirm.mhmui-confirm--danger.mhmui-confirm--compact button.mhmui-confirm__confirm,
+.mhmui-confirm.mhmui-confirm--danger.mhmui-confirm--compact button.mhmui-confirm__confirm:is( :hover, :focus, :active ) {
+	background: var( --mhmui-danger-strong );
+	border-color: var( --mhmui-danger-strong );
+	color: var( --mhmui-on-accent );
+}
+/* Locked or busy: like the other fills, it gives the fill up -- core forces
+   grey text on an aria-disabled .button, and grey on red is unreadable. */
+.mhmui-confirm.mhmui-confirm--danger.mhmui-confirm--compact button.mhmui-confirm__confirm[aria-disabled="true"] {
+	background: var( --mhmui-surface );
+	border-color: var( --mhmui-border );
+}
+
 /* Button (0.16.0). One button or link in four variants and two sizes, measured
    from the Mesajlar artboards: 13px text, 1px border, 3px radius (the drawn
    value -- the kit's --mhmui-radius is 4px and stays untouched), md 36px /

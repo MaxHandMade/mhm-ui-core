@@ -795,6 +795,58 @@ describe( 'ConfirmButton wins the cascade against WordPress core buttons', () =>
 	} );
 } );
 
+describe( 'ConfirmButton compact size (0.16.0)', () => {
+	const all = rules( read( 'admin.css' ) );
+	const MOBILE = '@media ( max-width: 782px )';
+	const PARTS = [ 'trigger', 'confirm', 'cancel' ];
+	const minHeightRows = ( part, at ) =>
+		all.filter(
+			( [ sel, body, a ] ) =>
+				a.join( '|' ) === at.join( '|' ) &&
+				sel.includes( 'mhmui-confirm--compact' ) &&
+				sel.includes( 'mhmui-confirm__' + part ) &&
+				/min-height:/.test( body )
+		);
+
+	test( 'compact confirm targets are 36px on desktop and 44px at 782px and below, and outrank core', () => {
+		for ( const part of PARTS ) {
+			const desk = minHeightRows( part, [] );
+			const mob = minHeightRows( part, [ MOBILE ] );
+			expect( [ part, desk.length > 0, mob.length > 0 ] ).toEqual( [ part, true, true ] );
+			for ( const [ sel, body ] of desk ) {
+				expect( /min-height:\s*36px/.test( body ) ).toBe( true );
+				expect( [ sel, compareSpecificity( specificity( sel ), [ 0, 4, 1 ] ) >= 0 ] ).toEqual( [ sel, true ] );
+			}
+			for ( const [ sel, body ] of mob ) {
+				expect( /min-height:\s*44px/.test( body ) ).toBe( true );
+				expect( [ sel, compareSpecificity( specificity( sel ), [ 0, 4, 1 ] ) >= 0 ] ).toEqual( [ sel, true ] );
+			}
+		}
+	} );
+
+	test( 'compact desktop rules outrank the 44px base rules, so 36px wins', () => {
+		const base = all.filter(
+			( [ sel, body, at ] ) => at.length === 0 && ! sel.includes( '--compact' ) && /min-height:\s*44px/.test( body )
+		);
+		for ( const part of PARTS ) {
+			const [ [ csel ] ] = minHeightRows( part, [] );
+			for ( const [ bsel ] of base.filter( ( [ s ] ) => s.includes( 'mhmui-confirm__' + part ) ) ) {
+				expect( [ bsel, compareSpecificity( specificity( csel ), specificity( bsel ) ) > 0 ] ).toEqual( [ bsel, true ] );
+			}
+		}
+	} );
+
+	test( 'compact root aligns to the start and the prompt is a box', () => {
+		const root = all.find( ( [ s, , a ] ) => a.length === 0 && s === '.mhmui-confirm.mhmui-confirm--compact' );
+		expect( root && /align-items:\s*flex-start/.test( root[ 1 ] ) ).toBe( true );
+		const box = all.find( ( [ s, , a ] ) => a.length === 0 && s.includes( '--compact' ) && s.includes( 'mhmui-confirm__prompt' ) );
+		expect( box ).toBeTruthy();
+		expect( box[ 1 ] ).toMatch( /padding:\s*12px/ );
+		expect( box[ 1 ] ).toMatch( /background:\s*var\(\s*--mhmui-neutral-soft\s*\)/ );
+		expect( box[ 1 ] ).toMatch( /border:\s*1px solid var\(\s*--mhmui-border-divider\s*\)/ );
+	} );
+} );
+
 describe( 'Button sizes (0.16.0)', () => {
 	const all = rules( read( 'admin.css' ) );
 	const MOBILE = '@media ( max-width: 782px )';
