@@ -677,6 +677,18 @@
 	line-height: 1.3;
 	color: var( --mhmui-text );
 }
+/* Page-level H1 (0.16.0): drawn at 400 like the wp-admin screen title. Only an
+   h1 -- the default h2 and h3 keep 0.15.x weight. */
+h1.mhmui-page-header__title {
+	font-weight: 400;
+}
+/* badges is opt-in: the wrapper exists only when a caller passes it. */
+.mhmui-page-header__badges {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var( --mhmui-space-3 );
+}
 .mhmui-page-header__actions {
 	margin-inline-start: auto;
 	display: flex;
@@ -685,6 +697,17 @@
 .mhmui-page-header__meta {
 	margin: 0;
 	color: var( --mhmui-text-muted );
+}
+/* Viewport-based on purpose (R-B6): the H1 shrinks and the chips take their own row. */
+@media ( max-width: 600px ) {
+	h1.mhmui-page-header__title {
+		font-size: 21px;
+	}
+	.mhmui-page-header__badges {
+		order: 1;
+		flex-basis: 100%;
+		gap: var( --mhmui-space-2 );
+	}
 }
 
 /* DetailList (0.15.0): the StatsGrid ceiling formula, so it folds on its own. */

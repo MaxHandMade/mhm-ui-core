@@ -33,6 +33,13 @@ function isPlainLeftClick( event ) {
  *                                 an empty/blank string -- no nameless link.
  *                                 A node label is drawn as given.
  * @param {Object} [props.badge]   { text, tone? } -> StatusBadge.
+ * @param {Array}  [props.badges]  [ { text, tone? } ] -> more StatusBadges after
+ *                                 `badge`; an item with empty text is skipped.
+ *                                 Given (non-empty), badge and badges share one
+ *                                 .mhmui-page-header__badges wrapper so a narrow
+ *                                 screen can drop the chips to their own row.
+ *                                 A call with only `badge` keeps the 0.15.2
+ *                                 markup byte for byte.
  * @param {string} [props.meta]
  * @param {*}      [props.actions]
  * @param {number} [props.level]   1 | 2 | 3, default 2.
@@ -41,6 +48,7 @@ export default function PageHeader( {
 	title,
 	back,
 	badge,
+	badges,
 	meta,
 	actions,
 	level = 2,
@@ -54,6 +62,7 @@ export default function PageHeader( {
 		back.label !== undefined &&
 		typeof back.label !== 'boolean' &&
 		( typeof back.label !== 'string' || back.label.trim() !== '' );
+	const hasBadges = Array.isArray( badges ) && badges.length > 0;
 	const handleBack =
 		hasBack && back.onClick
 			? ( event ) => {
@@ -80,10 +89,28 @@ export default function PageHeader( {
 				<Heading className="mhmui-page-header__title">
 					{ title }
 				</Heading>
-				{ badge && badge.text && (
-					<StatusBadge tone={ badge.tone }>
-						{ badge.text }
-					</StatusBadge>
+				{ hasBadges ? (
+					<div className="mhmui-page-header__badges">
+						{ [ badge, ...badges ].map(
+							( item, index ) =>
+								item &&
+								item.text && (
+									<StatusBadge
+										key={ index }
+										tone={ item.tone }
+									>
+										{ item.text }
+									</StatusBadge>
+								)
+						) }
+					</div>
+				) : (
+					badge &&
+					badge.text && (
+						<StatusBadge tone={ badge.tone }>
+							{ badge.text }
+						</StatusBadge>
+					)
 				) }
 				{ actions && (
 					<div className="mhmui-page-header__actions">

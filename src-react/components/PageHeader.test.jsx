@@ -1,5 +1,12 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { PageHeader } from '../index';
+import manifest from '../components.json';
+
+// Captured once from the unchanged 0.15.2 component (base d20ee9d) for the
+// components.json PageHeader fixture row 2 (F-I1): a call that passes only
+// `badge` must keep this markup byte for byte.
+const BASE_0152_PAGE_HEADER =
+	'<div class="mhmui-page-header"><a class="mhmui-page-header__back" href="?tab=pending"><span aria-hidden="true">← </span>Pending applications</a><div class="mhmui-page-header__title-row"><h2 class="mhmui-page-header__title">Marmaris Cars</h2><span class="mhmui-status mhmui-status--warning">Pending</span></div><p class="mhmui-page-header__meta">#9292 · 23/09/2026 07:26</p></div>';
 
 describe( 'PageHeader -- back link, title, badge, meta, actions', () => {
 	test( 'defaults to an h2 (the page h1 belongs to WordPress)', () => {
@@ -126,5 +133,55 @@ describe( 'PageHeader -- back link, title, badge, meta, actions', () => {
 		expect(
 			container.querySelector( '.mhmui-page-header__actions button' )
 		).toBeTruthy();
+	} );
+
+	test( 'status and priority badges, in order, skipping empty text', () => {
+		const { container } = render(
+			<PageHeader
+				title="T"
+				level={ 1 }
+				badge={ { text: 'Pending', tone: 'warning' } }
+				badges={ [ { text: 'Urgent', tone: 'danger' }, { text: '' } ] }
+			/>
+		);
+		expect(
+			[
+				...container.querySelectorAll(
+					'.mhmui-page-header__badges .mhmui-status'
+				),
+			].map( ( b ) => b.textContent )
+		).toEqual( [ 'Pending', 'Urgent' ] );
+		expect(
+			container.querySelector( 'h1.mhmui-page-header__title' ).textContent
+		).toBe( 'T' );
+	} );
+
+	test( 'no badges draws no badges wrapper', () => {
+		const { container } = render( <PageHeader title="T" /> );
+		expect(
+			container.querySelector( '.mhmui-page-header__badges' )
+		).toBeNull();
+	} );
+
+	test( 'badges alone draw the wrapper; an empty badges list draws none', () => {
+		const { container, rerender } = render(
+			<PageHeader title="T" badges={ [ { text: 'Urgent' } ] } />
+		);
+		expect(
+			container.querySelectorAll(
+				'.mhmui-page-header__badges .mhmui-status'
+			).length
+		).toBe( 1 );
+		rerender( <PageHeader title="T" badges={ [] } /> );
+		expect(
+			container.querySelector( '.mhmui-page-header__badges' )
+		).toBeNull();
+	} );
+
+	test( 'PageHeader with only badge keeps the 0.15.2 markup', () => {
+		expect(
+			render( <PageHeader { ...manifest.PageHeader.fixtures[ 1 ] } /> )
+				.container.innerHTML
+		).toBe( BASE_0152_PAGE_HEADER );
 	} );
 } );

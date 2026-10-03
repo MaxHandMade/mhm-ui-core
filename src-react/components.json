@@ -98,10 +98,11 @@
   },
   "PageHeader": {
     "interactive": true, "tone_semantics": false,
-    "props": { "title": "string", "back": "{ label: string, href: string, onClick: function? }?", "badge": "{ text: string, tone: role? }?", "meta": "string?", "actions": "node?", "level": "number?" },
+    "props": { "title": "string", "back": "{ label: string, href: string, onClick: function? }?", "badge": "{ text: string, tone: role? }?", "badges": "Array<{ text: string, tone: role? }>?", "meta": "string?", "actions": "node?", "level": "number?" },
     "fixtures": [
       { "title": "Marmaris Cars" },
-      { "title": "Marmaris Cars", "back": { "label": "Pending applications", "href": "?tab=pending" }, "badge": { "text": "Pending", "tone": "warning" }, "meta": "#9292 · 23/09/2026 07:26", "level": 2 }
+      { "title": "Marmaris Cars", "back": { "label": "Pending applications", "href": "?tab=pending" }, "badge": { "text": "Pending", "tone": "warning" }, "meta": "#9292 · 23/09/2026 07:26", "level": 2 },
+      { "title": "Deposit refund has not reached my account", "back": { "label": "Back to messages", "href": "?tab=messages" }, "badge": { "text": "Pending", "tone": "warning" }, "badges": [ { "text": "Urgent", "tone": "danger" } ], "meta": "#3702 · Payment · 3 messages", "level": 1 }
     ]
   },
   "DetailList": {
