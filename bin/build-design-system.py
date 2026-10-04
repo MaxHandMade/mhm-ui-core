@@ -222,13 +222,47 @@ files["components/notice.html"] = page(
 
 files["components/widget.html"] = page(
     "Components", "Widget",
-    "<b>Widget</b> — başlıklı panel; çoğu yönetici ekranının yapı taşı. Prop'lar: title, subtitle, icon, actions, children.",
+    "<b>Widget</b> — başlıklı panel; çoğu yönetici ekranının yapı taşı. Prop'lar: title, subtitle, icon, actions, level (2 | 3), variant (card | plain), collapsible, defaultOpen, storageKey, open, onToggle(next), children. "
+    "Katlanabilir kartta başlığın içinde aria-expanded/aria-controls taşıyan bir düğme durur; gövde monte kalır (hidden), actions yalnız açıkken çizilir, tüm başlık satırı tıklanır.",
     '<section class="mhmui-widget"><header class="mhmui-widget__header"><h3 class="mhmui-widget__title"><span class="dashicons" aria-hidden="true"></span>Son rezervasyonlar<span class="mhmui-widget__subtitle">son 7 gün</span></h3>'
     '<div class="mhmui-widget__actions"><a href="#" class="button">Tümü</a></div></header>'
     '<div class="mhmui-widget__body"><div class="mhmui-stats-grid" style="--mhmui-columns:3">'
     + stat_card("Yeni", "14", "info") + stat_card("Teslim", "9", "success") + stat_card("İade", "2", "warning")
-    + "</div></div></section>",
+    + "</div></div></section>"
+    '<div class="ds-label">level={2}</div>'
+    '<section class="mhmui-widget mhmui-widget--level-2"><header class="mhmui-widget__header"><h2 class="mhmui-widget__title">Sayfa bölümü</h2></header>'
+    '<div class="mhmui-widget__body">…</div></section>'
+    '<div class="ds-label">variant="plain"</div>'
+    '<section class="mhmui-widget mhmui-widget--plain"><header class="mhmui-widget__header"><h3 class="mhmui-widget__title">Bandsız kart</h3></header>'
+    '<div class="mhmui-widget__body">…</div></section>'
+    '<div class="ds-label">collapsible — açık</div>'
+    '<section class="mhmui-widget mhmui-widget--collapsible"><header class="mhmui-widget__header"><h3 class="mhmui-widget__title">'
+    '<button type="button" class="mhmui-widget__toggle" aria-expanded="true" aria-controls="w-open">Müşteri<span class="mhmui-widget__subtitle">özet</span><span class="mhmui-widget__chevron" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 9l6 6 6-6"/></svg></span></button></h3>'
+    '<div class="mhmui-widget__actions"><a href="#" class="button">Düzenle</a></div></header>'
+    '<div class="mhmui-widget__body" id="w-open">Gövde açık; eylemler görünür.</div></section>'
+    '<div class="ds-label">collapsible — kapalı</div>'
+    '<section class="mhmui-widget mhmui-widget--collapsible mhmui-widget--collapsed"><header class="mhmui-widget__header"><h3 class="mhmui-widget__title">'
+    '<button type="button" class="mhmui-widget__toggle" aria-expanded="false" aria-controls="w-closed">Notlar<span class="mhmui-widget__subtitle">3 not</span><span class="mhmui-widget__chevron" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 9l6 6 6-6"/></svg></span></button></h3></header>'
+    '<div class="mhmui-widget__body" id="w-closed" hidden>Gövde monte kalır, gizlidir.</div></section>',
     width=720,
+)
+
+files["components/button.html"] = page(
+    "Components", "Button",
+    "<b>Button</b> — düğme ya da düğme gibi çizilen bağlantı. Prop'lar: variant (primary/secondary/danger/plain/neutral), size (md 36px · sm 32px; ikisi de 782px ve altında 44px), icon (dekoratif), href (verilirse &lt;a&gt;), disabled, onClick. "
+    "disabled = aria-disabled: öğe odağını korur, tıklama yutulur, bağlantı href'ini kaybeder. Etiket children'dır; pakette görünür metin yok.",
+    "".join(
+        '<div class="ds-label">%s</div><div class="ds-row">%s</div>' % (size, "".join(
+            '<button type="button" class="mhmui-button mhmui-button--%s mhmui-button--%s">%s</button>' % (v, size, text)
+            for v, text in (("primary", "Kaydet"), ("secondary", "Vazgeç"), ("danger", "Sil"), ("plain", "Ayrıntı"), ("neutral", "Filtrele"))
+        ))
+        for size in ("md", "sm")
+    )
+    + '<div class="ds-label">Devre dışı (aria-disabled, odak korunur)</div><div class="ds-row">'
+    '<button type="button" class="mhmui-button mhmui-button--primary mhmui-button--md" aria-disabled="true">Kaydet</button></div>'
+    '<div class="ds-label">Simgeli</div><div class="ds-row">'
+    '<button type="button" class="mhmui-button mhmui-button--secondary mhmui-button--md"><span class="mhmui-button__icon" aria-hidden="true"><span class="dashicons dashicons-download"></span></span>Dışa aktar</button></div>',
+    width=620,
 )
 
 files["components/tabs.html"] = page(
@@ -332,7 +366,7 @@ Burada çizilen, WordPress'te aynen render olur.
 - Claude Design **üretim kodu üretmez**; devir paketi üretir, kodu Claude Code yazar.
 
 ## Bileşenler
-StatCard · StatsGrid · StatusBadge · Pagination · ProLock · Notice · Widget · Tabs · PageHeader · DetailList · DetailLayout · ConfirmButton
+StatCard · StatsGrid · StatusBadge · Pagination · ProLock · Notice · Widget · Button · Tabs · PageHeader · DetailList · DetailLayout · ConfirmButton
 (+ görünmeyenler: ErrorBoundary, createApiClient, useApi, createFormatter)
 
 ## Senkron
@@ -388,6 +422,18 @@ STYLE_HOOKS = {
 # admin.css and front.css).
 SHARED_RULE_MODIFIERS = {"mhmui-stat-card__delta--flat"}
 
+# Modifiers whose every rule is a descendant/compound selector
+# (`.mhmui-widget--collapsible .mhmui-widget__title`, `.mhmui-widget--level-2
+# .mhmui-widget__title`), so none ends in `.cls {` or `.cls,`. They DO have
+# rules; the strict pattern below cannot see them. They are checked with the
+# looser "appears as a whole class token in a selector" pattern instead of
+# being exempted (0.17.0).
+COMPOUND_ONLY_MODIFIERS = {
+    "mhmui-widget--collapsible",
+    "mhmui-widget--collapsed",
+    "mhmui-widget--level-2",
+}
+
 missing = []
 for rel, content in files.items():
     body = content.split("</head>", 1)[-1]
@@ -411,7 +457,8 @@ for rel, content in files.items():
         # a change to how EVERY class is verified, deliberately not made on a
         # release branch. Until then: a green run means "nothing renders a
         # class the stylesheet has never heard of", and no more than that.
-        if not re.search(r"\." + re.escape(cls) + r"\s*[,{]", styles):
+        pattern = r"\." + re.escape(cls) + (r"(?![\w-])" if cls in COMPOUND_ONLY_MODIFIERS else r"\s*[,{]")
+        if not re.search(pattern, styles):
             missing.append("%s -> .%s" % (rel, cls))
 
 if missing:

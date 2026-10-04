@@ -22,7 +22,7 @@ A consuming plugin `require_once`s `vendor/mhm/ui-core/register.php` from its
 main file and registers its own copy:
 
 ```php
-mhmuicore_register( '0.16.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.17.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 At `plugins_loaded` priority 0 the highest registered version boots; the rest
@@ -390,7 +390,7 @@ build from.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.16.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.17.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 Requiring `bootstrap.php` directly defines `MHMUICORE_VERSION` immediately, which
@@ -791,3 +791,36 @@ link loses its `href`.
 
 As with 0.11.0, the new JSX and CSS go together: load the stylesheet through
 `mhmuicore_enqueue_kit()`.
+
+### Collapsible Widget (0.17.0+)
+
+Moving a consumer from `^0.16` to `^0.17` is a minor bump. Everything below is
+opt-in except one default-look change; a call that passes none of the new props
+renders the 0.16.0 markup byte for byte.
+
+**The one default-look change.** A page-level `h1.mhmui-page-header__title` no
+longer inherits WordPress core's `.wrap h1` padding (`9px 0 4px`). A page that
+compensated for that padding can drop its override.
+
+**`Widget` collapsible** (opt-in): `collapsible`, `defaultOpen` (default true),
+`storageKey`, `open` (controlled) and `onToggle( next )`. The heading holds a
+disclosure button with `aria-expanded` / `aria-controls`; the body stays mounted
+(`hidden`), so typed input survives; `actions` render only while open; the whole
+header row is clickable; when a card closes with focus inside its body, focus
+returns to the toggle. The toggle is 44px at 782px and below and the chevron does
+not animate under `prefers-reduced-motion`. New classes: `mhmui-widget--collapsible`,
+`mhmui-widget--collapsed`. The body id comes from React `useId()` and contains
+`:`, so a CSS selector or `querySelector` lookup by that id must escape it
+(`CSS.escape()`).
+
+**New named exports:** `usePersistentOpen( storageKey, defaultOpen )` (remembers
+`'1'` / `'0'` in `localStorage`, falls back silently when storage is unavailable)
+and `useContainerWidth( threshold = 600 )`.
+
+**Fixes:**
+
+- `Button`: a caller's `aria-disabled` can no longer override the computed
+  disabled state.
+- `PageHeader`: no empty badges wrapper when there are no badges.
+- Underline `Tabs` scroll inside their bar on narrow containers; the focus ring
+  is drawn inset in the underline variant.

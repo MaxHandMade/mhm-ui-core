@@ -216,7 +216,7 @@ da bu tek yanlış cümle yüzünden taşıdı.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.16.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.17.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 `bootstrap.php`'yi doğrudan require etmek `MHMUICORE_VERSION`'ı anında tanımlar
@@ -642,7 +642,7 @@ parite kapısı eşitlik arar, uyumluluk değil.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.16.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.17.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 🔴 Sürüm dizesi **elle yazılır** (kayıt, herhangi bir bootstrap yüklenmeden önce koşar) ve
@@ -736,3 +736,35 @@ bağlantı `href`'ini kaybeder.
 
 0.11.0'daki gibi yeni JSX ve CSS birlikte gelir: stil dosyasını
 `mhmuicore_enqueue_kit()` ile yükleyin.
+
+### Katlanabilir Widget (0.17.0+)
+
+Bir tüketicinin `^0.16`'dan `^0.17`'ye geçmesi minör bir yükseltmedir. Aşağıdakilerin
+hepsi opt-in; tek istisna varsayılan görünüm değişikliği. Yeni proplardan hiçbirini
+vermeyen çağrı 0.16.0 işaretlemesini bayt bayt korur.
+
+**Tek varsayılan görünüm değişikliği.** Sayfa düzeyindeki
+`h1.mhmui-page-header__title` artık WordPress çekirdeğinin `.wrap h1` dolgusunu
+(`9px 0 4px`) devralmaz. Bu dolguyu dengelemek için ezme yazmış sayfa onu silebilir.
+
+**`Widget` katlanabilir** (opt-in): `collapsible`, `defaultOpen` (varsayılan true),
+`storageKey`, `open` (kontrollü) ve `onToggle( next )`. Başlığın içinde
+`aria-expanded` / `aria-controls` taşıyan bir aç/kapa düğmesi durur; gövde monte
+kalır (`hidden`), yazılan girdi kaybolmaz; `actions` yalnız açıkken çizilir; tüm
+başlık satırı tıklanabilir; kart odak gövdedeyken kapanırsa odak düğmeye döner.
+Düğme 782px ve altında 44px'tir, ok `prefers-reduced-motion` altında animasyonsuzdur.
+Yeni sınıflar: `mhmui-widget--collapsible`, `mhmui-widget--collapsed`. Gövde kimliği
+React `useId()`'den gelir ve `:` içerir; bu kimlikle yapılan CSS seçici ya da
+`querySelector` aramaları kaçışlanmalıdır (`CSS.escape()`).
+
+**Yeni adlandırılmış dışa aktarımlar:** `usePersistentOpen( storageKey, defaultOpen )`
+(`'1'` / `'0'` olarak `localStorage`'a yazar, depolama yoksa sessizce düşer) ve
+`useContainerWidth( threshold = 600 )`.
+
+**Düzeltmeler:**
+
+- `Button`: çağıranın `aria-disabled`'ı artık hesaplanan devre dışı durumu
+  ezemez.
+- `PageHeader`: rozet yokken boş rozet sarmalayıcısı çizilmez.
+- Çizgili (underline) `Tabs`, dar kaplarda kendi çubuğunun içinde kayar; odak
+  halkası çizgili varyantta içeri çizilir.
