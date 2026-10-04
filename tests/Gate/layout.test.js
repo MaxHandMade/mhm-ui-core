@@ -1,7 +1,7 @@
 const { readFileSync } = require( 'node:fs' );
 const { join } = require( 'node:path' );
 const postcss = require( 'postcss' );
-const { ruleBody } = require( './helpers' );
+const { ruleBody, mediaBlock } = require( './helpers' );
 
 const ROOT = join( __dirname, '..', '..' );
 const read = ( f ) => readFileSync( join( ROOT, 'assets', 'react', f ), 'utf8' );
@@ -985,5 +985,83 @@ describe( 'rules() reads the stylesheet the way the cascade does', () => {
 		[ 'a nested style rule', '.a { color: red; .b { color: blue; } }' ],
 	] )( '%s throws instead of measuring nothing', ( _name, css ) => {
 		expect( () => rules( css ) ).toThrow( /rules\(\)/ );
+	} );
+} );
+
+describe( 'mediaBlock() lets ruleBody() read inside an @media block (F-I6)', () => {
+	const css =
+		'.a { x: 1; }\n@media ( max-width: 782px ) {\n\t.b { min-height: 44px; }\n\t.c { y: 2; }\n}\n@media print { .b { z: 3; } }\n@media (max-width:782px) { .d { w: 4; } }';
+
+	test( 'the first rule of a block is readable, and blocks with the same query are joined', () => {
+		expect( ruleBody( css, '.b' ) ).toBeNull(); // the gap this helper closes
+		const block = mediaBlock( css, '( max-width: 782px )' );
+		expect( ruleBody( block, '.b' ).trim() ).toBe( 'min-height: 44px;' );
+		expect( ruleBody( block, '.d' ).trim() ).toBe( 'w: 4;' );
+		expect( ruleBody( block, '.a' ) ).toBeNull();
+	} );
+
+	test( 'an absent query is empty, not the whole sheet', () => {
+		expect( mediaBlock( css, '( prefers-reduced-motion: reduce )' ) ).toBe( '' );
+	} );
+} );
+
+describe( 'collapsible Widget (0.17.0)', () => {
+	const admin = read( 'admin.css' );
+
+	test( 'collapsible toggle is a 44px target at 782px and below', () => {
+		const body = ruleBody(
+			mediaBlock( admin, '( max-width: 782px )' ),
+			'.mhmui-widget__toggle'
+		);
+		expect( body ).not.toBeNull();
+		expect( body ).toMatch( /min-height:\s*44px/ );
+	} );
+
+	test( 'chevron turns without motion under prefers-reduced-motion', () => {
+		// Not vacuous: the chevron does animate by default, and it does turn.
+		expect( ruleBody( admin, '.mhmui-widget__chevron' ) ).toMatch(
+			/transition:\s*transform/
+		);
+		expect(
+			ruleBody(
+				admin,
+				'.mhmui-widget__toggle[aria-expanded="true"] .mhmui-widget__chevron'
+			)
+		).toMatch( /transform:\s*rotate\(\s*180deg\s*\)/ );
+		const reduced = ruleBody(
+			mediaBlock( admin, '( prefers-reduced-motion: reduce )' ),
+			'.mhmui-widget__chevron'
+		);
+		expect( reduced ).not.toBeNull();
+		expect( reduced ).toMatch( /transition:\s*none/ );
+	} );
+
+	test( 'a hidden widget body is not displayed', () => {
+		const body = ruleBody( admin, '.mhmui-widget__body[hidden]' );
+		expect( body ).not.toBeNull();
+		expect( body ).toMatch( /display:\s*none/ );
+		// It must out-rank every rule that gives the body a display value, or
+		// a later card rule would show a closed body again (F-I8).
+		const all = rules( admin );
+		const guard = all.findIndex(
+			( [ sel, b, at ] ) =>
+				sel === '.mhmui-widget__body[hidden]' &&
+				at.length === 0 &&
+				/display:\s*none/.test( b )
+		);
+		const rivals = all.filter(
+			( [ sel, b ], i ) =>
+				i !== guard &&
+				/\.mhmui-widget__body(?![\w-])/.test( sel ) &&
+				/(^|\s)display:/.test( b )
+		);
+		for ( const [ sel ] of rivals ) {
+			const cmp = compareSpecificity(
+				specificity( '.mhmui-widget__body[hidden]' ),
+				specificity( sel )
+			);
+			const later = all.findIndex( ( [ s ] ) => s === sel ) > guard;
+			expect( [ sel, cmp > 0 || ( cmp === 0 && ! later ) ] ).toEqual( [ sel, true ] );
+		}
 	} );
 } );

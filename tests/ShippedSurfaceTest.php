@@ -105,8 +105,10 @@ final class ShippedSurfaceTest extends TestCase {
 		// PageHeader.jsx to 62/54/3; DetailList.jsx to 63/55/3;
 		// DetailLayout.jsx to 64/56/3; ConfirmButton.jsx to 65/57/3;
 		// 0.16.0 Button.jsx to 66/58/3.
-		self::assertCount( 66, $files, 'shipped file count changed' );
-		self::assertCount( 58, $p1, 'P1 file set changed' );
+		// 0.17.0 src-react/hooks/usePersistentOpen.js and
+		// src-react/hooks/useContainerWidth.js (two P1 files) to 68/60/3.
+		self::assertCount( 68, $files, 'shipped file count changed' );
+		self::assertCount( 60, $p1, 'P1 file set changed' );
 		self::assertCount( 3, $p2, 'P2 file set changed' );
 	}
 }

@@ -1,6 +1,8 @@
 export { createFormatter } from './format';
 export { createApiClient } from './api/createApiClient';
 export { useApi } from './hooks/useApi';
+export { usePersistentOpen } from './hooks/usePersistentOpen';
+export { useContainerWidth } from './hooks/useContainerWidth';
 export { default as ErrorBoundary } from './components/ErrorBoundary';
 
 // Visual kit -- every string is a prop; the package has no text domain.

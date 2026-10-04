@@ -535,6 +535,50 @@
 .mhmui-widget--plain .mhmui-widget__header { padding: 0; border-bottom: 0; }
 .mhmui-widget--plain .mhmui-widget__body { padding: 0; }
 
+/* Widget collapsible (0.17.0, opt-in). The toggle is a button filling the
+   heading row: icon, title, subtitle, then a 16px chevron at the right in
+   --mhmui-text-secondary (AB/ThreadNarrow customer summary row). The chevron
+   points down when closed and turns when open; it does not animate under
+   prefers-reduced-motion. A closed banded card loses the divider under its
+   header. Focus ring: the kit's two rings (surface gap, then accent). */
+.mhmui-widget--collapsible .mhmui-widget__title { flex: 1 1 auto; min-width: 0; }
+.mhmui-widget__toggle {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	width: 100%;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	border-radius: 2px;
+	background: none;
+	color: inherit;
+	font: inherit;
+	text-align: start;
+	cursor: pointer;
+}
+.mhmui-widget__toggle:focus-visible {
+	outline: 2px solid transparent;
+	box-shadow: 0 0 0 2px var( --mhmui-surface ), 0 0 0 4px var( --mhmui-accent );
+}
+.mhmui-widget__chevron {
+	display: inline-flex;
+	flex: none;
+	margin-inline-start: auto;
+	color: var( --mhmui-text-secondary );
+	transition: transform 0.15s ease;
+}
+.mhmui-widget__toggle[aria-expanded="true"] .mhmui-widget__chevron { transform: rotate( 180deg ); }
+.mhmui-widget--collapsed .mhmui-widget__header { border-bottom: 0; }
+/* `hidden` must win over any display a card rule gives the body (F-I8). */
+.mhmui-widget__body[hidden] { display: none; }
+@media ( max-width: 782px ) {
+	.mhmui-widget__toggle { min-height: 44px; }
+}
+@media ( prefers-reduced-motion: reduce ) {
+	.mhmui-widget__chevron { transition: none; }
+}
+
 /* Tabs (0.15.0): page sections as links. Segmented strip; the current tab is
    told apart by a 2px accent underline as well as colour (WCAG 1.4.1/1.4.11 --
    background alone measured 1.14:1). The badge chip stays visible on both
