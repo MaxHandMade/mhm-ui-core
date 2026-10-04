@@ -774,10 +774,13 @@ React `useId()`'den gelir ve `:` içerir; bu kimlikle yapılan CSS seçici ya da
 
 0.17.1: katlanabilir `Widget` artık odağı sayfadan geri çekmez. Odak kartın
 gövdesinden ya da başlık eylemlerinden sayfanın boş bir yerine geçtikten sonra
-gelen bir kapanış (kontrollü `open` değişimi ya da `storageKey` değişimi) odağı
-düğmeye taşıyor ve sayfayı oraya kaydırıyordu; odak artık kullanıcının bıraktığı
-yerde kalır. Odak hâlâ gövdedeyken ya da bir eylemdeyken kapanış ve tıklanan
+gelen bir kapanış (kontrollü `open` değişimi -- aynı tıklamanın yaptığı dahil --
+ya da `storageKey` değişimi) odağı düğmeye taşıyor ve sayfayı oraya kaydırıyordu;
+odak artık kullanıcının bıraktığı yerde kalır. Odak hâlâ gövdedeyken ya da bir
+eylemdeyken kapanış, tarayıcı penceresi arka plandayken kapanış ve tıklanan
 düğmeye odak vermeyen tarayıcılarda (Safari) düğme tıklaması odağı yine düğmeye
-verir. Tasarım sistemindeki Tabs kartı artık `variant="underline"`'ı bir
-`.mhmui-tabs-bar` içinde, şeridin kaydığı dar bir kap örneğiyle birlikte gösterir.
+verir; başka bir yerde bırakılan ya da başka bir fare düğmesiyle yapılan basış
+tıklama sayılmaz. Tasarım sistemindeki Tabs kartı artık `variant="underline"`'ı
+bir `.mhmui-tabs-bar` içinde, şeridin kaydığı dar bir kap örneğiyle birlikte
+gösterir.
 Yeni prop ya da sınıf yok; `^0.17` bunu alır.

@@ -829,11 +829,13 @@ and `useContainerWidth( threshold = 600 )` → `[ setRef, layout, measured ]`; `
   `badges` item has text.
 
 0.17.1: a collapsible `Widget` no longer pulls focus back from the page. When
-focus had left the card's body or header actions for empty page space, a later
-close (a controlled `open` change or a `storageKey` change) moved focus to the
-toggle and scrolled the page there; it now stays where the user left it. Closing
-with focus still inside the body or on an action, and the toggle click in
-browsers that do not focus a clicked button (Safari), still hand focus to the
-toggle. The design-system Tabs card now shows `variant="underline"` inside a
-`.mhmui-tabs-bar`, including a narrow container where the strip scrolls. No new
-props or classes; `^0.17` picks it up.
+focus had left the card's body or header actions for empty page space, a close
+after that (a controlled `open` change, including one made by that same click,
+or a `storageKey` change) moved focus to the toggle and scrolled the page there;
+it now stays where the user left it. Closing with focus still inside the body or
+on an action, closing while the browser window is in the background, and the
+toggle click in browsers that do not focus a clicked button (Safari), still hand
+focus to the toggle; a toggle press released elsewhere or made with another
+mouse button does not count as one. The design-system Tabs card now shows
+`variant="underline"` inside a `.mhmui-tabs-bar`, including a narrow container
+where the strip scrolls. No new props or classes; `^0.17` picks it up.
