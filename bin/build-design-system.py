@@ -237,12 +237,12 @@ files["components/widget.html"] = page(
     '<div class="mhmui-widget__body">…</div></section>'
     '<div class="ds-label">collapsible — açık</div>'
     '<section class="mhmui-widget mhmui-widget--collapsible"><header class="mhmui-widget__header"><h3 class="mhmui-widget__title">'
-    '<button type="button" class="mhmui-widget__toggle" aria-expanded="true" aria-controls="w-open">Müşteri<span class="mhmui-widget__subtitle">özet</span><span class="mhmui-widget__chevron" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 9l6 6 6-6"/></svg></span></button></h3>'
+    '<button type="button" class="mhmui-widget__toggle" aria-expanded="true" aria-controls="w-open">Müşteri <span class="mhmui-widget__subtitle">özet</span><span class="mhmui-widget__chevron" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 9l6 6 6-6"/></svg></span></button></h3>'
     '<div class="mhmui-widget__actions"><a href="#" class="button">Düzenle</a></div></header>'
     '<div class="mhmui-widget__body" id="w-open">Gövde açık; eylemler görünür.</div></section>'
     '<div class="ds-label">collapsible — kapalı</div>'
     '<section class="mhmui-widget mhmui-widget--collapsible mhmui-widget--collapsed"><header class="mhmui-widget__header"><h3 class="mhmui-widget__title">'
-    '<button type="button" class="mhmui-widget__toggle" aria-expanded="false" aria-controls="w-closed">Notlar<span class="mhmui-widget__subtitle">3 not</span><span class="mhmui-widget__chevron" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 9l6 6 6-6"/></svg></span></button></h3></header>'
+    '<button type="button" class="mhmui-widget__toggle" aria-expanded="false" aria-controls="w-closed">Notlar <span class="mhmui-widget__subtitle">3 not</span><span class="mhmui-widget__chevron" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 9l6 6 6-6"/></svg></span></button></h3></header>'
     '<div class="mhmui-widget__body" id="w-closed" hidden style="display: none;">Gövde monte kalır, gizlidir.</div></section>',
     width=720,
 )

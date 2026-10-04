@@ -1066,7 +1066,7 @@ describe( 'collapsible Widget (0.17.0)', () => {
 	} );
 } );
 
-describe( 'the whole collapsible header row toggles (fix round 1)', () => {
+describe( 'the whole collapsible header row toggles', () => {
 	const admin = read( 'admin.css' );
 	const all = rules( admin );
 
@@ -1099,7 +1099,7 @@ describe( 'the whole collapsible header row toggles (fix round 1)', () => {
 	} );
 } );
 
-describe( 'kit park fixes (K2)', () => {
+describe( 'page header and underline tabs fit the admin screen', () => {
 	const admin = read( 'admin.css' );
 
 	test( 'page-level h1 cancels the core .wrap h1 padding', () => {
