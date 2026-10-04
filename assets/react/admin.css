@@ -577,8 +577,9 @@
 .mhmui-widget--collapsible .mhmui-widget__header { position: relative; }
 .mhmui-widget--collapsible .mhmui-widget__toggle::after { content: ""; position: absolute; inset: 0; }
 .mhmui-widget--collapsible .mhmui-widget__actions { position: relative; z-index: 1; }
-/* `hidden` must win over any display a card rule gives the body. */
-.mhmui-widget__body[hidden] { display: none; }
+/* `hidden` must win over any display a card rule -- the kit's or a
+   consumer's own, page-scoped one -- gives the body: !important on purpose. */
+.mhmui-widget__body[hidden] { display: none !important; }
 @media ( max-width: 782px ) {
 	.mhmui-widget__toggle { min-height: 44px; }
 }

@@ -13,13 +13,20 @@ import { useState, useRef, useCallback } from '@wordpress/element';
  * keeps the current layout. Without ResizeObserver the layout stays 'wide'
  * (the layout that needs no measuring).
  *
+ * The third value, `measured`, is false until the first non-zero width has
+ * been seen (or until it is known that ResizeObserver is missing; the layout
+ * is then 'wide' for good). A consumer whose layout picks a remembered state
+ * can wait for it instead of rendering the 'wide' guess first. Callers that
+ * read only the first two values are unaffected.
+ *
  * Ported unchanged from Rentiva Pro's messages screen (0.17.0).
  *
  * @param {number} [threshold=600] Widths up to and including this are 'narrow'.
- * @return {Array} [ setRef, 'wide' | 'narrow' ]
+ * @return {Array} [ setRef, 'wide' | 'narrow', measured: boolean ]
  */
 export function useContainerWidth( threshold = 600 ) {
 	const [ layout, setLayout ] = useState( 'wide' );
+	const [ measured, setMeasured ] = useState( false );
 	const observer = useRef( null );
 
 	const setRef = useCallback(
@@ -28,14 +35,22 @@ export function useContainerWidth( threshold = 600 ) {
 				observer.current.disconnect();
 				observer.current = null;
 			}
-			const RO = node && node.ownerDocument.defaultView.ResizeObserver;
-			if ( ! RO ) {
+			if ( ! node ) {
 				return;
 			}
-			const pick = ( width ) =>
+			const RO = node.ownerDocument.defaultView.ResizeObserver;
+			if ( ! RO ) {
+				// Nothing will ever measure: 'wide' is the final answer.
+				setMeasured( true );
+				return;
+			}
+			const pick = ( width ) => {
 				// 0 means "not laid out" (hidden or detached): keep what we have.
-				width > 0 &&
-				setLayout( width <= threshold ? 'narrow' : 'wide' );
+				if ( width > 0 ) {
+					setLayout( width <= threshold ? 'narrow' : 'wide' );
+					setMeasured( true );
+				}
+			};
 			pick( node.clientWidth );
 			observer.current = new RO( ( entries ) => {
 				const entry = entries[ entries.length - 1 ];
@@ -48,7 +63,7 @@ export function useContainerWidth( threshold = 600 ) {
 		[ threshold ]
 	);
 
-	return [ setRef, layout ];
+	return [ setRef, layout, measured ];
 }
 
 export default useContainerWidth;

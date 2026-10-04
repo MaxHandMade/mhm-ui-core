@@ -29,13 +29,14 @@ const observeWith = ( width ) => {
 
 function Probe( { show = true, threshold } ) {
 	// No argument at all when no threshold is given, so the default is measured.
-	const [ ref, layout ] = useContainerWidth(
+	const [ ref, layout, measured ] = useContainerWidth(
 		...( threshold === undefined ? [] : [ threshold ] )
 	);
 	return (
 		<>
 			{ show && <div ref={ ref } /> }
 			<output>{ layout }</output>
+			<span data-testid="measured">{ String( measured ) }</span>
 		</>
 	);
 }
@@ -87,4 +88,43 @@ test( 'the observer is disconnected when the container goes away', () => {
 	expect( disconnects ).toBe( 0 );
 	rerender( <Probe show={ false } /> );
 	expect( disconnects ).toBe( 1 );
+} );
+
+const measured = () => screen.getByTestId( 'measured' ).textContent;
+
+test( 'measured is false before the first measurement and true after', () => {
+	observeWith( 366 );
+	const { rerender } = render( <Probe show={ false } /> );
+	expect( [ layout(), measured() ] ).toEqual( [ 'wide', 'false' ] );
+	rerender( <Probe show /> );
+	expect( [ layout(), measured() ] ).toEqual( [ 'narrow', 'true' ] );
+} );
+
+test( 'no ResizeObserver: measured true, wide', () => {
+	delete window.ResizeObserver;
+	render( <Probe /> );
+	expect( [ layout(), measured() ] ).toEqual( [ 'wide', 'true' ] );
+} );
+
+test( '0 width keeps measured false', () => {
+	observeWith( 0 );
+	render( <Probe /> );
+	expect( [ layout(), measured() ] ).toEqual( [ 'wide', 'false' ] );
+	act( () => notify( [ { contentRect: { width: 900 } } ] ) );
+	expect( [ layout(), measured() ] ).toEqual( [ 'wide', 'true' ] );
+} );
+
+test( 'a two-value caller keeps working', () => {
+	observeWith( 366 );
+	function Two() {
+		const [ ref, l ] = useContainerWidth();
+		return (
+			<>
+				<div ref={ ref } />
+				<output>{ l }</output>
+			</>
+		);
+	}
+	render( <Two /> );
+	expect( layout() ).toBe( 'narrow' );
 } );
