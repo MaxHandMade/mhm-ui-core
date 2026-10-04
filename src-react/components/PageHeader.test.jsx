@@ -163,6 +163,18 @@ describe( 'PageHeader -- back link, title, badge, meta, actions', () => {
 		).toBeNull();
 	} );
 
+	test( 'badges whose texts are all empty draw no wrapper', () => {
+		const { container } = render(
+			<PageHeader
+				title="T"
+				badge={ { text: '' } }
+				badges={ [ { text: '' } ] }
+			/>
+		);
+		expect(
+			container.querySelector( '.mhmui-page-header__badges' )
+		).toBeNull();
+	} );
 	test( 'badges alone draw the wrapper; an empty badges list draws none', () => {
 		const { container, rerender } = render(
 			<PageHeader title="T" badges={ [ { text: 'Urgent' } ] } />

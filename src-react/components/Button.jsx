@@ -51,7 +51,6 @@ export default function Button( {
 	const s = SIZES.includes( size ) ? size : 'md';
 	const common = {
 		className: `mhmui-button mhmui-button--${ v } mhmui-button--${ s }`,
-		'aria-disabled': disabled ? 'true' : undefined,
 		onClick: ( event ) => {
 			if ( disabled ) {
 				event.preventDefault();
@@ -63,6 +62,11 @@ export default function Button( {
 		},
 		...passThrough( rest ),
 	};
+	// Written after the pass-through: when disabled, a caller's aria-disabled
+	// cannot say otherwise. When enabled, the caller's own value passes as before.
+	if ( disabled ) {
+		common[ 'aria-disabled' ] = 'true';
+	}
 	const content = (
 		<>
 			{ icon ? (

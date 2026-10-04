@@ -1098,3 +1098,28 @@ describe( 'the whole collapsible header row toggles (fix round 1)', () => {
 		expect( positioned.map( ( [ sel ] ) => sel ) ).toEqual( [] );
 	} );
 } );
+
+describe( 'kit park fixes (K2)', () => {
+	const admin = read( 'admin.css' );
+
+	test( 'page-level h1 cancels the core .wrap h1 padding', () => {
+		// WP core common.css: `.wrap h1` (0,1,1) sets padding 9px 0 4px.
+		// `h1.mhmui-page-header__title.mhmui-page-header__title` is (0,2,1) and wins.
+		const body = ruleBody( admin, 'h1.mhmui-page-header__title.mhmui-page-header__title' );
+		expect( body ).not.toBeNull();
+		expect( body ).toMatch( /padding:\s*0\s*;/ );
+	} );
+
+	test( 'underline tabs scroll inside their bar on narrow containers', () => {
+		const nav = ruleBody( admin, '.mhmui-tabs--underline' );
+		expect( nav ).toMatch( /overflow-x:\s*auto/ );
+		const tab = ruleBody( admin, '.mhmui-tabs--underline .mhmui-tabs__tab' );
+		expect( tab ).toMatch( /flex-shrink:\s*0/ );
+	} );
+
+	test( 'the underline tab focus ring is inset so the scroll box cannot clip it', () => {
+		const ring = ruleBody( admin, '.mhmui-tabs--underline .mhmui-tabs__tab:focus-visible' );
+		expect( ring ).toMatch( /outline:\s*2px solid/ );
+		expect( ring ).toMatch( /outline-offset:\s*-2px/ );
+	} );
+} );
