@@ -988,7 +988,7 @@ describe( 'rules() reads the stylesheet the way the cascade does', () => {
 	} );
 } );
 
-describe( 'mediaBlock() lets ruleBody() read inside an @media block (F-I6)', () => {
+describe( 'mediaBlock() lets ruleBody() read inside an @media block', () => {
 	const css =
 		'.a { x: 1; }\n@media ( max-width: 782px ) {\n\t.b { min-height: 44px; }\n\t.c { y: 2; }\n}\n@media print { .b { z: 3; } }\n@media (max-width:782px) { .d { w: 4; } }';
 
@@ -1041,7 +1041,7 @@ describe( 'collapsible Widget (0.17.0)', () => {
 		expect( body ).not.toBeNull();
 		expect( body ).toMatch( /display:\s*none/ );
 		// It must out-rank every rule that gives the body a display value, or
-		// a later card rule would show a closed body again (F-I8).
+		// a later card rule would show a closed body again.
 		const all = rules( admin );
 		const guard = all.findIndex(
 			( [ sel, b, at ] ) =>

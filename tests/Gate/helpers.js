@@ -74,7 +74,7 @@ function ruleBody( css, selector ) {
  * The inside of every `@media <query> { ... }` block, joined by newlines, so
  * ruleBody() can read the rules in it. ruleBody() alone cannot see the FIRST
  * rule of a media block: its selector follows the block's `{`, not a `}`
- * (plan audit F-I6). The query is compared with all whitespace removed, so
+ * The query is compared with all whitespace removed, so
  * `( max-width: 782px )` and `(max-width:782px)` are the same query. Comments
  * are dropped first. Returns '' when no block matches.
  */
