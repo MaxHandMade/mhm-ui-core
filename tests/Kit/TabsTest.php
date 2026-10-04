@@ -133,4 +133,97 @@ final class TabsTest extends TestCase {
 			)
 		);
 	}
+
+	private const BYTE_PROPS = array(
+		'label'   => 'S',
+		'current' => 'a',
+		'items'   => array(
+			array(
+				'id'    => 'a',
+				'label' => 'A',
+				'href'  => '?a',
+				'badge' => 2,
+			),
+			array(
+				'id'    => 'b',
+				'label' => 'B',
+				'href'  => '?b',
+				'badge' => 0,
+			),
+		),
+	);
+
+	// Captured once on the unchanged 0.15.2 code, under the marking stubs.
+	private const BASE_0152_MARKUP = '<nav class="mhmui-tabs" aria-label="S"><a class="mhmui-tabs__tab mhmui-tabs__tab--current" href="esc_url(?a)" aria-current="page">esc_html(A)<span class="mhmui-tabs__badge">esc_html(2)</span></a><a class="mhmui-tabs__tab" href="esc_url(?b)">esc_html(B)</a></nav>';
+
+	public function test_default_markup_is_unchanged(): void {
+		self::assertSame( self::BASE_0152_MARKUP, mhmuicore_tabs_html( self::BYTE_PROPS ) );
+	}
+
+	public function test_underline_show_zero_and_badge_tone(): void {
+		$html = self::unmark(
+			mhmuicore_tabs_html(
+				array(
+					'label'    => 'S',
+					'variant'  => 'underline',
+					'showZero' => true,
+					'current'  => 'all',
+					'items'    => array(
+						array(
+							'id'    => 'all',
+							'label' => 'All',
+							'href'  => '?',
+							'badge' => 7,
+						),
+						array(
+							'id'        => 'p',
+							'label'     => 'Pending',
+							'href'      => '?p',
+							'badge'     => 2,
+							'badgeTone' => 'warning',
+						),
+						array(
+							'id'    => 'c',
+							'label' => 'Closed',
+							'href'  => '?c',
+							'badge' => 0,
+						),
+					),
+				)
+			)
+		);
+		self::assertStringContainsString( 'class="mhmui-tabs mhmui-tabs--underline"', $html );
+		self::assertStringContainsString( '<span class="mhmui-tabs__badge">0</span>', $html );
+		self::assertStringContainsString( '<span class="mhmui-tabs__badge mhmui-tabs__badge--warning">2</span>', $html );
+	}
+
+	public function test_unknown_variant_and_tone_fall_back_and_negative_never_draws(): void {
+		$html = self::unmark(
+			mhmuicore_tabs_html(
+				array(
+					'label'    => 'S',
+					'variant'  => 'x',
+					'showZero' => true,
+					'items'    => array(
+						array(
+							'id'        => 'a',
+							'label'     => 'A',
+							'href'      => '?a',
+							'badge'     => 1,
+							'badgeTone' => 'purple',
+						),
+						array(
+							'id'    => 'b',
+							'label' => 'B',
+							'href'  => '?b',
+							'badge' => -3,
+						),
+					),
+				)
+			)
+		);
+		self::assertStringStartsWith( '<nav class="mhmui-tabs" aria-label="S">', $html );
+		self::assertSame( 1, substr_count( $html, 'mhmui-tabs__badge' ) );
+		self::assertStringContainsString( '<span class="mhmui-tabs__badge">1</span>', $html );
+	}
 }

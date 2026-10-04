@@ -53,8 +53,11 @@
   },
   "Pagination": {
     "interactive": true, "tone_semantics": false,
-    "props": { "page": "number", "totalPages": "number", "onChange": "function", "labels": "{ previous: string, of: string, next: string, navigation: string }" },
-    "fixtures": [ { "page": 1, "totalPages": 3, "onChange": "function", "labels": { "previous": "Prev", "next": "Next", "of": "of", "navigation": "Pagination" } } ]
+    "props": { "page": "number", "totalPages": "number", "onChange": "function", "labels": "{ previous: string, of: string, next: string, navigation: string, page: string? }", "variant": "inline|footer?", "summary": "string?" },
+    "fixtures": [
+      { "page": 1, "totalPages": 3, "onChange": "function", "labels": { "previous": "Prev", "next": "Next", "of": "of", "navigation": "Pagination" } },
+      { "page": 1, "totalPages": 3, "onChange": "function", "variant": "footer", "summary": "1-10 / 25", "labels": { "previous": "Prev", "next": "Next", "of": "/", "navigation": "Pagination", "page": "Page" } }
+    ]
   },
   "ProLock": {
     "interactive": false, "tone_semantics": false,
@@ -68,30 +71,38 @@
   },
   "Widget": {
     "interactive": false, "tone_semantics": false,
-    "props": { "title": "string", "subtitle": "string?", "icon": "string?", "actions": "node?", "children": "node" },
+    "props": { "title": "string", "subtitle": "string?", "icon": "string?", "actions": "node?", "level": "2|3?", "variant": "card|plain?", "children": "node" },
     "fixtures": [
       { "title": "Recent", "icon": "chart-line", "children": "Body" },
+      { "title": "Message", "level": 2, "children": "Body" },
+      { "title": "Customer", "level": 2, "variant": "plain", "children": "Body" },
       { "title": "Concept", "icon": "rate", "children": "Body" }
     ]
   },
   "Tabs": {
     "interactive": true, "tone_semantics": false, "php": "mhmuicore_tabs_html",
-    "props": { "label": "string", "current": "string?", "items": "array", "onSelect": "function?" },
+    "props": { "label": "string", "current": "string?", "items": "array", "variant": "pill|underline?", "showZero": "boolean?", "onSelect": "function?" },
     "fixtures": [
       { "label": "Sections", "current": "a", "items": [
         { "id": "a", "label": "A", "href": "?tab=a", "badge": 2, "badgeLabel": "2 pending" },
         { "id": "b", "label": "B", "href": "?tab=b", "badge": 3 },
         { "id": "c", "label": "C", "href": "?tab=c", "badge": 0 } ] },
       { "label": "Sections", "current": "none", "items": [ { "id": "a", "label": "A", "href": "?tab=a" } ] },
-      { "label": "Sections", "current": "a", "items": [ { "id": "a", "label": "A", "href": "" } ] }
+      { "label": "Sections", "current": "a", "items": [ { "id": "a", "label": "A", "href": "" } ] },
+      { "label": "Sections", "variant": "underline", "showZero": true, "current": "a", "items": [
+        { "id": "a", "label": "A", "href": "?tab=a", "badge": 7 },
+        { "id": "b", "label": "B", "href": "?tab=b", "badge": 2, "badgeTone": "warning" },
+        { "id": "c", "label": "C", "href": "?tab=c", "badge": 0 } ] },
+      { "label": "Sections", "variant": "nope", "items": [ { "id": "a", "label": "A", "href": "?tab=a", "badge": 1, "badgeTone": "purple" } ] }
     ]
   },
   "PageHeader": {
     "interactive": true, "tone_semantics": false,
-    "props": { "title": "string", "back": "{ label: string, href: string, onClick: function? }?", "badge": "{ text: string, tone: role? }?", "meta": "string?", "actions": "node?", "level": "number?" },
+    "props": { "title": "string", "back": "{ label: string, href: string, onClick: function? }?", "badge": "{ text: string, tone: role? }?", "badges": "Array<{ text: string, tone: role? }>?", "meta": "string?", "actions": "node?", "level": "number?" },
     "fixtures": [
       { "title": "Marmaris Cars" },
-      { "title": "Marmaris Cars", "back": { "label": "Pending applications", "href": "?tab=pending" }, "badge": { "text": "Pending", "tone": "warning" }, "meta": "#9292 · 23/09/2026 07:26", "level": 2 }
+      { "title": "Marmaris Cars", "back": { "label": "Pending applications", "href": "?tab=pending" }, "badge": { "text": "Pending", "tone": "warning" }, "meta": "#9292 · 23/09/2026 07:26", "level": 2 },
+      { "title": "Deposit refund has not reached my account", "back": { "label": "Back to messages", "href": "?tab=messages" }, "badge": { "text": "Pending", "tone": "warning" }, "badges": [ { "text": "Urgent", "tone": "danger" } ], "meta": "#3702 · Payment · 3 messages", "level": 1 }
     ]
   },
   "DetailList": {
@@ -112,10 +123,24 @@
   },
   "ConfirmButton": {
     "interactive": true, "tone_semantics": false,
-    "props": { "label": "string", "confirmText": "string", "confirmLabel": "string", "cancelLabel": "string", "busyText": "string", "onConfirm": "function", "variant": "primary|secondary|danger?", "confirmDisabled": "boolean?", "disabled": "boolean?", "describedBy": "string?", "children": "node?" },
+    "props": { "label": "string", "confirmText": "string", "confirmLabel": "string", "cancelLabel": "string", "busyText": "string", "onConfirm": "function", "variant": "primary|secondary|danger?", "size": "default|compact?", "confirmDisabled": "boolean?", "disabled": "boolean?", "describedBy": "string?", "children": "node?" },
     "fixtures": [
       { "label": "Approve", "confirmText": "Approve this application?", "confirmLabel": "Yes, approve", "cancelLabel": "Cancel", "busyText": "Working…", "onConfirm": "function", "variant": "primary" },
-      { "label": "Reject", "confirmText": "Reject it?", "confirmLabel": "Yes, reject", "cancelLabel": "Cancel", "busyText": "Working…", "onConfirm": "function", "variant": "danger", "confirmDisabled": true }
+      { "label": "Reject", "confirmText": "Reject it?", "confirmLabel": "Yes, reject", "cancelLabel": "Cancel", "busyText": "Working…", "onConfirm": "function", "variant": "danger", "confirmDisabled": true },
+      { "label": "Delete thread", "confirmText": "Delete this thread?", "confirmLabel": "Yes, delete", "cancelLabel": "Keep", "busyText": "Working…", "onConfirm": "function", "variant": "danger", "size": "compact" }
+    ]
+  },
+  "Button": {
+    "interactive": true, "tone_semantics": true, "tone_cue": "children",
+    "props": { "children": "node", "variant": "primary|secondary|danger|plain|neutral?", "size": "md|sm?", "href": "string?", "icon": "node?", "disabled": "boolean?", "onClick": "function?", "type": "string?" },
+    "fixtures": [
+      { "children": "Reply", "variant": "primary" },
+      { "children": "Apply", "variant": "secondary" },
+      { "children": "Delete", "variant": "danger" },
+      { "children": "Clear selection", "variant": "plain" },
+      { "children": "Copy", "variant": "neutral", "size": "sm" },
+      { "children": "Open", "variant": "secondary", "size": "sm", "href": "?x=1" },
+      { "children": "Send", "variant": "primary", "disabled": true }
     ]
   }
 }

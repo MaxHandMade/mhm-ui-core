@@ -216,7 +216,7 @@ da bu tek yanlış cümle yüzünden taşıdı.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.15.2', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.16.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 `bootstrap.php`'yi doğrudan require etmek `MHMUICORE_VERSION`'ı anında tanımlar
@@ -642,7 +642,7 @@ parite kapısı eşitlik arar, uyumluluk değil.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.15.2', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.16.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 🔴 Sürüm dizesi **elle yazılır** (kayıt, herhangi bir bootstrap yüklenmeden önce koşar) ve
@@ -697,3 +697,42 @@ beş ekran birden kırıldı.
   **inmez**; ancak constraint bilerek yükseltilince gelir.
 - **Paket, içine gireceği ağaçtan daha gevşek denetlenemez.** PHPCS burada `WordPress-Extra`
   koşar; daha dar bir setle "temiz" görünüp tüketicinin kapısını kırmıştı (v0.4.0 → v0.4.1).
+
+### Tasarım çizimi varyantları (0.16.0+)
+
+Aşağıdakilerin hepsi opt-in; tek istisna uyarı rozetinin mürekkebi. Bir
+tüketicinin `^0.15`'ten `^0.16`'ya geçmesi minör bir yükseltmedir; yeni
+proplardan hiçbirini vermeyen çağrı 0.15.2 işaretlemesini bayt bayt korur.
+
+**Tek varsayılan değişiklik.** `.mhmui-status--warning` metni artık 4.5:1'in
+altında kalan `#b08000` yerine `--mhmui-warning-ink` (`#8a6100`, açık uyarı
+dolgusu üstünde 4.5:1) tokenını okur. Uyarı rozetleri her yerde koyulaşır; eski
+rengi ezen sayfa kendi ezmesini silebilir.
+
+**Yeni tokenlar** (eklemeli, admin ve front kapsamı): `--mhmui-warning-ink`,
+`--mhmui-border-divider` (`#dcdcde`), `--mhmui-text-secondary` (`#50575e`),
+`--mhmui-danger-ink` (`#b32d2e`), `--mhmui-border-strong` (`#8c8f94`).
+
+**Yeni `Button` bileşeni** (`variant` primary | secondary | danger | plain |
+neutral; `size` md 36px | sm 32px; ikisi de 782px ve altında 44px). Etiket
+`children`, isteğe bağlı dekoratif `icon` önüne gelir, `href` verilirse `<a>`
+çizilir. `disabled`, `aria-disabled`'dır: öğe odağını korur, devre dışı bir
+bağlantı `href`'ini kaybeder.
+
+**Mevcut üyelerde opt-in proplar:**
+
+- `Tabs`: `variant="underline"`, `showZero` (0 sayısı için de rozet çizer) ve
+  öğe başına `badgeTone` (success | warning | danger | info | neutral). PHP
+  ikizi `mhmuicore_tabs_html()` aynı üçünü alır. Yalnız CSS'ten oluşan
+  `.mhmui-tabs-bar`, sekmeleri ve sondaki bir denetimi sarar.
+- `Pagination`: `variant="footer"` (tablo kartı alt bilgisi), `summary` (solda
+  aralık metni, yalnız footer) ve `labels.page`.
+- `Widget`: `level={2}` ve `variant="plain"` (başlık bandı yok; kartın kendisi
+  boşluk taşır).
+- `ConfirmButton`: `size="compact"` (36px, 782px ve altında 44px).
+- `PageHeader`: `badges[]` (`{ text, tone? }`, `badge`'den sonra daha fazla
+  rozet) ve `level={1}` için sayfa düzeyi stil (`h1.mhmui-page-header__title`);
+  varsayılan `h2`/`h3` 0.15.x ağırlığını korur.
+
+0.11.0'daki gibi yeni JSX ve CSS birlikte gelir: stil dosyasını
+`mhmuicore_enqueue_kit()` ile yükleyin.

@@ -13,14 +13,19 @@
 	--mhmui-success-strong: #007a1f;
 	--mhmui-warning:        #dba617;
 	--mhmui-warning-strong: #b08000;
+	--mhmui-warning-ink:    #8a6100;
 	--mhmui-danger:         #d63638;
 	--mhmui-danger-strong:  #a02224;
+	--mhmui-danger-ink:     #b32d2e;
 	--mhmui-neutral:        #646970;
 	--mhmui-neutral-strong: #3c3f44;
 	--mhmui-border:         #c3c4c7;
 	--mhmui-border-light:   #f0f0f1;
+	--mhmui-border-divider: #dcdcde;
+	--mhmui-border-strong:  #8c8f94;
 	--mhmui-text:           #1d2327;
 	--mhmui-text-muted:     #646970;
+	--mhmui-text-secondary: #50575e;
 	--mhmui-surface-sunken: #f0f0f1;
 	--mhmui-surface:        #ffffff;
 	--mhmui-gap:            12px;
@@ -471,13 +476,26 @@
 	color: var( --mhmui-text );
 }
 .mhmui-status--success { background: var( --mhmui-success-soft ); color: var( --mhmui-success-strong ); }
-.mhmui-status--warning { background: var( --mhmui-warning-soft ); color: var( --mhmui-warning-strong ); }
+.mhmui-status--warning { background: var( --mhmui-warning-soft ); color: var( --mhmui-warning-ink ); }
 .mhmui-status--danger  { background: var( --mhmui-danger-soft );  color: var( --mhmui-danger-strong ); }
 .mhmui-status--info    { background: var( --mhmui-info-soft );    color: var( --mhmui-info-strong ); }
 .mhmui-status--neutral { background: var( --mhmui-neutral-soft ); color: var( --mhmui-text ); }
 
 .mhmui-pagination { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
 .mhmui-pagination__status { color: var( --mhmui-text-muted ); font-variant-numeric: tabular-nums; }
+/* Footer variant: the table card's bottom bar (artboards Main/Contact) --
+   inside the card, soft grey, top rule, range left / controls right. The
+   doubled class beats the `.mhmui-admin-page > * + .mhmui-pagination` margin. */
+.mhmui-pagination.mhmui-pagination--footer {
+	justify-content: space-between;
+	margin-top: 0;
+	padding: 10px 16px;
+	border-top: 1px solid var( --mhmui-border-divider );
+	background: var( --mhmui-neutral-soft );
+}
+.mhmui-pagination__summary { color: var( --mhmui-text-muted ); }
+.mhmui-pagination__controls { display: flex; align-items: center; gap: 8px; }
+.mhmui-pagination--footer .mhmui-pagination__status { color: var( --mhmui-text-secondary ); }
 
 .mhmui-notice { margin: 12px 0; }
 
@@ -498,6 +516,24 @@
 .mhmui-widget__title { margin: 0; font-size: 14px; display: flex; align-items: center; gap: 8px; color: var( --mhmui-text ); }
 .mhmui-widget__subtitle { font-weight: 400; color: var( --mhmui-text-muted ); font-size: 12px; }
 .mhmui-widget__body { padding: 16px; }
+
+/* Widget level 2 / plain (0.16.0). Level 2 is a page section: 15px/600 title.
+   The banded card (AB/Thread "Yazisma") draws a 14px 20px header over a divider;
+   the plain card (AB/Thread aside, AB/ContactDetail "Teknik kayit") has no band --
+   the root carries 18px 20px and a 14px gap, `actions` stay at the right. */
+.mhmui-widget--level-2 .mhmui-widget__title { font-size: 15px; font-weight: 600; }
+.mhmui-widget--level-2:not( .mhmui-widget--plain ) .mhmui-widget__header {
+	padding: 14px 20px;
+	border-bottom-color: var( --mhmui-border-divider );
+}
+.mhmui-widget--plain {
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+	padding: 18px 20px;
+}
+.mhmui-widget--plain .mhmui-widget__header { padding: 0; border-bottom: 0; }
+.mhmui-widget--plain .mhmui-widget__body { padding: 0; }
 
 /* Tabs (0.15.0): page sections as links. Segmented strip; the current tab is
    told apart by a 2px accent underline as well as colour (WCAG 1.4.1/1.4.11 --
@@ -539,6 +575,73 @@
 .mhmui-tabs__tab--current .mhmui-tabs__badge {
 	background: var( --mhmui-surface-sunken );
 }
+/* Tabs underline variant + bar (0.16.0; AB/Main, AB/Contact): a transparent row,
+   2px accent underline on the current tab, 44px tall, 14px, 20px count chips.
+   Added rules only; the tone rules use three classes so they win over the
+   current-tab chip background. */
+.mhmui-tabs--underline {
+	display: flex;
+	flex-wrap: nowrap;
+	gap: var( --mhmui-space-1 );
+	padding: 0;
+	border-radius: 0;
+	background: transparent;
+}
+.mhmui-tabs--underline .mhmui-tabs__tab {
+	box-sizing: border-box;
+	min-height: 44px;
+	margin-bottom: -1px;
+	padding: 0 16px;
+	border-radius: 0;
+	border-bottom: 2px solid transparent;
+	color: var( --mhmui-text-secondary );
+	font-size: 14px;
+	font-weight: 400;
+}
+.mhmui-tabs--underline .mhmui-tabs__tab--current {
+	background: transparent;
+	border-bottom-color: var( --mhmui-accent );
+	box-shadow: none;
+	color: var( --mhmui-accent );
+	font-weight: 600;
+}
+.mhmui-tabs--underline .mhmui-tabs__badge {
+	box-sizing: border-box;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 20px;
+	height: 20px;
+	padding: 0 6px;
+	border-radius: 10px;
+	background: var( --mhmui-surface-sunken );
+	color: var( --mhmui-text-secondary );
+	font-size: 12px;
+	font-weight: 600;
+}
+.mhmui-tabs--underline .mhmui-tabs__tab--current .mhmui-tabs__badge {
+	background: var( --mhmui-info-soft );
+	color: var( --mhmui-accent-strong );
+}
+.mhmui-tabs .mhmui-tabs__tab .mhmui-tabs__badge--success { background: var( --mhmui-success-soft ); color: var( --mhmui-success-strong ); }
+.mhmui-tabs .mhmui-tabs__tab .mhmui-tabs__badge--warning { background: var( --mhmui-warning-soft ); color: var( --mhmui-warning-ink ); }
+.mhmui-tabs .mhmui-tabs__tab .mhmui-tabs__badge--danger  { background: var( --mhmui-danger-soft );  color: var( --mhmui-danger-strong ); }
+.mhmui-tabs .mhmui-tabs__tab .mhmui-tabs__badge--info    { background: var( --mhmui-info-soft );    color: var( --mhmui-info-strong ); }
+.mhmui-tabs .mhmui-tabs__tab .mhmui-tabs__badge--neutral { background: var( --mhmui-neutral-soft ); color: var( --mhmui-text ); }
+.mhmui-tabs-bar {
+	display: flex;
+	align-items: flex-end;
+	justify-content: space-between;
+	gap: var( --mhmui-space-4 );
+	border-bottom: 1px solid var( --mhmui-border );
+}
+.mhmui-tabs-bar > a {
+	display: inline-flex;
+	align-items: center;
+	gap: var( --mhmui-space-1 );
+	padding-bottom: 12px;
+	font-size: 13px;
+}
 .mhmui-tabs__badge-sr {
 	position: absolute;
 	width: 1px;
@@ -574,6 +677,18 @@
 	line-height: 1.3;
 	color: var( --mhmui-text );
 }
+/* Page-level H1 (0.16.0): drawn at 400 like the wp-admin screen title. Only an
+   h1 -- the default h2 and h3 keep 0.15.x weight. */
+h1.mhmui-page-header__title {
+	font-weight: 400;
+}
+/* badges is opt-in: the wrapper exists only when a caller passes it. */
+.mhmui-page-header__badges {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var( --mhmui-space-3 );
+}
 .mhmui-page-header__actions {
 	margin-inline-start: auto;
 	display: flex;
@@ -582,6 +697,17 @@
 .mhmui-page-header__meta {
 	margin: 0;
 	color: var( --mhmui-text-muted );
+}
+/* Viewport-based on purpose (R-B6): the H1 shrinks and the chips take their own row. */
+@media ( max-width: 600px ) {
+	h1.mhmui-page-header__title {
+		font-size: 21px;
+	}
+	.mhmui-page-header__badges {
+		order: 1;
+		flex-basis: 100%;
+		gap: var( --mhmui-space-2 );
+	}
 }
 
 /* DetailList (0.15.0): the StatsGrid ceiling formula, so it folds on its own. */
@@ -772,4 +898,194 @@
    colour on purpose -- focus must stay visible (WCAG 2.4.7). */
 .mhmui-confirm.mhmui-confirm--danger button:is( .mhmui-confirm__trigger, .mhmui-confirm__confirm )[aria-disabled="true"] {
 	border-color: var( --mhmui-border );
+}
+
+/* ConfirmButton compact (0.16.0), measured from the Mesajlar artboards
+   (Thread "Yazışmayı sil", ContactDetail "Mesajı sil"): 36px targets, 44px at
+   782px and below; a start-aligned trigger; the open prompt is a box (12px
+   padding, 1px divider border, 3px radius) holding a bold question, a filled
+   danger confirm and a grey-bordered cancel. The default size is untouched.
+   The target rules are (0,5,1): the :is() carries the variant class every
+   root has, so they outrank both core's (0,4,0) and this file's own 44px
+   (0,4,1) rules. The drawn danger red is --mhmui-danger-ink and the drawn
+   cancel border --mhmui-border-strong. The prompt stretches to the card's
+   width (the artboard box is a stretch child; only the trigger hugs the
+   start). */
+.mhmui-confirm.mhmui-confirm--compact {
+	align-items: flex-start;
+}
+.mhmui-confirm.mhmui-confirm--compact:is( .mhmui-confirm--primary, .mhmui-confirm--secondary, .mhmui-confirm--danger ) button[type="button"].mhmui-confirm__trigger,
+.mhmui-confirm.mhmui-confirm--compact:is( .mhmui-confirm--primary, .mhmui-confirm--secondary, .mhmui-confirm--danger ) button[type="button"].mhmui-confirm__confirm,
+.mhmui-confirm.mhmui-confirm--compact:is( .mhmui-confirm--primary, .mhmui-confirm--secondary, .mhmui-confirm--danger ) button[type="button"].mhmui-confirm__cancel {
+	min-height: 36px;
+}
+@media ( max-width: 782px ) {
+	.mhmui-confirm.mhmui-confirm--compact:is( .mhmui-confirm--primary, .mhmui-confirm--secondary, .mhmui-confirm--danger ) button[type="button"].mhmui-confirm__trigger,
+	.mhmui-confirm.mhmui-confirm--compact:is( .mhmui-confirm--primary, .mhmui-confirm--secondary, .mhmui-confirm--danger ) button[type="button"].mhmui-confirm__confirm,
+	.mhmui-confirm.mhmui-confirm--compact:is( .mhmui-confirm--primary, .mhmui-confirm--secondary, .mhmui-confirm--danger ) button[type="button"].mhmui-confirm__cancel {
+		min-height: 44px;
+	}
+}
+.mhmui-confirm--compact .mhmui-confirm__prompt {
+	align-self: stretch;
+	box-sizing: border-box;
+	padding: 12px;
+	background: var( --mhmui-neutral-soft );
+	border: 1px solid var( --mhmui-border-divider );
+	border-radius: 3px;
+}
+.mhmui-confirm--compact .mhmui-confirm__text {
+	font-size: 13px;
+}
+.mhmui-confirm.mhmui-confirm--compact button.mhmui-confirm__cancel,
+.mhmui-confirm.mhmui-confirm--compact button.mhmui-confirm__cancel:is( :hover, :focus, :active ) {
+	background: var( --mhmui-surface );
+	border-color: var( --mhmui-border-strong );
+	color: var( --mhmui-text-secondary );
+}
+/* A filled danger confirm (the artboard's "Evet, sil"). */
+.mhmui-confirm.mhmui-confirm--danger.mhmui-confirm--compact {
+	--mhmui-confirm-ink: var( --mhmui-danger-ink );
+}
+.mhmui-confirm.mhmui-confirm--danger.mhmui-confirm--compact button.mhmui-confirm__confirm,
+.mhmui-confirm.mhmui-confirm--danger.mhmui-confirm--compact button.mhmui-confirm__confirm:is( :hover, :focus, :active ) {
+	background: var( --mhmui-danger-ink );
+	border-color: var( --mhmui-danger-ink );
+	color: var( --mhmui-on-accent );
+}
+/* The default danger ring is one ring in the fill's own colour -- invisible
+   on a filled button. Two rings, the inner one the surface. */
+.mhmui-confirm.mhmui-confirm--danger.mhmui-confirm--compact button.mhmui-confirm__confirm:focus {
+	box-shadow: 0 0 0 2px var( --mhmui-surface ), 0 0 0 4px var( --mhmui-danger-ink );
+}
+/* Locked or busy: like the other fills, it gives the fill up -- core forces
+   grey text on an aria-disabled .button, and grey on red is unreadable. */
+.mhmui-confirm.mhmui-confirm--danger.mhmui-confirm--compact button.mhmui-confirm__confirm[aria-disabled="true"] {
+	background: var( --mhmui-surface );
+	border-color: var( --mhmui-border );
+}
+
+/* Button (0.16.0). One button or link in four variants and two sizes, measured
+   from the Mesajlar artboards: 13px text, 1px border, 3px radius (the drawn
+   value -- the kit's --mhmui-radius is 4px and stays untouched), md 36px /
+   sm 32px, both 44px at 782px and below (15px text there, as the narrow
+   artboard). The element carries no WordPress `.button` class, so core's
+   button sizing does not apply; the rules are still written as
+   `.mhmui-button.mhmui-button--x` (0,2,0) so core's link states
+   (`a:hover`, `a:focus` at (0,1,1)) cannot recolour a linked Button.
+   Danger uses the artboard's red, --mhmui-danger-ink (#b32d2e in the admin
+   scope; --mhmui-danger-strong is #a02224). */
+.mhmui-button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	box-sizing: border-box;
+	margin: 0;
+	border: 1px solid transparent;
+	border-radius: 3px;
+	font-family: inherit;
+	font-size: 13px;
+	line-height: 1.4;
+	text-decoration: none;
+	cursor: pointer;
+}
+.mhmui-button__icon {
+	display: inline-flex;
+	align-items: center;
+}
+.mhmui-button--md {
+	min-height: 36px;
+	padding: 4px 14px;
+}
+.mhmui-button--sm {
+	min-height: 32px;
+	padding: 0 12px;
+}
+.mhmui-button.mhmui-button--primary,
+.mhmui-button.mhmui-button--primary:is( :hover, :focus, :active ) {
+	background: var( --mhmui-accent );
+	border-color: var( --mhmui-accent );
+	color: var( --mhmui-on-accent );
+}
+.mhmui-button.mhmui-button--primary:is( :hover, :active ) {
+	background: var( --mhmui-accent-strong );
+	border-color: var( --mhmui-accent-strong );
+}
+.mhmui-button.mhmui-button--secondary,
+.mhmui-button.mhmui-button--secondary:is( :hover, :focus, :active ) {
+	background: var( --mhmui-surface );
+	border-color: var( --mhmui-accent );
+	color: var( --mhmui-accent );
+}
+.mhmui-button.mhmui-button--secondary:is( :hover, :active ) {
+	background: var( --mhmui-neutral-soft );
+	border-color: var( --mhmui-accent-strong );
+	color: var( --mhmui-accent-strong );
+}
+.mhmui-button.mhmui-button--neutral,
+.mhmui-button.mhmui-button--neutral:is( :hover, :focus, :active ) {
+	background: var( --mhmui-surface );
+	border-color: var( --mhmui-border );
+	color: var( --mhmui-accent );
+}
+.mhmui-button.mhmui-button--neutral:is( :hover, :active ) {
+	background: var( --mhmui-neutral-soft );
+	color: var( --mhmui-accent-strong );
+}
+.mhmui-button.mhmui-button--danger,
+.mhmui-button.mhmui-button--danger:is( :hover, :focus, :active ) {
+	background: var( --mhmui-surface );
+	border-color: var( --mhmui-danger-ink );
+	color: var( --mhmui-danger-ink );
+}
+.mhmui-button.mhmui-button--danger:is( :hover, :active ) {
+	background: var( --mhmui-danger-soft );
+}
+.mhmui-button.mhmui-button--plain,
+.mhmui-button.mhmui-button--plain:is( :hover, :focus, :active ) {
+	background: transparent;
+	border-width: 0;
+	color: var( --mhmui-accent );
+}
+.mhmui-button.mhmui-button--plain.mhmui-button--md {
+	padding-inline: 10px;
+}
+.mhmui-button.mhmui-button--plain:is( :hover, :active ) {
+	color: var( --mhmui-accent-strong );
+	text-decoration: underline;
+}
+/* Focus: the ring core draws around .button-primary -- a surface gap, then
+   the ring, as ConfirmButton does. The transparent outline stays visible in
+   forced-colors mode. */
+.mhmui-button.mhmui-button:focus-visible {
+	outline: 2px solid transparent;
+	box-shadow: 0 0 0 2px var( --mhmui-surface ), 0 0 0 4px var( --mhmui-accent );
+}
+.mhmui-button.mhmui-button--danger:focus-visible {
+	box-shadow: 0 0 0 2px var( --mhmui-surface ), 0 0 0 4px var( --mhmui-danger-ink );
+}
+/* Disabled: aria-disabled (the component) and native `disabled` (a plain
+   <button> wearing the classes, e.g. the pagination footer) look the same.
+   Kept after the variant rules at equal weight so it wins over :hover.
+   The ring stays: a locked button is still focusable. */
+.mhmui-button:is( .mhmui-button--primary, .mhmui-button--secondary, .mhmui-button--danger, .mhmui-button--plain, .mhmui-button--neutral ):disabled,
+.mhmui-button:is( .mhmui-button--primary, .mhmui-button--secondary, .mhmui-button--danger, .mhmui-button--plain, .mhmui-button--neutral )[aria-disabled="true"],
+.mhmui-button:is( .mhmui-button--primary, .mhmui-button--secondary, .mhmui-button--danger, .mhmui-button--plain, .mhmui-button--neutral ):is( :disabled, [aria-disabled="true"] ):is( :hover, :active ) {
+	background: var( --mhmui-neutral-soft );
+	border-color: var( --mhmui-border-divider );
+	color: #a7aaad;
+	text-decoration: none;
+	cursor: not-allowed;
+}
+.mhmui-button--secondary:disabled,
+.mhmui-button--secondary[aria-disabled="true"] {
+	border-style: solid;
+}
+@media ( max-width: 782px ) {
+	.mhmui-button--md,
+	.mhmui-button--sm {
+		min-height: 44px;
+		font-size: 15px;
+	}
 }

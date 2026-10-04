@@ -25,7 +25,16 @@
  *                                    an empty one yields an unnamed nav and no gate
  *                                    catches it.
  * @param {string}   [props.current]  Id of the current item.
- * @param {Array}    props.items      { id, label, href, badge?, badgeLabel? }.
+ * @param {Array}    props.items      { id, label, href, badge?, badgeLabel?, badgeTone? }.
+ * @param {string}   [props.variant]  'pill' (default) or 'underline' -- a
+ *                                    transparent row with a 2px underline on the
+ *                                    current tab. Unknown falls back to pill.
+ * @param {boolean}  [props.showZero] Draw a chip for a count of 0 (when the item
+ *                                    carries a numeric badge). Negative never draws.
+ *
+ *                                    badgeTone (success|warning|danger|info|neutral) colours that item's chip;
+ *                                    unknown adds no class. A CSS-only .mhmui-tabs-bar wraps tabs plus a
+ *                                    right-hand link under one full-width rule.
  * @param {Function} [props.onSelect] ( id, event ) on a plain left click.
  */
 
@@ -39,23 +48,40 @@ function isPlainLeftClick( event ) {
 	);
 }
 
+const BADGE_TONES = [ 'success', 'warning', 'danger', 'info', 'neutral' ];
+
 // A number, or a numeric string -- mirrors the PHP twin's is_numeric() + (int).
+// null when there is no count at all (so showZero never invents a "0").
 function badgeCount( badge ) {
 	if ( typeof badge === 'number' ) {
-		return Number.isFinite( badge ) ? Math.trunc( badge ) : 0;
+		return Number.isFinite( badge ) ? Math.trunc( badge ) : null;
 	}
 	if ( typeof badge === 'string' && badge.trim() !== '' ) {
 		const n = Number( badge );
-		return Number.isFinite( n ) ? Math.trunc( n ) : 0;
+		return Number.isFinite( n ) ? Math.trunc( n ) : null;
 	}
-	return 0;
+	return null;
 }
 
-export default function Tabs( { label, current, items = [], onSelect } ) {
+export default function Tabs( {
+	label,
+	current,
+	items = [],
+	variant,
+	showZero = false,
+	onSelect,
+} ) {
 	const hasCurrent = typeof current === 'string' && current !== '';
 
 	return (
-		<nav className="mhmui-tabs" aria-label={ label ? label : undefined }>
+		<nav
+			className={
+				variant === 'underline'
+					? 'mhmui-tabs mhmui-tabs--underline'
+					: 'mhmui-tabs'
+			}
+			aria-label={ label ? label : undefined }
+		>
 			{ items
 				.filter(
 					( item ) =>
@@ -66,6 +92,12 @@ export default function Tabs( { label, current, items = [], onSelect } ) {
 				.map( ( item, index ) => {
 					const isCurrent = hasCurrent && item.id === current;
 					const count = badgeCount( item.badge );
+					const showChip =
+						count !== null &&
+						( count > 0 || ( showZero && count === 0 ) );
+					const badgeClass = BADGE_TONES.includes( item.badgeTone )
+						? `mhmui-tabs__badge mhmui-tabs__badge--${ item.badgeTone }`
+						: 'mhmui-tabs__badge';
 					const hasBadgeLabel =
 						typeof item.badgeLabel === 'string' &&
 						item.badgeLabel !== '';
@@ -95,8 +127,8 @@ export default function Tabs( { label, current, items = [], onSelect } ) {
 							onClick={ handleClick }
 						>
 							{ item.label }
-							{ count > 0 && (
-								<span className="mhmui-tabs__badge">
+							{ showChip && (
+								<span className={ badgeClass }>
 									{ hasBadgeLabel ? (
 										<>
 											<span aria-hidden="true">

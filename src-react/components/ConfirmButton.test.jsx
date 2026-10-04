@@ -334,4 +334,49 @@ describe( 'ConfirmButton -- two steps, in the page', () => {
 		);
 		expect( container.firstChild.className ).toBe( cls );
 	} );
+
+	test( 'compact adds one root class and changes nothing in the focus contract', () => {
+		const { container, getByRole } = render(
+			<ConfirmButton
+				size="compact"
+				variant="danger"
+				label="Trash"
+				confirmText="Trash it?"
+				confirmLabel="Yes"
+				cancelLabel="No"
+				busyText="…"
+				onConfirm={ () => {} }
+			/>
+		);
+		expect( container.firstChild.className ).toBe(
+			'mhmui-confirm mhmui-confirm--danger mhmui-confirm--compact'
+		);
+		fireEvent.click( getByRole( 'button', { name: 'Trash' } ) );
+		expect( focused().textContent ).toBe( 'Yes' );
+	} );
+
+	test( 'without size the root classes are the 0.15.2 ones', () => {
+		const { container } = render(
+			<ConfirmButton { ...BASE } onConfirm={ jest.fn() } />
+		);
+		expect( container.firstChild.className ).toBe(
+			'mhmui-confirm mhmui-confirm--secondary'
+		);
+	} );
+
+	test.each( [ [ 'default' ], [ 'bogus' ], [ undefined ] ] )(
+		'size %s adds no compact class',
+		( size ) => {
+			const { container } = render(
+				<ConfirmButton
+					{ ...BASE }
+					size={ size }
+					onConfirm={ jest.fn() }
+				/>
+			);
+			expect( container.firstChild.className ).toBe(
+				'mhmui-confirm mhmui-confirm--secondary'
+			);
+		}
+	);
 } );

@@ -22,7 +22,7 @@ A consuming plugin `require_once`s `vendor/mhm/ui-core/register.php` from its
 main file and registers its own copy:
 
 ```php
-mhmuicore_register( '0.15.2', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.16.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 At `plugins_loaded` priority 0 the highest registered version boots; the rest
@@ -390,7 +390,7 @@ build from.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.15.2', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.16.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 Requiring `bootstrap.php` directly defines `MHMUICORE_VERSION` immediately, which
@@ -752,3 +752,42 @@ not swallowed). The shell's rhythm now spaces `.mhmui-tabs`,
 with `function_exists()` while an older copy can still win the loader, and echo
 it through `wp_kses_post()`. As with 0.11.0, the new JSX needs the new
 stylesheet -- load it through `mhmuicore_enqueue_kit()`.
+
+### Artboard variants (0.16.0+)
+
+Everything below is opt-in except one thing: the warning badge ink. Moving a
+consumer from `^0.15` to `^0.16` is a minor bump; a call that passes none of the
+new props renders the 0.15.2 markup byte for byte.
+
+**The one default change.** `.mhmui-status--warning` text now reads
+`--mhmui-warning-ink` (`#8a6100`, 4.5:1 on the soft warning fill) instead of
+`#b08000`, which sat below 4.5:1. Warning badges get darker everywhere; a page
+that overrode the old colour can drop its override.
+
+**New tokens** (additive, admin and front scopes): `--mhmui-warning-ink`,
+`--mhmui-border-divider` (`#dcdcde`), `--mhmui-text-secondary` (`#50575e`),
+`--mhmui-danger-ink` (`#b32d2e`), `--mhmui-border-strong` (`#8c8f94`).
+
+**New component `Button`** (`variant` primary | secondary | danger | plain |
+neutral; `size` md 36px | sm 32px; both 44px at 782px and below). The label is
+`children`, an optional decorative `icon` sits before it, `href` renders an
+`<a>`. `disabled` is `aria-disabled`, so the element keeps focus and a disabled
+link loses its `href`.
+
+**Opt-in props on existing members:**
+
+- `Tabs`: `variant="underline"`, `showZero` (draw a chip for a count of 0) and a
+  per-item `badgeTone` (success | warning | danger | info | neutral). The PHP
+  twin `mhmuicore_tabs_html()` takes the same three. A CSS-only
+  `.mhmui-tabs-bar` wraps tabs plus a trailing control.
+- `Pagination`: `variant="footer"` (table-card footer), `summary` (range text on
+  the left, footer only) and `labels.page`.
+- `Widget`: `level={2}` and `variant="plain"` (no header band; the card pads
+  itself).
+- `ConfirmButton`: `size="compact"` (36px, 44px at 782px and below).
+- `PageHeader`: `badges[]` (`{ text, tone? }`, more badges after `badge`) and a
+  page-level style for `level={1}` (`h1.mhmui-page-header__title`); the default
+  `h2`/`h3` keep their 0.15.x weight.
+
+As with 0.11.0, the new JSX and CSS go together: load the stylesheet through
+`mhmuicore_enqueue_kit()`.

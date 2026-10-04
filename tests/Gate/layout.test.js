@@ -1,17 +1,10 @@
 const { readFileSync } = require( 'node:fs' );
 const { join } = require( 'node:path' );
 const postcss = require( 'postcss' );
+const { ruleBody } = require( './helpers' );
 
 const ROOT = join( __dirname, '..', '..' );
 const read = ( f ) => readFileSync( join( ROOT, 'assets', 'react', f ), 'utf8' );
-
-/** Body of the first rule whose selector list is exactly `selector`. */
-function ruleBody( css, selector ) {
-	const code = css.replace( /\/\*[\s\S]*?\*\//g, '' );
-	const esc = selector.replace( /[.*+?^${}()|[\]\\]/g, '\\$&' );
-	const m = code.match( new RegExp( `(^|})\\s*${ esc }\\s*{([^}]*)}` ) );
-	return m ? m[ 2 ] : null;
-}
 
 /** No `width` declaration on the admin shell: it sits on the SAME element as
  * WP core's own `.wrap` (margin: 10px 20px 0 2px), and a block box already
@@ -801,6 +794,113 @@ describe( 'ConfirmButton wins the cascade against WordPress core buttons', () =>
 		}
 	} );
 } );
+
+describe( 'ConfirmButton compact size (0.16.0)', () => {
+	const all = rules( read( 'admin.css' ) );
+	const MOBILE = '@media ( max-width: 782px )';
+	const PARTS = [ 'trigger', 'confirm', 'cancel' ];
+	const minHeightRows = ( part, at ) =>
+		all.filter(
+			( [ sel, body, a ] ) =>
+				a.join( '|' ) === at.join( '|' ) &&
+				sel.includes( 'mhmui-confirm--compact' ) &&
+				sel.includes( 'mhmui-confirm__' + part ) &&
+				/min-height:/.test( body )
+		);
+
+	test( 'compact confirm targets are 36px on desktop and 44px at 782px and below, and outrank core', () => {
+		for ( const part of PARTS ) {
+			const desk = minHeightRows( part, [] );
+			const mob = minHeightRows( part, [ MOBILE ] );
+			expect( [ part, desk.length > 0, mob.length > 0 ] ).toEqual( [ part, true, true ] );
+			for ( const [ sel, body ] of desk ) {
+				expect( /min-height:\s*36px/.test( body ) ).toBe( true );
+				expect( [ sel, compareSpecificity( specificity( sel ), [ 0, 4, 1 ] ) >= 0 ] ).toEqual( [ sel, true ] );
+			}
+			for ( const [ sel, body ] of mob ) {
+				expect( /min-height:\s*44px/.test( body ) ).toBe( true );
+				expect( [ sel, compareSpecificity( specificity( sel ), [ 0, 4, 1 ] ) >= 0 ] ).toEqual( [ sel, true ] );
+			}
+		}
+	} );
+
+	test( 'compact desktop rules outrank the 44px base rules, so 36px wins', () => {
+		const base = all.filter(
+			( [ sel, body, at ] ) => at.length === 0 && ! sel.includes( '--compact' ) && /min-height:\s*44px/.test( body )
+		);
+		for ( const part of PARTS ) {
+			const [ [ csel ] ] = minHeightRows( part, [] );
+			for ( const [ bsel ] of base.filter( ( [ s ] ) => s.includes( 'mhmui-confirm__' + part ) ) ) {
+				expect( [ bsel, compareSpecificity( specificity( csel ), specificity( bsel ) ) > 0 ] ).toEqual( [ bsel, true ] );
+			}
+		}
+	} );
+
+	test( 'compact root aligns to the start and the prompt is a box', () => {
+		const root = all.find( ( [ s, , a ] ) => a.length === 0 && s === '.mhmui-confirm.mhmui-confirm--compact' );
+		expect( root && /align-items:\s*flex-start/.test( root[ 1 ] ) ).toBe( true );
+		const box = all.find( ( [ s, , a ] ) => a.length === 0 && s.includes( '--compact' ) && s.includes( 'mhmui-confirm__prompt' ) );
+		expect( box ).toBeTruthy();
+		expect( box[ 1 ] ).toMatch( /padding:\s*12px/ );
+		expect( box[ 1 ] ).toMatch( /background:\s*var\(\s*--mhmui-neutral-soft\s*\)/ );
+		expect( box[ 1 ] ).toMatch( /border:\s*1px solid var\(\s*--mhmui-border-divider\s*\)/ );
+	} );
+
+	test( 'the compact prompt box stretches while the root keeps the trigger at the start', () => {
+		const box = all.find( ( [ s, , a ] ) => a.length === 0 && s.includes( '--compact' ) && s.includes( 'mhmui-confirm__prompt' ) );
+		expect( box[ 1 ] ).toMatch( /align-self:\s*stretch/ );
+	} );
+
+	test( 'a focused filled danger confirm has a ring that is not the fill colour alone', () => {
+		const focus = all.filter(
+			( [ s, b, a ] ) =>
+				a.length === 0 &&
+				s.includes( 'mhmui-confirm--compact' ) &&
+				s.includes( 'mhmui-confirm--danger' ) &&
+				s.includes( 'mhmui-confirm__confirm' ) &&
+				/:focus$/.test( s ) &&
+				/box-shadow:\s*0 0 0 2px var\(\s*--mhmui-surface\s*\),\s*0 0 0 4px var\(\s*--mhmui-danger-ink\s*\)/.test( b )
+		);
+		expect( focus.length ).toBeGreaterThan( 0 );
+		const rival = all.filter(
+			( [ s, b, a ] ) =>
+				a.length === 0 &&
+				s.includes( 'mhmui-confirm--danger' ) &&
+				! s.includes( '--compact' ) &&
+				s.includes( ':focus' ) &&
+				/box-shadow/.test( b )
+		);
+		const order = all.map( ( [ s ] ) => s );
+		for ( const [ r ] of rival ) {
+			const cmp = compareSpecificity( specificity( focus[ 0 ][ 0 ] ), specificity( r ) );
+			expect( [ r, cmp > 0 || ( cmp === 0 && order.indexOf( focus[ 0 ][ 0 ] ) > order.indexOf( r ) ) ] ).toEqual( [ r, true ] );
+		}
+	} );
+} );
+
+describe( 'Button sizes (0.16.0)', () => {
+	const all = rules( read( 'admin.css' ) );
+	const MOBILE = '@media ( max-width: 782px )';
+	const minHeight = ( sel, at ) => {
+		const row = all.find( ( [ s, b, a ] ) => s === sel && a.join( '|' ) === at.join( '|' ) && /min-height:/.test( b ) );
+		return row ? /min-height:\s*([\d.]+px)/.exec( row[ 1 ] )[ 1 ] : null;
+	};
+
+	test( 'button sizes: md 36px, sm 32px, both 44px at 782px and below', () => {
+		expect( minHeight( '.mhmui-button--md', [] ) ).toBe( '36px' );
+		expect( minHeight( '.mhmui-button--sm', [] ) ).toBe( '32px' );
+		expect( minHeight( '.mhmui-button--md', [ MOBILE ] ) ).toBe( '44px' );
+		expect( minHeight( '.mhmui-button--sm', [ MOBILE ] ) ).toBe( '44px' );
+	} );
+
+	test( 'a natively disabled button is drawn like an aria-disabled one', () => {
+		for ( const state of [ ':disabled', '[aria-disabled="true"]' ] ) {
+			const row = all.find( ( [ s, , a ] ) => a.length === 0 && s.includes( 'mhmui-button--secondary' ) && s.includes( state ) );
+			expect( [ state, !! row ] ).toEqual( [ state, true ] );
+		}
+	} );
+} );
+
 
 /**
  * The parser every cascade check below stands on (audit of #36, B-3). The
