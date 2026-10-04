@@ -216,7 +216,7 @@ da bu tek yanlış cümle yüzünden taşıdı.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.17.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.17.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 `bootstrap.php`'yi doğrudan require etmek `MHMUICORE_VERSION`'ı anında tanımlar
@@ -642,7 +642,7 @@ parite kapısı eşitlik arar, uyumluluk değil.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.17.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.17.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 🔴 Sürüm dizesi **elle yazılır** (kayıt, herhangi bir bootstrap yüklenmeden önce koşar) ve
@@ -755,7 +755,7 @@ vermeyen bir `Widget` çağrısı 0.16.0 işaretlemesini bayt bayt korur.
 `storageKey`, `open` (kontrollü) ve `onToggle( next )`. Başlığın içinde
 `aria-expanded` / `aria-controls` taşıyan bir aç/kapa düğmesi durur; gövde monte
 kalır (`hidden`), yazılan girdi kaybolmaz; `actions` yalnız açıkken çizilir; tüm
-başlık satırı tıklanabilir; kart odak gövdedeyken kapanırsa odak düğmeye döner.
+başlık satırı tıklanabilir; kart odak gövdedeyken ya da başlık eylemlerindeyken kapanırsa odak düğmeye döner.
 Düğme 782px ve altında 44px'tir, ok `prefers-reduced-motion` altında animasyonsuzdur.
 Yeni sınıflar: `mhmui-widget--collapsible`, `mhmui-widget--collapsed`. Gövde kimliği
 React `useId()`'den gelir ve `:` içerir; bu kimlikle yapılan CSS seçici ya da
@@ -771,3 +771,16 @@ React `useId()`'den gelir ve `:` içerir; bu kimlikle yapılan CSS seçici ya da
   ezemez.
 - `PageHeader`: ne `badge` ne de herhangi bir `badges` öğesi metin taşıyorsa
   rozet sarmalayıcısı çizilmez.
+
+0.17.1: katlanabilir `Widget` artık odağı sayfadan geri çekmez. Odak kartın
+gövdesinden ya da başlık eylemlerinden sayfanın boş bir yerine geçtikten sonra
+gelen bir kapanış (kontrollü `open` değişimi -- aynı tıklamanın yaptığı dahil --
+ya da `storageKey` değişimi) odağı düğmeye taşıyor ve sayfayı oraya kaydırıyordu;
+odak artık kullanıcının bıraktığı yerde kalır. Odak hâlâ gövdedeyken ya da bir
+eylemdeyken kapanış, tarayıcı penceresi arka plandayken kapanış ve tıklanan
+düğmeye odak vermeyen tarayıcılarda (Safari) düğme tıklaması odağı yine düğmeye
+verir; başka bir yerde bırakılan ya da başka bir fare düğmesiyle yapılan basış
+tıklama sayılmaz. Tasarım sistemindeki Tabs kartı artık `variant="underline"`'ı
+bir `.mhmui-tabs-bar` içinde, şeridin kaydığı dar bir kap örneğiyle birlikte
+gösterir.
+Yeni prop ya da sınıf yok; `^0.17` bunu alır.

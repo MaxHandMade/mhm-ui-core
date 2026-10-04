@@ -22,7 +22,7 @@ A consuming plugin `require_once`s `vendor/mhm/ui-core/register.php` from its
 main file and registers its own copy:
 
 ```php
-mhmuicore_register( '0.17.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.17.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 At `plugins_loaded` priority 0 the highest registered version boots; the rest
@@ -390,7 +390,7 @@ build from.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.17.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.17.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 Requiring `bootstrap.php` directly defines `MHMUICORE_VERSION` immediately, which
@@ -810,8 +810,8 @@ new props renders the 0.16.0 markup byte for byte.
 `storageKey`, `open` (controlled) and `onToggle( next )`. The heading holds a
 disclosure button with `aria-expanded` / `aria-controls`; the body stays mounted
 (`hidden`), so typed input survives; `actions` render only while open; the whole
-header row is clickable; when a card closes with focus inside its body, focus
-returns to the toggle. The toggle is 44px at 782px and below and the chevron does
+header row is clickable; when a card closes with focus inside its body or its
+header actions, focus returns to the toggle. The toggle is 44px at 782px and below and the chevron does
 not animate under `prefers-reduced-motion`. New classes: `mhmui-widget--collapsible`,
 `mhmui-widget--collapsed`. The body id comes from React `useId()` and contains
 `:`, so a CSS selector or `querySelector` lookup by that id must escape it
@@ -827,3 +827,15 @@ and `useContainerWidth( threshold = 600 )` → `[ setRef, layout, measured ]`; `
   disabled state.
 - `PageHeader`: the badges wrapper is dropped when neither `badge` nor any
   `badges` item has text.
+
+0.17.1: a collapsible `Widget` no longer pulls focus back from the page. When
+focus had left the card's body or header actions for empty page space, a close
+after that (a controlled `open` change, including one made by that same click,
+or a `storageKey` change) moved focus to the toggle and scrolled the page there;
+it now stays where the user left it. Closing with focus still inside the body or
+on an action, closing while the browser window is in the background, and the
+toggle click in browsers that do not focus a clicked button (Safari), still hand
+focus to the toggle; a toggle press released elsewhere or made with another
+mouse button does not count as one. The design-system Tabs card now shows
+`variant="underline"` inside a `.mhmui-tabs-bar`, including a narrow container
+where the strip scrolls. No new props or classes; `^0.17` picks it up.

@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import { Widget } from '../index';
 
 test( 'default Widget keeps the 0.15.2 markup', () => {
@@ -300,6 +300,169 @@ describe( 'collapsible Widget', () => {
 		outside.focus();
 		rerender( tree( false ) );
 		expect( toggleOf().ownerDocument.activeElement ).toBe( outside );
+	} );
+
+	describe( 'focus released to the page before the card closes', () => {
+		// A click on empty page space blurs the focused node with no
+		// relatedTarget and leaves <body> as the active element. jsdom's own
+		// blur() passes the Document as relatedTarget instead, so the browser
+		// event is dispatched by hand and the active element is stubbed.
+		let activeSpy;
+		const releaseToPage = ( el ) => {
+			fireEvent.focusOut( el, { relatedTarget: null } );
+			activeSpy = jest
+				.spyOn( el.ownerDocument, 'activeElement', 'get' )
+				.mockReturnValue( el.ownerDocument.body );
+		};
+		// Lets the click on empty space finish before anything else happens.
+		const later = () =>
+			act( () => new Promise( ( resolve ) => setTimeout( resolve, 0 ) ) );
+		afterEach( () => {
+			if ( activeSpy ) {
+				activeSpy.mockRestore();
+				activeSpy = null;
+			}
+		} );
+		const withAction = ( props ) =>
+			card( {
+				actions: <button type="button">Act</button>,
+				...props,
+			} );
+
+		test.each( [
+			[ 'the body', 'Inner' ],
+			[ 'a header action', 'Act' ],
+		] )(
+			'focus left %s for the page, then a controlled close does not take it',
+			async ( _where, name ) => {
+				const { rerender } = render( withAction( { open: true } ) );
+				const from = screen.getByRole( 'button', { name } );
+				from.focus();
+				const spy = jest.spyOn( toggleOf(), 'focus' );
+				releaseToPage( from );
+				await later();
+				rerender( withAction( { open: false } ) );
+				expect( spy ).not.toHaveBeenCalled();
+			}
+		);
+
+		test( 'focus left the body for the page, then a storage key change closes the card without taking it', async () => {
+			window.localStorage.setItem( 'card-b', '0' );
+			const { rerender } = render( card( { storageKey: 'card-a' } ) );
+			const from = screen.getByRole( 'button', { name: 'Inner' } );
+			from.focus();
+			const spy = jest.spyOn( toggleOf(), 'focus' );
+			releaseToPage( from );
+			await later();
+			rerender( card( { storageKey: 'card-b' } ) );
+			expect( toggleOf().getAttribute( 'aria-expanded' ) ).toBe(
+				'false'
+			);
+			expect( spy ).not.toHaveBeenCalled();
+		} );
+
+		test( 'a toggle press released elsewhere, with no click, still lets the page keep focus', async () => {
+			// The press blurs the action to nowhere (a browser that does not
+			// focus a clicked button), then the pointer is dragged off and
+			// released outside the toggle: no click, the card stays open.
+			const { rerender } = render( withAction( { open: true } ) );
+			const from = screen.getByRole( 'button', { name: 'Act' } );
+			from.focus();
+			const spy = jest.spyOn( toggleOf(), 'focus' );
+			fireEvent.mouseDown( toggleOf(), { button: 0 } );
+			releaseToPage( from );
+			fireEvent.mouseUp( from.ownerDocument.body );
+			await later();
+			rerender( withAction( { open: false } ) );
+			expect( spy ).not.toHaveBeenCalled();
+		} );
+
+		test( 'an unmount during a toggle press removes its page listeners', () => {
+			const doc = window.document;
+			const added = jest.spyOn( doc, 'addEventListener' );
+			const removed = jest.spyOn( doc, 'removeEventListener' );
+			const { unmount } = render( card() );
+			fireEvent.mouseDown( toggleOf(), { button: 0 } );
+			const mine = ( spy ) =>
+				spy.mock.calls
+					.filter( ( [ type ] ) =>
+						[ 'mouseup', 'pointercancel' ].includes( type )
+					)
+					.map( ( [ type, fn ] ) => [ type, fn ] );
+			const armed = mine( added );
+			expect( armed.map( ( [ type ] ) => type ) ).toEqual( [
+				'mouseup',
+				'pointercancel',
+			] );
+			unmount();
+			expect( mine( removed ) ).toEqual( armed );
+			added.mockRestore();
+			removed.mockRestore();
+		} );
+
+		test( 'a right-button press on the toggle does not hold focus for the card', async () => {
+			const { rerender } = render( withAction( { open: true } ) );
+			const from = screen.getByRole( 'button', { name: 'Inner' } );
+			from.focus();
+			const spy = jest.spyOn( toggleOf(), 'focus' );
+			fireEvent.mouseDown( toggleOf(), { button: 2 } );
+			releaseToPage( from );
+			await later();
+			rerender( withAction( { open: false } ) );
+			expect( spy ).not.toHaveBeenCalled();
+		} );
+
+		test.each( [
+			[ 'the body', 'Inner' ],
+			[ 'a header action', 'Act' ],
+		] )(
+			'a close in the same click that gave focus from %s to the page does not take it',
+			( _where, name ) => {
+				// An "outside click closes the card" consumer: the close lands
+				// before the blur has settled.
+				const { rerender } = render( withAction( { open: true } ) );
+				const from = screen.getByRole( 'button', { name } );
+				from.focus();
+				const spy = jest.spyOn( toggleOf(), 'focus' );
+				releaseToPage( from );
+				rerender( withAction( { open: false } ) );
+				expect( spy ).not.toHaveBeenCalled();
+			}
+		);
+
+		test( 'the window losing focus does not count as focus leaving the card', async () => {
+			// Alt-tab or DevTools: the action gets a blur with no relatedTarget,
+			// but the document's active element stays on it.
+			const { rerender } = render( withAction( { open: true } ) );
+			const act1 = screen.getByRole( 'button', { name: 'Act' } );
+			act1.focus();
+			fireEvent.focusOut( act1, { relatedTarget: null } );
+			expect( act1.ownerDocument.activeElement ).toBe( act1 );
+			await later();
+			rerender( withAction( { open: false } ) );
+			expect( toggleOf().ownerDocument.activeElement ).toBe( toggleOf() );
+		} );
+
+		test.each( [
+			[ 'the body', 'Inner' ],
+			[ 'a header action', 'Act' ],
+		] )(
+			'a toggle click that does not focus the button still hands focus from %s to the toggle',
+			async ( _where, name ) => {
+				// Safari: pressing a button does not focus it; the press blurs the
+				// focused node to nowhere and the click closes the card after.
+				render( withAction() );
+				const from = screen.getByRole( 'button', { name } );
+				from.focus();
+				const spy = jest.spyOn( toggleOf(), 'focus' );
+				fireEvent.mouseDown( toggleOf() );
+				releaseToPage( from );
+				await later();
+				fireEvent.mouseUp( toggleOf() );
+				fireEvent.click( toggleOf() );
+				expect( spy ).toHaveBeenCalled();
+			}
+		);
 	} );
 
 	test( 'a closed collapsible body carries an inline display:none and the open one carries no style', () => {

@@ -1,4 +1,4 @@
-import { useId, useLayoutEffect, useRef } from '@wordpress/element';
+import { useEffect, useId, useLayoutEffect, useRef } from '@wordpress/element';
 import { resolveIcon } from '../icons';
 import { usePersistentOpen } from '../hooks/usePersistentOpen';
 
@@ -71,8 +71,27 @@ export default function Widget( {
 	// An action is already gone by then (and browsers do not reliably fire
 	// blur on removal), so the last focus inside the body or the actions is
 	// tracked from focus events instead of read from the active element.
+	// Focus the user already gave to the page (a click on empty space) is
+	// forgotten, so a later close does not pull it back or scroll the page.
 	const actionsRef = useRef( null );
 	const lastInside = useRef( null );
+	const togglePressed = useRef( false );
+	// A blur to nowhere waiting to settle (see onBlur), and its node.
+	const releaseTimer = useRef( null );
+	const releaseTarget = useRef( null );
+	// A blur to nowhere caused by a primary press on the toggle, held until
+	// the press ends; and the undo for that press's document listeners.
+	const heldBlur = useRef( null );
+	const pressEnd = useRef( null );
+	useEffect(
+		() => () => {
+			clearTimeout( releaseTimer.current );
+			if ( pressEnd.current ) {
+				pressEnd.current();
+			}
+		},
+		[]
+	);
 	const wasOpen = useRef( isOpen );
 	useLayoutEffect( () => {
 		const closed = wasOpen.current && ! isOpen;
@@ -89,11 +108,19 @@ export default function Widget( {
 		}
 		const last = lastInside.current;
 		const active = doc.activeElement;
+		// A blur to nowhere from this very node has not settled yet and the
+		// page holds focus: the close came in the same click that gave focus
+		// to the page.
+		const released =
+			releaseTimer.current !== null &&
+			releaseTarget.current === last &&
+			( ! active || active === doc.body );
 		// Stranded: focus sits in the hidden body, or it was last in the body
 		// or on a now-removed action and has not gone anywhere else since.
 		const stranded =
 			body.contains( active ) ||
 			( last &&
+				! released &&
 				( ! active || active === doc.body || ! active.isConnected ) &&
 				( ! last.isConnected || body.contains( last ) ) );
 		lastInside.current = null;
@@ -146,6 +173,8 @@ export default function Widget( {
 	}
 
 	const toggle = () => {
+		togglePressed.current = false;
+		heldBlur.current = null;
 		const next = ! isOpen;
 		if ( ! controlled ) {
 			setStored( next );
@@ -161,13 +190,87 @@ export default function Widget( {
 			( bodyRef.current && bodyRef.current.contains( target ) ) ||
 			( actionsRef.current && actionsRef.current.contains( target ) );
 		lastInside.current = inside ? target : null;
+		togglePressed.current = false;
 	};
-	const onBlur = ( event ) => {
-		// Focus moved to a known place outside the card: forget it.
-		const next = event.relatedTarget;
-		if ( next && ! event.currentTarget.contains( next ) ) {
+	// Forget a node only once the page really holds focus: not while it is
+	// still the active element (the window lost focus and will return there).
+	const releaseIfOnPage = ( left ) => {
+		const doc = left.ownerDocument;
+		const active = doc.activeElement;
+		if (
+			lastInside.current === left &&
+			( ! active || active === doc.body )
+		) {
 			lastInside.current = null;
 		}
+	};
+	const onBlur = ( event ) => {
+		const next = event.relatedTarget;
+		if ( next ) {
+			// Focus moved to a known place outside the card: forget it.
+			if ( ! event.currentTarget.contains( next ) ) {
+				lastInside.current = null;
+			}
+			return;
+		}
+		// No relatedTarget: either focus went nowhere (a click on empty page
+		// space -- the page holds it now, and a later close must not pull it
+		// back) or the window itself lost focus (alt-tab, DevTools -- the
+		// active element stays put and focus comes back to it).
+		const left = event.target;
+		if ( togglePressed.current ) {
+			// A press on the toggle in a browser that does not focus a
+			// clicked button: its click closes the card and hands focus to
+			// the toggle. Hold the decision until the press ends.
+			heldBlur.current = left;
+			return;
+		}
+		// Decide once the blur has settled.
+		clearTimeout( releaseTimer.current );
+		releaseTarget.current = left;
+		releaseTimer.current = setTimeout( () => {
+			releaseTimer.current = null;
+			releaseTarget.current = null;
+			releaseIfOnPage( left );
+		}, 0 );
+	};
+	const onMouseDown = ( event ) => {
+		// Only a primary press can turn into a click on the toggle.
+		if ( event.button !== 0 ) {
+			return;
+		}
+		if ( pressEnd.current ) {
+			pressEnd.current();
+		}
+		togglePressed.current = true;
+		heldBlur.current = null;
+		const doc = event.currentTarget.ownerDocument;
+		let timer = null;
+		const settle = () => {
+			doc.removeEventListener( 'mouseup', onUp, true );
+			doc.removeEventListener( 'pointercancel', onUp, true );
+		};
+		// The press ended. A click on the toggle, if one follows, runs before
+		// this timer and takes the held blur; otherwise (released elsewhere,
+		// cancelled) the held blur is decided like any other.
+		function onUp() {
+			settle();
+			timer = setTimeout( () => {
+				pressEnd.current = null;
+				togglePressed.current = false;
+				const left = heldBlur.current;
+				heldBlur.current = null;
+				if ( left ) {
+					releaseIfOnPage( left );
+				}
+			}, 0 );
+		}
+		doc.addEventListener( 'mouseup', onUp, true );
+		doc.addEventListener( 'pointercancel', onUp, true );
+		pressEnd.current = () => {
+			settle();
+			clearTimeout( timer );
+		};
 	};
 
 	return (
@@ -185,6 +288,7 @@ export default function Widget( {
 						aria-expanded={ isOpen ? 'true' : 'false' }
 						aria-controls={ bodyId }
 						onClick={ toggle }
+						onMouseDown={ onMouseDown }
 					>
 						{ iconNode }
 						{ title }
