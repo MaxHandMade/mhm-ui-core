@@ -354,7 +354,9 @@ describe( 'collapsible Widget', () => {
 			releaseToPage( from );
 			await later();
 			rerender( card( { storageKey: 'card-b' } ) );
-			expect( toggleOf().getAttribute( 'aria-expanded' ) ).toBe( 'false' );
+			expect( toggleOf().getAttribute( 'aria-expanded' ) ).toBe(
+				'false'
+			);
 			expect( spy ).not.toHaveBeenCalled();
 		} );
 
