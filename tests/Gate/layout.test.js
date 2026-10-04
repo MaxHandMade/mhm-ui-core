@@ -1065,3 +1065,36 @@ describe( 'collapsible Widget (0.17.0)', () => {
 		}
 	} );
 } );
+
+describe( 'the whole collapsible header row toggles (fix round 1)', () => {
+	const admin = read( 'admin.css' );
+	const all = rules( admin );
+
+	test( 'the toggle stretches a ::after over a positioned header, and actions sit above it', () => {
+		expect(
+			ruleBody( admin, '.mhmui-widget--collapsible .mhmui-widget__header' )
+		).toMatch( /position:\s*relative/ );
+		const overlay = ruleBody(
+			admin,
+			'.mhmui-widget--collapsible .mhmui-widget__toggle::after'
+		);
+		expect( overlay ).toMatch( /content:\s*""/ );
+		expect( overlay ).toMatch( /position:\s*absolute/ );
+		expect( overlay ).toMatch( /inset:\s*0/ );
+		const actions = ruleBody(
+			admin,
+			'.mhmui-widget--collapsible .mhmui-widget__actions'
+		);
+		expect( actions ).toMatch( /position:\s*relative/ );
+		expect( actions ).toMatch( /z-index:\s*[1-9]/ );
+	} );
+
+	test( 'nothing between the header and the overlay is positioned (title, toggle)', () => {
+		const positioned = all.filter(
+			( [ sel, body ] ) =>
+				/mhmui-widget__(title|toggle)(?![\w-])(?!::after)\s*$/.test( sel ) &&
+				/(^|\s)position:\s*(relative|absolute|fixed|sticky)/.test( body )
+		);
+		expect( positioned.map( ( [ sel ] ) => sel ) ).toEqual( [] );
+	} );
+} );

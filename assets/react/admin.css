@@ -570,6 +570,13 @@
 }
 .mhmui-widget__toggle[aria-expanded="true"] .mhmui-widget__chevron { transform: rotate( 180deg ); }
 .mhmui-widget--collapsed .mhmui-widget__header { border-bottom: 0; }
+/* The whole header row toggles, padding included: the button's ::after is
+   stretched over the (positioned) header; actions sit above it. The title is
+   NOT positioned, or the overlay would anchor to it. The focus ring stays the
+   button's own (the overlay is transparent and draws nothing). */
+.mhmui-widget--collapsible .mhmui-widget__header { position: relative; }
+.mhmui-widget--collapsible .mhmui-widget__toggle::after { content: ""; position: absolute; inset: 0; }
+.mhmui-widget--collapsible .mhmui-widget__actions { position: relative; z-index: 1; }
 /* `hidden` must win over any display a card rule gives the body (F-I8). */
 .mhmui-widget__body[hidden] { display: none; }
 @media ( max-width: 782px ) {
