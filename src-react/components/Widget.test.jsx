@@ -262,6 +262,25 @@ describe( 'collapsible Widget', () => {
 		expect( toggleOf().ownerDocument.activeElement ).toBe( outside );
 	} );
 
+	test( 'a closed collapsible body carries an inline display:none and the open one carries no style', () => {
+		// The inline declaration beats a consumer's own page-scoped
+		// `display` rule on the body, which the plain [hidden] guard in
+		// admin.css does not (and the kit writes no !important).
+		const { container } = render( card() );
+		const body = container.querySelector( '.mhmui-widget__body' );
+		expect( body.hasAttribute( 'style' ) ).toBe( false );
+		fireEvent.click( toggleOf() );
+		expect( [ body.hidden, body.getAttribute( 'style' ) ] ).toEqual( [
+			true,
+			'display: none;',
+		] );
+		fireEvent.click( toggleOf() );
+		expect( [ body.hidden, body.hasAttribute( 'style' ) ] ).toEqual( [
+			false,
+			false,
+		] );
+	} );
+
 	test( 'the body stays mounted while collapsed', () => {
 		const { container } = render( card() );
 		const input = screen.getByRole( 'textbox', { name: 'Note' } );

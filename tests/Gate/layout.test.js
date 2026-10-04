@@ -1040,10 +1040,6 @@ describe( 'collapsible Widget (0.17.0)', () => {
 		const body = ruleBody( admin, '.mhmui-widget__body[hidden]' );
 		expect( body ).not.toBeNull();
 		expect( body ).toMatch( /display:\s*none/ );
-		// !important: a consumer's own descendant selector (a page class +
-		// `.mhmui-widget--plain .mhmui-widget__body { display: flex }`) out-ranked
-		// the plain (0,2,0) guard in a real browser and showed closed bodies.
-		expect( body ).toMatch( /display:\s*none\s*!important/ );
 		// It must out-rank every rule that gives the body a display value, or
 		// a later card rule would show a closed body again.
 		const all = rules( admin );

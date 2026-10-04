@@ -35,6 +35,8 @@ import { usePersistentOpen } from '../hooks/usePersistentOpen';
  *                                             in both modes.
  * @param {*}              props.children      Body.
  */
+const HIDDEN_STYLE = { display: 'none' };
+
 export default function Widget( {
 	title,
 	subtitle,
@@ -72,6 +74,11 @@ export default function Widget( {
 		const closed = wasOpen.current && ! isOpen;
 		wasOpen.current = isOpen;
 		const body = bodyRef.current;
+		// React clears a removed inline style to `style=""`; an open body
+		// carries no style attribute at all.
+		if ( isOpen && body && body.getAttribute( 'style' ) === '' ) {
+			body.removeAttribute( 'style' );
+		}
 		const doc = body && body.ownerDocument;
 		if (
 			closed &&
@@ -183,6 +190,9 @@ export default function Widget( {
 				className="mhmui-widget__body"
 				id={ bodyId }
 				hidden={ ! isOpen }
+				// Inline, so a consumer's own `display` rule on the body cannot
+				// show a closed card (the kit writes no !important).
+				style={ isOpen ? undefined : HIDDEN_STYLE }
 			>
 				{ children }
 			</div>
