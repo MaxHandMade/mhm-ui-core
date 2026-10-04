@@ -71,8 +71,11 @@ export default function Widget( {
 	// An action is already gone by then (and browsers do not reliably fire
 	// blur on removal), so the last focus inside the body or the actions is
 	// tracked from focus events instead of read from the active element.
+	// Focus the user already gave to the page (a click on empty space) is
+	// forgotten, so a later close does not pull it back or scroll the page.
 	const actionsRef = useRef( null );
 	const lastInside = useRef( null );
+	const togglePressed = useRef( false );
 	const wasOpen = useRef( isOpen );
 	useLayoutEffect( () => {
 		const closed = wasOpen.current && ! isOpen;
@@ -146,6 +149,7 @@ export default function Widget( {
 	}
 
 	const toggle = () => {
+		togglePressed.current = false;
 		const next = ! isOpen;
 		if ( ! controlled ) {
 			setStored( next );
@@ -161,11 +165,22 @@ export default function Widget( {
 			( bodyRef.current && bodyRef.current.contains( target ) ) ||
 			( actionsRef.current && actionsRef.current.contains( target ) );
 		lastInside.current = inside ? target : null;
+		togglePressed.current = false;
 	};
 	const onBlur = ( event ) => {
-		// Focus moved to a known place outside the card: forget it.
 		const next = event.relatedTarget;
-		if ( next && ! event.currentTarget.contains( next ) ) {
+		const pressed = togglePressed.current;
+		togglePressed.current = false;
+		if ( next ) {
+			// Focus moved to a known place outside the card: forget it.
+			if ( ! event.currentTarget.contains( next ) ) {
+				lastInside.current = null;
+			}
+		} else if ( ! pressed ) {
+			// Focus went nowhere (a click on empty page space): the page
+			// holds it now, and a later close must not pull it back. A press
+			// on the toggle in a browser that does not focus a clicked button
+			// lands here too, and its click closes the card: keep it for that.
 			lastInside.current = null;
 		}
 	};
@@ -185,6 +200,9 @@ export default function Widget( {
 						aria-expanded={ isOpen ? 'true' : 'false' }
 						aria-controls={ bodyId }
 						onClick={ toggle }
+						onMouseDown={ () => {
+							togglePressed.current = true;
+						} }
 					>
 						{ iconNode }
 						{ title }
