@@ -763,7 +763,7 @@ React `useId()`'den gelir ve `:` içerir; bu kimlikle yapılan CSS seçici ya da
 
 **Yeni adlandırılmış dışa aktarımlar:** `usePersistentOpen( storageKey, defaultOpen )`
 (`'1'` / `'0'` olarak `localStorage`'a yazar, depolama yoksa sessizce düşer) ve
-`useContainerWidth( threshold = 600 )` → `[ setRef, layout, measured ]`; `measured` ilk sıfır olmayan genişliğe kadar false kalır (ResizeObserver yoksa hemen true), yerleşime bağlı bir durum onu bekleyebilir.
+`useContainerWidth( threshold = 600 )` → `[ setRef, layout, measured ]`; `measured` ilk sıfır olmayan genişliğe kadar false kalır (ResizeObserver yoksa hemen true), yerleşime bağlı bir durum onu bekleyebilir. Kap hiç yerleşime girmezse (örneğin `display: none` içinde) `measured` false kalır; bu durumda bir yedek görünüm çizin. Eşikle karşılaştırılan genişlik kabın içerik kutusudur (dolgu hariç).
 
 **Düzeltmeler:**
 

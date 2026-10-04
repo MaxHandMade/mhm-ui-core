@@ -819,7 +819,7 @@ not animate under `prefers-reduced-motion`. New classes: `mhmui-widget--collapsi
 
 **New named exports:** `usePersistentOpen( storageKey, defaultOpen )` (remembers
 `'1'` / `'0'` in `localStorage`, falls back silently when storage is unavailable)
-and `useContainerWidth( threshold = 600 )` → `[ setRef, layout, measured ]`; `measured` stays false until the first non-zero width (true at once without ResizeObserver), so a layout-keyed state can wait for it.
+and `useContainerWidth( threshold = 600 )` → `[ setRef, layout, measured ]`; `measured` stays false until the first non-zero width (true at once without ResizeObserver), so a layout-keyed state can wait for it. `measured` stays false for as long as the container is never laid out (for example inside `display: none`); render a fallback in that case. The width compared with the threshold is the container's content box (padding excluded).
 
 **Fixes:**
 

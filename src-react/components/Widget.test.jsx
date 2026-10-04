@@ -262,6 +262,46 @@ describe( 'collapsible Widget', () => {
 		expect( toggleOf().ownerDocument.activeElement ).toBe( outside );
 	} );
 
+	test( 'closing a card with focus on a header action moves focus to its toggle', () => {
+		// The actions unmount when the card closes, so by the time the card
+		// reacts the focused node is gone and the document's active element
+		// is already <body>.
+		const withAction = ( props ) =>
+			card( {
+				actions: <button type="button">Act</button>,
+				...props,
+			} );
+		const { rerender, unmount } = render( withAction( { open: true } ) );
+		screen.getByRole( 'button', { name: 'Act' } ).focus();
+		rerender( withAction( { open: false } ) );
+		expect( toggleOf().ownerDocument.activeElement ).toBe( toggleOf() );
+		unmount();
+
+		// Uncontrolled click path.
+		render( withAction() );
+		screen.getByRole( 'button', { name: 'Act' } ).focus();
+		fireEvent.click( toggleOf() );
+		expect( toggleOf().ownerDocument.activeElement ).toBe( toggleOf() );
+	} );
+
+	test( 'focus that left a header action for outside the card is not taken back', () => {
+		const tree = ( open ) => (
+			<>
+				<button type="button">Outside</button>
+				{ card( {
+					open,
+					actions: <button type="button">Act</button>,
+				} ) }
+			</>
+		);
+		const { rerender } = render( tree( true ) );
+		screen.getByRole( 'button', { name: 'Act' } ).focus();
+		const outside = screen.getByRole( 'button', { name: 'Outside' } );
+		outside.focus();
+		rerender( tree( false ) );
+		expect( toggleOf().ownerDocument.activeElement ).toBe( outside );
+	} );
+
 	test( 'a closed collapsible body carries an inline display:none and the open one carries no style', () => {
 		// The inline declaration beats a consumer's own page-scoped
 		// `display` rule on the body, which the plain [hidden] guard in

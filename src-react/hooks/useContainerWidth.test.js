@@ -128,3 +128,43 @@ test( 'a two-value caller keeps working', () => {
 	render( <Two /> );
 	expect( layout() ).toBe( 'narrow' );
 } );
+
+test( 'the first measurement and the observer both read the content box', () => {
+	// Content 580 inside 20 + 20 padding: clientWidth is 620 (padding box),
+	// ResizeObserver reports 580 (content box). Both must say 'narrow'.
+	let seen = [];
+	window.ResizeObserver = class {
+		constructor( cb ) {
+			notify = cb;
+		}
+		observe() {}
+		disconnect() {}
+	};
+	function Padded() {
+		const [ ref, l ] = useContainerWidth( 600 );
+		seen.push( l );
+		const setRef = ( node ) => {
+			if ( node ) {
+				Object.defineProperty( node, 'clientWidth', {
+					configurable: true,
+					value: 620,
+				} );
+				node.style.paddingLeft = '20px';
+				node.style.paddingRight = '20px';
+			}
+			ref( node );
+		};
+		return (
+			<>
+				<div ref={ setRef } />
+				<output>{ l }</output>
+			</>
+		);
+	}
+	render( <Padded /> );
+	expect( layout() ).toBe( 'narrow' );
+	seen = [];
+	act( () => notify( [ { contentRect: { width: 580 } } ] ) );
+	expect( layout() ).toBe( 'narrow' );
+	expect( seen ).not.toContain( 'wide' );
+} );

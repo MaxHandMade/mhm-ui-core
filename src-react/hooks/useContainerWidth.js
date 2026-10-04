@@ -8,8 +8,8 @@ import { useState, useRef, useCallback } from '@wordpress/element';
  * Returns a CALLBACK ref. A container that renders only after its data has
  * loaded mounts late; a callback ref attaches the observer the moment the
  * node arrives, and disconnects the old node when it changes or unmounts.
- * The first value is the node's clientWidth, the later ones come from
- * ResizeObserver. A width of 0 means "not laid out" (hidden or detached) and
+ * The first value is the node's content width (clientWidth minus its
+ * horizontal padding), the later ones come from ResizeObserver's content box. A width of 0 means "not laid out" (hidden or detached) and
  * keeps the current layout. Without ResizeObserver the layout stays 'wide'
  * (the layout that needs no measuring).
  *
@@ -19,7 +19,8 @@ import { useState, useRef, useCallback } from '@wordpress/element';
  * can wait for it instead of rendering the 'wide' guess first. Callers that
  * read only the first two values are unaffected.
  *
- * Ported unchanged from Rentiva Pro's messages screen (0.17.0).
+ * Ported from Rentiva Pro's messages screen (0.17.0); the first reading
+ * now measures the content box too.
  *
  * @param {number} [threshold=600] Widths up to and including this are 'narrow'.
  * @return {Array} [ setRef, 'wide' | 'narrow', measured: boolean ]
@@ -51,7 +52,15 @@ export function useContainerWidth( threshold = 600 ) {
 					setMeasured( true );
 				}
 			};
-			pick( node.clientWidth );
+			// clientWidth is the padding box; ResizeObserver reports the
+			// content box. Measure the content box both times, or a padded
+			// container can flip layouts between the two readings.
+			const style =
+				node.ownerDocument.defaultView.getComputedStyle( node );
+			const padding =
+				( parseFloat( style.paddingLeft ) || 0 ) +
+				( parseFloat( style.paddingRight ) || 0 );
+			pick( node.clientWidth > 0 ? node.clientWidth - padding : 0 );
 			observer.current = new RO( ( entries ) => {
 				const entry = entries[ entries.length - 1 ];
 				if ( entry ) {

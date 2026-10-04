@@ -9,7 +9,7 @@ import { usePersistentOpen } from '../hooks/usePersistentOpen';
  * (`aria-expanded`, `aria-controls` = the body's id) whose name is the title
  * and subtitle; a closed card hides its body with `hidden` (it stays mounted,
  * so typed input survives) and drops its `actions`. When a card closes with
- * focus inside its body, focus moves to the toggle. A call without
+ * focus inside its body or its actions, focus moves to the toggle. A call without
  * `collapsible` renders the 0.16.0 markup unchanged.
  *
  * @param {Object}         props
@@ -66,9 +66,13 @@ export default function Widget( {
 		isOpen = !! open;
 	}
 
-	// A closing card must not strand focus inside a hidden body: hand it to
-	// the toggle. Runs before paint, while the focused node is still the
-	// document's active element.
+	// A closing card must not strand focus inside a hidden body or on an
+	// action that unmounts with it: hand it to the toggle. Runs before paint.
+	// An action is already gone by then (and browsers do not reliably fire
+	// blur on removal), so the last focus inside the body or the actions is
+	// tracked from focus events instead of read from the active element.
+	const actionsRef = useRef( null );
+	const lastInside = useRef( null );
 	const wasOpen = useRef( isOpen );
 	useLayoutEffect( () => {
 		const closed = wasOpen.current && ! isOpen;
@@ -80,12 +84,20 @@ export default function Widget( {
 			body.removeAttribute( 'style' );
 		}
 		const doc = body && body.ownerDocument;
-		if (
-			closed &&
-			toggleRef.current &&
-			doc &&
-			body.contains( doc.activeElement )
-		) {
+		if ( ! closed || ! toggleRef.current || ! doc ) {
+			return;
+		}
+		const last = lastInside.current;
+		const active = doc.activeElement;
+		// Stranded: focus sits in the hidden body, or it was last in the body
+		// or on a now-removed action and has not gone anywhere else since.
+		const stranded =
+			body.contains( active ) ||
+			( last &&
+				( ! active || active === doc.body || ! active.isConnected ) &&
+				( ! last.isConnected || body.contains( last ) ) );
+		lastInside.current = null;
+		if ( stranded ) {
 			toggleRef.current.focus();
 		}
 	}, [ isOpen ] );
@@ -143,8 +155,27 @@ export default function Widget( {
 		}
 	};
 
+	const onFocus = ( event ) => {
+		const target = event.target;
+		const inside =
+			( bodyRef.current && bodyRef.current.contains( target ) ) ||
+			( actionsRef.current && actionsRef.current.contains( target ) );
+		lastInside.current = inside ? target : null;
+	};
+	const onBlur = ( event ) => {
+		// Focus moved to a known place outside the card: forget it.
+		const next = event.relatedTarget;
+		if ( next && ! event.currentTarget.contains( next ) ) {
+			lastInside.current = null;
+		}
+	};
+
 	return (
-		<section className={ classes.join( ' ' ) }>
+		<section
+			className={ classes.join( ' ' ) }
+			onFocus={ onFocus }
+			onBlur={ onBlur }
+		>
 			<header className="mhmui-widget__header">
 				<Heading className="mhmui-widget__title">
 					<button
@@ -182,7 +213,9 @@ export default function Widget( {
 					</button>
 				</Heading>
 				{ isOpen && actions && (
-					<div className="mhmui-widget__actions">{ actions }</div>
+					<div ref={ actionsRef } className="mhmui-widget__actions">
+						{ actions }
+					</div>
 				) }
 			</header>
 			<div
