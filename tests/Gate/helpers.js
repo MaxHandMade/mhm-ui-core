@@ -70,6 +70,38 @@ function ruleBody( css, selector ) {
 	return m ? m[ 2 ] : null;
 }
 
+/**
+ * The inside of every `@media <query> { ... }` block, joined by newlines, so
+ * ruleBody() can read the rules in it. ruleBody() alone cannot see the FIRST
+ * rule of a media block: its selector follows the block's `{`, not a `}`
+ * The query is compared with all whitespace removed, so
+ * `( max-width: 782px )` and `(max-width:782px)` are the same query. Comments
+ * are dropped first. Returns '' when no block matches.
+ */
+function mediaBlock( css, query ) {
+	const code = css.replace( /\/\*[\s\S]*?\*\//g, '' );
+	const want = String( query ).replace( /\s+/g, '' );
+	const blocks = [];
+	const re = /@media([^{]*)\{/g;
+	let m;
+	while ( ( m = re.exec( code ) ) !== null ) {
+		let depth = 1;
+		let i = re.lastIndex;
+		for ( ; i < code.length && depth > 0; i++ ) {
+			if ( code[ i ] === '{' ) {
+				depth++;
+			} else if ( code[ i ] === '}' ) {
+				depth--;
+			}
+		}
+		if ( m[ 1 ].replace( /\s+/g, '' ) === want ) {
+			blocks.push( code.slice( re.lastIndex, i - 1 ) );
+		}
+		re.lastIndex = i;
+	}
+	return blocks.join( '\n' );
+}
+
 /** WCAG 2.x relative luminance of a #rgb / #rrggbb colour. */
 function luminance( hex ) {
 	let h = String( hex ).replace( '#', '' );
@@ -92,4 +124,4 @@ function contrastRatio( fgHex, bgHex ) {
 	return ( Math.max( a, b ) + 0.05 ) / ( Math.min( a, b ) + 0.05 );
 }
 
-module.exports = { fixtureRepo, runGate, runGateOut, ruleBody, contrastRatio, CSS_GATE, PHP_GATE };
+module.exports = { fixtureRepo, runGate, runGateOut, ruleBody, mediaBlock, contrastRatio, CSS_GATE, PHP_GATE };

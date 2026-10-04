@@ -483,7 +483,7 @@
 
 .mhmui-pagination { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
 .mhmui-pagination__status { color: var( --mhmui-text-muted ); font-variant-numeric: tabular-nums; }
-/* Footer variant: the table card's bottom bar (artboards Main/Contact) --
+/* Footer variant: the table card's bottom bar (the approved list and detail designs) --
    inside the card, soft grey, top rule, range left / controls right. The
    doubled class beats the `.mhmui-admin-page > * + .mhmui-pagination` margin. */
 .mhmui-pagination.mhmui-pagination--footer {
@@ -518,8 +518,8 @@
 .mhmui-widget__body { padding: 16px; }
 
 /* Widget level 2 / plain (0.16.0). Level 2 is a page section: 15px/600 title.
-   The banded card (AB/Thread "Yazisma") draws a 14px 20px header over a divider;
-   the plain card (AB/Thread aside, AB/ContactDetail "Teknik kayit") has no band --
+   The banded card draws a 14px 20px header over a divider;
+   the plain card (a side panel, a technical-record panel) has no band --
    the root carries 18px 20px and a 14px gap, `actions` stay at the right. */
 .mhmui-widget--level-2 .mhmui-widget__title { font-size: 15px; font-weight: 600; }
 .mhmui-widget--level-2:not( .mhmui-widget--plain ) .mhmui-widget__header {
@@ -534,6 +534,59 @@
 }
 .mhmui-widget--plain .mhmui-widget__header { padding: 0; border-bottom: 0; }
 .mhmui-widget--plain .mhmui-widget__body { padding: 0; }
+
+/* Widget collapsible (0.17.0, opt-in). The toggle is a button filling the
+   heading row: icon, title, subtitle, then a 16px chevron at the right in
+   --mhmui-text-secondary (the approved narrow customer-summary row). The chevron
+   points down when closed and turns when open; it does not animate under
+   prefers-reduced-motion. A closed banded card loses the divider under its
+   header. Focus ring: the kit's two rings (surface gap, then accent). */
+.mhmui-widget--collapsible .mhmui-widget__title { flex: 1 1 auto; min-width: 0; }
+.mhmui-widget__toggle {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	width: 100%;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	border-radius: 2px;
+	background: none;
+	color: inherit;
+	font: inherit;
+	text-align: start;
+	cursor: pointer;
+}
+.mhmui-widget__toggle:focus-visible {
+	outline: 2px solid transparent;
+	box-shadow: 0 0 0 2px var( --mhmui-surface ), 0 0 0 4px var( --mhmui-accent );
+}
+.mhmui-widget__chevron {
+	display: inline-flex;
+	flex: none;
+	margin-inline-start: auto;
+	color: var( --mhmui-text-secondary );
+	transition: transform 0.15s ease;
+}
+.mhmui-widget__toggle[aria-expanded="true"] .mhmui-widget__chevron { transform: rotate( 180deg ); }
+.mhmui-widget--collapsed .mhmui-widget__header { border-bottom: 0; }
+/* The whole header row toggles, padding included: the button's ::after is
+   stretched over the (positioned) header; actions sit above it. The title is
+   NOT positioned, or the overlay would anchor to it. The focus ring stays the
+   button's own (the overlay is transparent and draws nothing). */
+.mhmui-widget--collapsible .mhmui-widget__header { position: relative; }
+.mhmui-widget--collapsible .mhmui-widget__toggle::after { content: ""; position: absolute; inset: 0; }
+.mhmui-widget--collapsible .mhmui-widget__actions { position: relative; z-index: 1; }
+/* `hidden` must win over any display a kit rule gives the body. A consumer's
+   own page-scoped rule is beaten by the inline display:none the component
+   puts on a closed body (the kit never writes !important). */
+.mhmui-widget__body[hidden] { display: none; }
+@media ( max-width: 782px ) {
+	.mhmui-widget__toggle { min-height: 44px; }
+}
+@media ( prefers-reduced-motion: reduce ) {
+	.mhmui-widget__chevron { transition: none; }
+}
 
 /* Tabs (0.15.0): page sections as links. Segmented strip; the current tab is
    told apart by a 2px accent underline as well as colour (WCAG 1.4.1/1.4.11 --
@@ -575,7 +628,7 @@
 .mhmui-tabs__tab--current .mhmui-tabs__badge {
 	background: var( --mhmui-surface-sunken );
 }
-/* Tabs underline variant + bar (0.16.0; AB/Main, AB/Contact): a transparent row,
+/* Tabs underline variant + bar (0.16.0): a transparent row,
    2px accent underline on the current tab, 44px tall, 14px, 20px count chips.
    Added rules only; the tone rules use three classes so they win over the
    current-tab chip background. */
@@ -586,17 +639,28 @@
 	padding: 0;
 	border-radius: 0;
 	background: transparent;
+	/* Narrow container: the strip scrolls inside its bar instead of wrapping or
+	   pushing the page wide. */
+	overflow-x: auto;
+	/* The 1px overlap with the bar rule lives on the strip, not on the tabs: a
+	   negative tab margin would overhang this scroll box and get clipped. */
+	margin-bottom: -1px;
 }
 .mhmui-tabs--underline .mhmui-tabs__tab {
 	box-sizing: border-box;
+	flex-shrink: 0;
 	min-height: 44px;
-	margin-bottom: -1px;
 	padding: 0 16px;
 	border-radius: 0;
 	border-bottom: 2px solid transparent;
 	color: var( --mhmui-text-secondary );
 	font-size: 14px;
 	font-weight: 400;
+}
+/* The strip is a scroll box, which clips an outset ring: draw it inside the tab. */
+.mhmui-tabs--underline .mhmui-tabs__tab:focus-visible {
+	outline: 2px solid var( --mhmui-accent );
+	outline-offset: -2px;
 }
 .mhmui-tabs--underline .mhmui-tabs__tab--current {
 	background: transparent;
@@ -682,6 +746,11 @@
 h1.mhmui-page-header__title {
 	font-weight: 400;
 }
+/* WP core's `.wrap h1` (common.css, 0,1,1) pads 9px 0 4px; this doubled-class (0,2,1) rule
+   cancels it so a page-level PageHeader sits flush like the h2/h3 forms. */
+h1.mhmui-page-header__title.mhmui-page-header__title {
+	padding: 0;
+}
 /* badges is opt-in: the wrapper exists only when a caller passes it. */
 .mhmui-page-header__badges {
 	display: flex;
@@ -698,7 +767,7 @@ h1.mhmui-page-header__title {
 	margin: 0;
 	color: var( --mhmui-text-muted );
 }
-/* Viewport-based on purpose (R-B6): the H1 shrinks and the chips take their own row. */
+/* Viewport-based on purpose: the H1 shrinks and the chips take their own row. */
 @media ( max-width: 600px ) {
 	h1.mhmui-page-header__title {
 		font-size: 21px;
@@ -900,8 +969,8 @@ h1.mhmui-page-header__title {
 	border-color: var( --mhmui-border );
 }
 
-/* ConfirmButton compact (0.16.0), measured from the Mesajlar artboards
-   (Thread "Yazışmayı sil", ContactDetail "Mesajı sil"): 36px targets, 44px at
+/* ConfirmButton compact (0.16.0), measured from the approved designs
+   (the delete-conversation and delete-message prompts): 36px targets, 44px at
    782px and below; a start-aligned trigger; the open prompt is a box (12px
    padding, 1px divider border, 3px radius) holding a bold question, a filled
    danger confirm and a grey-bordered cancel. The default size is untouched.
@@ -909,7 +978,7 @@ h1.mhmui-page-header__title {
    root has, so they outrank both core's (0,4,0) and this file's own 44px
    (0,4,1) rules. The drawn danger red is --mhmui-danger-ink and the drawn
    cancel border --mhmui-border-strong. The prompt stretches to the card's
-   width (the artboard box is a stretch child; only the trigger hugs the
+   width (the prompt box is a stretch child; only the trigger hugs the
    start). */
 .mhmui-confirm.mhmui-confirm--compact {
 	align-items: flex-start;
@@ -943,7 +1012,7 @@ h1.mhmui-page-header__title {
 	border-color: var( --mhmui-border-strong );
 	color: var( --mhmui-text-secondary );
 }
-/* A filled danger confirm (the artboard's "Evet, sil"). */
+/* A filled danger confirm (the approved design's "Yes, delete"). */
 .mhmui-confirm.mhmui-confirm--danger.mhmui-confirm--compact {
 	--mhmui-confirm-ink: var( --mhmui-danger-ink );
 }
@@ -966,14 +1035,14 @@ h1.mhmui-page-header__title {
 }
 
 /* Button (0.16.0). One button or link in four variants and two sizes, measured
-   from the Mesajlar artboards: 13px text, 1px border, 3px radius (the drawn
+   from the approved designs: 13px text, 1px border, 3px radius (the drawn
    value -- the kit's --mhmui-radius is 4px and stays untouched), md 36px /
    sm 32px, both 44px at 782px and below (15px text there, as the narrow
-   artboard). The element carries no WordPress `.button` class, so core's
+   design). The element carries no WordPress `.button` class, so core's
    button sizing does not apply; the rules are still written as
    `.mhmui-button.mhmui-button--x` (0,2,0) so core's link states
    (`a:hover`, `a:focus` at (0,1,1)) cannot recolour a linked Button.
-   Danger uses the artboard's red, --mhmui-danger-ink (#b32d2e in the admin
+   Danger uses the design's red, --mhmui-danger-ink (#b32d2e in the admin
    scope; --mhmui-danger-strong is #a02224). */
 .mhmui-button {
 	display: inline-flex;

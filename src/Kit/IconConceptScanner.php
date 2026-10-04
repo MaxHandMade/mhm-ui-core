@@ -113,7 +113,7 @@ namespace MHMUiCore\Kit;
  * php_icons() was already immune to this: token_get_all() gives a `//` or
  * `/* *\/` comment its own T_COMMENT token, never a T_CONSTANT_ENCAPSED_STRING,
  * so a commented-out `'icon' => 'money-alt'` was never reachable there. The JS
- * half had NO such immunity until this fix (Codex PR #32, measured
+ * half had NO such immunity until this fix (measured
  * 2026-09-20): a bare per-line regex over the raw source read
  * `// icon: 'money-alt'` -- an explicit "do not write this" example -- as a
  * live call site and failed the gate over it. js_icons() now runs the source
@@ -431,7 +431,7 @@ final class IconConceptScanner {
 	 * deleting it, so every newline survives and a hit's reported line number
 	 * still matches the untouched file. Returns NULL, never a string, when the
 	 * source ends while still inside a block comment -- see the bottom of the
-	 * method. Measured 2026-09-20 (Codex PR #32): without this, a discarded
+	 * method. Measured 2026-09-20: without this, a discarded
 	 * example left in a `//` comment -- `// icon: 'money-alt'` -- was read as
 	 * a live call site and reported RAW, punishing the exact "do not write
 	 * this" comment it was written to prevent. php_icons() never had this

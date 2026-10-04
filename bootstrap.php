@@ -17,7 +17,7 @@ if ( defined( 'MHMUICORE_VERSION' ) ) {
 	return;
 }
 
-define( 'MHMUICORE_VERSION', '0.16.0' );
+define( 'MHMUICORE_VERSION', '0.17.0' );
 define( 'MHMUICORE_DIR', __DIR__ );
 
 /*

@@ -8,6 +8,30 @@ describe( 'Button', () => {
 			'<button type="button" class="mhmui-button mhmui-button--secondary mhmui-button--md">Apply</button>'
 		);
 	} );
+	test( "a caller's aria-disabled cannot override the computed state", () => {
+		const a = render(
+			<Button disabled aria-disabled={ undefined }>
+				X
+			</Button>
+		);
+		expect( a.container.firstChild.getAttribute( 'aria-disabled' ) ).toBe(
+			'true'
+		);
+		a.unmount();
+		const b = render(
+			<Button disabled aria-disabled="false">
+				X
+			</Button>
+		);
+		expect( b.container.firstChild.getAttribute( 'aria-disabled' ) ).toBe(
+			'true'
+		);
+		b.unmount();
+		const c = render( <Button aria-disabled="true">X</Button> );
+		expect( c.container.firstChild.getAttribute( 'aria-disabled' ) ).toBe(
+			'true'
+		);
+	} );
 	test( 'href renders a link; unknown variant and size fall back', () => {
 		const { container } = render(
 			<Button href="?x=1" variant="pink" size="xl">

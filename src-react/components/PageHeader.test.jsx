@@ -3,7 +3,7 @@ import { PageHeader } from '../index';
 import manifest from '../components.json';
 
 // Captured once from the unchanged 0.15.2 component (base d20ee9d) for the
-// components.json PageHeader fixture row 2 (F-I1): a call that passes only
+// components.json PageHeader fixture row 2: a call that passes only
 // `badge` must keep this markup byte for byte.
 const BASE_0152_PAGE_HEADER =
 	'<div class="mhmui-page-header"><a class="mhmui-page-header__back" href="?tab=pending"><span aria-hidden="true">← </span>Pending applications</a><div class="mhmui-page-header__title-row"><h2 class="mhmui-page-header__title">Marmaris Cars</h2><span class="mhmui-status mhmui-status--warning">Pending</span></div><p class="mhmui-page-header__meta">#9292 · 23/09/2026 07:26</p></div>';
@@ -163,6 +163,18 @@ describe( 'PageHeader -- back link, title, badge, meta, actions', () => {
 		).toBeNull();
 	} );
 
+	test( 'badges whose texts are all empty draw no wrapper', () => {
+		const { container } = render(
+			<PageHeader
+				title="T"
+				badge={ { text: '' } }
+				badges={ [ { text: '' } ] }
+			/>
+		);
+		expect(
+			container.querySelector( '.mhmui-page-header__badges' )
+		).toBeNull();
+	} );
 	test( 'badges alone draw the wrapper; an empty badges list draws none', () => {
 		const { container, rerender } = render(
 			<PageHeader title="T" badges={ [ { text: 'Urgent' } ] } />

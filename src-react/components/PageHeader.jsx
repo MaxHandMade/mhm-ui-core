@@ -62,7 +62,11 @@ export default function PageHeader( {
 		back.label !== undefined &&
 		typeof back.label !== 'boolean' &&
 		( typeof back.label !== 'string' || back.label.trim() !== '' );
-	const hasBadges = Array.isArray( badges ) && badges.length > 0;
+	const hasText = ( item ) => Boolean( item && item.text );
+	const hasBadges =
+		Array.isArray( badges ) &&
+		badges.length > 0 &&
+		[ badge, ...badges ].some( hasText );
 	const handleBack =
 		hasBack && back.onClick
 			? ( event ) => {
