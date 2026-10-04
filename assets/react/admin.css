@@ -640,12 +640,14 @@
 	/* Narrow container: the strip scrolls inside its bar instead of wrapping or
 	   pushing the page wide. */
 	overflow-x: auto;
+	/* The 1px overlap with the bar rule lives on the strip, not on the tabs: a
+	   negative tab margin would overhang this scroll box and get clipped. */
+	margin-bottom: -1px;
 }
 .mhmui-tabs--underline .mhmui-tabs__tab {
 	box-sizing: border-box;
 	flex-shrink: 0;
 	min-height: 44px;
-	margin-bottom: -1px;
 	padding: 0 16px;
 	border-radius: 0;
 	border-bottom: 2px solid transparent;

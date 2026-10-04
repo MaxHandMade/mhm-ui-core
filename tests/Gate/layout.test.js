@@ -1117,6 +1117,13 @@ describe( 'kit park fixes (K2)', () => {
 		expect( tab ).toMatch( /flex-shrink:\s*0/ );
 	} );
 
+	test( 'no negative tab margin under the scroll box; the strip owns the bar-rule overlap', () => {
+		const tab = ruleBody( admin, '.mhmui-tabs--underline .mhmui-tabs__tab' );
+		expect( tab ).not.toMatch( /margin-bottom:/ );
+		const nav = ruleBody( admin, '.mhmui-tabs--underline' );
+		expect( nav ).toMatch( /margin-bottom:\s*-1px/ );
+	} );
+
 	test( 'the underline tab focus ring is inset so the scroll box cannot clip it', () => {
 		const ring = ruleBody( admin, '.mhmui-tabs--underline .mhmui-tabs__tab:focus-visible' );
 		expect( ring ).toMatch( /outline:\s*2px solid/ );
