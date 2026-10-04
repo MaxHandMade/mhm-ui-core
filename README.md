@@ -795,12 +795,16 @@ As with 0.11.0, the new JSX and CSS go together: load the stylesheet through
 ### Collapsible Widget (0.17.0+)
 
 Moving a consumer from `^0.16` to `^0.17` is a minor bump. Everything below is
-opt-in except one default-look change; a call that passes none of the new props
-renders the 0.16.0 markup byte for byte.
+opt-in except two default-look changes; a `Widget` call that passes none of the
+new props renders the 0.16.0 markup byte for byte.
 
-**The one default-look change.** A page-level `h1.mhmui-page-header__title` no
-longer inherits WordPress core's `.wrap h1` padding (`9px 0 4px`). A page that
-compensated for that padding can drop its override.
+**Two default-look changes.**
+
+1. A page-level `h1.mhmui-page-header__title` no longer inherits WordPress
+   core's `.wrap h1` padding (`9px 0 4px`). A page that compensated for that
+   padding can drop its override.
+2. A `Tabs variant="underline"` strip now scrolls inside its bar on narrow
+   containers instead of overflowing, and its focus ring is drawn inset.
 
 **`Widget` collapsible** (opt-in): `collapsible`, `defaultOpen` (default true),
 `storageKey`, `open` (controlled) and `onToggle( next )`. The heading holds a
@@ -821,6 +825,5 @@ and `useContainerWidth( threshold = 600 )`.
 
 - `Button`: a caller's `aria-disabled` can no longer override the computed
   disabled state.
-- `PageHeader`: no empty badges wrapper when there are no badges.
-- Underline `Tabs` scroll inside their bar on narrow containers; the focus ring
-  is drawn inset in the underline variant.
+- `PageHeader`: the badges wrapper is dropped when neither `badge` nor any
+  `badges` item has text.

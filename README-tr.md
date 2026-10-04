@@ -740,12 +740,16 @@ bağlantı `href`'ini kaybeder.
 ### Katlanabilir Widget (0.17.0+)
 
 Bir tüketicinin `^0.16`'dan `^0.17`'ye geçmesi minör bir yükseltmedir. Aşağıdakilerin
-hepsi opt-in; tek istisna varsayılan görünüm değişikliği. Yeni proplardan hiçbirini
-vermeyen çağrı 0.16.0 işaretlemesini bayt bayt korur.
+hepsi opt-in; istisna iki varsayılan görünüm değişikliği. Yeni proplardan hiçbirini
+vermeyen bir `Widget` çağrısı 0.16.0 işaretlemesini bayt bayt korur.
 
-**Tek varsayılan görünüm değişikliği.** Sayfa düzeyindeki
-`h1.mhmui-page-header__title` artık WordPress çekirdeğinin `.wrap h1` dolgusunu
-(`9px 0 4px`) devralmaz. Bu dolguyu dengelemek için ezme yazmış sayfa onu silebilir.
+**İki varsayılan görünüm değişikliği.**
+
+1. Sayfa düzeyindeki `h1.mhmui-page-header__title` artık WordPress çekirdeğinin
+   `.wrap h1` dolgusunu (`9px 0 4px`) devralmaz. Bu dolguyu dengelemek için ezme
+   yazmış sayfa onu silebilir.
+2. `Tabs variant="underline"` şeridi dar kaplarda taşmak yerine kendi çubuğunun
+   içinde kayar ve odak halkası içeri çizilir.
 
 **`Widget` katlanabilir** (opt-in): `collapsible`, `defaultOpen` (varsayılan true),
 `storageKey`, `open` (kontrollü) ve `onToggle( next )`. Başlığın içinde
@@ -765,6 +769,5 @@ React `useId()`'den gelir ve `:` içerir; bu kimlikle yapılan CSS seçici ya da
 
 - `Button`: çağıranın `aria-disabled`'ı artık hesaplanan devre dışı durumu
   ezemez.
-- `PageHeader`: rozet yokken boş rozet sarmalayıcısı çizilmez.
-- Çizgili (underline) `Tabs`, dar kaplarda kendi çubuğunun içinde kayar; odak
-  halkası çizgili varyantta içeri çizilir.
+- `PageHeader`: ne `badge` ne de herhangi bir `badges` öğesi metin taşıyorsa
+  rozet sarmalayıcısı çizilmez.
