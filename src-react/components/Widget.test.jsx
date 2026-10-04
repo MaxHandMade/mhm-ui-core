@@ -361,6 +361,75 @@ describe( 'collapsible Widget', () => {
 			expect( spy ).not.toHaveBeenCalled();
 		} );
 
+		test( 'a toggle press released elsewhere, with no click, still lets the page keep focus', async () => {
+			// The press blurs the action to nowhere (a browser that does not
+			// focus a clicked button), then the pointer is dragged off and
+			// released outside the toggle: no click, the card stays open.
+			const { rerender } = render( withAction( { open: true } ) );
+			const from = screen.getByRole( 'button', { name: 'Act' } );
+			from.focus();
+			const spy = jest.spyOn( toggleOf(), 'focus' );
+			fireEvent.mouseDown( toggleOf(), { button: 0 } );
+			releaseToPage( from );
+			fireEvent.mouseUp( from.ownerDocument.body );
+			await later();
+			rerender( withAction( { open: false } ) );
+			expect( spy ).not.toHaveBeenCalled();
+		} );
+
+		test( 'an unmount during a toggle press removes its page listeners', () => {
+			const doc = window.document;
+			const added = jest.spyOn( doc, 'addEventListener' );
+			const removed = jest.spyOn( doc, 'removeEventListener' );
+			const { unmount } = render( card() );
+			fireEvent.mouseDown( toggleOf(), { button: 0 } );
+			const mine = ( spy ) =>
+				spy.mock.calls
+					.filter( ( [ type ] ) =>
+						[ 'mouseup', 'pointercancel' ].includes( type )
+					)
+					.map( ( [ type, fn ] ) => [ type, fn ] );
+			const armed = mine( added );
+			expect( armed.map( ( [ type ] ) => type ) ).toEqual( [
+				'mouseup',
+				'pointercancel',
+			] );
+			unmount();
+			expect( mine( removed ) ).toEqual( armed );
+			added.mockRestore();
+			removed.mockRestore();
+		} );
+
+		test( 'a right-button press on the toggle does not hold focus for the card', async () => {
+			const { rerender } = render( withAction( { open: true } ) );
+			const from = screen.getByRole( 'button', { name: 'Inner' } );
+			from.focus();
+			const spy = jest.spyOn( toggleOf(), 'focus' );
+			fireEvent.mouseDown( toggleOf(), { button: 2 } );
+			releaseToPage( from );
+			await later();
+			rerender( withAction( { open: false } ) );
+			expect( spy ).not.toHaveBeenCalled();
+		} );
+
+		test.each( [
+			[ 'the body', 'Inner' ],
+			[ 'a header action', 'Act' ],
+		] )(
+			'a close in the same click that gave focus from %s to the page does not take it',
+			( _where, name ) => {
+				// An "outside click closes the card" consumer: the close lands
+				// before the blur has settled.
+				const { rerender } = render( withAction( { open: true } ) );
+				const from = screen.getByRole( 'button', { name } );
+				from.focus();
+				const spy = jest.spyOn( toggleOf(), 'focus' );
+				releaseToPage( from );
+				rerender( withAction( { open: false } ) );
+				expect( spy ).not.toHaveBeenCalled();
+			}
+		);
+
 		test( 'the window losing focus does not count as focus leaving the card', async () => {
 			// Alt-tab or DevTools: the action gets a blur with no relatedTarget,
 			// but the document's active element stays on it.
