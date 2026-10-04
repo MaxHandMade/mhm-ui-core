@@ -315,7 +315,8 @@ describe( 'collapsible Widget', () => {
 				.mockReturnValue( el.ownerDocument.body );
 		};
 		// Lets the click on empty space finish before anything else happens.
-		const later = () => act( async () => {} );
+		const later = () =>
+			act( () => new Promise( ( resolve ) => setTimeout( resolve, 0 ) ) );
 		afterEach( () => {
 			if ( activeSpy ) {
 				activeSpy.mockRestore();
@@ -358,6 +359,19 @@ describe( 'collapsible Widget', () => {
 				'false'
 			);
 			expect( spy ).not.toHaveBeenCalled();
+		} );
+
+		test( 'the window losing focus does not count as focus leaving the card', async () => {
+			// Alt-tab or DevTools: the action gets a blur with no relatedTarget,
+			// but the document's active element stays on it.
+			const { rerender } = render( withAction( { open: true } ) );
+			const act1 = screen.getByRole( 'button', { name: 'Act' } );
+			act1.focus();
+			fireEvent.focusOut( act1, { relatedTarget: null } );
+			expect( act1.ownerDocument.activeElement ).toBe( act1 );
+			await later();
+			rerender( withAction( { open: false } ) );
+			expect( toggleOf().ownerDocument.activeElement ).toBe( toggleOf() );
 		} );
 
 		test.each( [

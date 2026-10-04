@@ -1,4 +1,4 @@
-import { useId, useLayoutEffect, useRef } from '@wordpress/element';
+import { useEffect, useId, useLayoutEffect, useRef } from '@wordpress/element';
 import { resolveIcon } from '../icons';
 import { usePersistentOpen } from '../hooks/usePersistentOpen';
 
@@ -76,6 +76,8 @@ export default function Widget( {
 	const actionsRef = useRef( null );
 	const lastInside = useRef( null );
 	const togglePressed = useRef( false );
+	const releaseTimer = useRef( null );
+	useEffect( () => () => clearTimeout( releaseTimer.current ), [] );
 	const wasOpen = useRef( isOpen );
 	useLayoutEffect( () => {
 		const closed = wasOpen.current && ! isOpen;
@@ -177,11 +179,26 @@ export default function Widget( {
 				lastInside.current = null;
 			}
 		} else if ( ! pressed ) {
-			// Focus went nowhere (a click on empty page space): the page
-			// holds it now, and a later close must not pull it back. A press
-			// on the toggle in a browser that does not focus a clicked button
-			// lands here too, and its click closes the card: keep it for that.
-			lastInside.current = null;
+			// No relatedTarget: either focus went nowhere (a click on empty
+			// page space -- the page holds it now, and a later close must not
+			// pull it back) or the window itself lost focus (alt-tab, DevTools
+			// -- the active element stays put and focus comes back to it).
+			// Decide once the blur has settled. A press on the toggle in a
+			// browser that does not focus a clicked button also lands here,
+			// and its click closes the card: that one is kept outright.
+			const left = event.target;
+			const doc = left.ownerDocument;
+			clearTimeout( releaseTimer.current );
+			releaseTimer.current = setTimeout( () => {
+				releaseTimer.current = null;
+				const active = doc.activeElement;
+				if (
+					lastInside.current === left &&
+					( ! active || active === doc.body )
+				) {
+					lastInside.current = null;
+				}
+			}, 0 );
 		}
 	};
 
