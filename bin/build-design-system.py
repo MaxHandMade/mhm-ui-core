@@ -265,14 +265,30 @@ files["components/button.html"] = page(
     width=620,
 )
 
+# The markup Tabs.jsx emits for the same items, in both variants.
+_TABS_ITEMS = (
+    '<a href="#" class="mhmui-tabs__tab mhmui-tabs__tab--current" aria-current="page">Bekleyen Başvurular<span class="mhmui-tabs__badge%s"><span aria-hidden="true">1</span><span class="mhmui-tabs__badge-sr">1 bekleyen</span></span></a>'
+    '<a href="#" class="mhmui-tabs__tab">Aktif Bayiler</a>'
+    '<a href="#" class="mhmui-tabs__tab">IBAN Talepleri<span class="mhmui-tabs__badge%s">3</span></a>'
+    '<a href="#" class="mhmui-tabs__tab">Komisyon</a>'
+)
+TABS_PILL = '<nav class="mhmui-tabs" aria-label="Bayi yönetimi bölümleri">' + _TABS_ITEMS % ("", "") + "</nav>"
+TABS_UNDERLINE = (
+    '<nav class="mhmui-tabs mhmui-tabs--underline" aria-label="Bayi yönetimi bölümleri">'
+    + _TABS_ITEMS % ("", " mhmui-tabs__badge--warning")
+    + "</nav>"
+)
+
 files["components/tabs.html"] = page(
     "Components", "Tabs",
-    "<b>Tabs</b> — sayfa bölümleri, gerçek bağlantılar. Etkin sekme 2px vurgu çizgisiyle de ayrılır. Rozet: sayı aria-hidden, anlam görünmez metinde. Prop'lar: label, current, items{id,label,href,badge,badgeLabel}, onSelect.",
-    '<nav class="mhmui-tabs" aria-label="Bayi yönetimi bölümleri">'
-    '<a class="mhmui-tabs__tab mhmui-tabs__tab--current" href="#" aria-current="page">Bekleyen Başvurular<span class="mhmui-tabs__badge"><span aria-hidden="true">1</span><span class="mhmui-tabs__badge-sr">1 bekleyen</span></span></a>'
-    '<a class="mhmui-tabs__tab" href="#">Aktif Bayiler</a>'
-    '<a class="mhmui-tabs__tab" href="#">IBAN Talepleri<span class="mhmui-tabs__badge">3</span></a>'
-    '<a class="mhmui-tabs__tab" href="#">Komisyon</a></nav>',
+    "<b>Tabs</b> — sayfa bölümleri, gerçek bağlantılar. Etkin sekme 2px vurgu çizgisiyle de ayrılır. Rozet: sayı aria-hidden, anlam görünmez metinde. Prop'lar: label, current, items{id,label,href,badge,badgeLabel,badgeTone}, variant (pill | underline), showZero, onSelect. "
+    "variant=\"underline\": saydam satır, etkin sekmede 2px alt çizgi; .mhmui-tabs-bar sekmeleri ve sondaki bir bağlantıyı tek çizginin üstünde sarar. Dar kapta şerit taşmaz, çubuğun içinde yatay kayar; odak halkası sekmenin içine çizilir.",
+    '<div class="ds-label">variant="pill" (varsayılan)</div>'
+    + TABS_PILL
+    + '<div class="ds-label">variant="underline" + .mhmui-tabs-bar</div>'
+    '<div class="mhmui-tabs-bar">' + TABS_UNDERLINE + '<a href="#">Tüm başvurular</a></div>'
+    '<div class="ds-label">variant="underline", dar kap (320px): şerit kayar</div>'
+    '<div style="max-width:320px"><div class="mhmui-tabs-bar">' + TABS_UNDERLINE + '</div></div>',
     width=720,
 )
 
