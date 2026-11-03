@@ -2,10 +2,10 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { PageHeader, Tabs } from '../index';
 
 /**
- * Tabs and PageHeader each carry their own copy of isPlainLeftClick (audit of
- * the 0.15.0 branch, M-7). Moving it into one module is new import surface --
- * a minor bump by the house rule -- so it waits for 0.16.0. Until then this
- * table holds the two copies to one behaviour: a drift in either goes red.
+ * Tabs and PageHeader share one isPlainLeftClick (src-react/plain-left-click.js,
+ * 0.18.0; until then each carried its own copy, audit M-7). The table is kept
+ * on the two SURFACES, not the helper: a component that stops calling it, or
+ * calls something else, goes red here.
  */
 const CLICKS = [
 	[ 'plain left', { button: 0 }, true ],

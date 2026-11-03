@@ -1,3 +1,5 @@
+import { isPlainLeftClick } from '../plain-left-click';
+
 /**
  * Page-section navigation as real links.
  *
@@ -37,16 +39,6 @@
  *                                    right-hand link under one full-width rule.
  * @param {Function} [props.onSelect] ( id, event ) on a plain left click.
  */
-
-function isPlainLeftClick( event ) {
-	return (
-		event.button === 0 &&
-		! event.metaKey &&
-		! event.ctrlKey &&
-		! event.shiftKey &&
-		! event.altKey
-	);
-}
 
 const BADGE_TONES = [ 'success', 'warning', 'danger', 'info', 'neutral' ];
 
