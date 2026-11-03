@@ -847,8 +847,8 @@ lands on the **trigger** button. It never reaches the `.mhmui-confirm` root or
 the two prompt buttons, so a key or an id is never duplicated. While the prompt
 is open the trigger is not in the DOM; a consumer that tracks focus across that
 state should look up the `.mhmui-confirm` root. The kit's own `type`,
-`className`, `aria-disabled`, `aria-describedby` (pass `describedBy`) and
-`onClick` win over a passed value. An `aria-label` must contain the visible
+`className`, `aria-disabled`, `aria-describedby` (pass `describedBy`),
+`onClick` and `ref` win over a passed value (a `ref` is not forwarded). An `aria-label` must contain the visible
 `label` (WCAG 2.5.3).
 
 `Tabs` and `PageHeader` now share one internal plain-left-click guard

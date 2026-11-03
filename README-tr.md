@@ -792,8 +792,8 @@ Yeni prop ya da sınıf yok; `^0.17` bunu alır.
 iki düğmesine asla gitmez; bu yüzden bir anahtar ya da id iki kez görünmez. Onay
 kutusu açıkken tetikleyici DOM'da yoktur; bu durumda odağı izleyen bir tüketici
 `.mhmui-confirm` kökünü aramalıdır. Kitin kendi `type`, `className`,
-`aria-disabled`, `aria-describedby` (`describedBy` kullanın) ve `onClick` değerleri
-geçilen değeri ezer. Bir `aria-label` görünen `label`'ı içermelidir (WCAG 2.5.3).
+`aria-disabled`, `aria-describedby` (`describedBy` kullanın), `onClick` ve `ref`
+değerleri geçilen değeri ezer (`ref` iletilmez). Bir `aria-label` görünen `label`'ı içermelidir (WCAG 2.5.3).
 
 `Tabs` ve `PageHeader` artık tek bir iç sol tık denetimini paylaşır
 (`src-react/plain-left-click.js`, index'ten dışa aktarılmaz); tıklama davranışları

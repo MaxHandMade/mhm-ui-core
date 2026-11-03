@@ -12,3 +12,6 @@ build/
 .claude/memory/
 .claude/settings.json
 .claude/settings.local.json
+
+# Local VS Code workspace file; untracked on purpose (it would ship and move the surface pin).
+/mhm-ui-core.code-workspace

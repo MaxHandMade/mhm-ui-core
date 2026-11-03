@@ -39,7 +39,7 @@ const FOCUSABLE =
  *      is never duplicated. The trigger is not in the DOM while the prompt
  *      is open; a consumer tracking focus across that state reads the
  *      .mhmui-confirm root. The kit's own type, className, aria-disabled,
- *      aria-describedby (use describedBy) and onClick win. An aria-label
+ *      aria-describedby (use describedBy), onClick and ref win. An aria-label
  *      must contain the visible label (WCAG 2.5.3).
  *
  * @param {Object}   props
