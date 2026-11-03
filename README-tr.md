@@ -216,7 +216,7 @@ da bu tek yanlış cümle yüzünden taşıdı.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.17.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.18.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 `bootstrap.php`'yi doğrudan require etmek `MHMUICORE_VERSION`'ı anında tanımlar
@@ -642,7 +642,7 @@ parite kapısı eşitlik arar, uyumluluk değil.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.17.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.18.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 🔴 Sürüm dizesi **elle yazılır** (kayıt, herhangi bir bootstrap yüklenmeden önce koşar) ve
@@ -784,3 +784,18 @@ tıklama sayılmaz. Tasarım sistemindeki Tabs kartı artık `variant="underline
 bir `.mhmui-tabs-bar` içinde, şeridin kaydığı dar bir kap örneğiyle birlikte
 gösterir.
 Yeni prop ya da sınıf yok; `^0.17` bunu alır.
+
+### ConfirmButton ek prop'ları (0.18.0+)
+
+`ConfirmButton`'ın kendisinin adlandırmadığı her prop (`data-*`, `aria-*`, `id`,
+...) artık **tetikleyici** düğmeye iner. `.mhmui-confirm` köküne ve onay kutusunun
+iki düğmesine asla gitmez; bu yüzden bir anahtar ya da id iki kez görünmez. Onay
+kutusu açıkken tetikleyici DOM'da yoktur; bu durumda odağı izleyen bir tüketici
+`.mhmui-confirm` kökünü aramalıdır. Kitin kendi `type`, `className`,
+`aria-disabled`, `aria-describedby` (`describedBy` kullanın) ve `onClick` değerleri
+geçilen değeri ezer. Bir `aria-label` görünen `label`'ı içermelidir (WCAG 2.5.3).
+
+`Tabs` ve `PageHeader` artık tek bir iç sol tık denetimini paylaşır
+(`src-react/plain-left-click.js`, index'ten dışa aktarılmaz); tıklama davranışları
+değişmedi. Yeni sınıf yok, CSS değişikliği yok. Başvurulabilir bir yüzey eklendiği
+için bu bir minördür: `^0.17` bunu almaz; tüketici `^0.18` ile katılır.
