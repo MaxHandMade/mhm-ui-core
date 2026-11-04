@@ -1297,7 +1297,9 @@ h1.mhmui-page-header__title.mhmui-page-header__title {
 	min-height: 24px;
 	cursor: pointer;
 }
-.mhmui-table__select-hit input {
+/* (0,2,1): WP's `input[type=checkbox]` sizing (1.5625rem at <=782px) and
+   margin are (0,1,1), so the box wins on specificity, not on load order. */
+.mhmui-table__select-hit input[type="checkbox"] {
 	width: 16px;
 	height: 16px;
 	margin: 0;

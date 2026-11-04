@@ -1221,6 +1221,17 @@ describe( 'DataTable (0.19.0)', () => {
 		expect( body ).toMatch( /margin:\s*-4px 0 0 -5px/ );
 	} );
 
+	/*
+	 * WP's mobile `input[type=checkbox]` (0,1,1) sizes the box at 1.5625rem;
+	 * a (0,1,1) kit rule would win only by stylesheet order, and the mark and
+	 * the dash are both sized for the kit's box (audit of 0.19.1).
+	 */
+	test( 'the box size outranks WP on specificity (0.19.1)', () => {
+		const body = ruleBody( css, '.mhmui-table__select-hit input[type="checkbox"]' );
+		expect( body ).toMatch( /width:\s*16px/ );
+		expect( body ).toMatch( /margin:\s*0/ );
+	} );
+
 	test( 'the desktop mark rule is not filed inside the container block', () => {
 		expect( ruleBody( stack, MARK ) ).toBeNull();
 	} );
@@ -1244,6 +1255,10 @@ describe( 'DataTable (0.19.0)', () => {
 		expect( wide ).toMatch( /width:\s*8px/ );
 		expect( wide ).toMatch( /height:\s*2px/ );
 		expect( wide ).toMatch( /background:\s*#fff/ );
+		expect( wide ).toMatch( /display:\s*block/ );
+		expect( wide ).toMatch( /margin:\s*6px auto 0/ );
+		expect( ruleBody( stack, MIXED ) ).toBeNull();
+		expect( ruleBody( stack, `${ MIXED }::before` ) ).toBeNull();
 		const tall = ruleBody( stack, `.mhmui-table--stack ${ MIXED }::before` );
 		expect( tall ).toMatch( /width:\s*10px/ );
 		expect( tall ).toMatch( /margin:\s*8px auto 0/ );
