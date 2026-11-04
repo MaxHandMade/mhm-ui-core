@@ -1221,6 +1221,34 @@ describe( 'DataTable (0.19.0)', () => {
 		expect( body ).toMatch( /margin:\s*-4px 0 0 -5px/ );
 	} );
 
+	test( 'the desktop mark rule is not filed inside the container block', () => {
+		expect( ruleBody( stack, MARK ) ).toBeNull();
+	} );
+
+	/*
+	 * WP forms.css has no :indeterminate rule and draws checkboxes with
+	 * `appearance: none`, so a mixed SelectAll looked exactly like an empty
+	 * box in wp-admin (Fable audit of 0.19.1). The kit draws it: WP's checked
+	 * fill and a centred white dash.
+	 */
+	const MIXED = '.mhmui-table__select-hit input[type="checkbox"]:indeterminate';
+	test( 'a mixed box is filled like a checked one (0.19.1)', () => {
+		const body = ruleBody( css, MIXED );
+		expect( body ).toMatch( /background:\s*var\(\s*--wp-admin-theme-color/ );
+		expect( body ).toMatch( /border-color:\s*var\(\s*--wp-admin-theme-color/ );
+	} );
+
+	test( 'a mixed box draws a dash, sized for 16px and the stacked 20px (0.19.1)', () => {
+		const wide = ruleBody( css, `${ MIXED }::before` );
+		expect( wide ).toMatch( /content:\s*""/ );
+		expect( wide ).toMatch( /width:\s*8px/ );
+		expect( wide ).toMatch( /height:\s*2px/ );
+		expect( wide ).toMatch( /background:\s*#fff/ );
+		const tall = ruleBody( stack, `.mhmui-table--stack ${ MIXED }::before` );
+		expect( tall ).toMatch( /width:\s*10px/ );
+		expect( tall ).toMatch( /margin:\s*8px auto 0/ );
+	} );
+
 	test( 'the stacked cell label is spoken (no alt-text form)', () => {
 		const body = ruleBody( stack, '.mhmui-table--stack td[data-label]::before' );
 		expect( body ).toMatch( /content:\s*attr\(\s*data-label\s*\)/ );
