@@ -4,9 +4,11 @@ const postcss = require( 'postcss' );
 const { ruleBody, mediaBlock } = require( './helpers' );
 
 const ROOT = join( __dirname, '..', '..' );
-const read = ( f ) => readFileSync( join( ROOT, 'assets', 'react', f ), 'utf8' );
+const read = ( f ) =>
+	readFileSync( join( ROOT, 'assets', 'react', f ), 'utf8' );
 
-/** No `width` declaration on the admin shell: it sits on the SAME element as
+/**
+ * No `width` declaration on the admin shell: it sits on the SAME element as
  * WP core's own `.wrap` (margin: 10px 20px 0 2px), and a block box already
  * fills its container's content box on its own while respecting its own
  * margins -- that IS "flows full width". Forcing `width: 100%` on top of
@@ -14,92 +16,142 @@ const read = ( f ) => readFileSync( join( ROOT, 'assets', 'react', f ), 'utf8' )
  * margins (measured 2026-09-18, Chrome 1905px: .wrap.mhmui-admin.mhmui-admin-page
  * grew to 1907, the fourth KPI card clipped, page grew a horizontal
  * scrollbar). The lookbehind excludes `max-width` (and would exclude
- * `min-width`), whose hyphen sits directly before "width:". */
+ * `min-width`), whose hyphen sits directly before "width:".
+ * @param css
+ */
 function adminPageFlows( css ) {
 	const body = ruleBody( css, '.mhmui-admin-page' );
-	return body !== null
-		&& /max-width:\s*none/.test( body )
-		&& ! /container/.test( body )
-		&& ! /(?<!-)width:/.test( body );
+	return (
+		body !== null &&
+		/max-width:\s*none/.test( body ) &&
+		! /container/.test( body ) &&
+		! /(?<!-)width:/.test( body )
+	);
 }
 
 function frontPageCentresAndContains( css ) {
 	const body = ruleBody( css, '.mhmui-front-page' );
-	return body !== null && /margin-inline:\s*auto/.test( body ) && /container:\s*mhmui-page\s*\/\s*inline-size/.test( body ) && /max-width:\s*var\(\s*--mhmui-page-max\s*\)/.test( body );
+	return (
+		body !== null &&
+		/margin-inline:\s*auto/.test( body ) &&
+		/container:\s*mhmui-page\s*\/\s*inline-size/.test( body ) &&
+		/max-width:\s*var\(\s*--mhmui-page-max\s*\)/.test( body )
+	);
 }
 
-/** The plain (untoned) emphasis rule sets the accent colour -- not just present
- * as a substring of the tone-override selector, which also contains this text. */
+/**
+ * The plain (untoned) emphasis rule sets the accent colour -- not just present
+ * as a substring of the tone-override selector, which also contains this text.
+ * @param css
+ */
 function emphasisPlainRuleSetsAccent( css ) {
-	const body = ruleBody( css, '.mhmui-stat-card--emphasis .mhmui-stat-card__value' );
-	return body !== null && /color:\s*var\(\s*--mhmui-accent-strong\s*\)/.test( body );
+	const body = ruleBody(
+		css,
+		'.mhmui-stat-card--emphasis .mhmui-stat-card__value'
+	);
+	return (
+		body !== null &&
+		/color:\s*var\(\s*--mhmui-accent-strong\s*\)/.test( body )
+	);
 }
 
-/** The stat-card dashicon carries the accent colour -- the defect this gate
+/**
+ * The stat-card dashicon carries the accent colour -- the defect this gate
  * exists to catch (admin.css:311 had no colour at all before the fix, so the
  * icon silently inherited --mhmui-text instead of standing out in the
- * accent). */
+ * accent).
+ * @param css
+ */
 function statCardIconIsAccent( css ) {
 	const body = ruleBody( css, '.mhmui-stat-card .dashicons' );
 	return body !== null && /color:\s*var\(\s*--mhmui-accent\s*\)/.test( body );
 }
 
-/** The delta line is green climbing, red falling. The non-colour cue WCAG
+/**
+ * The delta line is green climbing, red falling. The non-colour cue WCAG
  * 1.4.1 requires no longer lives in the stylesheet -- it lives in the
  * consumer's own delta text (an arrow or a sign, per the `delta` docblock /
  * README), so the falling rule must NOT reintroduce an underline (or any
- * other text-decoration) on top of that. */
+ * other text-decoration) on top of that.
+ * @param css
+ */
 function statCardDeltaHasDirectionColour( css ) {
 	const up = ruleBody( css, '.mhmui-stat-card__delta--up' );
 	const down = ruleBody( css, '.mhmui-stat-card__delta--down' );
-	return up !== null && down !== null
-		&& /color:\s*var\(\s*--mhmui-success-strong\s*\)/.test( up )
-		&& /color:\s*var\(\s*--mhmui-danger-strong\s*\)/.test( down )
-		&& ! /text-decoration/.test( down );
+	return (
+		up !== null &&
+		down !== null &&
+		/color:\s*var\(\s*--mhmui-success-strong\s*\)/.test( up ) &&
+		/color:\s*var\(\s*--mhmui-danger-strong\s*\)/.test( down ) &&
+		! /text-decoration/.test( down )
+	);
 }
 
-/** The direction mark (StatCard's aria-hidden ↑/↓) inherits the delta line's
+/**
+ * The direction mark (StatCard's aria-hidden ↑/↓) inherits the delta line's
  * colour and keeps a small gap from the text -- it must not disappear
  * (display:none / visibility:hidden) or lose its colour, either of which
  * would silently drop the non-colour cue WCAG 1.4.1 needs even though the
- * coloured delta line still renders fine. */
+ * coloured delta line still renders fine.
+ * @param css
+ * @param selector
+ */
 function deltaMarkInheritsColourAndHasSpacing( css, selector ) {
 	const body = ruleBody( css, selector );
-	return body !== null
-		&& /color:\s*inherit/.test( body )
-		&& /margin/.test( body )
-		&& ! /display:\s*none/.test( body )
-		&& ! /visibility:\s*hidden/.test( body );
+	return (
+		body !== null &&
+		/color:\s*inherit/.test( body ) &&
+		/margin/.test( body ) &&
+		! /display:\s*none/.test( body ) &&
+		! /visibility:\s*hidden/.test( body )
+	);
 }
 
-/** The delta line's accessible-name span (StatCard's optional `delta.label`,
+/**
+ * The delta line's accessible-name span (StatCard's optional `delta.label`,
  * 0.13.0+) must be visually hidden but stay IN the accessibility tree: the
  * standard clip-to-1px pattern (position:absolute, 1x1px, clipped, no
  * wrapping), never display:none / visibility:hidden -- either of those
  * removes it from the accessibility tree too, which defeats the entire
- * point of adding it (P1: direction invisible to assistive technology). */
+ * point of adding it (P1: direction invisible to assistive technology).
+ * @param css
+ * @param selector
+ */
 function deltaSrIsVisuallyHidden( css, selector ) {
 	const body = ruleBody( css, selector );
-	return body !== null
-		&& /position:\s*absolute/.test( body )
-		&& /width:\s*1px/.test( body )
-		&& /height:\s*1px/.test( body )
-		&& /overflow:\s*hidden/.test( body )
-		&& /clip(-path)?:/.test( body )
-		&& ! /display:\s*none/.test( body )
-		&& ! /visibility:\s*hidden/.test( body );
+	return (
+		body !== null &&
+		/position:\s*absolute/.test( body ) &&
+		/width:\s*1px/.test( body ) &&
+		/height:\s*1px/.test( body ) &&
+		/overflow:\s*hidden/.test( body ) &&
+		/clip(-path)?:/.test( body ) &&
+		! /display:\s*none/.test( body ) &&
+		! /visibility:\s*hidden/.test( body )
+	);
 }
 
-/** The grid rule itself wraps from the --mhmui-columns ceiling via auto-fit,
- * not merely present somewhere else in the file. */
+/**
+ * The grid rule itself wraps from the --mhmui-columns ceiling via auto-fit,
+ * not merely present somewhere else in the file.
+ * @param css
+ * @param selector
+ */
 function gridWrapsFromColumns( css, selector ) {
 	const body = ruleBody( css, selector );
-	return body !== null && /repeat\(\s*auto-fit/.test( body ) && /var\(\s*--mhmui-columns\s*\)/.test( body );
+	return (
+		body !== null &&
+		/repeat\(\s*auto-fit/.test( body ) &&
+		/var\(\s*--mhmui-columns\s*\)/.test( body )
+	);
 }
 
-/** Splits a comma-separated selector list on its TOP-LEVEL commas only --
+/**
+ * Splits a comma-separated selector list on its TOP-LEVEL commas only --
  * one inside a pseudo-class's parentheses (e.g. `:is( a, b )`) does not end
- * the selector it is part of. */
+ * the selector it is part of.
+ * @param selectorList
+ */
 function splitTopLevelCommas( selectorList ) {
 	const parts = [];
 	let depth = 0;
@@ -121,10 +173,13 @@ function splitTopLevelCommas( selectorList ) {
 	return parts;
 }
 
-/** True only when `selector` is `:where( ... )` in its entirety -- the
+/**
+ * True only when `selector` is `:where( ... )` in its entirety -- the
  * :where(...) opens at the very first character and its matching close is
  * the very last, so nothing trails outside it (which would carry its own,
- * non-zero specificity: `:where( .mhmui-front ) .x` is 0-1-0, not 0-0-0). */
+ * non-zero specificity: `:where( .mhmui-front ) .x` is 0-1-0, not 0-0-0).
+ * @param selector
+ */
 function isFullyWrappedInWhere( selector ) {
 	if ( ! selector.startsWith( ':where(' ) ) {
 		return false;
@@ -143,7 +198,8 @@ function isFullyWrappedInWhere( selector ) {
 	return false;
 }
 
-/** Gate for item 1 of the audit: every `:where(` skin selector in the
+/**
+ * Gate for item 1 of the audit: every `:where(` skin selector in the
  * stylesheet must wrap its WHOLE selector, not just the `.mhmui-front`
  * ancestor -- `:where( .mhmui-front ) .x` is 0-1-0 per MDN's :where()
  * specificity rule, not the zero specificity the header comment promises.
@@ -154,7 +210,10 @@ function isFullyWrappedInWhere( selector ) {
  * to police had silently gone missing. Default 1 rejects that empty case for
  * any caller; the real front.css assertion below raises it to 6, the actual
  * count of skin rules (measured 2026-09-17).
- * Reads through rules() (B-3), so a rule inside an at-rule is seen too. */
+ * Reads through rules() (B-3), so a rule inside an at-rule is seen too.
+ * @param css
+ * @param minCount
+ */
 function allWhereSelectorsFullyWrapped( css, minCount = 1 ) {
 	let found = 0;
 	for ( const [ sel ] of rules( css ) ) {
@@ -169,19 +228,24 @@ function allWhereSelectorsFullyWrapped( css, minCount = 1 ) {
 	return found >= minCount;
 }
 
-/** Every UNWRAPPED rule (selector text, after stripping comments, matched
+/**
+ * Every UNWRAPPED rule (selector text, after stripping comments, matched
  * EXACTLY as one top-level item of a possibly comma-separated selector list)
  * whose selector equals `selector` -- ALL of them, in source order, not just
  * the first. Reused by `hierarchyDeclaredExactlyOnce` below; see that
  * function's comment for why "just the first" was the bug.
- * Reads through rules() (B-3), so a rule inside an at-rule is seen too. */
+ * Reads through rules() (B-3), so a rule inside an at-rule is seen too.
+ * @param css
+ * @param selector
+ */
 function unwrappedRuleBodiesForSelector( css, selector ) {
 	return rules( css )
 		.filter( ( [ sel ] ) => sel === selector )
 		.map( ( [ , body ] ) => body );
 }
 
-/** L2 (2026-09-18), fix round 1 / F1 (reviewer-found regression in the gate
+/**
+ * L2 (2026-09-18), fix round 1 / F1 (reviewer-found regression in the gate
  * itself, 2026-09-18): the front-end hierarchy typography -- the value
  * dominating its label, the thing that makes a KPI card a KPI card -- must
  * live OUTSIDE :where(), at normal specificity (0-2-0), not inside the
@@ -207,18 +271,49 @@ function unwrappedRuleBodiesForSelector( css, selector ) {
  * it says. A rule that merely GROUPS this selector for something unrelated
  * -- the margin reset `.mhmui-front .mhmui-stat-card__label, … .mhmui-stat-
  * card__delta { margin: 0; }` -- does not count: it declares none of
- * `properties`, so it is filtered out before counting (exercised below). */
+ * `properties`, so it is filtered out before counting (exercised below).
+ * @param css
+ * @param selector
+ * @param properties
+ */
 function hierarchyDeclaredExactlyOnce( css, selector, properties ) {
 	const bodies = unwrappedRuleBodiesForSelector( css, selector );
-	const declaring = bodies.filter( ( body ) => properties.some( ( prop ) => new RegExp( `${ prop }\\s*:` ).test( body ) ) );
-	return declaring.length === 1 && properties.every( ( prop ) => new RegExp( `${ prop }\\s*:` ).test( declaring[ 0 ] ) );
+	const declaring = bodies.filter( ( body ) =>
+		properties.some( ( prop ) =>
+			new RegExp( `${ prop }\\s*:` ).test( body )
+		)
+	);
+	return (
+		declaring.length === 1 &&
+		properties.every( ( prop ) =>
+			new RegExp( `${ prop }\\s*:` ).test( declaring[ 0 ] )
+		)
+	);
 }
 
 function frontHierarchyOutsideWhere( css ) {
-	return hierarchyDeclaredExactlyOnce( css, '.mhmui-front .mhmui-stat-card__value', [ 'font-size', 'font-weight' ] )
-		&& hierarchyDeclaredExactlyOnce( css, '.mhmui-front .mhmui-stat-card__label', [ 'font-size' ] )
-		&& hierarchyDeclaredExactlyOnce( css, '.mhmui-front .mhmui-stat-card__sub', [ 'font-size' ] )
-		&& hierarchyDeclaredExactlyOnce( css, '.mhmui-front .mhmui-stat-card__delta', [ 'font-size' ] );
+	return (
+		hierarchyDeclaredExactlyOnce(
+			css,
+			'.mhmui-front .mhmui-stat-card__value',
+			[ 'font-size', 'font-weight' ]
+		) &&
+		hierarchyDeclaredExactlyOnce(
+			css,
+			'.mhmui-front .mhmui-stat-card__label',
+			[ 'font-size' ]
+		) &&
+		hierarchyDeclaredExactlyOnce(
+			css,
+			'.mhmui-front .mhmui-stat-card__sub',
+			[ 'font-size' ]
+		) &&
+		hierarchyDeclaredExactlyOnce(
+			css,
+			'.mhmui-front .mhmui-stat-card__delta',
+			[ 'font-size' ]
+		)
+	);
 }
 
 describe( 'page layout standard (spec §3.5)', () => {
@@ -234,8 +329,12 @@ describe( 'page layout standard (spec §3.5)', () => {
 	} );
 
 	test( 'both stats grids wrap from the --mhmui-columns ceiling, not a fixed track list', () => {
-		expect( gridWrapsFromColumns( admin, '.mhmui-stats-grid' ) ).toBe( true );
-		expect( gridWrapsFromColumns( front, '.mhmui-front .mhmui-stats-grid' ) ).toBe( true );
+		expect( gridWrapsFromColumns( admin, '.mhmui-stats-grid' ) ).toBe(
+			true
+		);
+		expect(
+			gridWrapsFromColumns( front, '.mhmui-front .mhmui-stats-grid' )
+		).toBe( true );
 	} );
 
 	test( 'front.css declares no font-family and nothing !important', () => {
@@ -255,13 +354,30 @@ describe( 'page layout standard (spec §3.5)', () => {
 	} );
 
 	test( 'the delta direction mark inherits the delta colour and keeps a gap from the text, in both stylesheets', () => {
-		expect( deltaMarkInheritsColourAndHasSpacing( admin, '.mhmui-stat-card__delta-mark' ) ).toBe( true );
-		expect( deltaMarkInheritsColourAndHasSpacing( front, '.mhmui-front .mhmui-stat-card__delta-mark' ) ).toBe( true );
+		expect(
+			deltaMarkInheritsColourAndHasSpacing(
+				admin,
+				'.mhmui-stat-card__delta-mark'
+			)
+		).toBe( true );
+		expect(
+			deltaMarkInheritsColourAndHasSpacing(
+				front,
+				'.mhmui-front .mhmui-stat-card__delta-mark'
+			)
+		).toBe( true );
 	} );
 
 	test( 'the delta accessible-name span is visually hidden but stays in the accessibility tree, in both stylesheets', () => {
-		expect( deltaSrIsVisuallyHidden( admin, '.mhmui-stat-card__delta-sr' ) ).toBe( true );
-		expect( deltaSrIsVisuallyHidden( front, '.mhmui-front .mhmui-stat-card__delta-sr' ) ).toBe( true );
+		expect(
+			deltaSrIsVisuallyHidden( admin, '.mhmui-stat-card__delta-sr' )
+		).toBe( true );
+		expect(
+			deltaSrIsVisuallyHidden(
+				front,
+				'.mhmui-front .mhmui-stat-card__delta-sr'
+			)
+		).toBe( true );
 	} );
 
 	test( 'front.css skin rules wrap the WHOLE selector in :where(), not just the .mhmui-front ancestor', () => {
@@ -276,102 +392,142 @@ describe( 'page layout standard (spec §3.5)', () => {
 	} );
 
 	test( 'the checks are not vacuous: a capped admin shell and an uncontained front shell go red', () => {
-		expect( adminPageFlows( '.mhmui-admin-page { max-width: 1200px; }' ) ).toBe( false );
-		expect( adminPageFlows( '.mhmui-admin-page { max-width: none; container: x / inline-size; }' ) ).toBe( false );
+		expect(
+			adminPageFlows( '.mhmui-admin-page { max-width: 1200px; }' )
+		).toBe( false );
+		expect(
+			adminPageFlows(
+				'.mhmui-admin-page { max-width: none; container: x / inline-size; }'
+			)
+		).toBe( false );
 		// The regression this gate was added for (2026-09-18): `width: 100%`
 		// on the SAME element as WP core's own `.wrap` (non-zero horizontal
 		// margin) overflows the container by exactly that margin.
-		expect( adminPageFlows( '.mhmui-admin-page { width: 100%; max-width: none; box-sizing: border-box; }' ) ).toBe( false );
-		expect( frontPageCentresAndContains( '.mhmui-front-page { max-width: var(--mhmui-page-max); margin-inline: auto; }' ) ).toBe( false );
+		expect(
+			adminPageFlows(
+				'.mhmui-admin-page { width: 100%; max-width: none; box-sizing: border-box; }'
+			)
+		).toBe( false );
+		expect(
+			frontPageCentresAndContains(
+				'.mhmui-front-page { max-width: var(--mhmui-page-max); margin-inline: auto; }'
+			)
+		).toBe( false );
 
 		// Only the tone-override selector present (no plain emphasis rule) --
 		// this contains the same ".mhmui-stat-card--emphasis .mhmui-stat-card__value"
 		// substring, which is exactly what made the old substring-regex test vacuous.
-		expect( emphasisPlainRuleSetsAccent(
-			':is( .mhmui-stat-card--info ).mhmui-stat-card--emphasis .mhmui-stat-card__value { color: inherit; }'
-		) ).toBe( false );
+		expect(
+			emphasisPlainRuleSetsAccent(
+				':is( .mhmui-stat-card--info ).mhmui-stat-card--emphasis .mhmui-stat-card__value { color: inherit; }'
+			)
+		).toBe( false );
 
 		// Icon rule present but the colour got dropped -- would silently
 		// go back to inheriting page text instead of the accent.
-		expect( statCardIconIsAccent( '.mhmui-stat-card .dashicons { font-size: 28px; }' ) ).toBe( false );
+		expect(
+			statCardIconIsAccent(
+				'.mhmui-stat-card .dashicons { font-size: 28px; }'
+			)
+		).toBe( false );
 
 		// Neither delta direction has a colour at all.
-		expect( statCardDeltaHasDirectionColour(
-			'.mhmui-stat-card__delta--up { } .mhmui-stat-card__delta--down { }'
-		) ).toBe( false );
+		expect(
+			statCardDeltaHasDirectionColour(
+				'.mhmui-stat-card__delta--up { } .mhmui-stat-card__delta--down { }'
+			)
+		).toBe( false );
 
 		// Up has its colour, but down lost its -- still fails, both directions
 		// are required.
-		expect( statCardDeltaHasDirectionColour(
-			'.mhmui-stat-card__delta--up { color: var( --mhmui-success-strong ); } .mhmui-stat-card__delta--down { }'
-		) ).toBe( false );
+		expect(
+			statCardDeltaHasDirectionColour(
+				'.mhmui-stat-card__delta--up { color: var( --mhmui-success-strong ); } .mhmui-stat-card__delta--down { }'
+			)
+		).toBe( false );
 
 		// Both colours present, but an underline crept back onto --down --
 		// the non-colour cue now lives in the consumer's delta text (an arrow
 		// or sign), not the stylesheet, so a reintroduced text-decoration
 		// must fail this check.
-		expect( statCardDeltaHasDirectionColour(
-			'.mhmui-stat-card__delta--up { color: var( --mhmui-success-strong ); } .mhmui-stat-card__delta--down { color: var( --mhmui-danger-strong ); text-decoration: underline; }'
-		) ).toBe( false );
+		expect(
+			statCardDeltaHasDirectionColour(
+				'.mhmui-stat-card__delta--up { color: var( --mhmui-success-strong ); } .mhmui-stat-card__delta--down { color: var( --mhmui-danger-strong ); text-decoration: underline; }'
+			)
+		).toBe( false );
 
 		// Direction mark rule present but the colour dropped -- would silently
 		// lose the WCAG 1.4.1 cue even though the coloured delta line itself
 		// still renders fine.
-		expect( deltaMarkInheritsColourAndHasSpacing(
-			'.mhmui-stat-card__delta-mark { margin-right: 4px; }',
-			'.mhmui-stat-card__delta-mark'
-		) ).toBe( false );
+		expect(
+			deltaMarkInheritsColourAndHasSpacing(
+				'.mhmui-stat-card__delta-mark { margin-right: 4px; }',
+				'.mhmui-stat-card__delta-mark'
+			)
+		).toBe( false );
 
 		// Colour present but the mark is hidden -- it must never be able to
 		// disappear, that IS the non-colour cue.
-		expect( deltaMarkInheritsColourAndHasSpacing(
-			'.mhmui-stat-card__delta-mark { color: inherit; margin-right: 4px; display: none; }',
-			'.mhmui-stat-card__delta-mark'
-		) ).toBe( false );
-		expect( deltaMarkInheritsColourAndHasSpacing(
-			'.mhmui-stat-card__delta-mark { color: inherit; margin-right: 4px; visibility: hidden; }',
-			'.mhmui-stat-card__delta-mark'
-		) ).toBe( false );
+		expect(
+			deltaMarkInheritsColourAndHasSpacing(
+				'.mhmui-stat-card__delta-mark { color: inherit; margin-right: 4px; display: none; }',
+				'.mhmui-stat-card__delta-mark'
+			)
+		).toBe( false );
+		expect(
+			deltaMarkInheritsColourAndHasSpacing(
+				'.mhmui-stat-card__delta-mark { color: inherit; margin-right: 4px; visibility: hidden; }',
+				'.mhmui-stat-card__delta-mark'
+			)
+		).toBe( false );
 
 		// The rule for the mark itself is missing entirely -- only the delta
 		// line's own colour rule is present.
-		expect( deltaMarkInheritsColourAndHasSpacing(
-			'.mhmui-stat-card__delta { color: red; }',
-			'.mhmui-stat-card__delta-mark'
-		) ).toBe( false );
+		expect(
+			deltaMarkInheritsColourAndHasSpacing(
+				'.mhmui-stat-card__delta { color: red; }',
+				'.mhmui-stat-card__delta-mark'
+			)
+		).toBe( false );
 
 		// Grid rule present but fixed tracks, not auto-fit -- would still wrap
 		// nothing, since it never yields to the container's available space.
-		expect( gridWrapsFromColumns(
-			'.mhmui-stats-grid { grid-template-columns: repeat( 4, 1fr ); }',
-			'.mhmui-stats-grid'
-		) ).toBe( false );
+		expect(
+			gridWrapsFromColumns(
+				'.mhmui-stats-grid { grid-template-columns: repeat( 4, 1fr ); }',
+				'.mhmui-stats-grid'
+			)
+		).toBe( false );
 
 		// Only the .mhmui-front ancestor is zeroed; the descendant compound
 		// trails outside the :where(...) and still carries its own
 		// specificity (0-1-0) -- exactly the bug this gate exists to catch.
-		expect( allWhereSelectorsFullyWrapped(
-			':where( .mhmui-front ) .x { }'
-		) ).toBe( false );
+		expect(
+			allWhereSelectorsFullyWrapped( ':where( .mhmui-front ) .x { }' )
+		).toBe( false );
 
 		// No :where( selector at all -- "every one of them is fully wrapped"
 		// used to be true over an empty set, so a stylesheet that lost all
 		// six skin rules would have passed this gate silently.
-		expect( allWhereSelectorsFullyWrapped(
-			'.mhmui-front .mhmui-stat-card__label { color: red; }'
-		) ).toBe( false );
+		expect(
+			allWhereSelectorsFullyWrapped(
+				'.mhmui-front .mhmui-stat-card__label { color: red; }'
+			)
+		).toBe( false );
 
 		// L2 regression, mutated: the value's font-size put back inside
 		// :where() only, leaving nothing but font-weight on the unwrapped
 		// rule -- the reset that motivated this gate would beat font-size
 		// again, so this must go red. (label/sub/delta given valid rules so
 		// the failure is attributable to the value mutation specifically.)
-		expect( frontHierarchyOutsideWhere(
-			'.mhmui-front .mhmui-stat-card__value { font-weight: 600; } '
-			+ ':where( .mhmui-front .mhmui-stat-card__value ) { font-size: 1.75rem; } '
-			+ '.mhmui-front .mhmui-stat-card__label { font-size: 0.8125rem; } '
-			+ '.mhmui-front .mhmui-stat-card__sub, .mhmui-front .mhmui-stat-card__delta { font-size: 0.75rem; }'
-		) ).toBe( false );
+		expect(
+			frontHierarchyOutsideWhere(
+				'.mhmui-front .mhmui-stat-card__value { font-weight: 600; } ' +
+					':where( .mhmui-front .mhmui-stat-card__value ) { font-size: 1.75rem; } ' +
+					'.mhmui-front .mhmui-stat-card__label { font-size: 0.8125rem; } ' +
+					'.mhmui-front .mhmui-stat-card__sub, .mhmui-front .mhmui-stat-card__delta { font-size: 0.75rem; }'
+			)
+		).toBe( false );
 
 		// F1 (reviewer-found, 2026-09-18): a SECOND, LATER value rule --
 		// e.g. a bad merge/rebase reintroducing the pre-fix declaration --
@@ -380,49 +536,61 @@ describe( 'page layout standard (spec §3.5)', () => {
 		// and stayed green here; a browser resolves the equal-specificity
 		// tie by source order and renders the LATER rule, so the value goes
 		// back to looking identical to its label. This must go red.
-		expect( frontHierarchyOutsideWhere(
-			'.mhmui-front .mhmui-stat-card__value { font-size: 1.75rem; font-weight: 600; } '
-			+ '.mhmui-front .mhmui-stat-card__label { font-size: 0.8125rem; } '
-			+ '.mhmui-front .mhmui-stat-card__sub, .mhmui-front .mhmui-stat-card__delta { font-size: 0.75rem; } '
-			+ '.mhmui-front .mhmui-stat-card__value { font-size: 1rem; font-weight: 400; }'
-		) ).toBe( false );
+		expect(
+			frontHierarchyOutsideWhere(
+				'.mhmui-front .mhmui-stat-card__value { font-size: 1.75rem; font-weight: 600; } ' +
+					'.mhmui-front .mhmui-stat-card__label { font-size: 0.8125rem; } ' +
+					'.mhmui-front .mhmui-stat-card__sub, .mhmui-front .mhmui-stat-card__delta { font-size: 0.75rem; } ' +
+					'.mhmui-front .mhmui-stat-card__value { font-size: 1rem; font-weight: 400; }'
+			)
+		).toBe( false );
 
 		// The margin-reset rule groups all four part selectors together for
 		// an UNRELATED property -- it must not be mistaken for a second
 		// hierarchy-declaring rule. A single, correct hierarchy rule
 		// alongside it still reads as "exactly once" and must pass.
-		expect( frontHierarchyOutsideWhere(
-			'.mhmui-front .mhmui-stat-card__label, .mhmui-front .mhmui-stat-card__value, .mhmui-front .mhmui-stat-card__sub, .mhmui-front .mhmui-stat-card__delta { margin: 0; } '
-			+ '.mhmui-front .mhmui-stat-card__value { font-size: 1.75rem; font-weight: 600; } '
-			+ '.mhmui-front .mhmui-stat-card__label { font-size: 0.8125rem; } '
-			+ '.mhmui-front .mhmui-stat-card__sub, .mhmui-front .mhmui-stat-card__delta { font-size: 0.75rem; }'
-		) ).toBe( true );
+		expect(
+			frontHierarchyOutsideWhere(
+				'.mhmui-front .mhmui-stat-card__label, .mhmui-front .mhmui-stat-card__value, .mhmui-front .mhmui-stat-card__sub, .mhmui-front .mhmui-stat-card__delta { margin: 0; } ' +
+					'.mhmui-front .mhmui-stat-card__value { font-size: 1.75rem; font-weight: 600; } ' +
+					'.mhmui-front .mhmui-stat-card__label { font-size: 0.8125rem; } ' +
+					'.mhmui-front .mhmui-stat-card__sub, .mhmui-front .mhmui-stat-card__delta { font-size: 0.75rem; }'
+			)
+		).toBe( true );
 
 		// The rule is missing entirely.
-		expect( deltaSrIsVisuallyHidden(
-			'.mhmui-stat-card__delta { color: red; }',
-			'.mhmui-stat-card__delta-sr'
-		) ).toBe( false );
+		expect(
+			deltaSrIsVisuallyHidden(
+				'.mhmui-stat-card__delta { color: red; }',
+				'.mhmui-stat-card__delta-sr'
+			)
+		).toBe( false );
 
 		// Not clipped/positioned at all -- would render as plain visible text.
-		expect( deltaSrIsVisuallyHidden(
-			'.mhmui-stat-card__delta-sr { color: red; }',
-			'.mhmui-stat-card__delta-sr'
-		) ).toBe( false );
+		expect(
+			deltaSrIsVisuallyHidden(
+				'.mhmui-stat-card__delta-sr { color: red; }',
+				'.mhmui-stat-card__delta-sr'
+			)
+		).toBe( false );
 
 		// display:none -- hides it from the accessibility tree too, defeating
 		// the entire point of an accessible-name span.
-		expect( deltaSrIsVisuallyHidden(
-			'.mhmui-stat-card__delta-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); display: none; }',
-			'.mhmui-stat-card__delta-sr'
-		) ).toBe( false );
+		expect(
+			deltaSrIsVisuallyHidden(
+				'.mhmui-stat-card__delta-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); display: none; }',
+				'.mhmui-stat-card__delta-sr'
+			)
+		).toBe( false );
 
 		// visibility:hidden -- same defect as display:none, via a different
 		// property.
-		expect( deltaSrIsVisuallyHidden(
-			'.mhmui-stat-card__delta-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); visibility: hidden; }',
-			'.mhmui-stat-card__delta-sr'
-		) ).toBe( false );
+		expect(
+			deltaSrIsVisuallyHidden(
+				'.mhmui-stat-card__delta-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); visibility: hidden; }',
+				'.mhmui-stat-card__delta-sr'
+			)
+		).toBe( false );
 	} );
 } );
 
@@ -446,15 +614,19 @@ describe( 'vertical rhythm is owned by the page shell (0.14.0)', () => {
 		] ) {
 			const body = ruleBody( css, `${ shell } ${ RHYTHM }` );
 			expect( [ name, body ] ).not.toEqual( [ name, null ] );
-			expect( body ).toMatch( /margin-block-start:\s*var\(\s*--mhmui-space-3\s*\)/ );
+			expect( body ).toMatch(
+				/margin-block-start:\s*var\(\s*--mhmui-space-3\s*\)/
+			);
 		}
 	} );
 
-	/** Branch audit 2026-09-23 (M-5, re-graded Important): a sticky aside
+	/**
+	 * Branch audit 2026-09-23 (M-5, re-graded Important): a sticky aside
 	 * taller than the viewport stays pinned at its top, so its bottom -- the
 	 * decision buttons under an open reason field -- sits off screen until the
 	 * main column ends, and keyboard focus landing there is not scrolled into
-	 * view. The aside is capped at the viewport and scrolls on its own. */
+	 * view. The aside is capped at the viewport and scrolls on its own.
+	 */
 	test( 'the sticky detail aside never outgrows the viewport', () => {
 		const body = ruleBody( admin, '.mhmui-detail-layout__aside' );
 		expect( body ).not.toBeNull();
@@ -472,7 +644,8 @@ describe( 'vertical rhythm is owned by the page shell (0.14.0)', () => {
 		expect( body ).toMatch( /min-height:\s*44px/ );
 	} );
 
-	/** Finding 7 (2026-09-20, final fix wave): the OLD check only banned the
+	/**
+	 * Finding 7 (2026-09-20, final fix wave): the OLD check only banned the
 	 * literal shape `> * + *`, so `.mhmui-admin-page > * + p` or
 	 * `> *:not(h1) + *` still targeted a core-owned element (any `p`, any
 	 * unwrapped `*`) while staying green -- the gate's name promised more than
@@ -483,11 +656,15 @@ describe( 'vertical rhythm is owned by the page shell (0.14.0)', () => {
 	 * stripped first (ruleBody()'s own habit, and kit-parity.test.js's
 	 * classUniverse()) so a docblock describing the ban is never mistaken for
 	 * a violation of it.
-	 * Reads through rules() (B-3), so a rule inside an at-rule is seen too. */
+	 * Reads through rules() (B-3), so a rule inside an at-rule is seen too.
+	 * @param css
+	 */
 	function rhythmTargetsAreWrapped( css ) {
 		let found = 0;
 		for ( const [ sel ] of rules( css ) ) {
-			const shellMatch = sel.match( /mhmui-(?:admin|front)-page\s*>\s*[^+{}]*\+\s*(.*)$/ );
+			const shellMatch = sel.match(
+				/mhmui-(?:admin|front)-page\s*>\s*[^+{}]*\+\s*(.*)$/
+			);
 			if ( ! shellMatch ) {
 				continue;
 			}
@@ -508,21 +685,27 @@ describe( 'vertical rhythm is owned by the page shell (0.14.0)', () => {
 	} );
 
 	test( 'M15 mutation: `> * + p` (an unwrapped tag, the bypass the finding named) goes red', () => {
-		expect( rhythmTargetsAreWrapped(
-			'.mhmui-admin-page > * + p { margin-block-start: var( --mhmui-space-3 ); }'
-		) ).toBe( false );
+		expect(
+			rhythmTargetsAreWrapped(
+				'.mhmui-admin-page > * + p { margin-block-start: var( --mhmui-space-3 ); }'
+			)
+		).toBe( false );
 	} );
 
 	test( 'M15 mutation: `> * + *` (the OLD literal ban, still unwrapped) goes red', () => {
-		expect( rhythmTargetsAreWrapped(
-			'.mhmui-admin-page > * + * { margin-block-start: var( --mhmui-space-3 ); }'
-		) ).toBe( false );
+		expect(
+			rhythmTargetsAreWrapped(
+				'.mhmui-admin-page > * + * { margin-block-start: var( --mhmui-space-3 ); }'
+			)
+		).toBe( false );
 	} );
 
 	test( 'M15 baseline: the shipped shape (`+ :is(...)`) is green', () => {
-		expect( rhythmTargetsAreWrapped(
-			'.mhmui-admin-page > * + :is( .mhmui-stats-grid, .mhmui-widget ) { margin-block-start: var( --mhmui-space-3 ); }'
-		) ).toBe( true );
+		expect(
+			rhythmTargetsAreWrapped(
+				'.mhmui-admin-page > * + :is( .mhmui-stats-grid, .mhmui-widget ) { margin-block-start: var( --mhmui-space-3 ); }'
+			)
+		).toBe( true );
 	} );
 
 	test( 'the check is not vacuous: ruleBody finds nothing for an absent selector', () => {
@@ -530,7 +713,9 @@ describe( 'vertical rhythm is owned by the page shell (0.14.0)', () => {
 	} );
 
 	test( 'rhythmTargetsAreWrapped is not vacuous: no shell-prefixed combinator selector at all', () => {
-		expect( rhythmTargetsAreWrapped( '.mhmui-stats-grid { margin: 0; }' ) ).toBe( false );
+		expect(
+			rhythmTargetsAreWrapped( '.mhmui-stats-grid { margin: 0; }' )
+		).toBe( false );
 	} );
 } );
 
@@ -538,6 +723,7 @@ describe( 'vertical rhythm is owned by the page shell (0.14.0)', () => {
  * Specificity [ids, classes, types] of one complex selector. :where() counts
  * zero; :is()/:not()/:has() count their most specific argument; any other
  * pseudo-class counts as a class; pseudo-elements count as a type.
+ * @param selector
  */
 function specificity( selector ) {
 	let s = selector;
@@ -576,7 +762,10 @@ function specificity( selector ) {
 	score[ 0 ] += ( s.match( /#[\w-]+/g ) || [] ).length;
 	score[ 1 ] += ( s.match( /\.[\w-]+/g ) || [] ).length;
 	score[ 1 ] += ( s.match( /:[\w-]+/g ) || [] ).length;
-	score[ 2 ] += ( s.replace( /[#.:][\w-]+/g, ' ' ).match( /(^|[\s>+~])[a-z][\w-]*/gi ) || [] ).length;
+	score[ 2 ] += (
+		s.replace( /[#.:][\w-]+/g, ' ' ).match( /(^|[\s>+~])[a-z][\w-]*/gi ) ||
+		[]
+	).length;
 	return score;
 }
 
@@ -594,6 +783,7 @@ function compareSpecificity( a, b ) {
  * `!important` kept. CSS postcss cannot parse, and a style rule nested in
  * another (CSS nesting, which this package does not write), THROW: a gate
  * that cannot read its input fails loudly instead of measuring nothing.
+ * @param css
  */
 function rules( css ) {
 	let root;
@@ -617,7 +807,9 @@ function rules( css ) {
 			.filter( ( n ) => n.type === 'decl' )
 			.map(
 				( d ) =>
-					`${ d.prop }: ${ d.value }${ d.important ? ' !important' : '' };`
+					`${ d.prop }: ${ d.value }${
+						d.important ? ' !important' : ''
+					};`
 			)
 			.join( ' ' );
 		for ( const sel of rule.selectors ) {
@@ -653,12 +845,18 @@ describe( 'ConfirmButton wins the cascade against WordPress core buttons', () =>
 
 	test( 'the specificity helper agrees with the spec on known selectors', () => {
 		expect( specificity( '.wp-core-ui .button' ) ).toEqual( [ 0, 2, 0 ] );
-		expect( specificity( '.wp-core-ui .button:focus' ) ).toEqual( [ 0, 3, 0 ] );
+		expect( specificity( '.wp-core-ui .button:focus' ) ).toEqual( [
+			0, 3, 0,
+		] );
 		expect( specificity( '.a :is( .b, #c )' ) ).toEqual( [ 1, 1, 0 ] );
 		expect( specificity( ':where( .a ) .b' ) ).toEqual( [ 0, 1, 0 ] );
 		expect( specificity( 'input#publish' ) ).toEqual( [ 1, 0, 1 ] );
-		expect( specificity( '.wp-core-ui .tablenav .button' ) ).toEqual( [ 0, 3, 0 ] );
-		expect( specificity( '.wp-core-ui .button-group.button-small .button' ) ).toEqual( [ 0, 4, 0 ] );
+		expect( specificity( '.wp-core-ui .tablenav .button' ) ).toEqual( [
+			0, 3, 0,
+		] );
+		expect(
+			specificity( '.wp-core-ui .button-group.button-small .button' )
+		).toEqual( [ 0, 4, 0 ] );
 		expect(
 			specificity(
 				'.mhmui-confirm:is( .mhmui-confirm--primary, .mhmui-confirm--danger ) button[type="button"].mhmui-confirm__trigger'
@@ -680,10 +878,16 @@ describe( 'ConfirmButton wins the cascade against WordPress core buttons', () =>
 			'mhmui-confirm__confirm',
 			'mhmui-confirm__cancel',
 		] ) {
-			expect( [ part, targets.some( ( [ sel ] ) => sel.includes( part ) ) ] ).toEqual( [ part, true ] );
+			expect( [
+				part,
+				targets.some( ( [ sel ] ) => sel.includes( part ) ),
+			] ).toEqual( [ part, true ] );
 		}
 		for ( const [ sel ] of targets ) {
-			expect( [ sel, compareSpecificity( specificity( sel ), CORE_CONTEXT ) > 0 ] ).toEqual( [ sel, true ] );
+			expect( [
+				sel,
+				compareSpecificity( specificity( sel ), CORE_CONTEXT ) > 0,
+			] ).toEqual( [ sel, true ] );
 		}
 	} );
 
@@ -695,35 +899,45 @@ describe( 'ConfirmButton wins the cascade against WordPress core buttons', () =>
 		// Core tints a hovered/active .button with the theme colour; a danger
 		// button must not turn blue-ish (audit of #36, B-2).
 		[ 'danger', 'background' ],
-	] )( 'the %s variant keeps its %s on :focus, :hover and :active', ( variant, prop ) => {
-		for ( const state of [ 'focus', 'hover', 'active' ] ) {
-			const winners = all.filter(
+	] )(
+		'the %s variant keeps its %s on :focus, :hover and :active',
+		( variant, prop ) => {
+			for ( const state of [ 'focus', 'hover', 'active' ] ) {
+				const winners = all.filter(
+					( [ sel, body, at ] ) =>
+						at.length === 0 &&
+						sel.includes( `mhmui-confirm--${ variant }` ) &&
+						sel.includes( 'mhmui-confirm__confirm' ) &&
+						sel.includes( `:${ state }` ) &&
+						new RegExp( `(^|[;\\s])${ prop }\\s*:` ).test( body ) &&
+						compareSpecificity( specificity( sel ), CORE_STATE ) > 0
+				);
+				expect( [ variant, state, winners.length > 0 ] ).toEqual( [
+					variant,
+					state,
+					true,
+				] );
+			}
+		}
+	);
+
+	// The ring is the visible half of focus: core's :focus box-shadow (0,3,0)
+	// must not win (audit of #36, B-4).
+	test.each( [ [ 'primary' ], [ 'danger' ] ] )(
+		'the %s focus ring outranks core',
+		( variant ) => {
+			const ring = all.filter(
 				( [ sel, body, at ] ) =>
 					at.length === 0 &&
 					sel.includes( `mhmui-confirm--${ variant }` ) &&
 					sel.includes( 'mhmui-confirm__confirm' ) &&
-					sel.includes( `:${ state }` ) &&
-					new RegExp( `(^|[;\\s])${ prop }\\s*:` ).test( body ) &&
+					sel.includes( ':focus' ) &&
+					/(^|[;\s])box-shadow\s*:/.test( body ) &&
 					compareSpecificity( specificity( sel ), CORE_STATE ) > 0
 			);
-			expect( [ variant, state, winners.length > 0 ] ).toEqual( [ variant, state, true ] );
+			expect( [ variant, ring.length > 0 ] ).toEqual( [ variant, true ] );
 		}
-	} );
-
-	// The ring is the visible half of focus: core's :focus box-shadow (0,3,0)
-	// must not win (audit of #36, B-4).
-	test.each( [ [ 'primary' ], [ 'danger' ] ] )( 'the %s focus ring outranks core', ( variant ) => {
-		const ring = all.filter(
-			( [ sel, body, at ] ) =>
-				at.length === 0 &&
-				sel.includes( `mhmui-confirm--${ variant }` ) &&
-				sel.includes( 'mhmui-confirm__confirm' ) &&
-				sel.includes( ':focus' ) &&
-				/(^|[;\s])box-shadow\s*:/.test( body ) &&
-				compareSpecificity( specificity( sel ), CORE_STATE ) > 0
-		);
-		expect( [ variant, ring.length > 0 ] ).toEqual( [ variant, true ] );
-	} );
+	);
 
 	/**
 	 * Busy and locked buttons are aria-disabled, focusable, and show busyText.
@@ -734,29 +948,44 @@ describe( 'ConfirmButton wins the cascade against WordPress core buttons', () =>
 	 * #36, B-1/B-5).
 	 */
 	test( 'an aria-disabled button carries no opacity', () => {
-		const faded = all.filter( ( [ sel, body ] ) => sel.includes( 'aria-disabled' ) && /(^|[;\s])opacity\s*:/.test( body ) );
+		const faded = all.filter(
+			( [ sel, body ] ) =>
+				sel.includes( 'aria-disabled' ) &&
+				/(^|[;\s])opacity\s*:/.test( body )
+		);
 		expect( faded.map( ( [ sel ] ) => sel ) ).toEqual( [] );
 	} );
 
 	test( 'a locked primary drops its fill, and that rule wins over the primary state rules', () => {
 		const order = all.map( ( [ sel ] ) => sel );
 		const stateRules = all.filter(
-			( [ sel, body ] ) => sel.includes( 'mhmui-confirm--primary' ) && ! sel.includes( 'aria-disabled' ) && /(^|[;\s])background\s*:/.test( body )
+			( [ sel, body ] ) =>
+				sel.includes( 'mhmui-confirm--primary' ) &&
+				! sel.includes( 'aria-disabled' ) &&
+				/(^|[;\s])background\s*:/.test( body )
 		);
 		const locked = all.filter(
 			( [ sel, body, at ] ) =>
 				at.length === 0 &&
 				sel.includes( 'mhmui-confirm--primary' ) &&
 				sel.includes( 'aria-disabled="true"' ) &&
-				/(^|[;\s])background\s*:\s*var\(\s*--mhmui-surface\s*\)/.test( body )
+				/(^|[;\s])background\s*:\s*var\(\s*--mhmui-surface\s*\)/.test(
+					body
+				)
 		);
 		expect( locked.length ).toBeGreaterThan( 0 );
 		expect( stateRules.length ).toBeGreaterThan( 0 );
 		const [ lockedSel ] = locked[ locked.length - 1 ];
 		for ( const [ sel ] of stateRules ) {
-			const cmp = compareSpecificity( specificity( lockedSel ), specificity( sel ) );
+			const cmp = compareSpecificity(
+				specificity( lockedSel ),
+				specificity( sel )
+			);
 			const later = order.lastIndexOf( lockedSel ) > order.indexOf( sel );
-			expect( [ sel, cmp > 0 || ( cmp === 0 && later ) ] ).toEqual( [ sel, true ] );
+			expect( [ sel, cmp > 0 || ( cmp === 0 && later ) ] ).toEqual( [
+				sel,
+				true,
+			] );
 		}
 	} );
 
@@ -782,15 +1011,23 @@ describe( 'ConfirmButton wins the cascade against WordPress core buttons', () =>
 				sel.includes( 'mhmui-confirm--danger' ) &&
 				sel.includes( 'mhmui-confirm__confirm' ) &&
 				sel.includes( 'aria-disabled="true"' ) &&
-				/(^|[;\s])border-color\s*:\s*var\(\s*--mhmui-border\s*\)/.test( body )
+				/(^|[;\s])border-color\s*:\s*var\(\s*--mhmui-border\s*\)/.test(
+					body
+				)
 		);
 		expect( locked.length ).toBeGreaterThan( 0 );
 		expect( stateRules.length ).toBeGreaterThan( 0 );
 		const [ lockedSel ] = locked[ locked.length - 1 ];
 		for ( const [ sel ] of stateRules ) {
-			const cmp = compareSpecificity( specificity( lockedSel ), specificity( sel ) );
+			const cmp = compareSpecificity(
+				specificity( lockedSel ),
+				specificity( sel )
+			);
 			const later = order.lastIndexOf( lockedSel ) > order.indexOf( sel );
-			expect( [ sel, cmp > 0 || ( cmp === 0 && later ) ] ).toEqual( [ sel, true ] );
+			expect( [ sel, cmp > 0 || ( cmp === 0 && later ) ] ).toEqual( [
+				sel,
+				true,
+			] );
 		}
 	} );
 } );
@@ -812,42 +1049,82 @@ describe( 'ConfirmButton compact size (0.16.0)', () => {
 		for ( const part of PARTS ) {
 			const desk = minHeightRows( part, [] );
 			const mob = minHeightRows( part, [ MOBILE ] );
-			expect( [ part, desk.length > 0, mob.length > 0 ] ).toEqual( [ part, true, true ] );
+			expect( [ part, desk.length > 0, mob.length > 0 ] ).toEqual( [
+				part,
+				true,
+				true,
+			] );
 			for ( const [ sel, body ] of desk ) {
 				expect( /min-height:\s*36px/.test( body ) ).toBe( true );
-				expect( [ sel, compareSpecificity( specificity( sel ), [ 0, 4, 1 ] ) >= 0 ] ).toEqual( [ sel, true ] );
+				expect( [
+					sel,
+					compareSpecificity( specificity( sel ), [ 0, 4, 1 ] ) >= 0,
+				] ).toEqual( [ sel, true ] );
 			}
 			for ( const [ sel, body ] of mob ) {
 				expect( /min-height:\s*44px/.test( body ) ).toBe( true );
-				expect( [ sel, compareSpecificity( specificity( sel ), [ 0, 4, 1 ] ) >= 0 ] ).toEqual( [ sel, true ] );
+				expect( [
+					sel,
+					compareSpecificity( specificity( sel ), [ 0, 4, 1 ] ) >= 0,
+				] ).toEqual( [ sel, true ] );
 			}
 		}
 	} );
 
 	test( 'compact desktop rules outrank the 44px base rules, so 36px wins', () => {
 		const base = all.filter(
-			( [ sel, body, at ] ) => at.length === 0 && ! sel.includes( '--compact' ) && /min-height:\s*44px/.test( body )
+			( [ sel, body, at ] ) =>
+				at.length === 0 &&
+				! sel.includes( '--compact' ) &&
+				/min-height:\s*44px/.test( body )
 		);
 		for ( const part of PARTS ) {
 			const [ [ csel ] ] = minHeightRows( part, [] );
-			for ( const [ bsel ] of base.filter( ( [ s ] ) => s.includes( 'mhmui-confirm__' + part ) ) ) {
-				expect( [ bsel, compareSpecificity( specificity( csel ), specificity( bsel ) ) > 0 ] ).toEqual( [ bsel, true ] );
+			for ( const [ bsel ] of base.filter( ( [ s ] ) =>
+				s.includes( 'mhmui-confirm__' + part )
+			) ) {
+				expect( [
+					bsel,
+					compareSpecificity(
+						specificity( csel ),
+						specificity( bsel )
+					) > 0,
+				] ).toEqual( [ bsel, true ] );
 			}
 		}
 	} );
 
 	test( 'compact root aligns to the start and the prompt is a box', () => {
-		const root = all.find( ( [ s, , a ] ) => a.length === 0 && s === '.mhmui-confirm.mhmui-confirm--compact' );
-		expect( root && /align-items:\s*flex-start/.test( root[ 1 ] ) ).toBe( true );
-		const box = all.find( ( [ s, , a ] ) => a.length === 0 && s.includes( '--compact' ) && s.includes( 'mhmui-confirm__prompt' ) );
+		const root = all.find(
+			( [ s, , a ] ) =>
+				a.length === 0 && s === '.mhmui-confirm.mhmui-confirm--compact'
+		);
+		expect( root && /align-items:\s*flex-start/.test( root[ 1 ] ) ).toBe(
+			true
+		);
+		const box = all.find(
+			( [ s, , a ] ) =>
+				a.length === 0 &&
+				s.includes( '--compact' ) &&
+				s.includes( 'mhmui-confirm__prompt' )
+		);
 		expect( box ).toBeTruthy();
 		expect( box[ 1 ] ).toMatch( /padding:\s*12px/ );
-		expect( box[ 1 ] ).toMatch( /background:\s*var\(\s*--mhmui-neutral-soft\s*\)/ );
-		expect( box[ 1 ] ).toMatch( /border:\s*1px solid var\(\s*--mhmui-border-divider\s*\)/ );
+		expect( box[ 1 ] ).toMatch(
+			/background:\s*var\(\s*--mhmui-neutral-soft\s*\)/
+		);
+		expect( box[ 1 ] ).toMatch(
+			/border:\s*1px solid var\(\s*--mhmui-border-divider\s*\)/
+		);
 	} );
 
 	test( 'the compact prompt box stretches while the root keeps the trigger at the start', () => {
-		const box = all.find( ( [ s, , a ] ) => a.length === 0 && s.includes( '--compact' ) && s.includes( 'mhmui-confirm__prompt' ) );
+		const box = all.find(
+			( [ s, , a ] ) =>
+				a.length === 0 &&
+				s.includes( '--compact' ) &&
+				s.includes( 'mhmui-confirm__prompt' )
+		);
 		expect( box[ 1 ] ).toMatch( /align-self:\s*stretch/ );
 	} );
 
@@ -859,7 +1136,9 @@ describe( 'ConfirmButton compact size (0.16.0)', () => {
 				s.includes( 'mhmui-confirm--danger' ) &&
 				s.includes( 'mhmui-confirm__confirm' ) &&
 				/:focus$/.test( s ) &&
-				/box-shadow:\s*0 0 0 2px var\(\s*--mhmui-surface\s*\),\s*0 0 0 4px var\(\s*--mhmui-danger-ink\s*\)/.test( b )
+				/box-shadow:\s*0 0 0 2px var\(\s*--mhmui-surface\s*\),\s*0 0 0 4px var\(\s*--mhmui-danger-ink\s*\)/.test(
+					b
+				)
 		);
 		expect( focus.length ).toBeGreaterThan( 0 );
 		const rival = all.filter(
@@ -872,8 +1151,16 @@ describe( 'ConfirmButton compact size (0.16.0)', () => {
 		);
 		const order = all.map( ( [ s ] ) => s );
 		for ( const [ r ] of rival ) {
-			const cmp = compareSpecificity( specificity( focus[ 0 ][ 0 ] ), specificity( r ) );
-			expect( [ r, cmp > 0 || ( cmp === 0 && order.indexOf( focus[ 0 ][ 0 ] ) > order.indexOf( r ) ) ] ).toEqual( [ r, true ] );
+			const cmp = compareSpecificity(
+				specificity( focus[ 0 ][ 0 ] ),
+				specificity( r )
+			);
+			expect( [
+				r,
+				cmp > 0 ||
+					( cmp === 0 &&
+						order.indexOf( focus[ 0 ][ 0 ] ) > order.indexOf( r ) ),
+			] ).toEqual( [ r, true ] );
 		}
 	} );
 } );
@@ -882,7 +1169,12 @@ describe( 'Button sizes (0.16.0)', () => {
 	const all = rules( read( 'admin.css' ) );
 	const MOBILE = '@media ( max-width: 782px )';
 	const minHeight = ( sel, at ) => {
-		const row = all.find( ( [ s, b, a ] ) => s === sel && a.join( '|' ) === at.join( '|' ) && /min-height:/.test( b ) );
+		const row = all.find(
+			( [ s, b, a ] ) =>
+				s === sel &&
+				a.join( '|' ) === at.join( '|' ) &&
+				/min-height:/.test( b )
+		);
 		return row ? /min-height:\s*([\d.]+px)/.exec( row[ 1 ] )[ 1 ] : null;
 	};
 
@@ -895,12 +1187,16 @@ describe( 'Button sizes (0.16.0)', () => {
 
 	test( 'a natively disabled button is drawn like an aria-disabled one', () => {
 		for ( const state of [ ':disabled', '[aria-disabled="true"]' ] ) {
-			const row = all.find( ( [ s, , a ] ) => a.length === 0 && s.includes( 'mhmui-button--secondary' ) && s.includes( state ) );
+			const row = all.find(
+				( [ s, , a ] ) =>
+					a.length === 0 &&
+					s.includes( 'mhmui-button--secondary' ) &&
+					s.includes( state )
+			);
 			expect( [ state, !! row ] ).toEqual( [ state, true ] );
 		}
 	} );
 } );
-
 
 /**
  * The parser every cascade check below stands on (audit of #36, B-3). The
@@ -943,7 +1239,9 @@ describe( 'rules() reads the stylesheet the way the cascade does', () => {
 
 	test( 'a brace inside a string is text, not structure', () => {
 		expect(
-			rules( '.a { content: "}"; min-height: 44px; }\n.b { content: "{"; }' )
+			rules(
+				'.a { content: "}"; min-height: 44px; }\n.b { content: "{"; }'
+			)
 		).toEqual( [
 			[ '.a', 'content: "}"; min-height: 44px;', [] ],
 			[ '.b', 'content: "{";', [] ],
@@ -1001,7 +1299,9 @@ describe( 'mediaBlock() lets ruleBody() read inside an @media block', () => {
 	} );
 
 	test( 'an absent query is empty, not the whole sheet', () => {
-		expect( mediaBlock( css, '( prefers-reduced-motion: reduce )' ) ).toBe( '' );
+		expect( mediaBlock( css, '( prefers-reduced-motion: reduce )' ) ).toBe(
+			''
+		);
 	} );
 } );
 
@@ -1061,7 +1361,10 @@ describe( 'collapsible Widget (0.17.0)', () => {
 				specificity( sel )
 			);
 			const later = all.findIndex( ( [ s ] ) => s === sel ) > guard;
-			expect( [ sel, cmp > 0 || ( cmp === 0 && ! later ) ] ).toEqual( [ sel, true ] );
+			expect( [ sel, cmp > 0 || ( cmp === 0 && ! later ) ] ).toEqual( [
+				sel,
+				true,
+			] );
 		}
 	} );
 } );
@@ -1072,7 +1375,10 @@ describe( 'the whole collapsible header row toggles', () => {
 
 	test( 'the toggle stretches a ::after over a positioned header, and actions sit above it', () => {
 		expect(
-			ruleBody( admin, '.mhmui-widget--collapsible .mhmui-widget__header' )
+			ruleBody(
+				admin,
+				'.mhmui-widget--collapsible .mhmui-widget__header'
+			)
 		).toMatch( /position:\s*relative/ );
 		const overlay = ruleBody(
 			admin,
@@ -1092,8 +1398,12 @@ describe( 'the whole collapsible header row toggles', () => {
 	test( 'nothing between the header and the overlay is positioned (title, toggle)', () => {
 		const positioned = all.filter(
 			( [ sel, body ] ) =>
-				/mhmui-widget__(title|toggle)(?![\w-])(?!::after)\s*$/.test( sel ) &&
-				/(^|\s)position:\s*(relative|absolute|fixed|sticky)/.test( body )
+				/mhmui-widget__(title|toggle)(?![\w-])(?!::after)\s*$/.test(
+					sel
+				) &&
+				/(^|\s)position:\s*(relative|absolute|fixed|sticky)/.test(
+					body
+				)
 		);
 		expect( positioned.map( ( [ sel ] ) => sel ) ).toEqual( [] );
 	} );
@@ -1105,7 +1415,10 @@ describe( 'page header and underline tabs fit the admin screen', () => {
 	test( 'page-level h1 cancels the core .wrap h1 padding', () => {
 		// WP core common.css: `.wrap h1` (0,1,1) sets padding 9px 0 4px.
 		// `h1.mhmui-page-header__title.mhmui-page-header__title` is (0,2,1) and wins.
-		const body = ruleBody( admin, 'h1.mhmui-page-header__title.mhmui-page-header__title' );
+		const body = ruleBody(
+			admin,
+			'h1.mhmui-page-header__title.mhmui-page-header__title'
+		);
 		expect( body ).not.toBeNull();
 		expect( body ).toMatch( /padding:\s*0\s*;/ );
 	} );
@@ -1113,20 +1426,142 @@ describe( 'page header and underline tabs fit the admin screen', () => {
 	test( 'underline tabs scroll inside their bar on narrow containers', () => {
 		const nav = ruleBody( admin, '.mhmui-tabs--underline' );
 		expect( nav ).toMatch( /overflow-x:\s*auto/ );
-		const tab = ruleBody( admin, '.mhmui-tabs--underline .mhmui-tabs__tab' );
+		const tab = ruleBody(
+			admin,
+			'.mhmui-tabs--underline .mhmui-tabs__tab'
+		);
 		expect( tab ).toMatch( /flex-shrink:\s*0/ );
 	} );
 
 	test( 'no negative tab margin under the scroll box; the strip owns the bar-rule overlap', () => {
-		const tab = ruleBody( admin, '.mhmui-tabs--underline .mhmui-tabs__tab' );
+		const tab = ruleBody(
+			admin,
+			'.mhmui-tabs--underline .mhmui-tabs__tab'
+		);
 		expect( tab ).not.toMatch( /margin-bottom:/ );
 		const nav = ruleBody( admin, '.mhmui-tabs--underline' );
 		expect( nav ).toMatch( /margin-bottom:\s*-1px/ );
 	} );
 
 	test( 'the underline tab focus ring is inset so the scroll box cannot clip it', () => {
-		const ring = ruleBody( admin, '.mhmui-tabs--underline .mhmui-tabs__tab:focus-visible' );
+		const ring = ruleBody(
+			admin,
+			'.mhmui-tabs--underline .mhmui-tabs__tab:focus-visible'
+		);
 		expect( ring ).toMatch( /outline:\s*2px solid/ );
 		expect( ring ).toMatch( /outline-offset:\s*-2px/ );
+	} );
+} );
+
+/**
+ * DataTable (0.19.0, spec v2.1 §4). The stacked layout lives in a container
+ * query; ruleBody() cannot see a block's first rule (it follows the block's
+ * `{`), so the block is read with a leading `}`.
+ *
+ * @param {string} css   Stylesheet text.
+ * @param {string} query The container query, whitespace-insensitive.
+ * @return {string} The block's inside, '' when absent.
+ */
+function containerBlock( css, query ) {
+	const code = css.replace( /\/\*[\s\S]*?\*\//g, '' );
+	const want = String( query ).replace( /\s+/g, '' );
+	const re = /@container([^{]*)\{/g;
+	let m;
+	while ( ( m = re.exec( code ) ) !== null ) {
+		let depth = 1;
+		let i = re.lastIndex;
+		for ( ; i < code.length && depth > 0; i++ ) {
+			if ( code[ i ] === '{' ) {
+				depth++;
+			} else if ( code[ i ] === '}' ) {
+				depth--;
+			}
+		}
+		if ( m[ 1 ].replace( /\s+/g, '' ) === want ) {
+			return '}' + code.slice( re.lastIndex, i - 1 );
+		}
+		re.lastIndex = i;
+	}
+	return '';
+}
+
+describe( 'DataTable (0.19.0)', () => {
+	const css = read( 'admin.css' );
+	const stack = containerBlock( css, 'mhmui-table (max-width: 40rem)' );
+	const HIDDEN_HEADERS =
+		'.mhmui-table--stack thead th:not( .mhmui-table__th--sortable ):not( .mhmui-table__select )';
+
+	test( 'the stack wrapper is a named inline-size container', () => {
+		const body = ruleBody( css, '.mhmui-table-wrap--stack' );
+		expect( body ).toMatch( /container-type:\s*inline-size/ );
+		expect( body ).toMatch( /container-name:\s*mhmui-table/ );
+	} );
+
+	test( 'the stacked block exists', () => {
+		expect( stack ).not.toBe( '' );
+	} );
+
+	test( 'non-sortable column headers are clipped, never display:none, and only in thead', () => {
+		const body = ruleBody( stack, HIDDEN_HEADERS );
+		expect( body ).not.toBeNull();
+		expect( body ).toMatch( /clip:\s*rect/ );
+		expect( stack ).not.toMatch( /thead th[^{]*\{[^}]*display:\s*none/ );
+	} );
+
+	test( 'stacked targets are 44px and the boxes 20px', () => {
+		expect( ruleBody( stack, '.mhmui-table--stack .mhmui-table__sort' ) ).toMatch(
+			/min-height:\s*44px/
+		);
+		const hit = ruleBody( stack, '.mhmui-table--stack .mhmui-table__select-hit' );
+		expect( hit ).toMatch( /min-width:\s*44px/ );
+		expect( hit ).toMatch( /min-height:\s*44px/ );
+		expect(
+			ruleBody( stack, '.mhmui-table--stack .mhmui-table__select-hit input' )
+		).toMatch( /width:\s*20px/ );
+	} );
+
+	test( 'the stacked cell label is spoken (no alt-text form)', () => {
+		const body = ruleBody( stack, '.mhmui-table--stack td[data-label]::before' );
+		expect( body ).toMatch( /content:\s*attr\(\s*data-label\s*\)/ );
+		expect( body ).not.toMatch( /\// );
+	} );
+
+	test( 'the select-all label shows when stacked', () => {
+		const body = ruleBody( stack, '.mhmui-table--stack .mhmui-table__select-label' );
+		expect( body ).toMatch( /position:\s*static/ );
+		expect( body ).toMatch( /clip:\s*auto/ );
+	} );
+
+	test( 'wide hit area is at least 24px; 44px below 782px', () => {
+		const body = ruleBody( css, '.mhmui-table__select-hit' );
+		expect( body ).toMatch( /min-width:\s*24px/ );
+		expect( body ).toMatch( /min-height:\s*24px/ );
+		const narrow = '}' + mediaBlock( css, '( max-width: 782px )' );
+		expect( ruleBody( narrow, '.mhmui-table__select-hit' ) ).toMatch(
+			/min-height:\s*44px/
+		);
+		expect( ruleBody( narrow, '.mhmui-table__sort' ) ).toMatch(
+			/min-height:\s*44px/
+		);
+	} );
+
+	test( 'a checked row is tinted by the kit', () => {
+		expect(
+			ruleBody( css, '.mhmui-table tbody tr:has( .mhmui-table__row-select:checked )' )
+		).toMatch( /var\(\s*--mhmui-info-soft\s*\)/ );
+	} );
+
+	test.each( [
+		'.mhmui-table__caption--hidden',
+		'.mhmui-table__select-label',
+		'.mhmui-table__row-select-label',
+	] )( '%s is clipped, never display:none', ( selector ) => {
+		const body = ruleBody( css, selector );
+		expect( body ).toMatch( /clip:\s*rect/ );
+		expect( body ).not.toMatch( /display:\s*none/ );
+	} );
+
+	test( 'the scroll layout scrolls sideways', () => {
+		expect( ruleBody( css, '.mhmui-table-wrap' ) ).toMatch( /overflow-x:\s*auto/ );
 	} );
 } );
