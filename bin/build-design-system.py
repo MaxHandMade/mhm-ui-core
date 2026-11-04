@@ -386,18 +386,18 @@ def sort_th(label, state, end=False):
     )
 
 
-def table_rows(rows):
+def table_rows(rows, prefix):
     out = []
     for i, (name, mail, phone, bookings, spent, tone, status, checked) in enumerate(rows):
         out.append(
-            '<tr><td class="mhmui-table__select"><label class="mhmui-table__select-hit" for="dt-r%d">'
-            '<input id="dt-r%d" type="checkbox" class="mhmui-table__row-select"%s>'
+            '<tr><td class="mhmui-table__select"><label class="mhmui-table__select-hit" for="%s-r%d">'
+            '<input id="%s-r%d" type="checkbox" class="mhmui-table__row-select"%s>'
             '<span class="mhmui-table__row-select-label">Select %s</span></label></td>'
             '<td class="mhmui-table__primary"><strong>%s</strong><br><span class="mhmui-table__caption-meta">%s</span></td>'
             '<td data-label="Phone">%s</td><td class="mhmui-table__num" data-label="Bookings">%s</td>'
             '<td class="mhmui-table__num" data-label="Total spent">%s</td>'
             '<td data-label="Status"><span class="mhmui-status mhmui-status--%s">%s</span></td></tr>'
-            % (i, i, " checked" if checked else "", name, name, mail, phone, bookings, spent, tone, status)
+            % (prefix, i, prefix, i, " checked" if checked else "", name, name, mail, phone, bookings, spent, tone, status)
         )
     return "".join(out)
 
@@ -425,7 +425,7 @@ def data_table(stack):
         '<div class="mhmui-table-card"><div class="mhmui-table-wrap%s">'
         '<table class="mhmui-table%s"><caption class="mhmui-table__caption">Customers '
         '<span class="mhmui-table__caption-meta">· 48</span></caption>%s<tbody>%s</tbody></table></div></div>'
-        % (" mhmui-table-wrap--stack" if stack else "", " mhmui-table--stack" if stack else "", head, table_rows(DT_ROWS))
+        % (" mhmui-table-wrap--stack" if stack else "", " mhmui-table--stack" if stack else "", head, table_rows(DT_ROWS, "dt-stack" if stack else "dt-wide"))
     )
 
 
@@ -570,6 +570,26 @@ if missing:
     print("Fix the stylesheet or the inlining, not this check.")
     raise SystemExit(1)
 print("CHECKED: %d card(s), every mhmui-* base class has a rule" % len(files))
+
+# An id must be unique in its page: a duplicate makes the HTML invalid and
+# points a <label for> at the wrong box (0.20.1; the data-table card drew the
+# wide and the stacked table with the same row ids).
+dup_ids = []
+for rel, content in files.items():
+    body = content.split("</head>", 1)[-1]
+    seen = set()
+    # Any quoting and case (id='x', ID=x, id = "x"); comments are not markup.
+    markup = re.sub(r"<!--.*?-->", "", body, flags=re.S)
+    for value in re.findall(r"\sid\s*=\s*[\"']?([^\"'\s>]+)", markup, flags=re.I):
+        if value in seen:
+            dup_ids.append("%s -> #%s" % (rel, value))
+        seen.add(value)
+if dup_ids:
+    print("DESIGN SYSTEM: a card repeats an id")
+    for row in dup_ids:
+        print("  " + row)
+    raise SystemExit(1)
+print("CHECKED: no card repeats an id")
 
 os.makedirs(OUT, exist_ok=True)
 for rel, content in files.items():

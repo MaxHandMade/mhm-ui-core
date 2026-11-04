@@ -216,7 +216,7 @@ da bu tek yanlış cümle yüzünden taşıdı.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.20.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.20.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 `bootstrap.php`'yi doğrudan require etmek `MHMUICORE_VERSION`'ı anında tanımlar
@@ -642,7 +642,7 @@ parite kapısı eşitlik arar, uyumluluk değil.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.20.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.20.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 🔴 Sürüm dizesi **elle yazılır** (kayıt, herhangi bir bootstrap yüklenmeden önce koşar) ve
@@ -832,6 +832,9 @@ bölümüne bakın; kurallar aynı:
   bu hücreyle duyurmasını istiyorsanız `<th scope="row">` kullanın. Kendi
   başlıklarınızda `scope="col"` kullanın. Bu düzende kit, rol vermediğiniz
   yerlere açık tablo rolleri yazar.
+  Kart düzenindeki değer hücresi esnek bir satırdır (etiket başta, değer sonda):
+  içine **tek** çocuk koyun. Birkaç parçayı (tutar ve rozet, iki span) tek bir
+  öğeye sarın, yoksa satır onları birbirinden uzaklaştırır.
 - Sütun genişlikleri `<colgroup>`'a yazılır. `DataTable` ve `SortHeader`'daki
   `className` kendi sınıfınızı tabloya ve başlığa ekler.
 
