@@ -108,9 +108,10 @@ final class ShippedSurfaceTest extends TestCase {
 		// 0.17.0 src-react/hooks/usePersistentOpen.js and
 		// src-react/hooks/useContainerWidth.js (two P1 files) to 68/60/3.
 		// 0.18.0 src-react/plain-left-click.js (Tabs' and PageHeader's shared
-		// click guard, one P1 file) to 69/61/3.
-		self::assertCount( 69, $files, 'shipped file count changed' );
-		self::assertCount( 61, $p1, 'P1 file set changed' );
+		// click guard, one P1 file) to 69/61/3; 0.19.0 DataTable, SortHeader,
+		// SelectAll, RowSelect and hooks/useTableSelection (five P1 files) to 74/66/3.
+		self::assertCount( 74, $files, 'shipped file count changed' );
+		self::assertCount( 66, $p1, 'P1 file set changed' );
 		self::assertCount( 3, $p2, 'P2 file set changed' );
 	}
 }

@@ -19,6 +19,16 @@ export { default as DetailList } from './components/DetailList';
 export { default as DetailLayout } from './components/DetailLayout';
 export { default as ConfirmButton } from './components/ConfirmButton';
 export { default as Button } from './components/Button';
+export { default as DataTable } from './components/DataTable';
+export { default as SortHeader } from './components/SortHeader';
+export { default as SelectAll } from './components/SelectAll';
+export { default as RowSelect } from './components/RowSelect';
+
+// Table helpers (0.19.0). NAMED exports on purpose, like registerIcons below:
+// the manifest gate counts `export { default as X }` to find components, and a
+// hook and a pure sort helper are not components.
+export { useTableSelection } from './hooks/useTableSelection';
+export { nextSort } from './components/SortHeader';
 
 // The semantic icon vocabulary (0.14.0+). A NAMED export on purpose: the
 // manifest gate counts `export { default as X }` to find components, and a
