@@ -216,7 +216,7 @@ da bu tek yanlış cümle yüzünden taşıdı.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.19.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.20.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 `bootstrap.php`'yi doğrudan require etmek `MHMUICORE_VERSION`'ı anında tanımlar
@@ -642,7 +642,7 @@ parite kapısı eşitlik arar, uyumluluk değil.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.19.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.20.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 🔴 Sürüm dizesi **elle yazılır** (kayıt, herhangi bir bootstrap yüklenmeden önce koşar) ve
@@ -838,3 +838,47 @@ bölümüne bakın; kurallar aynı:
 Bu, başvurulabilir yüzey ekler (`src-react/` altında yeni dosyalar), bu yüzden
 minördür: `^0.18` bunu almaz; tüketici `^0.19` ile katılır. Mevcut hiçbir sınıf,
 token ya da prop değişmedi.
+
+### Sunucu listeleri (0.20.0+)
+
+`useServerList` sunucuda sayfalanan bir listenin durumunu tutar: sorgu, sayfa,
+son kabul edilen yanıt ve `Pagination` için hazır `pagination`. Hiçbir şey
+çizmez; tablo, filtre ve metinler sizindir. Örnek için İngilizce README'deki
+"Server lists (0.20.0+)" bölümüne bakın.
+
+- `setQuery( patch )` yamayı birleştirir ve **tek** güncellemede 1. sayfaya
+  döner: filtre, arama ya da sıralama değişimi tam bir istek gönderir. Bütün
+  değerleri mevcutlarla eşit olan yama hiçbir şey değiştirmez; bağlamada
+  `setQuery( { search: '' } )` çağıran gecikme efekti bu yüzden ikinci istek
+  göndermez.
+- Sorgu değerleri **ilkel** olmalı. Dizi her çizimde yeni başvurudur ve sayfayı
+  her seferinde sıfırlar; birden fazla değeri virgüllü dize olarak gönderin
+  (`status: 'failed,retry'`) ve sunucuda bölün.
+- `''`, `null` ve `undefined` isteğe girmez; başka hiçbir değer ayıklanmaz:
+  `'all'`, `0` ve `false` gönderilir, anlamları sunucunuzundur. Sorgudaki
+  `page` ve `per_page` anahtarları yok sayılır; sayfa yalnız `setPage` ile değişir.
+- Yalnız en yeni istek kabul edilir. Eski yanıt, başarılı ya da hatalı, atılır;
+  söküldüğünde uçuştaki her şey atılır. İsteğin kendisi iptal edilmez.
+- Yanıt geçerli sayfadan az sayfa bildirirse (son sayfanın son satırı silindi,
+  sonra `refetch()`) sayfa bir istekle son sayfaya çekilir. `totalPages` 1'in
+  altına inmez; `pages: 0` döndüren boş liste de "1 / 1" gösterir.
+- İstek sürerken `data` son kabul edilen yanıtı tutar ve `loading` `true`'dur;
+  tabloyu gizlemeyin, ekranda tutun. `range` ekrandaki satırlara aittir,
+  istenen sayfaya değil.
+- `error` ham red değeridir (`Error` ya da `{ code, message }`): çizmeden önce
+  metne çevirin. Bildirim, seçim ve toplu eylem hataları sizindir.
+- `readTotals` varsayılanı `( res ) => ( { total: res.total, pages: res.pages } )`.
+  Tam, negatif olmayan sayı olmayan değerler 0 okunur; hata fırlatan
+  `readTotals` ret sayılır.
+- `fetchPage` ve seçenekler son commit edilen çizimden okunur; `useCallback`
+  gerekmez, yalnız onları değiştirmek istek göndermez.
+- React StrictMode (geliştirme) bağlama efektini iki kez koşar: iki istek gider,
+  yalnız ikincisi kabul edilir.
+- `useDebouncedValue( value, delay = 300 )`: son değişimden `delay` ms sonraki
+  değer; arama kutusu kendi durumunu tutar, istek bunu okur.
+- `useApi` (0.20.0): bağımlılık değişince ya da `refetch`'te eski isteğin
+  yanıtı artık atılır.
+
+Bu, başvurulabilir yüzey ekler (`src-react/hooks/` altında yeni dosyalar), bu
+yüzden minördür: `^0.19` bunu almaz; tüketici `^0.20` ile katılır. Mevcut hiçbir
+sınıf, token ya da prop değişmedi.
