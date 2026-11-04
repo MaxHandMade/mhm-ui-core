@@ -129,4 +129,93 @@ describe( 'useApi', () => {
 			expect( result.current.data ).toBe( 'pending-2' )
 		);
 	} );
+	// 0.20.0: a request superseded by a deps change or a refetch must not
+	// write state. Each test resolves the OLD promise last -- the order a slow
+	// network produces -- and only the newest request may land.
+	describe( 'a superseded request', () => {
+		const deferred = () => {
+			let resolve;
+			let reject;
+			const promise = new Promise( ( res, rej ) => {
+				resolve = res;
+				reject = rej;
+			} );
+			return { promise, resolve, reject };
+		};
+
+		const byPage = () => {
+			const pending = {};
+			const fetchFor = ( page ) => {
+				pending[ page ] = deferred();
+				return pending[ page ].promise;
+			};
+			return { pending, fetchFor };
+		};
+
+		it( "keeps the latest deps' data when an older request resolves last", async () => {
+			const { pending, fetchFor } = byPage();
+			const { result, rerender } = renderHook(
+				( { page } ) =>
+					useApi( () => fetchFor( page ), null, [ page ] ),
+				{ initialProps: { page: 1 } }
+			);
+			rerender( { page: 2 } );
+
+			await act( async () => pending[ 2 ].resolve( 'two' ) );
+			expect( result.current.data ).toBe( 'two' );
+			expect( result.current.loading ).toBe( false );
+
+			await act( async () => pending[ 1 ].resolve( 'one' ) );
+			expect( result.current.data ).toBe( 'two' );
+			expect( result.current.loading ).toBe( false );
+		} );
+
+		it( 'does not let an older request lower loading', async () => {
+			const { pending, fetchFor } = byPage();
+			const { result, rerender } = renderHook(
+				( { page } ) =>
+					useApi( () => fetchFor( page ), null, [ page ] ),
+				{ initialProps: { page: 1 } }
+			);
+			rerender( { page: 2 } );
+
+			await act( async () => pending[ 1 ].resolve( 'one' ) );
+			expect( result.current.loading ).toBe( true );
+			expect( result.current.data ).toBeNull();
+
+			await act( async () => pending[ 2 ].resolve( 'two' ) );
+			expect( result.current.loading ).toBe( false );
+		} );
+
+		it( 'drops the answer of a request superseded by refetch', async () => {
+			const calls = [];
+			const { result } = renderHook( () =>
+				useApi( () => {
+					calls.push( deferred() );
+					return calls[ calls.length - 1 ].promise;
+				} )
+			);
+			act( () => result.current.refetch() );
+			expect( calls ).toHaveLength( 2 );
+
+			await act( async () => calls[ 1 ].resolve( 'new' ) );
+			await act( async () => calls[ 0 ].resolve( 'old' ) );
+			expect( result.current.data ).toBe( 'new' );
+		} );
+
+		it( 'ignores an older rejection', async () => {
+			const { pending, fetchFor } = byPage();
+			const { result, rerender } = renderHook(
+				( { page } ) =>
+					useApi( () => fetchFor( page ), null, [ page ] ),
+				{ initialProps: { page: 1 } }
+			);
+			rerender( { page: 2 } );
+
+			await act( async () => pending[ 2 ].resolve( 'two' ) );
+			await act( async () => pending[ 1 ].reject( new Error( 'late' ) ) );
+			expect( result.current.error ).toBeNull();
+			expect( result.current.data ).toBe( 'two' );
+		} );
+	} );
 } );
