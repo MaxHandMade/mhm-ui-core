@@ -1,3 +1,4 @@
+import { useLayoutEffect } from '@wordpress/element';
 import { render, screen, fireEvent } from '@testing-library/react';
 import SelectAll from './SelectAll';
 import RowSelect from './RowSelect';
@@ -27,6 +28,36 @@ describe( 'SelectAll', () => {
 		);
 		expect( box().indeterminate ).toBe( false );
 		expect( box().checked ).toBe( true );
+	} );
+
+	// 0.20.1: the mixed state is written before paint (a layout effect), so
+	// no frame shows the old box. A sibling's layout effect runs in the same
+	// commit, before any passive effect, and must already see it.
+	test( 'the mixed state is on the box before paint', () => {
+		const seen = [];
+		const Probe = ( { state } ) => {
+			useLayoutEffect( () => {
+				seen.push(
+					document.querySelector( '.mhmui-table__select-all' )
+						.indeterminate
+				);
+			}, [ state ] );
+			return null;
+		};
+		const View = ( { state } ) => (
+			<>
+				<SelectAll
+					state={ state }
+					onChange={ () => {} }
+					label="Select all"
+				/>
+				<Probe state={ state } />
+			</>
+		);
+		const { rerender } = render( <View state="none" /> );
+		rerender( <View state="some" /> );
+		rerender( <View state="all" /> );
+		expect( seen ).toEqual( [ false, true, false ] );
 	} );
 
 	test( 'a declined change keeps the mixed state', () => {
