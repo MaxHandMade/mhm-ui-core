@@ -22,7 +22,7 @@ A consuming plugin `require_once`s `vendor/mhm/ui-core/register.php` from its
 main file and registers its own copy:
 
 ```php
-mhmuicore_register( '0.20.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.20.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 At `plugins_loaded` priority 0 the highest registered version boots; the rest
@@ -390,7 +390,7 @@ build from.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.20.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.20.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 Requiring `bootstrap.php` directly defines `MHMUICORE_VERSION` immediately, which
@@ -916,6 +916,9 @@ const selection = useTableSelection( rows.map( ( r ) => r.id ) );
   `<th scope="row">` for the title cell if you want screen readers to announce
   each row by it. Use `scope="col"` on your own headers. In this layout the kit
   writes explicit table roles where you set none.
+  A stacked value cell is a flex row (label left, value right): put **one**
+  child in it. Wrap several pieces (an amount and a badge, two spans) in a
+  single element, or the row spreads them apart.
 - Column widths go in a `<colgroup>`. `className` on `DataTable` and
   `SortHeader` adds your own class to the table and the header.
 
