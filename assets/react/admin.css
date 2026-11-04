@@ -1225,6 +1225,11 @@ h1.mhmui-page-header__title.mhmui-page-header__title {
 .mhmui-table tbody tr:has( .mhmui-table__row-select:checked ) {
 	background: var( --mhmui-info-soft );
 }
+/* An info badge shares the row tint's fill; on a selected row it would lose
+   its pill (measured in the 0.19.0 browser run), so it takes the surface. */
+.mhmui-table tbody tr:has( .mhmui-table__row-select:checked ) .mhmui-status--info {
+	background: var( --mhmui-surface );
+}
 .mhmui-table tbody td,
 .mhmui-table tbody th {
 	padding: 10px 12px;

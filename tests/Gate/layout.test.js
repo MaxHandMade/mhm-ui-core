@@ -1239,6 +1239,15 @@ describe( 'DataTable (0.19.0)', () => {
 		expect( body ).not.toMatch( /display:\s*none/ );
 	} );
 
+	test( 'an info badge keeps its pill on a selected row (same fill as the row tint)', () => {
+		expect(
+			ruleBody(
+				css,
+				'.mhmui-table tbody tr:has( .mhmui-table__row-select:checked ) .mhmui-status--info'
+			)
+		).toMatch( /background:\s*var\(\s*--mhmui-surface\s*\)/ );
+	} );
+
 	test( 'the scroll layout scrolls sideways', () => {
 		expect( ruleBody( css, '.mhmui-table-wrap' ) ).toMatch( /overflow-x:\s*auto/ );
 	} );
