@@ -53,4 +53,19 @@ describe( 'useDebouncedValue', () => {
 		unmount();
 		expect( jest.getTimerCount() ).toBe( 0 );
 	} );
+
+	// A function is a value too: React would call it as an initializer or
+	// updater if it were handed to useState / setState directly.
+	it( 'keeps a function value as it is, without calling it', () => {
+		const first = jest.fn( () => 'first-called' );
+		const second = jest.fn( () => 'second-called' );
+		const { result, rerender } = mount( first );
+		expect( result.current ).toBe( first );
+
+		rerender( { value: second } );
+		act( () => jest.advanceTimersByTime( 300 ) );
+		expect( result.current ).toBe( second );
+		expect( first ).not.toHaveBeenCalled();
+		expect( second ).not.toHaveBeenCalled();
+	} );
 } );

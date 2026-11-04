@@ -864,7 +864,13 @@ son kabul edilen yanıt ve `Pagination` için hazır `pagination`. Hiçbir şey
   altına inmez; `pages: 0` döndüren boş liste de "1 / 1" gösterir.
 - İstek sürerken `data` son kabul edilen yanıtı tutar ve `loading` `true`'dur;
   tabloyu gizlemeyin, ekranda tutun. `range` ekrandaki satırlara aittir,
-  istenen sayfaya değil.
+  istenen sayfaya değil; ilk yanıt kabul edilene kadar ve `perPage` yokken
+  `null`'dır — kullanmadan önce denetleyin.
+- Geri çekiş isteği başarısız olursa `page` son sayfayı gösterir, `data` ve
+  `range` ekrandaki satırları tutmaya devam eder, `error` dolar. Hatayı
+  gösterin; `refetch()` o son sayfayı yeniden ister.
+- Gecikme efektinde `const { setQuery } = list;` alın ve bağımlılığa onu
+  yazın: kararlıdır, efekti yeniden tetiklemez, lint kuralı da susar.
 - `error` ham red değeridir (`Error` ya da `{ code, message }`): çizmeden önce
   metne çevirin. Bildirim, seçim ve toplu eylem hataları sizindir.
 - `readTotals` varsayılanı `( res ) => ( { total: res.total, pages: res.pages } )`.

@@ -649,3 +649,120 @@ describe( 'useServerList', () => {
 		} );
 	} );
 } );
+
+// Branch review (Fable + Codex, 0.20.0): mutation classes the first suite
+// did not kill.
+describe( 'useServerList — review additions', () => {
+	it( 'X1: a request in the same commit as a new fetchPage uses the new one', async () => {
+		const a = makeFetch();
+		const b = makeFetch();
+		const { result, rerender } = mountList( a.fetch, ALL );
+		await settle( a.calls[ 0 ], page( 5 ) );
+
+		act( () => {
+			rerender( { fetch: b.fetch, options: { ...ALL, perPage: 10 } } );
+			result.current.setPage( 2 );
+		} );
+		expect( a.calls ).toHaveLength( 1 );
+		expect( b.calls ).toHaveLength( 1 );
+		expect( b.calls[ 0 ].params.per_page ).toBe( 10 );
+	} );
+
+	it( 'X2: a synchronously throwing fetchPage becomes the error', async () => {
+		const boom = new Error( 'sync' );
+		const { result } = mountList( () => {
+			throw boom;
+		}, ALL );
+		await act( async () => {} );
+		expect( result.current.error ).toBe( boom );
+		expect( result.current.loading ).toBe( false );
+	} );
+
+	it( 'X3: setPage to the current page is a no-op', async () => {
+		const { calls, fetch } = makeFetch();
+		const { result } = mountList( fetch, ALL );
+		await settle( calls[ 0 ], page( 5 ) );
+		act( () => result.current.setPage( 1 ) );
+		expect( calls ).toHaveLength( 1 );
+		expect( result.current.loading ).toBe( false );
+	} );
+
+	it( 'X4: readTotals and perPage are the ones at request start', async () => {
+		const { calls, fetch } = makeFetch();
+		const { result, rerender } = mountList( fetch, ALL );
+		rerender( {
+			fetch,
+			options: {
+				...ALL,
+				perPage: 10,
+				readTotals: () => ( { total: 1, pages: 1 } ),
+			},
+		} );
+		await settle( calls[ 0 ], page( 5, 100 ) );
+		expect( result.current.total ).toBe( 100 );
+		expect( result.current.range ).toEqual( {
+			from: 1,
+			to: 20,
+			total: 100,
+		} );
+	} );
+
+	it( 'reads totals once per accepted answer under StrictMode', async () => {
+		const { calls, fetch } = makeFetch();
+		const readTotals = jest.fn( ( r ) => r );
+		renderHook( () => useServerList( fetch, { ...ALL, readTotals } ), {
+			wrapper: StrictMode,
+		} );
+		await settle( calls[ 1 ], page( 3 ) );
+		expect( readTotals ).toHaveBeenCalledTimes( 1 );
+	} );
+
+	it( 'rule 12: a failed pull-back keeps the rows it has and shows the error', async () => {
+		const { calls, fetch } = makeFetch();
+		const boom = new Error( 'boom' );
+		const { result } = mountList( fetch, ALL );
+		await settle( calls[ 0 ], page( 5, 100, 'A1' ) );
+		act( () => result.current.setPage( 3 ) );
+		await settle( calls[ 1 ], page( 5, 100, 'P3' ) );
+		act( () => result.current.setPage( 4 ) );
+
+		await settle( calls[ 2 ], page( 2, 30, 'short' ) );
+		expect( calls[ 3 ].params.page ).toBe( 2 );
+		await fail( calls[ 3 ], boom );
+
+		expect( result.current.page ).toBe( 2 );
+		expect( result.current.data.items ).toBe( 'P3' );
+		expect( result.current.range ).toEqual( {
+			from: 41,
+			to: 60,
+			total: 100,
+		} );
+		expect( result.current.error ).toBe( boom );
+		expect( result.current.loading ).toBe( false );
+	} );
+
+	it( '4: keeps the newest answer when the newest settles first', async () => {
+		const { calls, fetch } = makeFetch();
+		const { result } = mountList( fetch, ALL );
+		act( () => result.current.setPage( 2 ) );
+
+		await settle( calls[ 1 ], page( 3, 60, 'two' ) );
+		await settle( calls[ 0 ], page( 3, 60, 'one' ) );
+		expect( result.current.data.items ).toBe( 'two' );
+		expect( result.current.page ).toBe( 2 );
+	} );
+
+	it( '7: loading stays up on every commit from the pull-back to its answer', async () => {
+		const { calls, fetch } = makeFetch();
+		const { result, log } = mountList( fetch, ALL );
+		await settle( calls[ 0 ], page( 5, 100, 'A1' ) );
+		act( () => result.current.setPage( 3 ) );
+		const mark = log.length;
+
+		await settle( calls[ 1 ], page( 2, 30, 'P3' ) );
+		const between = log.slice( mark );
+		expect( between.length ).toBeGreaterThan( 0 );
+		expect( between.every( ( r ) => r.loading ) ).toBe( true );
+		expect( between.every( ( r ) => r.data.items === 'A1' ) ).toBe( true );
+	} );
+} );

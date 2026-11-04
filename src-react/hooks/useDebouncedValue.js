@@ -15,10 +15,11 @@ import { useState, useEffect } from '@wordpress/element';
  * @return {*} The last value that stood still for `delay` ms.
  */
 export function useDebouncedValue( value, delay = 300 ) {
-	const [ settled, setSettled ] = useState( value );
+	// Function forms on purpose: a function value must be stored, not called.
+	const [ settled, setSettled ] = useState( () => value );
 
 	useEffect( () => {
-		const timer = setTimeout( () => setSettled( value ), delay );
+		const timer = setTimeout( () => setSettled( () => value ), delay );
 		return () => clearTimeout( timer );
 	}, [ value, delay ] );
 

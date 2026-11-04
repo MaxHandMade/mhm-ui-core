@@ -232,7 +232,9 @@ export function useServerList( fetchPage, options = {} ) {
 		return () => {
 			alive = false;
 		};
-	}, [ query, page, nonce ] ); // eslint-disable-line react-hooks/exhaustive-deps -- `latest` is a ref; the three fields are the request's identity (spec v2.2 rule 1).
+		// The three fields are the request's identity (spec v2.2 rule 1); never
+		// `[ state ]` -- writing `accepted` or `loading` would refetch forever.
+	}, [ query, page, nonce ] );
 
 	const setQuery = useCallback(
 		( patch ) =>

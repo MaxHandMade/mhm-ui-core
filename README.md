@@ -941,7 +941,8 @@ const list = useServerList( ( params ) => api.getVendors( params ), {
 // Search: the box keeps its own state so typing stays instant.
 const [ search, setSearch ] = useState( '' );
 const debounced = useDebouncedValue( search ); // 300 ms
-useEffect( () => list.setQuery( { search: debounced } ), [ debounced ] );
+const { setQuery } = list; // stable, so the effect lists it without refiring
+useEffect( () => setQuery( { search: debounced } ), [ setQuery, debounced ] );
 
 // Status filter: a <select> ...
 <select value={ list.query.status } onChange={ ( e ) => list.setQuery( { status: e.target.value } ) }>…</select>
@@ -955,9 +956,11 @@ useEffect( () => list.setQuery( { search: debounced } ), [ debounced ] );
 
 { list.totalPages > 1 && <Pagination { ...list.pagination } labels={ … } /> }
 
-// "41–48 of 48" -- the words are your translation.
-const { from, to, total } = list.range;
-sprintf( _n( '%1$d–%2$d of %3$d vendor', '%1$d–%2$d of %3$d vendors', total, 'my-plugin' ), from, to, total );
+// "41–48 of 48" -- the words are your translation. `range` is null until the
+// first answer is accepted (and always without `perPage`), so guard it.
+const summary = list.range
+	? sprintf( _n( '%1$d–%2$d of %3$d vendor', '%1$d–%2$d of %3$d vendors', list.range.total, 'my-plugin' ), list.range.from, list.range.to, list.range.total )
+	: '';
 ```
 
 - `setQuery( patch )` merges the patch and goes back to page 1 in **one**
@@ -980,7 +983,11 @@ sprintf( _n( '%1$d–%2$d of %3$d vendor', '%1$d–%2$d of %3$d vendors', total,
   list that reports `pages: 0` still shows "1 / 1".
 - While a request is in flight `data` keeps the last accepted answer and
   `loading` is `true`; keep the table on screen instead of hiding it. `range`
-  belongs to the rows on screen, not to the page being requested.
+  belongs to the rows on screen, not to the page being requested, and is
+  `null` until the first answer is accepted or when there is no `perPage`.
+- If a pull-back request fails, `page` already shows the last page while
+  `data` and `range` still hold the rows that were on screen, and `error` is
+  set. Show the error; `refetch()` retries that last page.
 - `error` is the raw rejection (an `Error` or a `{ code, message }` object):
   turn it into words before you render it. Notices, selection and bulk-action
   errors stay yours, e.g. `useEffect( () => { if ( list.error ) notify( … ); }, [ list.error ] )`.
