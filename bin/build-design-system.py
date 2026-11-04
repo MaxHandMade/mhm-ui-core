@@ -366,6 +366,82 @@ files["components/confirm-button.html"] = page(
     width=620,
 )
 
+# DataTable (0.19.0) -- the DOM is what DataTable / SortHeader / SelectAll /
+# RowSelect emit. A static card cannot set the DOM-only `indeterminate`
+# property, so the mixed header box is described in the note, not drawn.
+SORT_ICON = {
+    "none": "M5 6.5l3-3 3 3M5 9.5l3 3 3-3",
+    "asc": "M8 13V3M4 7l4-4 4 4",
+    "desc": "M8 3v10M4 9l4 4 4-4",
+}
+
+
+def sort_th(label, state, end=False):
+    cls = "mhmui-table__th mhmui-table__th--sortable" + (" mhmui-table__th--end" if end else "")
+    aria = {"asc": ' aria-sort="ascending"', "desc": ' aria-sort="descending"'}.get(state, "")
+    return (
+        '<th scope="col" class="%s"%s><button type="button" class="mhmui-table__sort">%s'
+        '<svg aria-hidden="true" focusable="false" class="mhmui-table__sort-icon mhmui-table__sort-icon--%s" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="%s"></path></svg>'
+        "</button></th>" % (cls, aria, label, state, SORT_ICON[state])
+    )
+
+
+def table_rows(rows):
+    out = []
+    for i, (name, mail, phone, bookings, spent, tone, status, checked) in enumerate(rows):
+        out.append(
+            '<tr><td class="mhmui-table__select"><label class="mhmui-table__select-hit" for="dt-r%d">'
+            '<input id="dt-r%d" type="checkbox" class="mhmui-table__row-select"%s>'
+            '<span class="mhmui-table__row-select-label">Select %s</span></label></td>'
+            '<td class="mhmui-table__primary"><strong>%s</strong><br><span class="mhmui-table__caption-meta">%s</span></td>'
+            '<td data-label="Phone">%s</td><td class="mhmui-table__num" data-label="Bookings">%s</td>'
+            '<td class="mhmui-table__num" data-label="Total spent">%s</td>'
+            '<td data-label="Status"><span class="mhmui-status mhmui-status--%s">%s</span></td></tr>'
+            % (i, i, " checked" if checked else "", name, name, mail, phone, bookings, spent, tone, status)
+        )
+    return "".join(out)
+
+
+DT_ROWS = (
+    ("Ada Yılmaz", "ada@example.com", "+90 532 000 11 22", "14", "₺18.420", "info", "VIP", False),
+    ("Deniz Kaya", "deniz@example.com", "+90 536 000 77 88", "9", "₺11.300", "info", "VIP", True),
+    ("Emre Şahin", "emre@example.com", "+90 537 000 99 00", "5", "₺4.875", "success", "Active", False),
+)
+
+
+def data_table(stack):
+    head = (
+        '<thead><tr><th scope="col" class="mhmui-table__select"><label class="mhmui-table__select-hit" for="dt-all%d">'
+        '<input id="dt-all%d" type="checkbox" class="mhmui-table__select-all">'
+        '<span class="mhmui-table__select-label">Select all</span></label></th>'
+        % (int(stack), int(stack))
+        + sort_th("Customer", "none")
+        + '<th scope="col">Phone</th>'
+        + sort_th("Bookings", "none", end=True)
+        + sort_th("Total spent", "desc", end=True)
+        + '<th scope="col">Status</th></tr></thead>'
+    )
+    return (
+        '<div class="mhmui-table-card"><div class="mhmui-table-wrap%s">'
+        '<table class="mhmui-table%s"><caption class="mhmui-table__caption">Customers '
+        '<span class="mhmui-table__caption-meta">· 48</span></caption>%s<tbody>%s</tbody></table></div></div>'
+        % (" mhmui-table-wrap--stack" if stack else "", " mhmui-table--stack" if stack else "", head, table_rows(DT_ROWS))
+    )
+
+
+files["components/data-table.html"] = page(
+    "Components", "DataTable",
+    "<b>DataTable</b> + <b>SortHeader</b> + <b>SelectAll</b> / <b>RowSelect</b> (0.19.0) — caption zorunlu (tabloyu adlandırır), "
+    "başlık hücresinin tamamı düğme, <code>aria-sort</code> yalnız sıralanan sütunda. Seçili satırı kit boyar (<code>:has()</code>). "
+    "Kısmi seçim (<code>indeterminate</code>) yalnız DOM özelliğidir, statik kartta çizilemez. Seçim vuruş alanı ≥24px, dar düzende 44px. "
+    "<code>layout=\"stack\"</code>: kap 40rem altına inince satırlar karta döner, sıralama başlıkları şerit düğmesi olur, hücre etiketi <code>data-label</code>'dan.",
+    '<div class="ds-label">layout="scroll" (varsayılan)</div>'
+    + data_table(False)
+    + '<div class="ds-label">layout="stack", dar kap (390px)</div>'
+    '<div style="max-width:390px">' + data_table(True) + "</div>",
+    width=1040,
+)
+
 # ---- README for the designers ---------------------------------------------
 files["README.md"] = u"""# mhm-ui-core — tasarım sistemi (v%s)
 
@@ -417,6 +493,10 @@ STYLE_HOOKS = {
     "mhmui-notice--warning",
     "mhmui-notice--danger",
     "mhmui-notice--info",
+    # 0.19.0: SortHeader's base th class (the table styles `thead th`) and the
+    # header box's own class -- semantic hooks, styled through the hit label.
+    "mhmui-table__th",
+    "mhmui-table__select-all",
 }
 
 # Modifiers that intentionally carry NO rule of their own -- not the
@@ -436,7 +516,9 @@ STYLE_HOOKS = {
 # reads as neutral, and flat must read as neither good nor bad -- the →
 # mark is its whole cue; see the comment beside the --up/--down rules in
 # admin.css and front.css).
-SHARED_RULE_MODIFIERS = {"mhmui-stat-card__delta--flat"}
+# 0.19.0: the unsorted icon IS the base .mhmui-table__sort-icon colour
+# (--mhmui-border-strong); only --asc/--desc recolour it.
+SHARED_RULE_MODIFIERS = {"mhmui-stat-card__delta--flat", "mhmui-table__sort-icon--none"}
 
 # Modifiers whose every rule is a descendant/compound selector
 # (`.mhmui-widget--collapsible .mhmui-widget__title`, `.mhmui-widget--level-2
@@ -448,6 +530,10 @@ COMPOUND_ONLY_MODIFIERS = {
     "mhmui-widget--collapsible",
     "mhmui-widget--collapsed",
     "mhmui-widget--level-2",
+    # 0.19.0: tinted row via tr:has( .mhmui-table__row-select:checked ); end
+    # alignment via .mhmui-table__th--end .mhmui-table__sort.
+    "mhmui-table__row-select",
+    "mhmui-table__th--end",
 }
 
 missing = []
