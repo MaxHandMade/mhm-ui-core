@@ -22,7 +22,7 @@ A consuming plugin `require_once`s `vendor/mhm/ui-core/register.php` from its
 main file and registers its own copy:
 
 ```php
-mhmuicore_register( '0.19.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.19.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 At `plugins_loaded` priority 0 the highest registered version boots; the rest
@@ -390,7 +390,7 @@ build from.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.19.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.19.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 Requiring `bootstrap.php` directly defines `MHMUICORE_VERSION` immediately, which
@@ -901,7 +901,9 @@ const selection = useTableSelection( rows.map( ( r ) => r.id ) );
   direction on the same column and starts another at `firstDirection`).
 - `SelectAll` / `RowSelect` take plain props. `SelectAll`'s `label` becomes
   visible in the stacked layout, so keep it short ("Select all"). A checked row
-  is tinted by the kit; add no class for it.
+  is tinted by the kit; add no class for it. Do not give the select cell WP's
+  `check-column` class: core list-tables.css stretches a `.check-column label`
+  over the cell (`position: absolute`), which breaks the kit's hit area.
 - `useTableSelection( ids )` is page-scoped: when the ids change, the ones that
   left are dropped and do not come back. Ids are compared with `===`, so keep
   their type consistent (a REST payload that sends `7` once and `"7"` the next

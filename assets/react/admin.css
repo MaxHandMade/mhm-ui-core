@@ -1297,11 +1297,42 @@ h1.mhmui-page-header__title.mhmui-page-header__title {
 	min-height: 24px;
 	cursor: pointer;
 }
-.mhmui-table__select-hit input {
+/* (0,2,1): WP's `input[type=checkbox]` sizing (1.5625rem at <=782px) and
+   margin are (0,1,1), so the box wins on specificity, not on load order. */
+.mhmui-table__select-hit input[type="checkbox"] {
 	width: 16px;
 	height: 16px;
 	margin: 0;
 	accent-color: var( --mhmui-accent );
+}
+/* WP core forms.css draws the checked mark as an oversized ::before sized for
+   its own box; at <=782px it is 30px, so on the kit's 16px box it spilled out
+   (measured in the Lite pilot, 0.19.0). The mark keeps WP's desktop ratio
+   (1.3125 of the box) at every width. The attribute selector outranks WP's
+   rule on specificity, not on stylesheet order. */
+.mhmui-table__select-hit input[type="checkbox"]:checked::before {
+	width: 21px;
+	height: 21px;
+	margin: -3px 0 0 -4px;
+}
+/* WP draws checkboxes with `appearance: none` and has no :indeterminate rule,
+   so a mixed SelectAll looked like an empty box in wp-admin. The kit draws
+   it: WP's checked fill and a centred white dash (14px content box). */
+/* stylelint-disable custom-property-pattern -- reads (never defines) core's own
+   admin colour, so the mixed box matches WP's checked fill in every scheme */
+.mhmui-table__select-hit input[type="checkbox"]:indeterminate {
+	background: var( --wp-admin-theme-color, #3858e9 );
+	border-color: var( --wp-admin-theme-color, #3858e9 );
+}
+/* stylelint-enable custom-property-pattern */
+.mhmui-table__select-hit input[type="checkbox"]:indeterminate::before {
+	content: "";
+	display: block;
+	float: none;
+	width: 8px;
+	height: 2px;
+	margin: 6px auto 0;
+	background: #fff;
 }
 .mhmui-table__select-label {
 	position: absolute;
@@ -1399,6 +1430,15 @@ h1.mhmui-page-header__title.mhmui-page-header__title {
 	.mhmui-table--stack .mhmui-table__select-hit input {
 		width: 20px;
 		height: 20px;
+	}
+	.mhmui-table--stack .mhmui-table__select-hit input[type="checkbox"]:checked::before {
+		width: 26px;
+		height: 26px;
+		margin: -4px 0 0 -5px;
+	}
+	.mhmui-table--stack .mhmui-table__select-hit input[type="checkbox"]:indeterminate::before {
+		width: 10px;
+		margin: 8px auto 0;
 	}
 	.mhmui-table--stack tbody tr {
 		display: grid;

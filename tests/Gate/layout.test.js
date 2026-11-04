@@ -1198,6 +1198,72 @@ describe( 'DataTable (0.19.0)', () => {
 		).toMatch( /width:\s*20px/ );
 	} );
 
+	/*
+	 * WP core forms.css draws the checked mark as an oversized ::before sized
+	 * for its own box (1.3125rem on 1rem; at <=782px 1.875rem on 1.5625rem).
+	 * The kit sizes the box, so it must size the mark too, or at <=782px a
+	 * 30px mark spills off a 16px box (measured in the Lite pilot, 0.19.0).
+	 * The selector outranks WP's `input[type=checkbox]:checked::before`
+	 * (0,2,1) on specificity, not on stylesheet order.
+	 */
+	const MARK = '.mhmui-table__select-hit input[type="checkbox"]:checked::before';
+	test( 'the checked mark keeps WP proportions on the 16px box (0.19.1)', () => {
+		const body = ruleBody( css, MARK );
+		expect( body ).toMatch( /width:\s*21px/ );
+		expect( body ).toMatch( /height:\s*21px/ );
+		expect( body ).toMatch( /margin:\s*-3px 0 0 -4px/ );
+	} );
+
+	test( 'the checked mark scales with the stacked 20px box (0.19.1)', () => {
+		const body = ruleBody( stack, `.mhmui-table--stack ${ MARK }` );
+		expect( body ).toMatch( /width:\s*26px/ );
+		expect( body ).toMatch( /height:\s*26px/ );
+		expect( body ).toMatch( /margin:\s*-4px 0 0 -5px/ );
+	} );
+
+	/*
+	 * WP's mobile `input[type=checkbox]` (0,1,1) sizes the box at 1.5625rem;
+	 * a (0,1,1) kit rule would win only by stylesheet order, and the mark and
+	 * the dash are both sized for the kit's box (audit of 0.19.1).
+	 */
+	test( 'the box size outranks WP on specificity (0.19.1)', () => {
+		const body = ruleBody( css, '.mhmui-table__select-hit input[type="checkbox"]' );
+		expect( body ).toMatch( /width:\s*16px/ );
+		expect( body ).toMatch( /margin:\s*0/ );
+	} );
+
+	test( 'the desktop mark rule is not filed inside the container block', () => {
+		expect( ruleBody( stack, MARK ) ).toBeNull();
+	} );
+
+	/*
+	 * WP forms.css has no :indeterminate rule and draws checkboxes with
+	 * `appearance: none`, so a mixed SelectAll looked exactly like an empty
+	 * box in wp-admin (Fable audit of 0.19.1). The kit draws it: WP's checked
+	 * fill and a centred white dash.
+	 */
+	const MIXED = '.mhmui-table__select-hit input[type="checkbox"]:indeterminate';
+	test( 'a mixed box is filled like a checked one (0.19.1)', () => {
+		const body = ruleBody( css, MIXED );
+		expect( body ).toMatch( /background:\s*var\(\s*--wp-admin-theme-color/ );
+		expect( body ).toMatch( /border-color:\s*var\(\s*--wp-admin-theme-color/ );
+	} );
+
+	test( 'a mixed box draws a dash, sized for 16px and the stacked 20px (0.19.1)', () => {
+		const wide = ruleBody( css, `${ MIXED }::before` );
+		expect( wide ).toMatch( /content:\s*""/ );
+		expect( wide ).toMatch( /width:\s*8px/ );
+		expect( wide ).toMatch( /height:\s*2px/ );
+		expect( wide ).toMatch( /background:\s*#fff/ );
+		expect( wide ).toMatch( /display:\s*block/ );
+		expect( wide ).toMatch( /margin:\s*6px auto 0/ );
+		expect( ruleBody( stack, MIXED ) ).toBeNull();
+		expect( ruleBody( stack, `${ MIXED }::before` ) ).toBeNull();
+		const tall = ruleBody( stack, `.mhmui-table--stack ${ MIXED }::before` );
+		expect( tall ).toMatch( /width:\s*10px/ );
+		expect( tall ).toMatch( /margin:\s*8px auto 0/ );
+	} );
+
 	test( 'the stacked cell label is spoken (no alt-text form)', () => {
 		const body = ruleBody( stack, '.mhmui-table--stack td[data-label]::before' );
 		expect( body ).toMatch( /content:\s*attr\(\s*data-label\s*\)/ );
