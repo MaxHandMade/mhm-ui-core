@@ -1313,7 +1313,8 @@ h1.mhmui-page-header__title.mhmui-page-header__title {
 .mhmui-table__select-hit input[type="checkbox"]:checked::before {
 	width: 21px;
 	height: 21px;
-	margin: -3px 0 0 -4px;
+	margin: -3px 0 0;
+	margin-inline-start: -4px;
 }
 /* WP draws checkboxes with `appearance: none` and has no :indeterminate rule,
    so a mixed SelectAll looked like an empty box in wp-admin. The kit draws
@@ -1407,6 +1408,9 @@ h1.mhmui-page-header__title.mhmui-page-header__title {
 		font-size: 13px;
 		background: var( --mhmui-surface );
 	}
+	.mhmui-table--stack .mhmui-table__sort:focus-visible {
+		outline-offset: 2px;
+	}
 	.mhmui-table--stack thead th[aria-sort] .mhmui-table__sort {
 		background: var( --mhmui-info-soft );
 		border-color: var( --mhmui-accent );
@@ -1434,7 +1438,8 @@ h1.mhmui-page-header__title.mhmui-page-header__title {
 	.mhmui-table--stack .mhmui-table__select-hit input[type="checkbox"]:checked::before {
 		width: 26px;
 		height: 26px;
-		margin: -4px 0 0 -5px;
+		margin: -4px 0 0;
+		margin-inline-start: -5px;
 	}
 	.mhmui-table--stack .mhmui-table__select-hit input[type="checkbox"]:indeterminate::before {
 		width: 10px;

@@ -1211,14 +1211,45 @@ describe( 'DataTable (0.19.0)', () => {
 		const body = ruleBody( css, MARK );
 		expect( body ).toMatch( /width:\s*21px/ );
 		expect( body ).toMatch( /height:\s*21px/ );
-		expect( body ).toMatch( /margin:\s*-3px 0 0 -4px/ );
+		expect( body ).toMatch( /margin:\s*-3px 0 0;/ );
+	} );
+
+	/*
+	 * The mark's offset is written with logical properties so it mirrors in
+	 * RTL, where WP's forms-rtl.css floats the mark right (0.20.1): a physical
+	 * `margin-left: -4px` shifted it about 4px off the box there.
+	 */
+	test( 'the checked mark offset is logical, so it mirrors in RTL (0.20.1)', () => {
+		const wide = ruleBody( css, MARK );
+		expect( wide ).toMatch( /margin:\s*-3px 0 0;/ );
+		expect( wide ).toMatch( /margin-inline-start:\s*-4px/ );
+		expect( wide ).not.toMatch( /margin-left/ );
+		const tall = ruleBody( stack, `.mhmui-table--stack ${ MARK }` );
+		expect( tall ).toMatch( /margin:\s*-4px 0 0;/ );
+		expect( tall ).toMatch( /margin-inline-start:\s*-5px/ );
+	} );
+
+	/*
+	 * The stacked sort chip is a pill with its own border; the approved
+	 * artboard (Narrow.dc.html) draws its focus ring 2px OUTSIDE it. The wide
+	 * header keeps -2px (the cell edge would clip an outer ring there).
+	 */
+	test( 'the stacked sort chip draws its focus ring outside the pill (0.20.1)', () => {
+		const body = ruleBody(
+			stack,
+			'.mhmui-table--stack .mhmui-table__sort:focus-visible'
+		);
+		expect( body ).toMatch( /outline-offset:\s*2px/ );
+		expect( ruleBody( css, '.mhmui-table__sort:focus-visible' ) ).toMatch(
+			/outline-offset:\s*-2px/
+		);
 	} );
 
 	test( 'the checked mark scales with the stacked 20px box (0.19.1)', () => {
 		const body = ruleBody( stack, `.mhmui-table--stack ${ MARK }` );
 		expect( body ).toMatch( /width:\s*26px/ );
 		expect( body ).toMatch( /height:\s*26px/ );
-		expect( body ).toMatch( /margin:\s*-4px 0 0 -5px/ );
+		expect( body ).toMatch( /margin:\s*-4px 0 0;/ );
 	} );
 
 	/*
