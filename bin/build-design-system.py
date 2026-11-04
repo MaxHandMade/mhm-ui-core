@@ -578,7 +578,9 @@ dup_ids = []
 for rel, content in files.items():
     body = content.split("</head>", 1)[-1]
     seen = set()
-    for value in re.findall(r'\sid="([^"]+)"', body):
+    # Any quoting and case (id='x', ID=x, id = "x"); comments are not markup.
+    markup = re.sub(r"<!--.*?-->", "", body, flags=re.S)
+    for value in re.findall(r"\sid\s*=\s*[\"']?([^\"'\s>]+)", markup, flags=re.I):
         if value in seen:
             dup_ids.append("%s -> #%s" % (rel, value))
         seen.add(value)

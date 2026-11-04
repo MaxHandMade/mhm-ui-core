@@ -832,7 +832,7 @@ bölümüne bakın; kurallar aynı:
   bu hücreyle duyurmasını istiyorsanız `<th scope="row">` kullanın. Kendi
   başlıklarınızda `scope="col"` kullanın. Bu düzende kit, rol vermediğiniz
   yerlere açık tablo rolleri yazar.
-  Kart düzenindeki değer hücresi esnek bir satırdır (etiket solda, değer sağda):
+  Kart düzenindeki değer hücresi esnek bir satırdır (etiket başta, değer sonda):
   içine **tek** çocuk koyun. Birkaç parçayı (tutar ve rozet, iki span) tek bir
   öğeye sarın, yoksa satır onları birbirinden uzaklaştırır.
 - Sütun genişlikleri `<colgroup>`'a yazılır. `DataTable` ve `SortHeader`'daki

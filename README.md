@@ -916,7 +916,7 @@ const selection = useTableSelection( rows.map( ( r ) => r.id ) );
   `<th scope="row">` for the title cell if you want screen readers to announce
   each row by it. Use `scope="col"` on your own headers. In this layout the kit
   writes explicit table roles where you set none.
-  A stacked value cell is a flex row (label left, value right): put **one**
+  A stacked value cell is a flex row (label at the start, value at the end): put **one**
   child in it. Wrap several pieces (an amount and a badge, two spans) in a
   single element, or the row spreads them apart.
 - Column widths go in a `<colgroup>`. `className` on `DataTable` and
