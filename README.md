@@ -22,7 +22,7 @@ A consuming plugin `require_once`s `vendor/mhm/ui-core/register.php` from its
 main file and registers its own copy:
 
 ```php
-mhmuicore_register( '0.18.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.19.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 At `plugins_loaded` priority 0 the highest registered version boots; the rest
@@ -390,7 +390,7 @@ build from.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.18.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.19.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 Requiring `bootstrap.php` directly defines `MHMUICORE_VERSION` immediately, which
@@ -856,3 +856,67 @@ state should look up the `.mhmui-confirm` root. The kit's own `type`,
 behaviour is unchanged. No new classes, no CSS change. This adds a referenceable
 surface, so it is a minor: `^0.17` does not pick it up; a consumer opts in with
 `^0.18`.
+
+### Tables (0.19.0+)
+
+Four pieces and one optional hook for an accessible admin table. The rows and
+cells stay yours; the kit owns the card, the caption, the sortable header and
+the select boxes.
+
+```jsx
+import { DataTable, SortHeader, SelectAll, RowSelect, useTableSelection, nextSort } from '@mhm/ui-core';
+
+const selection = useTableSelection( rows.map( ( r ) => r.id ) );
+
+<DataTable caption={ __( 'Customers', 'my-plugin' ) } captionHidden className="my-table" layout="stack" footer={ <Pagination … /> }>
+	<colgroup><col /><col /><col style={ { width: '140px' } } /></colgroup>
+	<thead>
+		<tr>
+			<th scope="col" className="mhmui-table__select">
+				<SelectAll state={ selection.state } onChange={ selection.setAll } label={ __( 'Select all', 'my-plugin' ) } disabled={ rows.length === 0 } />
+			</th>
+			<SortHeader label={ __( 'Customer', 'my-plugin' ) } sortKey="name" sort={ sort } onSort={ ( key ) => { setSort( nextSort( sort, key, 'desc' ) ); setPage( 1 ); } } />
+			<SortHeader label={ __( 'Total spent', 'my-plugin' ) } sortKey="spent" sort={ sort } onSort={ … } align="end" />
+		</tr>
+	</thead>
+	<tbody>
+		{ rows.map( ( r ) => (
+			<tr key={ r.id }>
+				<td className="mhmui-table__select"><RowSelect checked={ selection.isSelected( r.id ) } onChange={ () => selection.toggle( r.id ) } label={ … } /></td>
+				<th scope="row" className="mhmui-table__primary">{ r.name }</th>
+				<td className="mhmui-table__num" data-label={ __( 'Total spent', 'my-plugin' ) }>{ r.total }</td>
+			</tr>
+		) ) }
+	</tbody>
+</DataTable>
+```
+
+- `caption` names the table and is required. An empty caption is drawn empty
+  and **no kit gate catches it**; assert its text in your own test.
+  `captionHidden` hides it visually when the page title already names the
+  table; it is never removed.
+- `SortHeader` puts `aria-sort` on the **sorted column only**; the other
+  headers carry none. `onSort( sortKey )` only reports the click: the
+  direction, the data and the page reset are yours (`nextSort` turns the
+  direction on the same column and starts another at `firstDirection`).
+- `SelectAll` / `RowSelect` take plain props. `SelectAll`'s `label` becomes
+  visible in the stacked layout, so keep it short ("Select all"). A checked row
+  is tinted by the kit; add no class for it.
+- `useTableSelection( ids )` is page-scoped: when the ids change, the ones that
+  left are dropped and do not come back. Ids are compared with `===`, so keep
+  their type consistent (a REST payload that sends `7` once and `"7"` the next
+  selects nothing). `toggle`, `setAll` and `clear` keep their identity;
+  `isSelected` is per render. Locking during a bulk request is yours.
+- `layout="scroll"` (default) scrolls sideways in a narrow container.
+  `layout="stack"` turns rows into cards below a 40rem container: give every
+  cell a `data-label` (its column name, spoken and shown), mark the title cell
+  `mhmui-table__primary` and an actions cell `mhmui-table__actions`. Use
+  `<th scope="row">` for the title cell if you want screen readers to announce
+  each row by it. Use `scope="col"` on your own headers. In this layout the kit
+  writes explicit table roles where you set none.
+- Column widths go in a `<colgroup>`. `className` on `DataTable` and
+  `SortHeader` adds your own class to the table and the header.
+
+This adds referenceable surface (new files under `src-react/`), so it is a
+minor: `^0.18` does not pick it up; a consumer opts in with `^0.19`. No
+existing class, token or prop changed.
