@@ -216,7 +216,7 @@ da bu tek yanlış cümle yüzünden taşıdı.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.18.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.19.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 `bootstrap.php`'yi doğrudan require etmek `MHMUICORE_VERSION`'ı anında tanımlar
@@ -642,7 +642,7 @@ parite kapısı eşitlik arar, uyumluluk değil.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.18.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.19.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 🔴 Sürüm dizesi **elle yazılır** (kayıt, herhangi bir bootstrap yüklenmeden önce koşar) ve
@@ -799,3 +799,40 @@ değerleri geçilen değeri ezer (`ref` iletilmez). Bir `aria-label` görünen `
 (`src-react/plain-left-click.js`, index'ten dışa aktarılmaz); tıklama davranışları
 değişmedi. Yeni sınıf yok, CSS değişikliği yok. Başvurulabilir bir yüzey eklendiği
 için bu bir minördür: `^0.17` bunu almaz; tüketici `^0.18` ile katılır.
+
+### Tablolar (0.19.0+)
+
+Erişilebilir bir yönetici tablosu için dört parça ve isteğe bağlı bir hook.
+Satırlar ve hücreler sizin; kart, başlık (caption), sıralanabilir başlık hücresi
+ve seçim kutuları kitin. Örnek için İngilizce README'deki "Tables (0.19.0+)"
+bölümüne bakın; kurallar aynı:
+
+- `caption` tabloyu adlandırır ve zorunludur. Boş caption boş çizilir ve **hiçbir
+  kit kapısı bunu yakalamaz**; metnini kendi testinizde doğrulayın.
+  `captionHidden`, sayfa başlığı tabloyu zaten adlandırıyorsa onu görsel olarak
+  gizler; hiçbir zaman silmez.
+- `SortHeader`, `aria-sort`'u **yalnız sıralanan sütuna** yazar; diğer
+  başlıklarda bu öznitelik yoktur. `onSort( sortKey )` yalnız tıklamayı bildirir:
+  yön, veri ve sayfayı başa almak sizin (`nextSort` aynı sütunda yönü çevirir,
+  başka sütunu `firstDirection` ile başlatır).
+- `SelectAll` / `RowSelect` düz prop alır. `SelectAll`'ın `label`'ı dar düzende
+  görünür olur, kısa tutun ("Tümünü seç"). Seçili satırı kit boyar; bunun için
+  sınıf eklemeyin.
+- `useTableSelection( ids )` sayfaya bağlıdır: kimlikler değişince listeden
+  çıkanlar seçimden düşer ve geri gelmez. Kimlikler `===` ile karşılaştırılır;
+  türlerini tutarlı tutun (bir REST yanıtı bir kez `7`, bir kez `"7"` gönderirse
+  hiçbir şey seçilmez). `toggle`, `setAll` ve `clear` kimliklerini korur;
+  `isSelected` her çizimde yenidir. Toplu istek sırasında kilitlemek sizin.
+- `layout="scroll"` (varsayılan) dar kapta yana kayar. `layout="stack"` 40rem
+  altındaki kapta satırları karta çevirir: her hücreye bir `data-label` verin
+  (sütun adı; görünür ve okunur), başlık hücresini `mhmui-table__primary`, eylem
+  hücresini `mhmui-table__actions` ile işaretleyin. Ekran okuyucunun her satırı
+  bu hücreyle duyurmasını istiyorsanız `<th scope="row">` kullanın. Kendi
+  başlıklarınızda `scope="col"` kullanın. Bu düzende kit, rol vermediğiniz
+  yerlere açık tablo rolleri yazar.
+- Sütun genişlikleri `<colgroup>`'a yazılır. `DataTable` ve `SortHeader`'daki
+  `className` kendi sınıfınızı tabloya ve başlığa ekler.
+
+Bu, başvurulabilir yüzey ekler (`src-react/` altında yeni dosyalar), bu yüzden
+minördür: `^0.18` bunu almaz; tüketici `^0.19` ile katılır. Mevcut hiçbir sınıf,
+token ya da prop değişmedi.

@@ -1130,3 +1130,152 @@ describe( 'page header and underline tabs fit the admin screen', () => {
 		expect( ring ).toMatch( /outline-offset:\s*-2px/ );
 	} );
 } );
+
+/**
+ * DataTable (0.19.0, spec v2.1 §4). The stacked layout lives in a container
+ * query; ruleBody() cannot see a block's first rule (it follows the block's
+ * `{`), so the block is read with a leading `}`.
+ *
+ * @param {string} css   Stylesheet text.
+ * @param {string} query The container query, whitespace-insensitive.
+ * @return {string} The block's inside, '' when absent.
+ */
+function containerBlock( css, query ) {
+	const code = css.replace( /\/\*[\s\S]*?\*\//g, '' );
+	const want = String( query ).replace( /\s+/g, '' );
+	const re = /@container([^{]*)\{/g;
+	let m;
+	while ( ( m = re.exec( code ) ) !== null ) {
+		let depth = 1;
+		let i = re.lastIndex;
+		for ( ; i < code.length && depth > 0; i++ ) {
+			if ( code[ i ] === '{' ) {
+				depth++;
+			} else if ( code[ i ] === '}' ) {
+				depth--;
+			}
+		}
+		if ( m[ 1 ].replace( /\s+/g, '' ) === want ) {
+			return '}' + code.slice( re.lastIndex, i - 1 );
+		}
+		re.lastIndex = i;
+	}
+	return '';
+}
+
+describe( 'DataTable (0.19.0)', () => {
+	const css = read( 'admin.css' );
+	const stack = containerBlock( css, 'mhmui-table (max-width: 40rem)' );
+	const HIDDEN_HEADERS =
+		'.mhmui-table--stack thead th:not( .mhmui-table__th--sortable ):not( .mhmui-table__select )';
+
+	test( 'the stack wrapper is a named inline-size container', () => {
+		const body = ruleBody( css, '.mhmui-table-wrap--stack' );
+		expect( body ).toMatch( /container-type:\s*inline-size/ );
+		expect( body ).toMatch( /container-name:\s*mhmui-table/ );
+	} );
+
+	test( 'the stacked block exists', () => {
+		expect( stack ).not.toBe( '' );
+	} );
+
+	test( 'non-sortable column headers are clipped, never display:none, and only in thead', () => {
+		const body = ruleBody( stack, HIDDEN_HEADERS );
+		expect( body ).not.toBeNull();
+		expect( body ).toMatch( /clip:\s*rect/ );
+		expect( stack ).not.toMatch( /thead th[^{]*\{[^}]*display:\s*none/ );
+	} );
+
+	test( 'stacked targets are 44px and the boxes 20px', () => {
+		expect( ruleBody( stack, '.mhmui-table--stack .mhmui-table__sort' ) ).toMatch(
+			/min-height:\s*44px/
+		);
+		const hit = ruleBody( stack, '.mhmui-table--stack .mhmui-table__select-hit' );
+		expect( hit ).toMatch( /min-width:\s*44px/ );
+		expect( hit ).toMatch( /min-height:\s*44px/ );
+		expect(
+			ruleBody( stack, '.mhmui-table--stack .mhmui-table__select-hit input' )
+		).toMatch( /width:\s*20px/ );
+	} );
+
+	test( 'the stacked cell label is spoken (no alt-text form)', () => {
+		const body = ruleBody( stack, '.mhmui-table--stack td[data-label]::before' );
+		expect( body ).toMatch( /content:\s*attr\(\s*data-label\s*\)/ );
+		expect( body ).not.toMatch( /\// );
+	} );
+
+	test( 'the select-all label shows when stacked', () => {
+		const body = ruleBody( stack, '.mhmui-table--stack .mhmui-table__select-label' );
+		expect( body ).toMatch( /position:\s*static/ );
+		expect( body ).toMatch( /clip:\s*auto/ );
+	} );
+
+	test( 'wide hit area is at least 24px; 44px below 782px', () => {
+		const body = ruleBody( css, '.mhmui-table__select-hit' );
+		expect( body ).toMatch( /min-width:\s*24px/ );
+		expect( body ).toMatch( /min-height:\s*24px/ );
+		const narrow = '}' + mediaBlock( css, '( max-width: 782px )' );
+		expect( ruleBody( narrow, '.mhmui-table__select-hit' ) ).toMatch(
+			/min-height:\s*44px/
+		);
+		expect( ruleBody( narrow, '.mhmui-table__sort' ) ).toMatch(
+			/min-height:\s*44px/
+		);
+	} );
+
+	test( 'a checked row is tinted by the kit', () => {
+		expect(
+			ruleBody( css, '.mhmui-table tbody tr:has( .mhmui-table__row-select:checked )' )
+		).toMatch( /var\(\s*--mhmui-info-soft\s*\)/ );
+	} );
+
+	test.each( [
+		'.mhmui-table__caption--hidden',
+		'.mhmui-table__select-label',
+		'.mhmui-table__row-select-label',
+	] )( '%s is clipped, never display:none', ( selector ) => {
+		const body = ruleBody( css, selector );
+		expect( body ).toMatch( /clip:\s*rect/ );
+		expect( body ).not.toMatch( /display:\s*none/ );
+	} );
+
+	test( 'an info badge keeps its pill on a selected row (same fill as the row tint)', () => {
+		expect(
+			ruleBody(
+				css,
+				'.mhmui-table tbody tr:has( .mhmui-table__row-select:checked ) .mhmui-status--info'
+			)
+		).toMatch( /background:\s*var\(\s*--mhmui-surface\s*\)/ );
+	} );
+
+	test( 'a neutral badge keeps its pill on a hovered row (same fill as the hover tint)', () => {
+		expect(
+			ruleBody( css, '.mhmui-table tbody tr:hover .mhmui-status--neutral' )
+		).toMatch( /background:\s*var\(\s*--mhmui-surface\s*\)/ );
+	} );
+
+	test( 'a stacked card reserves no gutter when the table has no select column', () => {
+		expect( ruleBody( stack, '.mhmui-table--stack tbody tr' ) ).toMatch(
+			/grid-template-columns:\s*auto\s+minmax/
+		);
+	} );
+
+	test( 'stacked value rows run the full card width (Narrow artboard)', () => {
+		expect(
+			ruleBody(
+				stack,
+				'.mhmui-table--stack tbody td:not( .mhmui-table__select ):not( .mhmui-table__primary )'
+			)
+		).toMatch( /grid-column:\s*1\s*\/\s*-1/ );
+	} );
+
+	test( 'the select cell never shows a stacked label', () => {
+		expect(
+			ruleBody( stack, '.mhmui-table--stack tbody .mhmui-table__select::before' )
+		).toMatch( /content:\s*none/ );
+	} );
+
+	test( 'the scroll layout scrolls sideways', () => {
+		expect( ruleBody( css, '.mhmui-table-wrap' ) ).toMatch( /overflow-x:\s*auto/ );
+	} );
+} );

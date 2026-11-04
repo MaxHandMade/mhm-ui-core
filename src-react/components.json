@@ -143,5 +143,40 @@
       { "children": "Open", "variant": "secondary", "size": "sm", "href": "?x=1" },
       { "children": "Send", "variant": "primary", "disabled": true }
     ]
+  },
+  "DataTable": {
+    "interactive": false, "tone_semantics": false,
+    "props": { "caption": "string", "captionHidden": "boolean?", "captionMeta": "node?", "layout": "scroll|stack?", "className": "string?", "footer": "node?", "children": "node" },
+    "fixtures": [
+      { "caption": "Customers", "children": "rows" },
+      { "caption": "Customers", "captionMeta": "· 48", "layout": "stack", "className": "rv-cust-table", "children": "rows" },
+      { "caption": "Customers", "captionHidden": true, "children": "rows" }
+    ]
+  },
+  "SortHeader": {
+    "interactive": true, "tone_semantics": false,
+    "props": { "label": "string", "sortKey": "string", "sort": "{ key: string, direction: asc|desc }?", "onSort": "function", "align": "start|end?", "className": "string?" },
+    "fixtures": [
+      { "label": "Customer", "sortKey": "name", "sort": null },
+      { "label": "Total spent", "sortKey": "spent", "sort": { "key": "spent", "direction": "desc" }, "align": "end" }
+    ]
+  },
+  "SelectAll": {
+    "interactive": true, "tone_semantics": false,
+    "props": { "state": "none|some|all", "onChange": "function", "label": "string", "disabled": "boolean?" },
+    "fixtures": [
+      { "state": "none", "label": "Select all" },
+      { "state": "some", "label": "Select all" },
+      { "state": "all", "label": "Select all" },
+      { "state": "none", "label": "Select all", "disabled": true }
+    ]
+  },
+  "RowSelect": {
+    "interactive": true, "tone_semantics": false,
+    "props": { "checked": "boolean", "onChange": "function", "label": "string", "disabled": "boolean?" },
+    "fixtures": [
+      { "checked": false, "label": "Select Burak Demir" },
+      { "checked": true, "label": "Select Burak Demir" }
+    ]
   }
 }
