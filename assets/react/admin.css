@@ -1303,6 +1303,16 @@ h1.mhmui-page-header__title.mhmui-page-header__title {
 	margin: 0;
 	accent-color: var( --mhmui-accent );
 }
+/* WP core forms.css draws the checked mark as an oversized ::before sized for
+   its own box; at <=782px it is 30px, so on the kit's 16px box it spilled out
+   (measured in the Lite pilot, 0.19.0). The mark keeps WP's desktop ratio
+   (1.3125 of the box) at every width. The attribute selector outranks WP's
+   rule on specificity, not on stylesheet order. */
+.mhmui-table__select-hit input[type="checkbox"]:checked::before {
+	width: 21px;
+	height: 21px;
+	margin: -3px 0 0 -4px;
+}
 .mhmui-table__select-label {
 	position: absolute;
 	width: 1px;
@@ -1399,6 +1409,11 @@ h1.mhmui-page-header__title.mhmui-page-header__title {
 	.mhmui-table--stack .mhmui-table__select-hit input {
 		width: 20px;
 		height: 20px;
+	}
+	.mhmui-table--stack .mhmui-table__select-hit input[type="checkbox"]:checked::before {
+		width: 26px;
+		height: 26px;
+		margin: -4px 0 0 -5px;
 	}
 	.mhmui-table--stack tbody tr {
 		display: grid;

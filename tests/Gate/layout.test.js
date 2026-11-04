@@ -1198,6 +1198,29 @@ describe( 'DataTable (0.19.0)', () => {
 		).toMatch( /width:\s*20px/ );
 	} );
 
+	/*
+	 * WP core forms.css draws the checked mark as an oversized ::before sized
+	 * for its own box (1.3125rem on 1rem; at <=782px 1.875rem on 1.5625rem).
+	 * The kit sizes the box, so it must size the mark too, or at <=782px a
+	 * 30px mark spills off a 16px box (measured in the Lite pilot, 0.19.0).
+	 * The selector outranks WP's `input[type=checkbox]:checked::before`
+	 * (0,2,1) on specificity, not on stylesheet order.
+	 */
+	const MARK = '.mhmui-table__select-hit input[type="checkbox"]:checked::before';
+	test( 'the checked mark keeps WP proportions on the 16px box (0.19.1)', () => {
+		const body = ruleBody( css, MARK );
+		expect( body ).toMatch( /width:\s*21px/ );
+		expect( body ).toMatch( /height:\s*21px/ );
+		expect( body ).toMatch( /margin:\s*-3px 0 0 -4px/ );
+	} );
+
+	test( 'the checked mark scales with the stacked 20px box (0.19.1)', () => {
+		const body = ruleBody( stack, `.mhmui-table--stack ${ MARK }` );
+		expect( body ).toMatch( /width:\s*26px/ );
+		expect( body ).toMatch( /height:\s*26px/ );
+		expect( body ).toMatch( /margin:\s*-4px 0 0 -5px/ );
+	} );
+
 	test( 'the stacked cell label is spoken (no alt-text form)', () => {
 		const body = ruleBody( stack, '.mhmui-table--stack td[data-label]::before' );
 		expect( body ).toMatch( /content:\s*attr\(\s*data-label\s*\)/ );
