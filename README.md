@@ -22,7 +22,7 @@ A consuming plugin `require_once`s `vendor/mhm/ui-core/register.php` from its
 main file and registers its own copy:
 
 ```php
-mhmuicore_register( '0.17.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.18.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 At `plugins_loaded` priority 0 the highest registered version boots; the rest
@@ -390,7 +390,7 @@ build from.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.17.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.18.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 Requiring `bootstrap.php` directly defines `MHMUICORE_VERSION` immediately, which
@@ -839,3 +839,20 @@ focus to the toggle; a toggle press released elsewhere or made with another
 mouse button does not count as one. The design-system Tabs card now shows
 `variant="underline"` inside a `.mhmui-tabs-bar`, including a narrow container
 where the strip scrolls. No new props or classes; `^0.17` picks it up.
+
+### ConfirmButton extra props (0.18.0+)
+
+Any prop `ConfirmButton` does not name itself (`data-*`, `aria-*`, `id`, ...) now
+lands on the **trigger** button. It never reaches the `.mhmui-confirm` root or
+the two prompt buttons, so a key or an id is never duplicated. While the prompt
+is open the trigger is not in the DOM; a consumer that tracks focus across that
+state should look up the `.mhmui-confirm` root. The kit's own `type`,
+`className`, `aria-disabled`, `aria-describedby` (pass `describedBy`),
+`onClick` and `ref` win over a passed value (a `ref` is not forwarded). An `aria-label` must contain the visible
+`label` (WCAG 2.5.3).
+
+`Tabs` and `PageHeader` now share one internal plain-left-click guard
+(`src-react/plain-left-click.js`, not re-exported from the index); their click
+behaviour is unchanged. No new classes, no CSS change. This adds a referenceable
+surface, so it is a minor: `^0.17` does not pick it up; a consumer opts in with
+`^0.18`.

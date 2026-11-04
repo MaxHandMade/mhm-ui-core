@@ -1,16 +1,7 @@
 import StatusBadge from './StatusBadge';
+import { isPlainLeftClick } from '../plain-left-click';
 
 const LEVELS = [ 1, 2, 3 ];
-
-function isPlainLeftClick( event ) {
-	return (
-		event.button === 0 &&
-		! event.metaKey &&
-		! event.ctrlKey &&
-		! event.shiftKey &&
-		! event.altKey
-	);
-}
 
 /**
  * The header of a detail view: back link, title, status badge, meta line,

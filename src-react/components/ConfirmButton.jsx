@@ -34,6 +34,13 @@ const FOCUSABLE =
  *      unmounted, focus is the consumer's.
  *   6. `disabled` locks the trigger, and both prompt buttons when open --
  *      that is how a sibling in the same row is locked.
+ *   7. Any other prop (data-*, aria-*, id, ...) lands on the TRIGGER only
+ *      (0.18.0+), never on the root or the prompt buttons, so a key or an id
+ *      is never duplicated. The trigger is not in the DOM while the prompt
+ *      is open; a consumer tracking focus across that state reads the
+ *      .mhmui-confirm root. The kit's own type, className, aria-disabled,
+ *      aria-describedby (use describedBy), onClick and ref win. An aria-label
+ *      must contain the visible label (WCAG 2.5.3).
  *
  * @param {Object}   props
  * @param {string}   props.label             Trigger text.
@@ -72,6 +79,7 @@ export default function ConfirmButton( {
 	disabled = false,
 	describedBy,
 	children,
+	...rest
 } ) {
 	const [ open, setOpen ] = useState( false );
 	const [ busy, setBusy ] = useState( false );
@@ -164,6 +172,7 @@ export default function ConfirmButton( {
 		>
 			{ ! open ? (
 				<button
+					{ ...rest }
 					type="button"
 					ref={ triggerRef }
 					className="button mhmui-confirm__trigger"

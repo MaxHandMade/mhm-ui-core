@@ -380,3 +380,81 @@ describe( 'ConfirmButton -- two steps, in the page', () => {
 		}
 	);
 } );
+
+describe( 'ConfirmButton -- extra props land on the trigger only (0.18.0)', () => {
+	test( 'data-* and aria-* reach the trigger', () => {
+		render(
+			<ConfirmButton
+				{ ...BASE }
+				onConfirm={ jest.fn() }
+				data-focus-key="trash:confirm"
+				aria-label="Approve application 42"
+				id="approve-42"
+			/>
+		);
+		const trigger = screen.getByRole( 'button', {
+			name: 'Approve application 42',
+		} );
+		expect( [
+			trigger.getAttribute( 'data-focus-key' ),
+			trigger.id,
+		] ).toEqual( [ 'trash:confirm', 'approve-42' ] );
+	} );
+
+	test( 'the open prompt carries none of them -- no duplicate keys or ids', () => {
+		const { container } = render(
+			<ConfirmButton
+				{ ...BASE }
+				onConfirm={ jest.fn() }
+				data-focus-key="trash:confirm"
+				id="approve-42"
+			/>
+		);
+		open();
+		expect( [
+			container.querySelectorAll( '[data-focus-key]' ).length,
+			container.querySelectorAll( '#approve-42' ).length,
+		] ).toEqual( [ 0, 0 ] );
+	} );
+
+	test( 'the kit keeps its own attributes: type, class, aria-disabled, describedby, click', () => {
+		const onClick = jest.fn();
+		render(
+			<ConfirmButton
+				{ ...BASE }
+				onConfirm={ jest.fn() }
+				disabled
+				describedBy="hint"
+				type="submit"
+				className="mine"
+				aria-disabled="false"
+				aria-describedby="other"
+				onClick={ onClick }
+			/>
+		);
+		const trigger = screen.getByRole( 'button', { name: 'Approve' } );
+		fireEvent.click( trigger );
+		expect( [
+			trigger.getAttribute( 'type' ),
+			trigger.className,
+			trigger.getAttribute( 'aria-disabled' ),
+			trigger.getAttribute( 'aria-describedby' ),
+			onClick.mock.calls.length,
+		] ).toEqual( [
+			'button',
+			'button mhmui-confirm__trigger',
+			'true',
+			'hint',
+			0,
+		] );
+	} );
+
+	test( 'the root and the prompt buttons get nothing either', () => {
+		const { container } = render(
+			<ConfirmButton { ...BASE } onConfirm={ jest.fn() } data-x="1" />
+		);
+		expect( container.firstChild.hasAttribute( 'data-x' ) ).toBe( false );
+		open();
+		expect( container.querySelectorAll( '[data-x]' ).length ).toBe( 0 );
+	} );
+} );
