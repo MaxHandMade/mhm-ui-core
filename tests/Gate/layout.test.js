@@ -1248,6 +1248,33 @@ describe( 'DataTable (0.19.0)', () => {
 		).toMatch( /background:\s*var\(\s*--mhmui-surface\s*\)/ );
 	} );
 
+	test( 'a neutral badge keeps its pill on a hovered row (same fill as the hover tint)', () => {
+		expect(
+			ruleBody( css, '.mhmui-table tbody tr:hover .mhmui-status--neutral' )
+		).toMatch( /background:\s*var\(\s*--mhmui-surface\s*\)/ );
+	} );
+
+	test( 'a stacked card reserves no gutter when the table has no select column', () => {
+		expect( ruleBody( stack, '.mhmui-table--stack tbody tr' ) ).toMatch(
+			/grid-template-columns:\s*auto\s+minmax/
+		);
+	} );
+
+	test( 'stacked value rows run the full card width (Narrow artboard)', () => {
+		expect(
+			ruleBody(
+				stack,
+				'.mhmui-table--stack tbody td:not( .mhmui-table__select ):not( .mhmui-table__primary )'
+			)
+		).toMatch( /grid-column:\s*1\s*\/\s*-1/ );
+	} );
+
+	test( 'the select cell never shows a stacked label', () => {
+		expect(
+			ruleBody( stack, '.mhmui-table--stack tbody .mhmui-table__select::before' )
+		).toMatch( /content:\s*none/ );
+	} );
+
 	test( 'the scroll layout scrolls sideways', () => {
 		expect( ruleBody( css, '.mhmui-table-wrap' ) ).toMatch( /overflow-x:\s*auto/ );
 	} );

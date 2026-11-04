@@ -1230,6 +1230,10 @@ h1.mhmui-page-header__title.mhmui-page-header__title {
 .mhmui-table tbody tr:has( .mhmui-table__row-select:checked ) .mhmui-status--info {
 	background: var( --mhmui-surface );
 }
+/* Same shape on hover: the hover tint is the neutral badge's fill. */
+.mhmui-table tbody tr:hover .mhmui-status--neutral {
+	background: var( --mhmui-surface );
+}
 .mhmui-table tbody td,
 .mhmui-table tbody th {
 	padding: 10px 12px;
@@ -1398,7 +1402,7 @@ h1.mhmui-page-header__title.mhmui-page-header__title {
 	}
 	.mhmui-table--stack tbody tr {
 		display: grid;
-		grid-template-columns: 44px minmax( 0, 1fr );
+		grid-template-columns: auto minmax( 0, 1fr );
 		column-gap: 0;
 		row-gap: 6px;
 		padding: 14px 16px;
@@ -1411,6 +1415,11 @@ h1.mhmui-page-header__title.mhmui-page-header__title {
 		grid-column: 2;
 		padding: 0;
 		text-align: right;
+	}
+	/* Value rows run the full card width (Narrow artboard); the title cell
+	   stays beside the checkbox. */
+	.mhmui-table--stack tbody td:not( .mhmui-table__select ):not( .mhmui-table__primary ) {
+		grid-column: 1 / -1;
 	}
 	.mhmui-table--stack td[data-label]::before {
 		content: attr( data-label );
@@ -1428,6 +1437,9 @@ h1.mhmui-page-header__title.mhmui-page-header__title {
 	.mhmui-table--stack tbody .mhmui-table__actions {
 		display: block;
 		text-align: left;
+	}
+	.mhmui-table--stack tbody .mhmui-table__select::before {
+		content: none;
 	}
 	.mhmui-table--stack tbody .mhmui-table__primary::before,
 	.mhmui-table--stack tbody .mhmui-table__actions::before {
