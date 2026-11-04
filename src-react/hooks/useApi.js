@@ -34,6 +34,12 @@ export function useApi( fetchFn, initialData = null, deps = [] ) {
 	const primed = useRef( initialData !== null );
 
 	useEffect( () => {
+		// 0.20.0: only the newest request writes state. A deps change, a
+		// refetch or unmounting runs the cleanup below, so an older promise
+		// that settles late is ignored instead of overwriting newer data or
+		// lowering `loading` early (React's documented `ignore` pattern).
+		let current = true;
+
 		if ( primed.current ) {
 			// Fetch anyway -- pre-populated data can be stale. Just do it quietly.
 			primed.current = false;
@@ -42,9 +48,25 @@ export function useApi( fetchFn, initialData = null, deps = [] ) {
 		}
 
 		fetchFn()
-			.then( setData )
-			.catch( setError )
-			.finally( () => setLoading( false ) );
+			.then( ( value ) => {
+				if ( current ) {
+					setData( value );
+				}
+			} )
+			.catch( ( reason ) => {
+				if ( current ) {
+					setError( reason );
+				}
+			} )
+			.finally( () => {
+				if ( current ) {
+					setLoading( false );
+				}
+			} );
+
+		return () => {
+			current = false;
+		};
 	}, [ ...deps, trigger ] ); // eslint-disable-line react-hooks/exhaustive-deps
 
 	const refetch = () => setTrigger( ( t ) => t + 1 );

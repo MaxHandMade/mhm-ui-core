@@ -22,7 +22,7 @@ A consuming plugin `require_once`s `vendor/mhm/ui-core/register.php` from its
 main file and registers its own copy:
 
 ```php
-mhmuicore_register( '0.19.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.20.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 At `plugins_loaded` priority 0 the highest registered version boots; the rest
@@ -390,7 +390,7 @@ build from.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.19.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.20.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 Requiring `bootstrap.php` directly defines `MHMUICORE_VERSION` immediately, which
@@ -921,4 +921,86 @@ const selection = useTableSelection( rows.map( ( r ) => r.id ) );
 
 This adds referenceable surface (new files under `src-react/`), so it is a
 minor: `^0.18` does not pick it up; a consumer opts in with `^0.19`. No
+existing class, token or prop changed.
+
+### Server lists (0.20.0+)
+
+`useServerList` holds the state of a server-paged list: the query, the page,
+the last accepted answer and a ready `pagination` for `Pagination`. It draws
+nothing; the table, the filter and the words stay yours.
+
+```jsx
+import { useServerList, useDebouncedValue, Pagination, Tabs } from '@mhm/ui-core';
+
+const list = useServerList( ( params ) => api.getVendors( params ), {
+	initialQuery: { search: '', status: 'all' },
+	perPage: 20,
+	// readTotals: ( res ) => ( { total: res.total, pages: res.total_pages } ),
+} );
+
+// Search: the box keeps its own state so typing stays instant.
+const [ search, setSearch ] = useState( '' );
+const debounced = useDebouncedValue( search ); // 300 ms
+const { setQuery } = list; // stable, so the effect lists it without refiring
+useEffect( () => setQuery( { search: debounced } ), [ setQuery, debounced ] );
+
+// Status filter: a <select> ...
+<select value={ list.query.status } onChange={ ( e ) => list.setQuery( { status: e.target.value } ) }>…</select>
+// ... or counted Tabs, with the counts your endpoint returns (`list.data?.counts`).
+<Tabs
+	label={ __( 'Filter by status', 'my-plugin' ) }
+	current={ list.query.status }
+	items={ STATUSES.map( ( s ) => ( { id: s.id, label: s.label, href: `${ pageUrl }&status=${ s.id }`, badge: list.data?.counts?.[ s.id ] } ) ) }
+	onSelect={ ( id ) => list.setQuery( { status: id } ) } // Tabs prevents the navigation on a plain left click
+/>
+
+{ list.totalPages > 1 && <Pagination { ...list.pagination } labels={ … } /> }
+
+// "41–48 of 48" -- the words are your translation. `range` is null until the
+// first answer is accepted (and always without `perPage`), so guard it.
+const summary = list.range
+	? sprintf( _n( '%1$d–%2$d of %3$d vendor', '%1$d–%2$d of %3$d vendors', list.range.total, 'my-plugin' ), list.range.from, list.range.to, list.range.total )
+	: '';
+```
+
+- `setQuery( patch )` merges the patch and goes back to page 1 in **one**
+  update, so a filter, search or sort change sends exactly one request.
+  A patch whose values all equal the current ones changes nothing, which is
+  why the mount-time `setQuery( { search: '' } )` above sends no second request.
+- Query values must be **primitive**. An array is a new reference on every
+  render and would reset the page each time; send several values as a
+  comma-separated string (`status: 'failed,retry'`) and split it on the server.
+- `''`, `null` and `undefined` are left out of the request. Nothing else is:
+  `'all'`, `0` and `false` are sent, because what they mean is your server's.
+  `page` and `per_page` keys in a query are ignored; the page changes only
+  through `setPage`.
+- Only the newest request is accepted. An older answer, success or failure,
+  is dropped, and unmounting drops everything in flight. The request itself is
+  not cancelled.
+- If an answer reports fewer pages than the current page (the last row on the
+  last page was deleted, then `refetch()`), the page is pulled back to the
+  last one with one more request. `totalPages` is never below 1, so an empty
+  list that reports `pages: 0` still shows "1 / 1".
+- While a request is in flight `data` keeps the last accepted answer and
+  `loading` is `true`; keep the table on screen instead of hiding it. `range`
+  belongs to the rows on screen, not to the page being requested, and is
+  `null` until the first answer is accepted or when there is no `perPage`.
+- If a pull-back request fails, `page` already shows the last page while
+  `data` and `range` still hold the rows that were on screen, and `error` is
+  set. Show the error; `refetch()` retries that last page.
+- `error` is the raw rejection (an `Error` or a `{ code, message }` object):
+  turn it into words before you render it. Notices, selection and bulk-action
+  errors stay yours, e.g. `useEffect( () => { if ( list.error ) notify( … ); }, [ list.error ] )`.
+- `readTotals` defaults to `( res ) => ( { total: res.total, pages: res.pages } )`.
+  Values that are not whole non-negative numbers read as 0; a `readTotals`
+  that throws counts as a rejection.
+- `fetchPage` and the options are read from the last committed render; you do
+  not need `useCallback`, and changing them alone sends no request.
+- React StrictMode (development) runs the mount effect twice, so two mount
+  requests go out and only the second is accepted.
+- `useApi` (0.20.0): an older request's answer is now dropped too, when its
+  deps change or on `refetch`.
+
+This adds referenceable surface (new files under `src-react/hooks/`), so it is
+a minor: `^0.19` does not pick it up; a consumer opts in with `^0.20`. No
 existing class, token or prop changed.

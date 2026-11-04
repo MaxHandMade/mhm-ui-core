@@ -30,6 +30,12 @@ export { default as RowSelect } from './components/RowSelect';
 export { useTableSelection } from './hooks/useTableSelection';
 export { nextSort } from './components/SortHeader';
 
+// Server list helpers (0.20.0). NAMED exports for the same reason: hooks and a
+// pure range helper are not components. buildParams / normalizeTotals stay
+// module-internal (exported from their file for tests only).
+export { useServerList, pageRange } from './hooks/useServerList';
+export { useDebouncedValue } from './hooks/useDebouncedValue';
+
 // The semantic icon vocabulary (0.14.0+). A NAMED export on purpose: the
 // manifest gate counts `export { default as X }` to find components, and a
 // vocabulary is not a component. resetIcons stays out -- it is a test seam.
