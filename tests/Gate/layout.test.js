@@ -1234,25 +1234,33 @@ describe( 'DataTable (0.19.0)', () => {
 	 * so an RTL admin (forms-rtl.css, `dir="rtl"` on <html>) mirrors it with
 	 * no RTL stylesheet. physicalSides() is the gate; its scope is exactly:
 	 *  - a property NAMED by a side (`margin-left`, `border-top-right-radius`,
-	 *    `left`, `right`, ...);
-	 *  - a `left`/`right` keyword in text-align, float, clear, caption-side,
-	 *    justify-*, background-position, object-position, transform-origin;
+	 *    `left`, `right`, ...), and any `direction`/`unicode-bidi`, which
+	 *    would switch the mirroring off; custom properties (`--x`) are skipped;
+	 *  - a `left`/`right` keyword token in text-align(-last), float, clear,
+	 *    caption-side, justify-*, background(-position), object-position,
+	 *    mask-position, transform-origin, perspective-origin. A length offset
+	 *    in those (`background-position: 4px center`) is NOT checked;
 	 *  - a four-side shorthand (margin, padding, inset, border-width/-color/
 	 *    -style, scroll-margin, scroll-padding) whose inline sides differ, and
 	 *    a border-radius whose left and right corners differ;
 	 *  - a non-zero horizontal translate (translate, translateX(), translate())
 	 *    or box-shadow x offset.
-	 * Parenthesised groups (`var( --x )`, `calc( a + b )`) count as one token.
+	 * Parenthesised groups (`var( --x )`, `calc( var( --a ) + 1px )`) count as
+	 * one token, however deeply nested.
 	 * The section runs from its header comment to the next versioned section
 	 * header (`/* Name (0.x`) or the end of admin.css.
 	 */
 	const FOUR_SIDES = /^(margin|padding|inset|border-(width|color|style)|scroll-(margin|padding))$/;
-	const SIDE_KEYWORD = /^(text-align|float|clear|caption-side|justify-(content|items|self)|background-position(-x)?|object-position|transform-origin)$/;
+	const SIDE_KEYWORD = /^(text-align(-last)?|float|clear|caption-side|justify-(content|items|self)|background(-position(-x)?)?|object-position|mask-position|transform-origin|perspective-origin)$/;
+	// Innermost group first; its parentheses become `[]` so the enclosing
+	// group matches `[^()]*` on the next pass (nested calc( var() ) etc.).
 	const tokens = ( value ) => {
 		let v = value;
 		for ( let prev = ''; prev !== v; ) {
 			prev = v;
-			v = v.replace( /[\w-]*\([^()]*\)/g, ( m ) => m.replace( /\s+/g, '' ) );
+			v = v.replace( /[\w-]*\([^()]*\)/g, ( m ) =>
+				m.replace( /\s+/g, '' ).replace( /\(/g, '[' ).replace( /\)/g, ']' )
+			);
 		}
 		return v.split( /\s+/ ).filter( Boolean );
 	};
@@ -1264,10 +1272,13 @@ describe( 'DataTable (0.19.0)', () => {
 			const value = d.value.replace( /!important/i, '' ).trim().toLowerCase();
 			const parts = tokens( value );
 			const hit = () => found.push( `${ d.parent.selector || d.parent.params } { ${ prop }: ${ value } }` );
-			if ( /(^|-)(left|right)(-|$)/.test( prop ) ) {
+			if ( prop.startsWith( '--' ) ) {
+				return;
+			}
+			if ( /(^|-)(left|right)(-|$)/.test( prop ) || prop === 'direction' || prop === 'unicode-bidi' ) {
 				return hit();
 			}
-			if ( SIDE_KEYWORD.test( prop ) && /\b(left|right)\b/.test( value ) ) {
+			if ( SIDE_KEYWORD.test( prop ) && parts.some( ( t ) => /^(left|right),?$/.test( t ) ) ) {
 				return hit();
 			}
 			if ( FOUR_SIDES.test( prop ) && parts.length === 4 && parts[ 1 ] !== parts[ 3 ] ) {
@@ -1321,12 +1332,18 @@ describe( 'DataTable (0.19.0)', () => {
 			'border-width: 0 1px 0 0', 'border-radius: 4px 0', 'border-radius: 4px 4px 0 4px',
 			'translate: 4px 0', 'transform: translateX( -2px )', 'transform: translate( 3px, 0 )',
 			'box-shadow: 2px 0 0 var( --mhmui-border )', 'box-shadow: 0 1px 2px red, -1px 0 red',
+			'padding: 0 calc( var( --a ) + 1px ) 0 0', 'margin: 0 calc( var( --a ) * 2 ) 0 calc( var( --b ) * 3 )',
+			'background: url( x.png ) left top', 'text-align-last: right', 'perspective-origin: left',
+			'mask-position: right, left', 'direction: ltr', 'unicode-bidi: isolate',
 		];
 		const clean = [
 			'text-align: start', 'text-align: end', 'text-align: center', 'margin-inline-start: -12px',
 			'margin: -10px 0 0', 'margin: 0 12px', 'padding: 10px 12px 4px', 'padding: 0 var( --x ) 0 var( --x )',
 			'border-radius: 4px', 'border-radius: 4px 4px 0 0', 'translate: 0 4px', 'transform: translateY( 2px )',
 			'box-shadow: 0 1px 2px red', 'box-shadow: none', 'justify-content: flex-end',
+			'margin: 0 calc( var( --a ) * 2 ) 0 calc( var( --a ) * 2 )', '--mhmui-offset-left: 4px',
+			'transform-origin: var( --mhmui-origin-right )', 'background: var( --mhmui-surface )',
+			'content: "left"',
 		];
 		for ( const decl of caught ) {
 			expect( [ decl, physicalSides( `.x { ${ decl }; }` ).length ] ).toEqual( [ decl, 1 ] );
