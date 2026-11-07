@@ -921,9 +921,10 @@ const selection = useTableSelection( rows.map( ( r ) => r.id ) );
   single element, or the row spreads them apart.
 - The table is written in logical directions (0.20.2): under `dir="rtl"` it
   mirrors with no RTL stylesheet. A left-to-right value inside it (a phone
-  number, an IBAN, a code) still needs `dir="ltr"` or a `<bdi>` around it, or
-  the browser reorders its digit groups (`+90 532 000 11 22` reads
-  `22 11 000 532 90+`). That is the value's own direction, not the kit's.
+  number, an IBAN, a code) still needs an inline wrapper (`<span dir="ltr">`
+  or `<bdi>`; not `dir` on the cell itself, which would flip that cell's
+  alignment), or the browser reorders its digit groups (`+90 532 000 11 22`
+  reads `22 11 000 532 90+`). That is the value's own direction, not the kit's.
 - Column widths go in a `<colgroup>`. `className` on `DataTable` and
   `SortHeader` adds your own class to the table and the header.
 

@@ -837,8 +837,10 @@ bölümüne bakın; kurallar aynı:
   öğeye sarın, yoksa satır onları birbirinden uzaklaştırır.
 - Tablo mantıksal yönlerle yazılır (0.20.2): `dir="rtl"` altında RTL stil
   dosyası olmadan aynalanır. İçindeki soldan sağa bir değer (telefon numarası,
-  IBAN, kod) yine de `dir="ltr"` ya da `<bdi>` ile sarılmalıdır, yoksa tarayıcı
-  rakam gruplarını yeniden dizer (`+90 532 000 11 22` → `22 11 000 532 90+`).
+  IBAN, kod) yine de satır içi bir sarmalayıcıya alınmalıdır (`<span dir="ltr">`
+  ya da `<bdi>`; `dir` hücrenin kendisine verilmez, o hücrenin hizası
+  döner), yoksa tarayıcı rakam gruplarını yeniden dizer
+  (`+90 532 000 11 22` → `22 11 000 532 90+`).
   Bu, değerin kendi yönüdür, kitin değil.
 - Sütun genişlikleri `<colgroup>`'a yazılır. `DataTable` ve `SortHeader`'daki
   `className` kendi sınıfınızı tabloya ve başlığa ekler.

@@ -1232,33 +1232,117 @@ describe( 'DataTable (0.19.0)', () => {
 	/*
 	 * The whole DataTable section is written in logical directions (0.20.2),
 	 * so an RTL admin (forms-rtl.css, `dir="rtl"` on <html>) mirrors it with
-	 * no RTL stylesheet: `text-align` takes start/end, and no declaration
-	 * names a physical side -- neither a `*-left`/`*-right` property nor a
-	 * four-value margin/padding shorthand whose inline sides differ. The
-	 * section runs from its own header comment to the end of admin.css.
+	 * no RTL stylesheet. physicalSides() is the gate; its scope is exactly:
+	 *  - a property NAMED by a side (`margin-left`, `border-top-right-radius`,
+	 *    `left`, `right`, ...);
+	 *  - a `left`/`right` keyword in text-align, float, clear, caption-side,
+	 *    justify-*, background-position, object-position, transform-origin;
+	 *  - a four-side shorthand (margin, padding, inset, border-width/-color/
+	 *    -style, scroll-margin, scroll-padding) whose inline sides differ, and
+	 *    a border-radius whose left and right corners differ;
+	 *  - a non-zero horizontal translate (translate, translateX(), translate())
+	 *    or box-shadow x offset.
+	 * Parenthesised groups (`var( --x )`, `calc( a + b )`) count as one token.
+	 * The section runs from its header comment to the next versioned section
+	 * header (`/* Name (0.x`) or the end of admin.css.
 	 */
-	test( 'the DataTable section names no physical side, so it mirrors in RTL (0.20.2)', () => {
-		const start = css.indexOf( '/* DataTable (0.19.0' );
-		expect( start ).toBeGreaterThan( -1 );
+	const FOUR_SIDES = /^(margin|padding|inset|border-(width|color|style)|scroll-(margin|padding))$/;
+	const SIDE_KEYWORD = /^(text-align|float|clear|caption-side|justify-(content|items|self)|background-position(-x)?|object-position|transform-origin)$/;
+	const tokens = ( value ) => {
+		let v = value;
+		for ( let prev = ''; prev !== v; ) {
+			prev = v;
+			v = v.replace( /[\w-]*\([^()]*\)/g, ( m ) => m.replace( /\s+/g, '' ) );
+		}
+		return v.split( /\s+/ ).filter( Boolean );
+	};
+	const isZero = ( t ) => /^[-+]?0(\.0+)?([a-z%]+)?$/.test( t );
+	function physicalSides( text ) {
 		const found = [];
-		postcss.parse( css.slice( start ) ).walkDecls( ( d ) => {
+		postcss.parse( text ).walkDecls( ( d ) => {
 			const prop = d.prop.toLowerCase();
-			const value = d.value.trim().toLowerCase();
-			const where = `${ d.parent.selector || d.parent.params } { ${ prop }: ${ value } }`;
-			if ( ( prop === 'text-align' || prop === 'float' || prop === 'clear' ) && /^(left|right)$/.test( value ) ) {
-				found.push( where );
-			}
+			const value = d.value.replace( /!important/i, '' ).trim().toLowerCase();
+			const parts = tokens( value );
+			const hit = () => found.push( `${ d.parent.selector || d.parent.params } { ${ prop }: ${ value } }` );
 			if ( /(^|-)(left|right)(-|$)/.test( prop ) ) {
-				found.push( where );
+				return hit();
 			}
-			if ( prop === 'margin' || prop === 'padding' ) {
-				const parts = value.split( /\s+/ );
-				if ( parts.length === 4 && parts[ 1 ] !== parts[ 3 ] ) {
-					found.push( where );
+			if ( SIDE_KEYWORD.test( prop ) && /\b(left|right)\b/.test( value ) ) {
+				return hit();
+			}
+			if ( FOUR_SIDES.test( prop ) && parts.length === 4 && parts[ 1 ] !== parts[ 3 ] ) {
+				return hit();
+			}
+			if ( prop === 'border-radius' ) {
+				const r = value.split( '/' ).map( ( h ) => tokens( h ) );
+				if ( r.some( ( c ) => ( c.length === 2 && c[ 0 ] !== c[ 1 ] ) || ( c.length === 3 && ( c[ 0 ] !== c[ 1 ] || c[ 1 ] !== c[ 2 ] ) ) || ( c.length === 4 && ( c[ 0 ] !== c[ 1 ] || c[ 2 ] !== c[ 3 ] ) ) ) ) {
+					return hit();
+				}
+			}
+			if ( prop === 'translate' && parts.length && ! isZero( parts[ 0 ] ) ) {
+				return hit();
+			}
+			const tx = value.match( /translate(x|3d)?\(\s*([^,)\s]+)/ );
+			if ( prop === 'transform' && tx && ! isZero( tx[ 2 ] ) ) {
+				return hit();
+			}
+			if ( prop === 'box-shadow' && value !== 'none' ) {
+				const xs = value.split( /,(?![^()]*\))/ ).map( ( s ) => tokens( s ).filter( ( t ) => /^[-+]?[\d.]/.test( t ) )[ 0 ] );
+				if ( xs.some( ( x ) => x && ! isZero( x ) ) ) {
+					return hit();
 				}
 			}
 		} );
-		expect( found ).toEqual( [] );
+		return found;
+	}
+	function dataTableSection( text ) {
+		const start = text.indexOf( '/* DataTable (0.19.0' );
+		if ( start < 0 ) {
+			return null;
+		}
+		const rest = text.slice( start + 1 );
+		const next = rest.search( /^\/\* [A-Z][\w-]* \(\d+\.\d+/m );
+		return next < 0 ? text.slice( start ) : text.slice( start, start + 1 + next );
+	}
+
+	test( 'the DataTable section names no physical side, so it mirrors in RTL (0.20.2)', () => {
+		const section = dataTableSection( css );
+		expect( section ).not.toBeNull();
+		expect( section ).toMatch( /mhmui-table--stack/ );
+		expect( physicalSides( section ) ).toEqual( [] );
+	} );
+
+	test( 'the physical-side gate catches each shape it claims, and only those (0.20.2)', () => {
+		const caught = [
+			'text-align: left', 'text-align: RIGHT !important', 'float: left', 'caption-side: right',
+			'justify-content: left', 'background-position: right 4px top', 'transform-origin: left center',
+			'margin-left: 4px', 'padding-right: 0', 'left: 0', 'border-top-left-radius: 4px',
+			'margin: -10px 0 0 -12px', 'padding: 0 var( --mhmui-gap ) 0 0', 'inset: 0 calc( 1px + 2px ) 0 0',
+			'border-width: 0 1px 0 0', 'border-radius: 4px 0', 'border-radius: 4px 4px 0 4px',
+			'translate: 4px 0', 'transform: translateX( -2px )', 'transform: translate( 3px, 0 )',
+			'box-shadow: 2px 0 0 var( --mhmui-border )', 'box-shadow: 0 1px 2px red, -1px 0 red',
+		];
+		const clean = [
+			'text-align: start', 'text-align: end', 'text-align: center', 'margin-inline-start: -12px',
+			'margin: -10px 0 0', 'margin: 0 12px', 'padding: 10px 12px 4px', 'padding: 0 var( --x ) 0 var( --x )',
+			'border-radius: 4px', 'border-radius: 4px 4px 0 0', 'translate: 0 4px', 'transform: translateY( 2px )',
+			'box-shadow: 0 1px 2px red', 'box-shadow: none', 'justify-content: flex-end',
+		];
+		for ( const decl of caught ) {
+			expect( [ decl, physicalSides( `.x { ${ decl }; }` ).length ] ).toEqual( [ decl, 1 ] );
+		}
+		for ( const decl of clean ) {
+			expect( [ decl, physicalSides( `.x { ${ decl }; }` ).length ] ).toEqual( [ decl, 0 ] );
+		}
+		const file = [
+			'/* DataTable (0.19.0; x) */',
+			'.a { text-align: start; }',
+			'/* Pagination (0.21.0; y) */',
+			'.b { margin-left: 4px; }',
+		].join( '\n' );
+		expect( dataTableSection( file ) ).toMatch( /text-align: start/ );
+		expect( dataTableSection( file ) ).not.toMatch( /margin-left/ );
+		expect( dataTableSection( '/* DataTable (0.19.0 */\n.a{}' ) ).toMatch( /\.a\{\}/ );
 	} );
 
 	/*
