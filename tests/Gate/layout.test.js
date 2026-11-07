@@ -1230,6 +1230,38 @@ describe( 'DataTable (0.19.0)', () => {
 	} );
 
 	/*
+	 * The whole DataTable section is written in logical directions (0.20.2),
+	 * so an RTL admin (forms-rtl.css, `dir="rtl"` on <html>) mirrors it with
+	 * no RTL stylesheet: `text-align` takes start/end, and no declaration
+	 * names a physical side -- neither a `*-left`/`*-right` property nor a
+	 * four-value margin/padding shorthand whose inline sides differ. The
+	 * section runs from its own header comment to the end of admin.css.
+	 */
+	test( 'the DataTable section names no physical side, so it mirrors in RTL (0.20.2)', () => {
+		const start = css.indexOf( '/* DataTable (0.19.0' );
+		expect( start ).toBeGreaterThan( -1 );
+		const found = [];
+		postcss.parse( css.slice( start ) ).walkDecls( ( d ) => {
+			const prop = d.prop.toLowerCase();
+			const value = d.value.trim().toLowerCase();
+			const where = `${ d.parent.selector || d.parent.params } { ${ prop }: ${ value } }`;
+			if ( ( prop === 'text-align' || prop === 'float' || prop === 'clear' ) && /^(left|right)$/.test( value ) ) {
+				found.push( where );
+			}
+			if ( /(^|-)(left|right)(-|$)/.test( prop ) ) {
+				found.push( where );
+			}
+			if ( prop === 'margin' || prop === 'padding' ) {
+				const parts = value.split( /\s+/ );
+				if ( parts.length === 4 && parts[ 1 ] !== parts[ 3 ] ) {
+					found.push( where );
+				}
+			}
+		} );
+		expect( found ).toEqual( [] );
+	} );
+
+	/*
 	 * The stacked sort chip is a pill with its own border; the approved
 	 * artboard (Narrow.dc.html) draws its focus ring 2px OUTSIDE it. The wide
 	 * header keeps -2px (the cell edge would clip an outer ring there).

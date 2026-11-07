@@ -22,7 +22,7 @@ A consuming plugin `require_once`s `vendor/mhm/ui-core/register.php` from its
 main file and registers its own copy:
 
 ```php
-mhmuicore_register( '0.20.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.20.2', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 At `plugins_loaded` priority 0 the highest registered version boots; the rest
@@ -390,7 +390,7 @@ build from.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.20.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.20.2', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 Requiring `bootstrap.php` directly defines `MHMUICORE_VERSION` immediately, which
@@ -919,6 +919,11 @@ const selection = useTableSelection( rows.map( ( r ) => r.id ) );
   A stacked value cell is a flex row (label at the start, value at the end): put **one**
   child in it. Wrap several pieces (an amount and a badge, two spans) in a
   single element, or the row spreads them apart.
+- The table is written in logical directions (0.20.2): under `dir="rtl"` it
+  mirrors with no RTL stylesheet. A left-to-right value inside it (a phone
+  number, an IBAN, a code) still needs `dir="ltr"` or a `<bdi>` around it, or
+  the browser reorders its digit groups (`+90 532 000 11 22` reads
+  `22 11 000 532 90+`). That is the value's own direction, not the kit's.
 - Column widths go in a `<colgroup>`. `className` on `DataTable` and
   `SortHeader` adds your own class to the table and the header.
 
