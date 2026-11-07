@@ -1182,7 +1182,7 @@ h1.mhmui-page-header__title.mhmui-page-header__title {
 	font-variant-numeric: tabular-nums;
 }
 .mhmui-table__caption {
-	text-align: left;
+	text-align: start;
 	padding: 14px 16px;
 	font-size: 14px;
 	font-weight: 600;
@@ -1211,7 +1211,7 @@ h1.mhmui-page-header__title.mhmui-page-header__title {
 }
 .mhmui-table thead th {
 	padding: 0 12px;
-	text-align: left;
+	text-align: start;
 	font-weight: 400;
 	color: var( --mhmui-text-secondary );
 	vertical-align: middle;
@@ -1237,11 +1237,11 @@ h1.mhmui-page-header__title.mhmui-page-header__title {
 .mhmui-table tbody td,
 .mhmui-table tbody th {
 	padding: 10px 12px;
-	text-align: left;
+	text-align: start;
 	vertical-align: middle;
 }
 .mhmui-table td.mhmui-table__num {
-	text-align: right;
+	text-align: end;
 	font-variant-numeric: tabular-nums;
 }
 /* Sortable header: the whole cell is the button. */
@@ -1259,7 +1259,7 @@ h1.mhmui-page-header__title.mhmui-page-header__title {
 	background: transparent;
 	font: inherit;
 	color: inherit;
-	text-align: left;
+	text-align: start;
 	cursor: pointer;
 }
 .mhmui-table__th--end .mhmui-table__sort {
@@ -1459,7 +1459,7 @@ h1.mhmui-page-header__title.mhmui-page-header__title {
 		gap: 12px;
 		grid-column: 2;
 		padding: 0;
-		text-align: right;
+		text-align: end;
 	}
 	/* Value rows run the full card width (Narrow artboard); the title cell
 	   stays beside the checkbox. */
@@ -1470,18 +1470,19 @@ h1.mhmui-page-header__title.mhmui-page-header__title {
 		content: attr( data-label );
 		color: var( --mhmui-text-secondary );
 		font-size: 13px;
-		text-align: left;
+		text-align: start;
 	}
 	.mhmui-table--stack tbody .mhmui-table__select {
 		grid-column: 1;
 		grid-row: 1;
 		width: auto;
-		margin: -10px 0 0 -12px;
+		margin: -10px 0 0;
+		margin-inline-start: -12px;
 	}
 	.mhmui-table--stack tbody .mhmui-table__primary,
 	.mhmui-table--stack tbody .mhmui-table__actions {
 		display: block;
-		text-align: left;
+		text-align: start;
 	}
 	.mhmui-table--stack tbody .mhmui-table__select::before {
 		content: none;

@@ -1230,6 +1230,139 @@ describe( 'DataTable (0.19.0)', () => {
 	} );
 
 	/*
+	 * The whole DataTable section is written in logical directions (0.20.2),
+	 * so an RTL admin (forms-rtl.css, `dir="rtl"` on <html>) mirrors it with
+	 * no RTL stylesheet. physicalSides() is the gate; its scope is exactly:
+	 *  - a property NAMED by a side (`margin-left`, `border-top-right-radius`,
+	 *    `left`, `right`, ...), and any `direction`/`unicode-bidi`, which
+	 *    would switch the mirroring off; custom properties (`--x`) are skipped;
+	 *  - a `left`/`right` keyword token in text-align(-last), float, clear,
+	 *    caption-side, justify-*, background(-position), object-position,
+	 *    mask-position, transform-origin, perspective-origin. A length offset
+	 *    in those (`background-position: 4px center`) is NOT checked;
+	 *  - a four-side shorthand (margin, padding, inset, border-width/-color/
+	 *    -style, scroll-margin, scroll-padding) whose inline sides differ, and
+	 *    a border-radius whose left and right corners differ;
+	 *  - a non-zero horizontal translate (translate, translateX(), translate())
+	 *    or box-shadow x offset.
+	 * Parenthesised groups (`var( --x )`, `calc( var( --a ) + 1px )`) count as
+	 * one token, however deeply nested.
+	 * The section runs from its header comment to the next versioned section
+	 * header (`/* Name (0.x`) or the end of admin.css.
+	 */
+	const FOUR_SIDES = /^(margin|padding|inset|border-(width|color|style)|scroll-(margin|padding))$/;
+	const SIDE_KEYWORD = /^(text-align(-last)?|float|clear|caption-side|justify-(content|items|self)|background(-position(-x)?)?|object-position|mask-position|transform-origin|perspective-origin)$/;
+	// Innermost group first; its parentheses become `[]` so the enclosing
+	// group matches `[^()]*` on the next pass (nested calc( var() ) etc.).
+	const tokens = ( value ) => {
+		let v = value;
+		for ( let prev = ''; prev !== v; ) {
+			prev = v;
+			v = v.replace( /[\w-]*\([^()]*\)/g, ( m ) =>
+				m.replace( /\s+/g, '' ).replace( /\(/g, '[' ).replace( /\)/g, ']' )
+			);
+		}
+		return v.split( /\s+/ ).filter( Boolean );
+	};
+	const isZero = ( t ) => /^[-+]?0(\.0+)?([a-z%]+)?$/.test( t );
+	function physicalSides( text ) {
+		const found = [];
+		postcss.parse( text ).walkDecls( ( d ) => {
+			const prop = d.prop.toLowerCase();
+			const value = d.value.replace( /!important/i, '' ).trim().toLowerCase();
+			const parts = tokens( value );
+			const hit = () => found.push( `${ d.parent.selector || d.parent.params } { ${ prop }: ${ value } }` );
+			if ( prop.startsWith( '--' ) ) {
+				return;
+			}
+			if ( /(^|-)(left|right)(-|$)/.test( prop ) || prop === 'direction' || prop === 'unicode-bidi' ) {
+				return hit();
+			}
+			if ( SIDE_KEYWORD.test( prop ) && parts.some( ( t ) => /^(left|right),?$/.test( t ) ) ) {
+				return hit();
+			}
+			if ( FOUR_SIDES.test( prop ) && parts.length === 4 && parts[ 1 ] !== parts[ 3 ] ) {
+				return hit();
+			}
+			if ( prop === 'border-radius' ) {
+				const r = value.split( '/' ).map( ( h ) => tokens( h ) );
+				if ( r.some( ( c ) => ( c.length === 2 && c[ 0 ] !== c[ 1 ] ) || ( c.length === 3 && ( c[ 0 ] !== c[ 1 ] || c[ 1 ] !== c[ 2 ] ) ) || ( c.length === 4 && ( c[ 0 ] !== c[ 1 ] || c[ 2 ] !== c[ 3 ] ) ) ) ) {
+					return hit();
+				}
+			}
+			if ( prop === 'translate' && parts.length && ! isZero( parts[ 0 ] ) ) {
+				return hit();
+			}
+			const tx = value.match( /translate(x|3d)?\(\s*([^,)\s]+)/ );
+			if ( prop === 'transform' && tx && ! isZero( tx[ 2 ] ) ) {
+				return hit();
+			}
+			if ( prop === 'box-shadow' && value !== 'none' ) {
+				const xs = value.split( /,(?![^()]*\))/ ).map( ( s ) => tokens( s ).filter( ( t ) => /^[-+]?[\d.]/.test( t ) )[ 0 ] );
+				if ( xs.some( ( x ) => x && ! isZero( x ) ) ) {
+					return hit();
+				}
+			}
+		} );
+		return found;
+	}
+	function dataTableSection( text ) {
+		const start = text.indexOf( '/* DataTable (0.19.0' );
+		if ( start < 0 ) {
+			return null;
+		}
+		const rest = text.slice( start + 1 );
+		const next = rest.search( /^\/\* [A-Z][\w-]* \(\d+\.\d+/m );
+		return next < 0 ? text.slice( start ) : text.slice( start, start + 1 + next );
+	}
+
+	test( 'the DataTable section names no physical side, so it mirrors in RTL (0.20.2)', () => {
+		const section = dataTableSection( css );
+		expect( section ).not.toBeNull();
+		expect( section ).toMatch( /mhmui-table--stack/ );
+		expect( physicalSides( section ) ).toEqual( [] );
+	} );
+
+	test( 'the physical-side gate catches each shape it claims, and only those (0.20.2)', () => {
+		const caught = [
+			'text-align: left', 'text-align: RIGHT !important', 'float: left', 'caption-side: right',
+			'justify-content: left', 'background-position: right 4px top', 'transform-origin: left center',
+			'margin-left: 4px', 'padding-right: 0', 'left: 0', 'border-top-left-radius: 4px',
+			'margin: -10px 0 0 -12px', 'padding: 0 var( --mhmui-gap ) 0 0', 'inset: 0 calc( 1px + 2px ) 0 0',
+			'border-width: 0 1px 0 0', 'border-radius: 4px 0', 'border-radius: 4px 4px 0 4px',
+			'translate: 4px 0', 'transform: translateX( -2px )', 'transform: translate( 3px, 0 )',
+			'box-shadow: 2px 0 0 var( --mhmui-border )', 'box-shadow: 0 1px 2px red, -1px 0 red',
+			'padding: 0 calc( var( --a ) + 1px ) 0 0', 'margin: 0 calc( var( --a ) * 2 ) 0 calc( var( --b ) * 3 )',
+			'background: url( x.png ) left top', 'text-align-last: right', 'perspective-origin: left',
+			'mask-position: right, left', 'direction: ltr', 'unicode-bidi: isolate',
+		];
+		const clean = [
+			'text-align: start', 'text-align: end', 'text-align: center', 'margin-inline-start: -12px',
+			'margin: -10px 0 0', 'margin: 0 12px', 'padding: 10px 12px 4px', 'padding: 0 var( --x ) 0 var( --x )',
+			'border-radius: 4px', 'border-radius: 4px 4px 0 0', 'translate: 0 4px', 'transform: translateY( 2px )',
+			'box-shadow: 0 1px 2px red', 'box-shadow: none', 'justify-content: flex-end',
+			'margin: 0 calc( var( --a ) * 2 ) 0 calc( var( --a ) * 2 )', '--mhmui-offset-left: 4px',
+			'transform-origin: var( --mhmui-origin-right )', 'background: var( --mhmui-surface )',
+			'content: "left"',
+		];
+		for ( const decl of caught ) {
+			expect( [ decl, physicalSides( `.x { ${ decl }; }` ).length ] ).toEqual( [ decl, 1 ] );
+		}
+		for ( const decl of clean ) {
+			expect( [ decl, physicalSides( `.x { ${ decl }; }` ).length ] ).toEqual( [ decl, 0 ] );
+		}
+		const file = [
+			'/* DataTable (0.19.0; x) */',
+			'.a { text-align: start; }',
+			'/* Pagination (0.21.0; y) */',
+			'.b { margin-left: 4px; }',
+		].join( '\n' );
+		expect( dataTableSection( file ) ).toMatch( /text-align: start/ );
+		expect( dataTableSection( file ) ).not.toMatch( /margin-left/ );
+		expect( dataTableSection( '/* DataTable (0.19.0 */\n.a{}' ) ).toMatch( /\.a\{\}/ );
+	} );
+
+	/*
 	 * The stacked sort chip is a pill with its own border; the approved
 	 * artboard (Narrow.dc.html) draws its focus ring 2px OUTSIDE it. The wide
 	 * header keeps -2px (the cell edge would clip an outer ring there).
