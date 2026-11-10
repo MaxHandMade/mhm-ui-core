@@ -465,7 +465,7 @@ if ( function_exists( 'mhmuicore_stats_grid_html' ) ) {
 Props: `label`, `value` (already formatted), `icon` (Dashicons suffix — admin
 only), `tone` (`success|warning|danger|info|neutral`, anything else is dropped),
 `sub`, `delta` (`{direction: up|down|flat, text, label?}`), `emphasis` (bool),
-`data` (`key => value` → `data-key`, keys `^[a-z0-9-]{1,32}$`). The second
+`data` (`key => value` → `data-key`, keys `^[a-z0-9]+(?:-[a-z0-9]+)*$`, at most 32 characters). The second
 argument is a column **ceiling**; the grid wraps in CSS. Avoid `direction` as
 a key in your own `data` map — the kit already emits `data-direction` on the
 delta line for every recognised direction; no collision is possible (different
@@ -611,9 +611,9 @@ the kit renders (dashicon span, tone/emphasis classes, `aria-hidden`,
 `data-*` hooks, the delta mark and accessible name, the grid's
 `style="--mhmui-columns:N"`) passes byte for byte on **WordPress 6.6+**.
 Custom-property assignment in inline styles is allowed by
-`safecss_filter_attr()` since 6.1.0; `data-*` names with a leading, trailing
-or doubled hyphen — which `data` keys matching `[a-z0-9-]` can produce —
-are kept only since 6.6, when core widened its `data-*` pattern. A plugin
+`safecss_filter_attr()` since 6.1.0. `data` keys are hyphen-separated runs of
+`[a-z0-9]` (0.22.0 tightened this: a leading, trailing or doubled hyphen was
+stripped by kses on WordPress ≤ 6.5, so the kit no longer emits it). A plugin
 filtering `wp_kses_allowed_html` or `safe_style_css` can still strip them.
 The integration suite pins this on the WordPress version CI runs (7.1):
 `tests/Integration/KitEscapingTest.php`, so a kit change that kses would

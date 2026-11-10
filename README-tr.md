@@ -282,7 +282,7 @@ if ( function_exists( 'mhmuicore_stats_grid_html' ) ) {
 Prop'lar: `label`, `value` (zaten biçimlendirilmiş), `icon` (Dashicons soneki — yalnız yönetici
 ekranı), `tone` (`success|warning|danger|info|neutral`, başka her şey düşürülür), `sub`,
 `delta` (`{direction: up|down|flat, text, label?}`), `emphasis` (bool), `data` (`anahtar => değer` →
-`data-anahtar`, anahtarlar `^[a-z0-9-]{1,32}$`). İkinci argüman sütun **tavanıdır**; ızgara
+`data-anahtar`, anahtarlar `^[a-z0-9]+(?:-[a-z0-9]+)*$`, en çok 32 karakter). İkinci argüman sütun **tavanıdır**; ızgara
 CSS'te sarar. Kendi `data` haritanızda `direction` anahtarından kaçının — kit zaten delta
 satırında her tanınan yön için `data-direction` basıyor; çakışma imkânsız (farklı elemanlar)
 ama bir `[data-direction]` sorgusu ikisiyle de eşleşir.
@@ -414,9 +414,9 @@ etmek sevk ettiğiniz her ağaçta tek bir çıta tutar.
 (dashicon span'ı, ton/vurgu sınıfları, `aria-hidden`, `data-*` kancaları, delta işareti ve
 erişilebilir adı, ızgaranın `style="--mhmui-columns:N"`'i) **WordPress 6.6+** üzerinde onu
 bayt bayt geçer. Satır içi stilde özel özellik ataması `safecss_filter_attr()` tarafından
-6.1.0'dan beri kabul edilir; başında, sonunda ya da art arda tire olan `data-*` adları —
-`[a-z0-9-]` desenine uyan `data` anahtarları bunları üretebilir — ancak çekirdek `data-*`
-desenini genişlettiği 6.6'dan beri korunur. `wp_kses_allowed_html` ya da `safe_style_css`
+6.1.0'dan beri kabul edilir. `data` anahtarları tire ile ayrılmış `[a-z0-9]` öbekleridir
+(0.22.0'da sıkılaştı: başta, sonda ya da art arda tire WordPress ≤ 6.5'te kses tarafından
+siliniyordu, kit artık bunu üretmez). `wp_kses_allowed_html` ya da `safe_style_css`
 filtreleyen bir eklenti bunları yine silebilir. Entegrasyon takımı bunu CI'ın koştuğu
 WordPress sürümünde (7.1) sabitler: `tests/Integration/KitEscapingTest.php`; kses'in sileceği
 bir kit değişikliği önce orada düşer.
