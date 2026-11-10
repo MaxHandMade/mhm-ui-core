@@ -22,7 +22,7 @@ A consuming plugin `require_once`s `vendor/mhm/ui-core/register.php` from its
 main file and registers its own copy:
 
 ```php
-mhmuicore_register( '0.21.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.22.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 At `plugins_loaded` priority 0 the highest registered version boots; the rest
@@ -390,7 +390,7 @@ build from.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.21.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.22.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 Requiring `bootstrap.php` directly defines `MHMUICORE_VERSION` immediately, which
@@ -470,6 +470,12 @@ argument is a column **ceiling**; the grid wraps in CSS. Avoid `direction` as
 a key in your own `data` map — the kit already emits `data-direction` on the
 delta line for every recognised direction; no collision is possible (different
 elements), but it would leave a `[data-direction]` query matching both.
+
+**Since 0.22.0** the column ceiling parses the same in both twins, with PHP's
+`is_numeric()` semantics: a number, or a numeric string (`'3'`, `' 3 '`, `'1e1'`,
+`'.5'`), becomes `max( 1, trunc( n ) )`; anything else (`'3cats'`, `'0x10'`, `''`,
+`true`, `null`) falls back to the member's default (4 for StatsGrid, 2 for
+DetailList). Before 0.22.0 the JSX twin read `'3cats'` as 3 while PHP fell back.
 
 **Since 0.21.0: "4 or 2, never 3."** When the cards fill whole rows of a
 ceiling of 4 or 6 (4, 8, 12… cards under 4; 6, 12… under 6), both twins add
