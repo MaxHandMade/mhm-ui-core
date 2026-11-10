@@ -216,7 +216,7 @@ da bu tek yanlış cümle yüzünden taşıdı.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.21.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.22.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 `bootstrap.php`'yi doğrudan require etmek `MHMUICORE_VERSION`'ı anında tanımlar
@@ -286,6 +286,15 @@ ekranı), `tone` (`success|warning|danger|info|neutral`, başka her şey düşü
 CSS'te sarar. Kendi `data` haritanızda `direction` anahtarından kaçının — kit zaten delta
 satırında her tanınan yön için `data-direction` basıyor; çakışma imkânsız (farklı elemanlar)
 ama bir `[data-direction]` sorgusu ikisiyle de eşleşir.
+
+**0.22.0'dan itibaren** sütun tavanı PHP `is_numeric()` semantiğiyle ayrıştırılır, StatsGrid'in
+iki ikizinde aynı (DetailList'in yalnız JSX ikizi var, aynı ayrıştırmayı kullanır): sayı ya da
+sayısal dize (`'3'`, `' 3 '`, `'1e1'`, `'.5'`; çevre boşluğu PHP'nin ASCII kümesidir, bölünmez
+boşluk sayılmaz) `max( 1, trunc( n ) )` olur; sonlu olmayan sayısal değer (`NaN`, `Infinity`,
+`'1e400'`) 1 olur; başka her şey (`'3cats'`, `'0x10'`, `''`, `true`, `null`) üyenin varsayılanına
+düşer (StatsGrid'de 4, DetailList'te 2). 0.22.0'dan önce JSX ikizi `'3cats'`'i 3 okuyordu, PHP ise
+varsayılana düşüyordu. Bire bir eşlenmeyen tek uç: PHP tamsayı aralığını aşan sonlu değer
+(`'1e20'`); PHP onu kırpar, JS korur.
 
 **0.21.0'dan itibaren: "4 ya da 2, asla 3."** Kartlar tavanı 4 ya da 6 olan bir ızgaranın tam
 satırlarını dolduruyorsa (tavan 4'te 4, 8, 12… kart; tavan 6'da 6, 12… kart) iki ikiz de
@@ -656,7 +665,7 @@ parite kapısı eşitlik arar, uyumluluk değil.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.21.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.22.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 🔴 Sürüm dizesi **elle yazılır** (kayıt, herhangi bir bootstrap yüklenmeden önce koşar) ve

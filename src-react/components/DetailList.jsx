@@ -29,7 +29,7 @@ const ceiling = ( columns ) => numericCeiling( columns, 2 );
  * @param {Object} props
  * @param {Array}  props.items     { label, value, tone? }.
  * @param {string} props.emptyText Shown for an empty value (consumer-translated).
- * @param {number} [props.columns] Column ceiling, default 2 (stacked only); a value with no leading number falls back to 2 (parsed like StatsGrid: '3cats' is 3).
+ * @param {number} [props.columns] Column ceiling, default 2 (stacked only); a non-numeric value falls back to 2 (parsed like StatsGrid, PHP is_numeric semantics: '3cats' falls back).
  * @param {string} [props.layout]  "stacked" (default) | "inline".
  */
 export default function DetailList( {

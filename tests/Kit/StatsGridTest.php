@@ -37,6 +37,12 @@ final class StatsGridTest extends TestCase {
 			'hex'        => array( '0x10', 4 ),
 			'empty'      => array( '', 4 ),
 			'bool'       => array( true, 4 ),
+			'nbsp'       => array( "\u{a0}3", 4 ),
+			'line-sep'   => array( "3\u{2028}", 4 ),
+			'ascii-ws'   => array( " \t3\n", 3 ),
+			'overflow'   => array( '1e400', 1 ),
+			'nan'        => array( NAN, 1 ),
+			'inf'        => array( INF, 1 ),
 		);
 	}
 
