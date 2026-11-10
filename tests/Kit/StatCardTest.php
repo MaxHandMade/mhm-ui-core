@@ -235,6 +235,23 @@ final class StatCardTest extends TestCase {
 		self::assertStringNotContainsString( 'data-n=', $html );
 	}
 
+	/**
+	 * Keys kses would strip on WordPress <= 6.5 (trailing or doubled hyphen) or
+	 * that PHP's `$` would let through (trailing newline) never reach the markup.
+	 */
+	public function test_data_keys_with_edge_hyphens_or_a_newline_are_dropped(): void {
+		$bad  = array( 'edge-', '-edge', 'a--b', '-', '', "ok
+", str_repeat( 'a', 33 ) );
+		$data = array( 'a-b' => '1', str_repeat( 'a', 32 ) => '2' );
+		foreach ( $bad as $key ) {
+			$data[ $key ] = 'x';
+		}
+		$html = StatCard::render_html( array( 'label' => 'L', 'value' => '1', 'data' => $data ) );
+		self::assertStringContainsString( 'data-a-b="1"', $html );
+		self::assertStringContainsString( 'data-' . str_repeat( 'a', 32 ) . '="2"', $html );
+		self::assertSame( 2, substr_count( $html, ' data-' ) );
+	}
+
 	public function test_wrapper_function_is_the_public_api(): void {
 		self::assertSame(
 			StatCard::render_html( array( 'label' => 'L', 'value' => '1' ) ),

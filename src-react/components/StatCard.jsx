@@ -41,12 +41,13 @@ import { resolveIcon } from '../icons';
  *                                      (the mark is aria-hidden and data-direction is not an
  *                                      accessible name), exactly as in 0.12.0.
  * @param {boolean} [props.emphasis]    Value in the accent colour; not a fill.
- * @param {Object}  [props.data]        { key: value } -> data-key="value"; keys ^[a-z0-9-]{1,32}$.
+ * @param {Object}  [props.data]        { key: value } -> data-key="value"; keys: lowercase letters and digits in
+ *                                      hyphen-separated runs, 1-32 chars (no leading, trailing or doubled hyphen).
  */
 export const TONES = [ 'success', 'warning', 'danger', 'info', 'neutral' ];
 export const DIRECTIONS = [ 'up', 'down', 'flat' ];
 
-const DATA_KEY = /^[a-z0-9-]{1,32}$/;
+const DATA_KEY = /^(?=.{1,32}$)[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 // Presence test for the string/number props icon and sub take, matching the
 // PHP twin's '' !== $icon / '' === $sub check for those same two types: a

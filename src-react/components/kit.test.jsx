@@ -487,6 +487,26 @@ describe( 'the visual kit renders only what it is given', () => {
 		);
 	} );
 
+	test( 'StatCard drops data keys with a leading, trailing or doubled hyphen, or over 32 chars', () => {
+		const { container } = render(
+			<StatCard
+				label="L"
+				value="1"
+				data={ {
+					'a-b': '1',
+					'edge-': 'x',
+					'-edge': 'x',
+					'a--b': 'x',
+					[ 'a'.repeat( 33 ) ]: 'x',
+				} }
+			/>
+		);
+		const attrs = Array.from( container.firstChild.attributes )
+			.map( ( a ) => a.name )
+			.filter( ( n ) => n.startsWith( 'data-' ) );
+		expect( attrs ).toEqual( [ 'data-a-b' ] );
+	} );
+
 	test( 'StatCard treats "0" icon/sub as present, like the PHP twin', () => {
 		const { container } = render(
 			<StatCard label="L" value="1" sub="0" icon="0" />

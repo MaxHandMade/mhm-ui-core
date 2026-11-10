@@ -33,7 +33,7 @@ final class StatCard {
 
 	public const DIRECTIONS = array( 'up', 'down', 'flat' );
 
-	private const DATA_KEY = '/^[a-z0-9-]{1,32}$/';
+	private const DATA_KEY = '/^(?=.{1,32}$)[a-z0-9]+(?:-[a-z0-9]+)*$/D';
 
 	/**
 	 * Render one stat card to an HTML string.
