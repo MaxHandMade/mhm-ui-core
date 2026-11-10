@@ -20,14 +20,18 @@ import StatCard from './StatCard';
 
 // PHP is_numeric() for a string: optional sign, digits with an optional point
 // or a leading point, optional exponent, surrounding whitespace allowed. Not
-// hex, not '6abc', not ''.
-const NUMERIC_STRING = /^\s*[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?\s*$/;
+// hex, not '6abc', not ''. Whitespace is PHP's set (" \t\n\r\v\f"), not JS \s:
+// \s also matches NBSP and U+2028, which is_numeric() rejects.
+const NUMERIC_STRING =
+	/^[ \t\n\r\v\f]*[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?[ \t\n\r\v\f]*$/;
 
 /**
  * Twin of StatsGrid::render_html()'s `is_numeric( $columns ) ? max( 1, (int) $columns )`.
- * Numeric (a finite number, or a string PHP's is_numeric() accepts) ->
- * max( 1, trunc( n ) ); anything else -> `fallback`. So '1e1' is 10, '.5' is 1,
- * '6abc' / '0x10' / true / null fall back -- the same in both languages.
+ * Numeric (a number, or a string PHP's is_numeric() accepts) -> max( 1, trunc( n ) );
+ * anything else -> `fallback`. So '1e1' is 10, '.5' is 1, '6abc' / '0x10' / true /
+ * null fall back -- the same in both languages. A numeric value that is not
+ * finite (NaN, Infinity, '1e400') is 1: PHP's (int) casts it to 0. Not mirrored:
+ * a finite value past PHP_INT_MAX (PHP clamps, JS keeps it) -- both are absurd.
  *
  * @param {*}      columns  Raw prop.
  * @param {number} fallback Ceiling for a non-numeric value (4 here, 2 in DetailList).
@@ -36,8 +40,11 @@ export function numericCeiling( columns, fallback ) {
 	const numeric =
 		typeof columns === 'number' ||
 		( typeof columns === 'string' && NUMERIC_STRING.test( columns ) );
-	const n = numeric ? Math.trunc( Number( columns ) ) : NaN;
-	return Number.isFinite( n ) ? Math.max( 1, n ) : fallback;
+	if ( ! numeric ) {
+		return fallback;
+	}
+	const n = Math.trunc( Number( columns ) );
+	return Number.isFinite( n ) ? Math.max( 1, n ) : 1;
 }
 
 export function columnCeiling( columns ) {

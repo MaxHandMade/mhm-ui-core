@@ -352,6 +352,12 @@ describe( 'the visual kit renders only what it is given', () => {
 		[ true, 4 ],
 		[ '3', 3 ],
 		[ -3, 1 ],
+		[ '\u00a03', 4 ],
+		[ '3\u2028', 4 ],
+		[ ' \t3\n', 3 ],
+		[ '1e400', 1 ],
+		[ NaN, 1 ],
+		[ Infinity, 1 ],
 	] )(
 		'StatsGrid ceiling parse matches PHP is_numeric: %p -> %i',
 		( columns, expected ) => {
