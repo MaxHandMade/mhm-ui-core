@@ -478,7 +478,7 @@ one card orphaned below; narrower than N/2 fits, the card-min floor takes over
 (2 or 1 columns, which cannot orphan). Four cards of four, 16px root: 740px and
 up → 4 · 364–739px → 2+2 (was 3+1 from 552px) · narrower → 1. The threshold
 derives from `--mhmui-card-min`, `--mhmui-gap` and the ceiling, so it follows a
-larger root font (20px root: 4 from 916px) or your own card-min. It does not
+larger root font (20px root: 4 columns from 916px, derived; measured 2+2 at 740px, 4 at 920px) or your own card-min. It does not
 enter for other counts or ceilings: 3 cards under 4 keep today's layout (the
 rule would draw 2+1), 6 under 4 keep theirs (3+3, then 4+2), and a ceiling of 8
 or more is left alone (once half the row stops fitting the grid falls back to

@@ -293,7 +293,7 @@ satırlarını dolduruyorsa (tavan 4'te 4, 8, 12… kart; tavan 6'da 6, 12… ka
 N−1 dizilimini çizmez. N/2 sütunun sığmadığı darlıkta card-min alt sınırı devreye girer (2 ya da 1
 sütun, yetim bırakmaz). Dört kart, tavan 4, 16px kök: 740px ve üstü → 4 · 364–739px → 2+2 (eskiden
 552px'ten itibaren 3+1) · daha dar → 1. Eşik `--mhmui-card-min`, `--mhmui-gap` ve tavandan türer;
-büyük kök yazı boyutunu (20px kökte 4 sütun 916px'ten itibaren) ya da kendi card-min değerinizi
+büyük kök yazı boyutunu (20px kökte 4 sütun 916px'ten itibaren, hesaplanmış; ölçülen: 740px'te 2+2, 920px'te 4) ya da kendi card-min değerinizi
 kendiliğinden izler. Diğer sayı ve tavanlarda devreye girmez: tavan 4'te 3 kart bugünkü dizilimini
 korur (kural 2+1 çizerdi), tavan 4'te 6 kart da korur (3+3, sonra 4+2), tavan 8 ve üstü hiç
 etkilenmez (yarım satır sığmayınca ızgara yine ara sayılara düşer). Prop yok, kararı kart sayısı

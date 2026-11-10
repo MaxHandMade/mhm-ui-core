@@ -344,7 +344,8 @@
    and the threshold derives from the same three variables, so it follows a
    20px root or a consumer's card-min by itself. Measured in Chrome
    2026-11-10, four cards of four, 16px root: 364-739px -> 2+2 (was 3+1 from
-   552px), 740px+ -> 4; 20px root: 4 from 916px. */
+   552px), 740px+ -> 4; 20px root: 2+2 at 740, 4 at 920 (threshold derived:
+   4 x 220 + 36 = 916px). */
 .mhmui-stats-grid.mhmui-stats-grid--pairs {
 	grid-template-columns: repeat( auto-fit, minmax( max( var( --mhmui-card-min ), calc( ( 100% - ( var( --mhmui-columns ) - 1 ) * var( --mhmui-gap ) ) / var( --mhmui-columns ) ), clamp( 0px, calc( ( var( --mhmui-columns ) * var( --mhmui-card-min ) + ( var( --mhmui-columns ) - 1 ) * var( --mhmui-gap ) - 100% ) * 100000 ), calc( ( 100% - ( var( --mhmui-columns ) / 2 - 1 ) * var( --mhmui-gap ) ) / ( var( --mhmui-columns ) / 2 ) ) ) ), 1fr ) );
 }
