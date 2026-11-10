@@ -367,6 +367,9 @@ describe( 'the visual kit renders only what it is given', () => {
 		[ 6, 4, false ], // not a multiple: today's 3+3 already holds
 		[ 2, 2, false ], // half of 2 is 1 -- nothing to gain
 		[ 3, 3, false ], // odd ceiling has no half
+		[ 8, 8, false ], // 8+: CSS would draw 3+3+2 once half stops fitting
+		[ 16, 8, false ],
+		[ 12, 6, true ],
 		[ 0, 4, false ],
 	] )(
 		'StatsGrid: %i cards, ceiling %p -> pairs modifier %p',

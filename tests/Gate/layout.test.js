@@ -247,12 +247,15 @@ describe( 'page layout standard (spec §3.5)', () => {
 		expect( a ).not.toBeNull();
 		expect( f ).not.toBeNull();
 		const track = ( body ) => ( body.match( /grid-template-columns:\s*([^;]+);/ ) || [] )[ 1 ];
-		expect( track( a ) ).toBeDefined();
-		expect( track( a ) ).toBe( track( f ) );
-		expect( track( a ) ).toMatch( /clamp\(\s*0px,/ );
-		expect( track( a ) ).toMatch( /var\(\s*--mhmui-columns\s*\)\s*\/\s*2/ );
-		expect( track( a ) ).toMatch( /var\(\s*--mhmui-card-min\s*\)/ );
-		expect( track( a ) ).not.toMatch( /\d+px\s*-\s*100%/ ); // no literal threshold
+		// Pinned whole, not by regex fragments: a flipped sign (rule fires on
+		// WIDE screens), a dropped factor (a sub-pixel band of 3+1 below the
+		// threshold), or one broken `/ 2` would each survive a fragment match.
+		const N = 'var( --mhmui-columns )';
+		const MIN = 'var( --mhmui-card-min )';
+		const GAP = 'var( --mhmui-gap )';
+		const expected = `repeat( auto-fit, minmax( max( ${ MIN }, calc( ( 100% - ( ${ N } - 1 ) * ${ GAP } ) / ${ N } ), clamp( 0px, calc( ( ${ N } * ${ MIN } + ( ${ N } - 1 ) * ${ GAP } - 100% ) * 100000 ), calc( ( 100% - ( ${ N } / 2 - 1 ) * ${ GAP } ) / ( ${ N } / 2 ) ) ) ), 1fr ) )`;
+		expect( track( a ) ).toBe( expected );
+		expect( track( f ) ).toBe( expected );
 	} );
 
 	test( 'front.css declares no font-family and nothing !important', () => {

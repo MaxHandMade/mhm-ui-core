@@ -332,17 +332,21 @@
 }
 
 /* "4 or 2, never 3" (0.21.0, spec 2026-11-10). The renderer adds --pairs only
-   when the cards fill whole rows of an even ceiling N >= 4. A third lower
+   when the cards fill whole rows of a ceiling N of 4 or 6. A third lower
    bound on the track is then half the row whenever N tracks cannot fit:
-   clamp( 0, (N*card-min + (N-1)*gap - 100%) * 1000, half-row ) is the full
-   half-row below that threshold and 0 at or above it, so the grid draws N
-   or N/2 columns (or fewer, where card-min forces it) and never N-1+1.
-   No container query: one cannot query its own box, and the threshold here
-   derives from the same three variables, so it follows a 20px root or a
-   consumer's card-min by itself. Measured in Chrome 2026-11-10, four cards
-   of four: 400-739px -> 2+2 (was 3+1 from 552px), 740px+ -> 4. */
+   clamp( 0, (N*card-min + (N-1)*gap - 100%) * 100000, half-row ) is the full
+   half-row below that threshold and 0 at or above it (the large factor
+   leaves no sub-pixel band where it is in between), so the grid draws N or
+   N/2 columns, and below N/2 the card-min floor (2 or 1 for these ceilings,
+   which never orphans). Not 8+: once N/2 stops fitting, auto-fit falls back
+   to in-between counts again (8 cards of 8 -> 3+3+2) -- the renderer does
+   not ask for it there. No container query: one cannot query its own box,
+   and the threshold derives from the same three variables, so it follows a
+   20px root or a consumer's card-min by itself. Measured in Chrome
+   2026-11-10, four cards of four, 16px root: 364-739px -> 2+2 (was 3+1 from
+   552px), 740px+ -> 4; 20px root: 4 from 916px. */
 .mhmui-stats-grid.mhmui-stats-grid--pairs {
-	grid-template-columns: repeat( auto-fit, minmax( max( var( --mhmui-card-min ), calc( ( 100% - ( var( --mhmui-columns ) - 1 ) * var( --mhmui-gap ) ) / var( --mhmui-columns ) ), clamp( 0px, calc( ( var( --mhmui-columns ) * var( --mhmui-card-min ) + ( var( --mhmui-columns ) - 1 ) * var( --mhmui-gap ) - 100% ) * 1000 ), calc( ( 100% - ( var( --mhmui-columns ) / 2 - 1 ) * var( --mhmui-gap ) ) / ( var( --mhmui-columns ) / 2 ) ) ) ), 1fr ) );
+	grid-template-columns: repeat( auto-fit, minmax( max( var( --mhmui-card-min ), calc( ( 100% - ( var( --mhmui-columns ) - 1 ) * var( --mhmui-gap ) ) / var( --mhmui-columns ) ), clamp( 0px, calc( ( var( --mhmui-columns ) * var( --mhmui-card-min ) + ( var( --mhmui-columns ) - 1 ) * var( --mhmui-gap ) - 100% ) * 100000 ), calc( ( 100% - ( var( --mhmui-columns ) / 2 - 1 ) * var( --mhmui-gap ) ) / ( var( --mhmui-columns ) / 2 ) ) ) ), 1fr ) );
 }
 
 /* Base = the quiet bordered box (what KpiBox used to be). A tone modifier

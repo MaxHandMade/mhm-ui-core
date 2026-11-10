@@ -25,9 +25,11 @@ export function columnCeiling( columns ) {
 
 /**
  * "4 or 2, never 3" (spec 2026-11-10 §2) -- twin of StatsGrid::pairs(). Only
- * when the cards fill whole rows of an even ceiling >= 4: 3 cards under a 4
- * ceiling would draw 2+1, worse than today, and a ceiling of 2 has nothing to
- * halve to. The CSS modifier then lets the grid pick N or N/2 columns only.
+ * when the cards fill whole rows of a ceiling of 4 or 6: 3 cards under a 4
+ * ceiling would draw 2+1, worse than today; a ceiling of 2 has nothing to
+ * halve to; at 8+ the CSS cannot keep its promise once half the row stops
+ * fitting (8 of 8 -> 3+3+2). The CSS modifier then lets the grid pick N or
+ * N/2 columns.
  *
  * @param {number} count   Cards drawn.
  * @param {number} ceiling Column ceiling.
@@ -35,7 +37,7 @@ export function columnCeiling( columns ) {
  */
 export function pairs( count, ceiling ) {
 	return (
-		ceiling >= 4 && ceiling % 2 === 0 && count > 0 && count % ceiling === 0
+		( ceiling === 4 || ceiling === 6 ) && count > 0 && count % ceiling === 0
 	);
 }
 

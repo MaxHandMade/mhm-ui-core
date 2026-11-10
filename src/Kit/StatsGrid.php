@@ -42,15 +42,17 @@ final class StatsGrid {
 
 	/**
 	 * "4 or 2, never 3" (spec 2026-11-10 §2) -- twin of StatsGrid.jsx's
-	 * `pairs()`. Only when the cards fill whole rows of an even ceiling >= 4:
-	 * 3 cards under a 4 ceiling would draw 2+1, worse than today, and a
-	 * ceiling of 2 has nothing to halve to. Counts the cards it DRAWS.
+	 * `pairs()`. Only when the cards fill whole rows of a ceiling of 4 or 6:
+	 * 3 cards under a 4 ceiling would draw 2+1, worse than today; a ceiling
+	 * of 2 has nothing to halve to; at 8+ the CSS cannot keep its promise
+	 * once half the row stops fitting (8 of 8 -> 3+3+2). Counts the cards
+	 * it DRAWS.
 	 *
 	 * @param int $count   Cards drawn.
 	 * @param int $ceiling Column ceiling.
 	 * @return bool
 	 */
 	private static function pairs( int $count, int $ceiling ): bool {
-		return $ceiling >= 4 && 0 === $ceiling % 2 && $count > 0 && 0 === $count % $ceiling;
+		return ( 4 === $ceiling || 6 === $ceiling ) && $count > 0 && 0 === $count % $ceiling;
 	}
 }

@@ -52,6 +52,9 @@ final class StatsGridTest extends TestCase {
 			'6 of 4'          => array( 6, 4, false ),
 			'2 of 2'          => array( 2, 2, false ),
 			'3 of 3'          => array( 3, 3, false ),
+			'8 of 8'          => array( 8, 8, false ),
+			'16 of 8'         => array( 16, 8, false ),
+			'12 of 6'         => array( 12, 6, true ),
 			'none'            => array( 0, 4, false ),
 		);
 	}

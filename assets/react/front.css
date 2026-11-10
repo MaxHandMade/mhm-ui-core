@@ -147,7 +147,7 @@
 /* "4 or 2, never 3" -- same rule and formula as admin.css (read the comment
    there); the front-end selector is one class heavier, like its base. */
 .mhmui-front .mhmui-stats-grid.mhmui-stats-grid--pairs {
-	grid-template-columns: repeat( auto-fit, minmax( max( var( --mhmui-card-min ), calc( ( 100% - ( var( --mhmui-columns ) - 1 ) * var( --mhmui-gap ) ) / var( --mhmui-columns ) ), clamp( 0px, calc( ( var( --mhmui-columns ) * var( --mhmui-card-min ) + ( var( --mhmui-columns ) - 1 ) * var( --mhmui-gap ) - 100% ) * 1000 ), calc( ( 100% - ( var( --mhmui-columns ) / 2 - 1 ) * var( --mhmui-gap ) ) / ( var( --mhmui-columns ) / 2 ) ) ) ), 1fr ) );
+	grid-template-columns: repeat( auto-fit, minmax( max( var( --mhmui-card-min ), calc( ( 100% - ( var( --mhmui-columns ) - 1 ) * var( --mhmui-gap ) ) / var( --mhmui-columns ) ), clamp( 0px, calc( ( var( --mhmui-columns ) * var( --mhmui-card-min ) + ( var( --mhmui-columns ) - 1 ) * var( --mhmui-gap ) - 100% ) * 100000 ), calc( ( 100% - ( var( --mhmui-columns ) / 2 - 1 ) * var( --mhmui-gap ) ) / ( var( --mhmui-columns ) / 2 ) ) ) ), 1fr ) );
 }
 
 /* Card structure. Sizes follow the approved vendor-panel card, not admin. */

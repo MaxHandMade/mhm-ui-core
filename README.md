@@ -471,16 +471,21 @@ a key in your own `data` map — the kit already emits `data-direction` on the
 delta line for every recognised direction; no collision is possible (different
 elements), but it would leave a `[data-direction]` query matching both.
 
-**Since 0.21.0: "4 or 2, never 3."** When the cards fill whole rows of an
-even ceiling of 4 or more (4 or 8 cards under 4, 6 under 6), both twins add
-`mhmui-stats-grid--pairs` and the grid draws N or N/2 columns only, never
-N−1 with one card orphaned below. Four cards of four, 16px root: 740px and
-up → 4 · 400–739px → 2+2 (was 3+1 from 552px) · narrower → 1. The threshold
-derives from `--mhmui-card-min`, `--mhmui-gap` and the ceiling, so it follows
-a larger root font or your own card-min. It does not enter for other counts:
-3 cards under 4 keep today's layout (the rule would draw 2+1), and 6 under 4
-keep their 3+3. No prop: the count decides. A consumer that hand-wrote the
-same rule (Rentiva Pro's vendor panel, K9) keeps working; the two agree.
+**Since 0.21.0: "4 or 2, never 3."** When the cards fill whole rows of a
+ceiling of 4 or 6 (4, 8, 12… cards under 4; 6, 12… under 6), both twins add
+`mhmui-stats-grid--pairs` and the grid draws N or N/2 columns, never N−1 with
+one card orphaned below; narrower than N/2 fits, the card-min floor takes over
+(2 or 1 columns, which cannot orphan). Four cards of four, 16px root: 740px and
+up → 4 · 364–739px → 2+2 (was 3+1 from 552px) · narrower → 1. The threshold
+derives from `--mhmui-card-min`, `--mhmui-gap` and the ceiling, so it follows a
+larger root font (20px root: 4 from 916px) or your own card-min. It does not
+enter for other counts or ceilings: 3 cards under 4 keep today's layout (the
+rule would draw 2+1), 6 under 4 keep theirs (3+3, then 4+2), and a ceiling of 8
+or more is left alone (once half the row stops fitting the grid falls back to
+in-between counts). No prop: the count decides. A consumer that hand-wrote the
+same rule for four cards (Rentiva Pro's vendor panel, K9) gets the same layout,
+but the kit's front-end rule (0,3,0) now outranks its (0,2,0) rule, so that
+copy no longer applies and can be removed.
 
 **Since 0.12.0** the kit itself renders the direction cue for `delta` — an
 `aria-hidden` mark before the text — because colour alone must never be the

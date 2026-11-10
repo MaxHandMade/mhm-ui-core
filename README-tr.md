@@ -287,15 +287,19 @@ CSS'te sarar. Kendi `data` haritanızda `direction` anahtarından kaçının —
 satırında her tanınan yön için `data-direction` basıyor; çakışma imkânsız (farklı elemanlar)
 ama bir `[data-direction]` sorgusu ikisiyle de eşleşir.
 
-**0.21.0'dan itibaren: "4 ya da 2, asla 3."** Kartlar 4 ya da daha büyük çift bir tavanın tam
-satırlarını dolduruyorsa (tavan 4'te 4 ya da 8 kart, tavan 6'da 6 kart) iki ikiz de
-`mhmui-stats-grid--pairs` basar. Izgara o zaman yalnız N ya da N/2 sütun çizer, alt satırda tek
-kart kalan N−1 dizilimi çizmez. Dört kart, tavan 4, 16px kök: 740px ve üstü → 4 · 400–739px →
-2+2 (eskiden 552px'ten itibaren 3+1) · daha dar → 1. Eşik `--mhmui-card-min`, `--mhmui-gap` ve
-tavandan türer, büyük kök yazı boyutunu ya da kendi card-min değerinizi kendiliğinden izler.
-Diğer sayılarda devreye girmez: tavan 4'te 3 kart bugünkü dizilimini korur (kural 2+1 çizerdi),
-tavan 4'te 6 kart 3+3'ünü korur. Prop yok, kararı kart sayısı verir. Aynı kuralı elle yazmış
-tüketici (Rentiva Pro satıcı paneli, K9) çalışmaya devam eder, ikisi aynı sonucu verir.
+**0.21.0'dan itibaren: "4 ya da 2, asla 3."** Kartlar tavanı 4 ya da 6 olan bir ızgaranın tam
+satırlarını dolduruyorsa (tavan 4'te 4, 8, 12… kart; tavan 6'da 6, 12… kart) iki ikiz de
+`mhmui-stats-grid--pairs` basar. Izgara o zaman N ya da N/2 sütun çizer, alt satırda tek kart kalan
+N−1 dizilimini çizmez. N/2 sütunun sığmadığı darlıkta card-min alt sınırı devreye girer (2 ya da 1
+sütun, yetim bırakmaz). Dört kart, tavan 4, 16px kök: 740px ve üstü → 4 · 364–739px → 2+2 (eskiden
+552px'ten itibaren 3+1) · daha dar → 1. Eşik `--mhmui-card-min`, `--mhmui-gap` ve tavandan türer;
+büyük kök yazı boyutunu (20px kökte 4 sütun 916px'ten itibaren) ya da kendi card-min değerinizi
+kendiliğinden izler. Diğer sayı ve tavanlarda devreye girmez: tavan 4'te 3 kart bugünkü dizilimini
+korur (kural 2+1 çizerdi), tavan 4'te 6 kart da korur (3+3, sonra 4+2), tavan 8 ve üstü hiç
+etkilenmez (yarım satır sığmayınca ızgara yine ara sayılara düşer). Prop yok, kararı kart sayısı
+verir. Aynı kuralı dört kart için elle yazmış tüketici (Rentiva Pro satıcı paneli, K9) aynı
+dizilimi alır. Ama kitin ön yüz kuralı (0,3,0) onun (0,2,0) kuralını geçer; o kopya artık
+uygulanmaz ve kaldırılabilir.
 
 **0.12.0'dan itibaren** yön ipucunu artık kit'in kendisi çiziyor — metinden önce `aria-hidden`
 bir işaret — çünkü renk tek başına bir eğilimi iletmemelidir (WCAG 1.4.1) ve yön sözlüğünü
