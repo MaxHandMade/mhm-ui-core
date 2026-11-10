@@ -1,5 +1,5 @@
 import { TONES } from './StatCard';
-import { columnCeiling } from './StatsGrid';
+import { numericCeiling } from './StatsGrid';
 
 const isEmpty = ( value ) =>
 	value === undefined ||
@@ -7,13 +7,9 @@ const isEmpty = ( value ) =>
 	value === '' ||
 	typeof value === 'boolean';
 
-// columnCeiling() falls back to StatsGrid's 4; this member's default is 2.
-// Same parse as columnCeiling (parseInt): '3cats' reads as 3; only a value
-// with no leading number falls back.
-const ceiling = ( columns ) =>
-	Number.isNaN( Number.parseInt( columns, 10 ) )
-		? 2
-		: columnCeiling( columns );
+// Same parse as StatsGrid's columnCeiling (PHP is_numeric semantics); this
+// member's fallback for a non-numeric value is 2, not 4.
+const ceiling = ( columns ) => numericCeiling( columns, 2 );
 
 /**
  * Label/value pairs: a real <dl>, each pair in a <div>.
