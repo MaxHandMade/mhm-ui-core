@@ -18,9 +18,30 @@
  */
 import StatCard from './StatCard';
 
+// PHP is_numeric() for a string: optional sign, digits with an optional point
+// or a leading point, optional exponent, surrounding whitespace allowed. Not
+// hex, not '6abc', not ''.
+const NUMERIC_STRING = /^\s*[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?\s*$/;
+
+/**
+ * Twin of StatsGrid::render_html()'s `is_numeric( $columns ) ? max( 1, (int) $columns )`.
+ * Numeric (a finite number, or a string PHP's is_numeric() accepts) ->
+ * max( 1, trunc( n ) ); anything else -> `fallback`. So '1e1' is 10, '.5' is 1,
+ * '6abc' / '0x10' / true / null fall back -- the same in both languages.
+ *
+ * @param {*}      columns  Raw prop.
+ * @param {number} fallback Ceiling for a non-numeric value (4 here, 2 in DetailList).
+ */
+export function numericCeiling( columns, fallback ) {
+	const numeric =
+		typeof columns === 'number' ||
+		( typeof columns === 'string' && NUMERIC_STRING.test( columns ) );
+	const n = numeric ? Math.trunc( Number( columns ) ) : NaN;
+	return Number.isFinite( n ) ? Math.max( 1, n ) : fallback;
+}
+
 export function columnCeiling( columns ) {
-	const parsed = Number.parseInt( columns, 10 );
-	return Number.isNaN( parsed ) ? 4 : Math.max( 1, parsed );
+	return numericCeiling( columns, 4 );
 }
 
 /**

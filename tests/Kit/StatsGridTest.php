@@ -30,6 +30,13 @@ final class StatsGridTest extends TestCase {
 			'large'      => array( 99, 99 ),
 			'numeric'    => array( '3', 3 ),
 			'non-number' => array( 'wide', 4 ),
+			'trailing'   => array( '6abc', 4 ),
+			'exponent'   => array( '1e1', 10 ),
+			'leading-pt' => array( '.5', 1 ),
+			'fraction'   => array( '2.9', 2 ),
+			'hex'        => array( '0x10', 4 ),
+			'empty'      => array( '', 4 ),
+			'bool'       => array( true, 4 ),
 		);
 	}
 

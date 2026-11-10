@@ -341,6 +341,29 @@ describe( 'the visual kit renders only what it is given', () => {
 		).toBe( '2' );
 	} );
 
+	// Twin of tests/Kit/StatsGridTest.php::ceilings() -- same inputs, same answers.
+	test.each( [
+		[ '6abc', 4 ],
+		[ '1e1', 10 ],
+		[ '.5', 1 ],
+		[ '2.9', 2 ],
+		[ '0x10', 4 ],
+		[ '', 4 ],
+		[ true, 4 ],
+		[ '3', 3 ],
+		[ -3, 1 ],
+	] )(
+		'StatsGrid ceiling parse matches PHP is_numeric: %p -> %i',
+		( columns, expected ) => {
+			const { container } = render(
+				<StatsGrid cards={ [] } columns={ columns } />
+			);
+			expect(
+				container.firstChild.style.getPropertyValue( '--mhmui-columns' )
+			).toBe( String( expected ) );
+		}
+	);
+
 	test( 'StatsGrid floors the ceiling at one and defaults a non-number to four', () => {
 		const zero = render( <StatsGrid cards={ [] } columns={ 0 } /> );
 		expect(
