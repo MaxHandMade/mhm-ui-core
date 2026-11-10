@@ -22,7 +22,7 @@ A consuming plugin `require_once`s `vendor/mhm/ui-core/register.php` from its
 main file and registers its own copy:
 
 ```php
-mhmuicore_register( '0.20.2', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.21.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 At `plugins_loaded` priority 0 the highest registered version boots; the rest
@@ -390,7 +390,7 @@ build from.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.20.2', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.21.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 Requiring `bootstrap.php` directly defines `MHMUICORE_VERSION` immediately, which
@@ -470,6 +470,22 @@ argument is a column **ceiling**; the grid wraps in CSS. Avoid `direction` as
 a key in your own `data` map — the kit already emits `data-direction` on the
 delta line for every recognised direction; no collision is possible (different
 elements), but it would leave a `[data-direction]` query matching both.
+
+**Since 0.21.0: "4 or 2, never 3."** When the cards fill whole rows of a
+ceiling of 4 or 6 (4, 8, 12… cards under 4; 6, 12… under 6), both twins add
+`mhmui-stats-grid--pairs` and the grid draws N or N/2 columns, never N−1 with
+one card orphaned below; narrower than N/2 fits, the card-min floor takes over
+(2 or 1 columns, which cannot orphan). Four cards of four, 16px root: 740px and
+up → 4 · 364–739px → 2+2 (was 3+1 from 552px) · narrower → 1. The threshold
+derives from `--mhmui-card-min`, `--mhmui-gap` and the ceiling, so it follows a
+larger root font (20px root: 4 columns from 916px, derived; measured 2+2 at 740px, 4 at 920px) or your own card-min. It does not
+enter for other counts or ceilings: 3 cards under 4 keep today's layout (the
+rule would draw 2+1), 6 under 4 keep theirs (3+3, then 4+2), and a ceiling of 8
+or more is left alone (once half the row stops fitting the grid falls back to
+in-between counts). No prop: the count decides. A consumer that hand-wrote the
+same rule for four cards (Rentiva Pro's vendor panel, K9) gets the same layout,
+but the kit's front-end rule (0,3,0) now outranks its (0,2,0) rule, so that
+copy no longer applies and can be removed.
 
 **Since 0.12.0** the kit itself renders the direction cue for `delta` — an
 `aria-hidden` mark before the text — because colour alone must never be the

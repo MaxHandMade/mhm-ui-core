@@ -43,7 +43,8 @@
     "props": { "cards": "array", "columns": "number?" },
     "fixtures": [
       { "cards": [ { "label": "A", "value": "1" }, { "label": "B", "value": "2", "tone": "info" } ], "columns": 2 },
-      { "cards": [ { "label": "A", "value": "1" } ], "columns": 0 }
+      { "cards": [ { "label": "A", "value": "1" } ], "columns": 0 },
+      { "cards": [ { "label": "A", "value": "1" }, { "label": "B", "value": "2" }, { "label": "C", "value": "3" }, { "label": "D", "value": "4" } ], "columns": 4 }
     ]
   },
   "StatusBadge": {

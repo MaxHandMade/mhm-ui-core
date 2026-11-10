@@ -356,6 +356,42 @@ describe( 'the visual kit renders only what it is given', () => {
 		).toBe( '4' );
 	} );
 
+	test.each( [
+		// [ cards, columns, pairs? ] -- spec 2026-11-10 §2: the rule enters only
+		// when the card count is a whole multiple of an even ceiling >= 4.
+		[ 4, 4, true ],
+		[ 8, 4, true ],
+		[ 6, 6, true ],
+		[ 4, 'wide', true ], // a non-number ceiling defaults to 4
+		[ 3, 4, false ], // 3 of 4 would draw 2+1, worse than today
+		[ 6, 4, false ], // not a multiple: today's 3+3 already holds
+		[ 2, 2, false ], // half of 2 is 1 -- nothing to gain
+		[ 3, 3, false ], // odd ceiling has no half
+		[ 8, 8, false ], // 8+: CSS would draw 3+3+2 once half stops fitting
+		[ 16, 8, false ],
+		[ 12, 6, true ],
+		[ 0, 4, false ],
+	] )(
+		'StatsGrid: %i cards, ceiling %p -> pairs modifier %p',
+		( count, columns, pairs ) => {
+			const cards = Array.from( { length: count }, ( _, i ) => ( {
+				label: `C${ i }`,
+				value: String( i ),
+			} ) );
+			const { container } = render(
+				<StatsGrid cards={ cards } columns={ columns } />
+			);
+			expect(
+				container.firstChild.classList.contains(
+					'mhmui-stats-grid--pairs'
+				)
+			).toBe( pairs );
+			expect(
+				container.firstChild.classList.contains( 'mhmui-stats-grid' )
+			).toBe( true );
+		}
+	);
+
 	test( 'StatCard drops a tone or direction outside the vocabulary, like the PHP renderer', () => {
 		const { container } = render(
 			<StatCard

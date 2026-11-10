@@ -238,6 +238,26 @@ describe( 'page layout standard (spec §3.5)', () => {
 		expect( gridWrapsFromColumns( front, '.mhmui-front .mhmui-stats-grid' ) ).toBe( true );
 	} );
 
+	/* 0.21.0 "4 or 2, never 3" (spec 2026-11-10 §3): the --pairs track is the
+	 * base track plus a clamp() half-row bound, and both sheets carry the SAME
+	 * declaration -- a one-sided edit would split the twins' look by surface. */
+	test( 'both stats grids carry the same --pairs track, derived from the three variables', () => {
+		const a = ruleBody( admin, '.mhmui-stats-grid.mhmui-stats-grid--pairs' );
+		const f = ruleBody( front, '.mhmui-front .mhmui-stats-grid.mhmui-stats-grid--pairs' );
+		expect( a ).not.toBeNull();
+		expect( f ).not.toBeNull();
+		const track = ( body ) => ( body.match( /grid-template-columns:\s*([^;]+);/ ) || [] )[ 1 ];
+		// Pinned whole, not by regex fragments: a flipped sign (rule fires on
+		// WIDE screens), a dropped factor (a sub-pixel band of 3+1 below the
+		// threshold), or one broken `/ 2` would each survive a fragment match.
+		const N = 'var( --mhmui-columns )';
+		const MIN = 'var( --mhmui-card-min )';
+		const GAP = 'var( --mhmui-gap )';
+		const expected = `repeat( auto-fit, minmax( max( ${ MIN }, calc( ( 100% - ( ${ N } - 1 ) * ${ GAP } ) / ${ N } ), clamp( 0px, calc( ( ${ N } * ${ MIN } + ( ${ N } - 1 ) * ${ GAP } - 100% ) * 100000 ), calc( ( 100% - ( ${ N } / 2 - 1 ) * ${ GAP } ) / ( ${ N } / 2 ) ) ) ), 1fr ) )`;
+		expect( track( a ) ).toBe( expected );
+		expect( track( f ) ).toBe( expected );
+	} );
+
 	test( 'front.css declares no font-family and nothing !important', () => {
 		const code = front.replace( /\/\*[\s\S]*?\*\//g, '' );
 		expect( code ).not.toMatch( /font-family/ );

@@ -223,6 +223,14 @@
             "mhmui-stat-card__label",
             "mhmui-stat-card__value",
             "mhmui-stats-grid"
+        ],
+        [
+            "mhmui-stat-card",
+            "mhmui-stat-card__body",
+            "mhmui-stat-card__label",
+            "mhmui-stat-card__value",
+            "mhmui-stats-grid",
+            "mhmui-stats-grid--pairs"
         ]
     ],
     "Tabs": [
