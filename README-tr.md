@@ -216,7 +216,7 @@ da bu tek yanlış cümle yüzünden taşıdı.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.20.2', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.21.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 `bootstrap.php`'yi doğrudan require etmek `MHMUICORE_VERSION`'ı anında tanımlar
@@ -286,6 +286,16 @@ ekranı), `tone` (`success|warning|danger|info|neutral`, başka her şey düşü
 CSS'te sarar. Kendi `data` haritanızda `direction` anahtarından kaçının — kit zaten delta
 satırında her tanınan yön için `data-direction` basıyor; çakışma imkânsız (farklı elemanlar)
 ama bir `[data-direction]` sorgusu ikisiyle de eşleşir.
+
+**0.21.0'dan itibaren: "4 ya da 2, asla 3."** Kartlar 4 ya da daha büyük çift bir tavanın tam
+satırlarını dolduruyorsa (tavan 4'te 4 ya da 8 kart, tavan 6'da 6 kart) iki ikiz de
+`mhmui-stats-grid--pairs` basar. Izgara o zaman yalnız N ya da N/2 sütun çizer, alt satırda tek
+kart kalan N−1 dizilimi çizmez. Dört kart, tavan 4, 16px kök: 740px ve üstü → 4 · 400–739px →
+2+2 (eskiden 552px'ten itibaren 3+1) · daha dar → 1. Eşik `--mhmui-card-min`, `--mhmui-gap` ve
+tavandan türer, büyük kök yazı boyutunu ya da kendi card-min değerinizi kendiliğinden izler.
+Diğer sayılarda devreye girmez: tavan 4'te 3 kart bugünkü dizilimini korur (kural 2+1 çizerdi),
+tavan 4'te 6 kart 3+3'ünü korur. Prop yok, kararı kart sayısı verir. Aynı kuralı elle yazmış
+tüketici (Rentiva Pro satıcı paneli, K9) çalışmaya devam eder, ikisi aynı sonucu verir.
 
 **0.12.0'dan itibaren** yön ipucunu artık kit'in kendisi çiziyor — metinden önce `aria-hidden`
 bir işaret — çünkü renk tek başına bir eğilimi iletmemelidir (WCAG 1.4.1) ve yön sözlüğünü
@@ -642,7 +652,7 @@ parite kapısı eşitlik arar, uyumluluk değil.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.20.2', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.21.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 🔴 Sürüm dizesi **elle yazılır** (kayıt, herhangi bir bootstrap yüklenmeden önce koşar) ve

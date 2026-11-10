@@ -238,6 +238,23 @@ describe( 'page layout standard (spec §3.5)', () => {
 		expect( gridWrapsFromColumns( front, '.mhmui-front .mhmui-stats-grid' ) ).toBe( true );
 	} );
 
+	/* 0.21.0 "4 or 2, never 3" (spec 2026-11-10 §3): the --pairs track is the
+	 * base track plus a clamp() half-row bound, and both sheets carry the SAME
+	 * declaration -- a one-sided edit would split the twins' look by surface. */
+	test( 'both stats grids carry the same --pairs track, derived from the three variables', () => {
+		const a = ruleBody( admin, '.mhmui-stats-grid.mhmui-stats-grid--pairs' );
+		const f = ruleBody( front, '.mhmui-front .mhmui-stats-grid.mhmui-stats-grid--pairs' );
+		expect( a ).not.toBeNull();
+		expect( f ).not.toBeNull();
+		const track = ( body ) => ( body.match( /grid-template-columns:\s*([^;]+);/ ) || [] )[ 1 ];
+		expect( track( a ) ).toBeDefined();
+		expect( track( a ) ).toBe( track( f ) );
+		expect( track( a ) ).toMatch( /clamp\(\s*0px,/ );
+		expect( track( a ) ).toMatch( /var\(\s*--mhmui-columns\s*\)\s*\/\s*2/ );
+		expect( track( a ) ).toMatch( /var\(\s*--mhmui-card-min\s*\)/ );
+		expect( track( a ) ).not.toMatch( /\d+px\s*-\s*100%/ ); // no literal threshold
+	} );
+
 	test( 'front.css declares no font-family and nothing !important', () => {
 		const code = front.replace( /\/\*[\s\S]*?\*\//g, '' );
 		expect( code ).not.toMatch( /font-family/ );
