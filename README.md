@@ -22,7 +22,7 @@ A consuming plugin `require_once`s `vendor/mhm/ui-core/register.php` from its
 main file and registers its own copy:
 
 ```php
-mhmuicore_register( '0.22.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.23.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 At `plugins_loaded` priority 0 the highest registered version boots; the rest
@@ -390,7 +390,7 @@ build from.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.22.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.23.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 Requiring `bootstrap.php` directly defines `MHMUICORE_VERSION` immediately, which
@@ -799,7 +799,8 @@ that overrode the old colour can drop its override.
 neutral; `size` md 36px | sm 32px; both 44px at 782px and below). The label is
 `children`, an optional decorative `icon` sits before it, `href` renders an
 `<a>`. `disabled` is `aria-disabled`, so the element keeps focus and a disabled
-link loses its `href`.
+link loses its `href`. **Since 0.23.0** a link also takes `target` and `rel`
+(e.g. `target="_blank" rel="noopener noreferrer"`); a button ignores both.
 
 **Opt-in props on existing members:**
 

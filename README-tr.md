@@ -216,7 +216,7 @@ da bu tek yanlış cümle yüzünden taşıdı.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.22.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.23.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 `bootstrap.php`'yi doğrudan require etmek `MHMUICORE_VERSION`'ı anında tanımlar
@@ -665,7 +665,7 @@ parite kapısı eşitlik arar, uyumluluk değil.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.22.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.23.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 🔴 Sürüm dizesi **elle yazılır** (kayıt, herhangi bir bootstrap yüklenmeden önce koşar) ve
@@ -740,7 +740,8 @@ rengi ezen sayfa kendi ezmesini silebilir.
 neutral; `size` md 36px | sm 32px; ikisi de 782px ve altında 44px). Etiket
 `children`, isteğe bağlı dekoratif `icon` önüne gelir, `href` verilirse `<a>`
 çizilir. `disabled`, `aria-disabled`'dır: öğe odağını korur, devre dışı bir
-bağlantı `href`'ini kaybeder.
+bağlantı `href`'ini kaybeder. **0.23.0'dan itibaren** bağlantı `target` ve `rel` de
+alır (ör. `target="_blank" rel="noopener noreferrer"`); düğme ikisini de yok sayar.
 
 **Mevcut üyelerde opt-in proplar:**
 
