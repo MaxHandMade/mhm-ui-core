@@ -30,6 +30,8 @@ function passThrough( rest ) {
  *                                    anything else is secondary.
  * @param {string}   [props.size]     md | sm; anything else is md.
  * @param {string}   [props.href]     Renders an <a> instead of a <button>.
+ * @param {string}   [props.target]   Link only (with href); ignored on a button.
+ * @param {string}   [props.rel]      Link only (with href); ignored on a button.
  * @param {*}        [props.icon]     Decorative node drawn before the label.
  * @param {boolean}  [props.disabled]
  * @param {Function} [props.onClick]
@@ -41,6 +43,8 @@ export default function Button( {
 	variant = 'secondary',
 	size = 'md',
 	href,
+	target,
+	rel,
 	icon,
 	disabled = false,
 	onClick,
@@ -82,6 +86,8 @@ export default function Button( {
 		return (
 			<a
 				href={ disabled ? undefined : href }
+				target={ target }
+				rel={ rel }
 				role={ disabled ? 'link' : undefined }
 				tabIndex={ disabled ? 0 : undefined }
 				{ ...common }

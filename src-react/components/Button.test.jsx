@@ -119,4 +119,24 @@ describe( 'Button', () => {
 				.getAttribute( 'aria-hidden' )
 		).toBe( 'true' );
 	} );
+	test( 'link_keeps_target_and_rel', () => {
+		const { container } = render(
+			<Button href="/x" target="_blank" rel="noopener noreferrer">
+				Docs
+			</Button>
+		);
+		const a = container.querySelector( 'a' );
+		expect( a.getAttribute( 'target' ) ).toBe( '_blank' );
+		expect( a.getAttribute( 'rel' ) ).toBe( 'noopener noreferrer' );
+	} );
+	test( 'button_ignores_target_and_rel', () => {
+		const { container } = render(
+			<Button target="_blank" rel="noopener">
+				Go
+			</Button>
+		);
+		const b = container.querySelector( 'button' );
+		expect( b.hasAttribute( 'target' ) ).toBe( false );
+		expect( b.hasAttribute( 'rel' ) ).toBe( false );
+	} );
 } );
