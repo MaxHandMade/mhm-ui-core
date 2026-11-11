@@ -134,7 +134,7 @@
   },
   "Button": {
     "interactive": true, "tone_semantics": true, "tone_cue": "children",
-    "props": { "children": "node", "variant": "primary|secondary|danger|plain|neutral?", "size": "md|sm?", "href": "string?", "icon": "node?", "disabled": "boolean?", "onClick": "function?", "type": "string?" },
+    "props": { "children": "node", "variant": "primary|secondary|danger|plain|neutral?", "size": "md|sm?", "href": "string?", "target": "string?", "rel": "string?", "icon": "node?", "disabled": "boolean?", "onClick": "function?", "type": "string?" },
     "fixtures": [
       { "children": "Reply", "variant": "primary" },
       { "children": "Apply", "variant": "secondary" },
