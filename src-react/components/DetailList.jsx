@@ -39,9 +39,11 @@ export default function DetailList( {
 	layout = 'stacked',
 } ) {
 	const inline = layout === 'inline';
-	// Same rule as StatsGrid: an item must be an object. A null item would
-	// crash the whole list; a string would draw a label-less pair.
-	const shown = items.filter(
+	// Same rule as StatsGrid: the list must be an array (the default [] only
+	// covers undefined, not a null REST field) and an item must be an object.
+	// A null item would crash the whole list; a string would draw a
+	// label-less pair.
+	const shown = ( Array.isArray( items ) ? items : [] ).filter(
 		( item ) => item !== null && typeof item === 'object'
 	);
 

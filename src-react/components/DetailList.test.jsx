@@ -190,4 +190,21 @@ describe( 'DetailList -- label/value pairs', () => {
 			].map( ( dt ) => dt.textContent )
 		).toEqual( [ 'City', 'Zip' ] );
 	} );
+
+	// The default [] only covers undefined; null (a REST field that is null)
+	// or any non-array used to crash the render on `.filter`.
+	test.each( [ null, {}, 'items' ] )(
+		'treats a non-array items prop (%p) as an empty list',
+		( items ) => {
+			const { container } = render(
+				<DetailList emptyText="—" items={ items } />
+			);
+			expect(
+				container.querySelector( 'dl.mhmui-detail-list' )
+			).not.toBeNull();
+			expect(
+				container.querySelectorAll( '.mhmui-detail-list__item' )
+			).toHaveLength( 0 );
+		}
+	);
 } );

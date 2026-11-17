@@ -74,7 +74,9 @@ export default function StatsGrid( { cards, columns = 4 } ) {
 	// Twin of the PHP renderer's is_array() skip: a decoded PHP array is a JS
 	// object or array, anything else ('junk', null) is not a card. Counting
 	// the drawn cards, not the entries, keeps the pairs class in step too.
-	const drawn = cards.filter(
+	// A missing, null or non-array cards prop is no cards (PHP types the
+	// argument `array`, so it never gets that far there).
+	const drawn = ( Array.isArray( cards ) ? cards : [] ).filter(
 		( card ) => card !== null && typeof card === 'object'
 	);
 	return (

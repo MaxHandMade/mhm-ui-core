@@ -672,4 +672,18 @@ describe( 'the visual kit renders only what it is given', () => {
 
 		expect( container.querySelector( '.dashicons-car' ) ).not.toBeNull();
 	} );
+
+	// cards had no default at all: leaving it out, or passing null or a
+	// non-array, crashed the render on `.filter`. It is now an empty grid.
+	// (StatsGrid.php types `array $cards`, so PHP rejects this at the call.)
+	test.each( [ undefined, null, {}, 'cards' ] )(
+		'StatsGrid treats a missing or non-array cards prop (%p) as no cards',
+		( cards ) => {
+			const { container } = render( <StatsGrid cards={ cards } /> );
+			expect( container.firstChild.className ).toBe( 'mhmui-stats-grid' );
+			expect(
+				container.querySelectorAll( '.mhmui-stat-card' )
+			).toHaveLength( 0 );
+		}
+	);
 } );
