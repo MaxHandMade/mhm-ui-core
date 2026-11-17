@@ -17,6 +17,9 @@ export default function Pagination( {
 	variant = 'inline',
 	summary,
 } ) {
+	// labels has no default: a missing or null prop must not crash the
+	// render. The controls still draw, unlabelled.
+	const text = labels && typeof labels === 'object' ? labels : {};
 	const atStart = page <= 1;
 	const atEnd = page >= totalPages;
 
@@ -26,7 +29,7 @@ export default function Pagination( {
 		return (
 			<nav
 				className="mhmui-pagination mhmui-pagination--footer"
-				aria-label={ labels.navigation ?? '' }
+				aria-label={ text.navigation ?? '' }
 			>
 				<span className="mhmui-pagination__summary">{ summary }</span>
 				<div className="mhmui-pagination__controls">
@@ -37,10 +40,10 @@ export default function Pagination( {
 						onClick={ () => onChange( page - 1 ) }
 					>
 						<span aria-hidden="true">‹</span>
-						{ labels.previous }
+						{ text.previous }
 					</button>
 					<span className="mhmui-pagination__status">
-						{ labels.page } { page } { labels.of }{ ' ' }
+						{ text.page } { page } { text.of }{ ' ' }
 						{ Math.max( 1, totalPages ) }
 					</span>
 					<button
@@ -49,7 +52,7 @@ export default function Pagination( {
 						disabled={ atEnd }
 						onClick={ () => onChange( page + 1 ) }
 					>
-						{ labels.next }
+						{ text.next }
 						<span aria-hidden="true">›</span>
 					</button>
 				</div>
@@ -58,20 +61,17 @@ export default function Pagination( {
 	}
 
 	return (
-		<nav
-			className="mhmui-pagination"
-			aria-label={ labels.navigation ?? '' }
-		>
+		<nav className="mhmui-pagination" aria-label={ text.navigation ?? '' }>
 			<button
 				type="button"
 				className="button mhmui-pagination__button"
 				disabled={ atStart }
 				onClick={ () => onChange( page - 1 ) }
 			>
-				{ labels.previous }
+				{ text.previous }
 			</button>
 			<span className="mhmui-pagination__status">
-				{ page } { labels.of } { totalPages }
+				{ page } { text.of } { totalPages }
 			</span>
 			<button
 				type="button"
@@ -79,7 +79,7 @@ export default function Pagination( {
 				disabled={ atEnd }
 				onClick={ () => onChange( page + 1 ) }
 			>
-				{ labels.next }
+				{ text.next }
 			</button>
 		</nav>
 	);

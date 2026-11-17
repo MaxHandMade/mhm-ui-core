@@ -110,4 +110,27 @@ describe( 'Pagination', () => {
 			'‹'
 		);
 	} );
+
+	// labels had no default: leaving it out or passing null crashed the
+	// render on `labels.navigation`, in both variants. The controls still
+	// render (unlabelled -- the consumer's bug, but not a blank screen).
+	test.each( [
+		[ 'inline', undefined ],
+		[ 'inline', null ],
+		[ 'footer', undefined ],
+		[ 'footer', 'labels' ],
+	] )( '%s variant renders without labels (%p)', ( variant, value ) => {
+		const { container } = render(
+			<Pagination
+				page={ 1 }
+				totalPages={ 2 }
+				onChange={ () => {} }
+				labels={ value }
+				variant={ variant }
+			/>
+		);
+		expect(
+			container.querySelectorAll( 'nav.mhmui-pagination button' )
+		).toHaveLength( 2 );
+	} );
 } );
