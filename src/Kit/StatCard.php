@@ -169,7 +169,9 @@ final class StatCard {
 		}
 		$out = '';
 		foreach ( $data as $key => $value ) {
-			if ( ! is_string( $key ) || 1 !== preg_match( self::DATA_KEY, $key ) || ! ( is_string( $value ) || is_int( $value ) || is_float( $value ) ) ) {
+			// PHP stores a digit-only key ('7') as int 7; the JSX twin sees '7'.
+			$key = (string) $key;
+			if ( 1 !== preg_match( self::DATA_KEY, $key ) || ! ( is_string( $value ) || is_int( $value ) || is_float( $value ) ) ) {
 				continue;
 			}
 			$out .= ' data-' . $key . '="' . esc_attr( (string) $value ) . '"';

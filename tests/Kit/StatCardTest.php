@@ -252,6 +252,16 @@ final class StatCardTest extends TestCase {
 		self::assertSame( 2, substr_count( $html, ' data-' ) );
 	}
 
+	/**
+	 * PHP turns the array key '7' into the int 7; the pattern allows a
+	 * digit-only key, and the JSX twin emits `data-7`, so PHP must too.
+	 */
+	public function test_digit_only_data_key_renders_like_the_jsx_twin(): void {
+		$html = StatCard::render_html( array( 'label' => 'L', 'value' => '1', 'data' => array( '7' => 'x', '0' => 'y' ) ) );
+		self::assertStringContainsString( 'data-7="x"', $html );
+		self::assertStringContainsString( 'data-0="y"', $html );
+	}
+
 	public function test_wrapper_function_is_the_public_api(): void {
 		self::assertSame(
 			StatCard::render_html( array( 'label' => 'L', 'value' => '1' ) ),
