@@ -168,4 +168,26 @@ describe( 'DetailList -- label/value pairs', () => {
 				.textContent
 		).toBe( 'TR**' );
 	} );
+
+	// Same rule as StatsGrid since 0.23.2: an item must be an object. A null
+	// item used to crash the whole list (Cannot read properties of null) and a
+	// string drew a label-less pair showing emptyText.
+	test( 'skips items that are not objects instead of crashing', () => {
+		const { container } = render(
+			<DetailList
+				emptyText="—"
+				items={ [
+					{ label: 'City', value: 'Muğla' },
+					null,
+					'junk',
+					{ label: 'Zip', value: '48000' },
+				] }
+			/>
+		);
+		expect(
+			[
+				...container.querySelectorAll( '.mhmui-detail-list__label' ),
+			].map( ( dt ) => dt.textContent )
+		).toEqual( [ 'City', 'Zip' ] );
+	} );
 } );

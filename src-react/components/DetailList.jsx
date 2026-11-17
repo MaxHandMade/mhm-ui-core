@@ -39,6 +39,11 @@ export default function DetailList( {
 	layout = 'stacked',
 } ) {
 	const inline = layout === 'inline';
+	// Same rule as StatsGrid: an item must be an object. A null item would
+	// crash the whole list; a string would draw a label-less pair.
+	const shown = items.filter(
+		( item ) => item !== null && typeof item === 'object'
+	);
 
 	return (
 		<dl
@@ -51,7 +56,7 @@ export default function DetailList( {
 				inline ? undefined : { '--mhmui-columns': ceiling( columns ) }
 			}
 		>
-			{ items.map( ( item, index ) => {
+			{ shown.map( ( item, index ) => {
 				const empty = isEmpty( item.value );
 				const tone =
 					! empty && TONES.includes( item.tone ) ? item.tone : null;
