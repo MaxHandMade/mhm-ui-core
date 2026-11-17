@@ -203,6 +203,55 @@ describe( 'the visual kit renders only what it is given', () => {
 		);
 	} );
 
+	// Twin of StatsGridTest::test_one_card_per_array_entry_and_non_arrays_skipped
+	// and ::test_pairs_counts_the_cards_it_draws_not_the_entries_it_was_given --
+	// same inputs. PHP skips anything is_array() rejects; a decoded PHP array is
+	// a JS object or array, so everything else is skipped here too.
+	test( 'StatsGrid skips entries that are not card objects, like PHP', () => {
+		const { container } = render(
+			<StatsGrid
+				cards={ [
+					{ label: 'A', value: '1' },
+					'junk',
+					null,
+					{ label: 'B', value: '2' },
+				] }
+				columns={ 2 }
+			/>
+		);
+		expect( container.querySelectorAll( '.mhmui-stat-card' ) ).toHaveLength(
+			2
+		);
+	} );
+
+	test( 'StatsGrid counts the cards it draws, not the entries it was given', () => {
+		const card = ( label ) => ( { label, value: '1' } );
+		const four = render(
+			<StatsGrid
+				cards={ [
+					card( 'A' ),
+					card( 'B' ),
+					card( 'C' ),
+					'junk',
+					card( 'D' ),
+				] }
+				columns={ 4 }
+			/>
+		);
+		expect( four.container.firstChild.className ).toBe(
+			'mhmui-stats-grid mhmui-stats-grid--pairs'
+		);
+		const three = render(
+			<StatsGrid
+				cards={ [ card( 'A' ), card( 'B' ), card( 'C' ), 'junk' ] }
+				columns={ 4 }
+			/>
+		);
+		expect( three.container.firstChild.className ).toBe(
+			'mhmui-stats-grid'
+		);
+	} );
+
 	// StatCard is the kit's ONLY key-figure component. KpiBox was a second one
 	// whose only difference was which props it refused (no icon, no sub/delta,
 	// a different default tone) -- a fork that would have drifted screen to

@@ -71,16 +71,22 @@ export function pairs( count, ceiling ) {
 
 export default function StatsGrid( { cards, columns = 4 } ) {
 	const ceiling = columnCeiling( columns );
+	// Twin of the PHP renderer's is_array() skip: a decoded PHP array is a JS
+	// object or array, anything else ('junk', null) is not a card. Counting
+	// the drawn cards, not the entries, keeps the pairs class in step too.
+	const drawn = cards.filter(
+		( card ) => card !== null && typeof card === 'object'
+	);
 	return (
 		<div
 			className={
-				pairs( cards.length, ceiling )
+				pairs( drawn.length, ceiling )
 					? 'mhmui-stats-grid mhmui-stats-grid--pairs'
 					: 'mhmui-stats-grid'
 			}
 			style={ { '--mhmui-columns': ceiling } }
 		>
-			{ cards.map( ( card ) => (
+			{ drawn.map( ( card ) => (
 				<StatCard key={ card.label } { ...card } />
 			) ) }
 		</div>
