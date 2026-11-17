@@ -58,7 +58,139 @@ final class ShippedSurfaceTest extends TestCase {
 			$code
 		);
 
-		return 0 === $code && array() !== array_filter( $out, static fn( $l ) => '' !== trim( $l ) );
+		// A failed `git status` cannot vouch for a clean file: count it as dirty.
+		return 0 !== $code || array() !== array_filter( $out, static fn( $l ) => '' !== trim( $l ) );
+	}
+
+	/**
+	 * The export-ignore attribute git resolves for a path.
+	 *
+	 * `git check-attr` answers for paths that do not exist yet, which is the
+	 * point: the allowlist must already exclude a file nobody has created.
+	 */
+	private function export_ignore_of( string $path ): string {
+		$root = dirname( __DIR__ );
+		exec(
+			'git -C ' . escapeshellarg( $root ) . ' check-attr export-ignore -- ' . escapeshellarg( $path ),
+			$out,
+			$code
+		);
+		self::assertSame( 0, $code, "git check-attr failed for {$path}" );
+
+		return trim( (string) substr( (string) ( $out[0] ?? '' ), strlen( "{$path}: export-ignore: " ) ) );
+	}
+
+	/**
+	 * The root of the archive is an allowlist: a file or directory nobody has
+	 * named stays out by default. Under the old blacklist each of these would
+	 * have shipped to every consumer's vendor/mhm/ui-core in silence.
+	 *
+	 * Directories are asked by their own name: git archive checks the
+	 * directory and skips it whole, while `check-attr newdir/x.php` reports
+	 * the file's attribute, which `/*` (no slash inside) never sets.
+	 */
+	public function test_an_unnamed_root_entry_does_not_ship(): void {
+		foreach ( array( 'NOTES.md', '.envrc', 'newdir', 'build', '.superpowers' ) as $path ) {
+			self::assertSame( 'set', $this->export_ignore_of( $path ), "{$path} would ship: the root is not an allowlist" );
+		}
+	}
+
+	/**
+	 * Negative control for the allowlist: every root entry that must ship is
+	 * still let through. Too broad an exclusion fails silently otherwise.
+	 */
+	public function test_the_allowlisted_root_entries_still_ship(): void {
+		$must_ship = array(
+			'LICENSE',
+			'README.md',
+			'README-tr.md',
+			'bootstrap.php',
+			'register.php',
+			'composer.json',
+			'package.json',
+			// Directories by their own name, as git archive asks: a file
+			// path inside them would read "unspecified" even with the
+			// directory closed (mutation-checked: removing `/src
+			// -export-ignore` left a file-path probe green).
+			'src',
+			'src-react',
+			'assets',
+		);
+		foreach ( $must_ship as $path ) {
+			self::assertNotSame( 'set', $this->export_ignore_of( $path ), "{$path} must ship" );
+		}
+	}
+
+	/**
+	 * The exact shipped list, by name. A count alone tells you the surface
+	 * moved; this tells you which file moved it. Inside src/, src-react/ and
+	 * assets/ this list IS the allowlist -- a git pattern like `/src/**`
+	 * would also match the subdirectories and git archive would skip them
+	 * whole, so the inner allowlist lives here instead of in .gitattributes.
+	 *
+	 * When it breaks: run `git archive HEAD | tar -t | grep -v '/$' | sort`,
+	 * justify every new entry, then update tests/shipped-files.txt.
+	 */
+	public function test_the_shipped_files_match_the_manifest_by_name(): void {
+		self::assertFalse( $this->attributes_are_dirty(), '.gitattributes has uncommitted changes; commit them first.' );
+
+		$manifest = file( __DIR__ . '/shipped-files.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES );
+		self::assertIsArray( $manifest );
+
+		$actual = $this->shipped_files();
+		sort( $actual );
+		sort( $manifest );
+
+		self::assertSame( array(), array_values( array_diff( $actual, $manifest ) ), 'shipped but not in tests/shipped-files.txt' );
+		self::assertSame( array(), array_values( array_diff( $manifest, $actual ) ), 'in tests/shipped-files.txt but no longer shipped' );
+	}
+
+	/**
+	 * Composer's own archiver (`composer archive`, Satis, Private Packagist)
+	 * does NOT run git archive: it parses .gitattributes itself, and its `/*`
+	 * does not match dotfiles. Measured 2026-11-17 (Fable, PR #55): with only
+	 * `/*` closing the root it shipped .github/, .eslintrc.js, .gitignore and
+	 * friends -- 83 files where git archive gave 76. Only Composer can measure
+	 * Composer, so this runs it on a clean clone of HEAD (no node_modules,
+	 * no untracked files) and holds it to the same manifest.
+	 */
+	public function test_composer_archive_matches_the_manifest(): void {
+		// The clone is of HEAD: an uncommitted attributes edit is invisible here.
+		self::assertFalse( $this->attributes_are_dirty(), '.gitattributes has uncommitted changes; commit them first.' );
+
+		$root  = dirname( __DIR__ );
+		$work  = sys_get_temp_dir() . '/mhmui-surface-' . bin2hex( random_bytes( 4 ) );
+		$clone = $work . '/clone';
+		$out   = $work . '/out';
+
+		try {
+			exec( 'git clone -q --local ' . escapeshellarg( $root ) . ' ' . escapeshellarg( $clone ) . ' 2>&1', $log, $code );
+			self::assertSame( 0, $code, 'git clone failed: ' . implode( "\n", $log ) );
+
+			exec(
+				'composer archive -q --format=tar --dir=' . escapeshellarg( $out ) . ' --file=a --working-dir=' . escapeshellarg( $clone ) . ' 2>&1',
+				$log,
+				$code
+			);
+			self::assertSame( 0, $code, 'composer archive failed: ' . implode( "\n", $log ) );
+
+			// PharData, not tar: Windows tar reads "C:" as a remote host name.
+			$tar    = new \PharData( $out . '/a.tar' );
+			$prefix = 'phar://' . str_replace( '\\', '/', $tar->getPath() ) . '/';
+			$listed = array();
+			foreach ( new \RecursiveIteratorIterator( $tar ) as $file ) {
+				$listed[] = substr( str_replace( '\\', '/', $file->getPathname() ), strlen( $prefix ) );
+			}
+			unset( $tar );
+		} finally {
+			exec( ( '\\' === DIRECTORY_SEPARATOR ? 'rmdir /s /q ' : 'rm -rf ' ) . escapeshellarg( $work ) );
+		}
+
+		$actual   = $listed;
+		$manifest = file( __DIR__ . '/shipped-files.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES );
+
+		self::assertSame( array(), array_values( array_diff( $actual, $manifest ) ), 'composer archive ships what git archive does not' );
+		self::assertSame( array(), array_values( array_diff( $manifest, $actual ) ), 'composer archive drops a shipped file' );
 	}
 
 	public function test_the_gate_scripts_do_not_ship(): void {
