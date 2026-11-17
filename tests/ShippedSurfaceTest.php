@@ -61,6 +61,85 @@ final class ShippedSurfaceTest extends TestCase {
 		return 0 === $code && array() !== array_filter( $out, static fn( $l ) => '' !== trim( $l ) );
 	}
 
+	/**
+	 * The export-ignore attribute git resolves for a path.
+	 *
+	 * `git check-attr` answers for paths that do not exist yet, which is the
+	 * point: the allowlist must already exclude a file nobody has created.
+	 */
+	private function export_ignore_of( string $path ): string {
+		$root = dirname( __DIR__ );
+		exec(
+			'git -C ' . escapeshellarg( $root ) . ' check-attr export-ignore -- ' . escapeshellarg( $path ),
+			$out,
+			$code
+		);
+		self::assertSame( 0, $code, "git check-attr failed for {$path}" );
+
+		return trim( (string) substr( (string) ( $out[0] ?? '' ), strlen( "{$path}: export-ignore: " ) ) );
+	}
+
+	/**
+	 * The root of the archive is an allowlist: a file or directory nobody has
+	 * named stays out by default. Under the old blacklist each of these would
+	 * have shipped to every consumer's vendor/mhm/ui-core in silence.
+	 *
+	 * Directories are asked by their own name: git archive checks the
+	 * directory and skips it whole, while `check-attr newdir/x.php` reports
+	 * the file's attribute, which `/*` (no slash inside) never sets.
+	 */
+	public function test_an_unnamed_root_entry_does_not_ship(): void {
+		foreach ( array( 'NOTES.md', '.envrc', 'newdir', 'build', '.superpowers' ) as $path ) {
+			self::assertSame( 'set', $this->export_ignore_of( $path ), "{$path} would ship: the root is not an allowlist" );
+		}
+	}
+
+	/**
+	 * Negative control for the allowlist: every root entry that must ship is
+	 * still let through. Too broad an exclusion fails silently otherwise.
+	 */
+	public function test_the_allowlisted_root_entries_still_ship(): void {
+		$must_ship = array(
+			'LICENSE',
+			'README.md',
+			'README-tr.md',
+			'bootstrap.php',
+			'register.php',
+			'composer.json',
+			'package.json',
+			'src/Kit/StatCard.php',
+			'src-react/components/Button.jsx',
+			'assets/react/admin.css',
+		);
+		foreach ( $must_ship as $path ) {
+			self::assertNotSame( 'set', $this->export_ignore_of( $path ), "{$path} must ship" );
+		}
+	}
+
+	/**
+	 * The exact shipped list, by name. A count alone tells you the surface
+	 * moved; this tells you which file moved it. Inside src/, src-react/ and
+	 * assets/ this list IS the allowlist -- a git pattern like `/src/**`
+	 * would also match the subdirectories and git archive would skip them
+	 * whole, so the inner allowlist lives here instead of in .gitattributes.
+	 *
+	 * When it breaks: run `git archive HEAD | tar -t | grep -v '/$' | sort`,
+	 * justify every new entry, then update tests/shipped-files.txt.
+	 */
+	public function test_the_shipped_files_match_the_manifest_by_name(): void {
+		self::assertFalse( $this->attributes_are_dirty(), '.gitattributes has uncommitted changes; commit them first.' );
+
+		$manifest = file( __DIR__ . '/shipped-files.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES );
+		self::assertIsArray( $manifest );
+
+		$actual = $this->shipped_files();
+		sort( $actual );
+		sort( $manifest );
+
+		self::assertSame( array(), array_values( array_diff( $actual, $manifest ) ), 'shipped but not in tests/shipped-files.txt' );
+		self::assertSame( array(), array_values( array_diff( $manifest, $actual ) ), 'in tests/shipped-files.txt but no longer shipped' );
+	}
+
 	public function test_the_gate_scripts_do_not_ship(): void {
 		foreach ( $this->shipped_files() as $path ) {
 			self::assertStringStartsNotWith( 'bin/', $path, "bin/ must not ship: {$path}" );

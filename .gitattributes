@@ -8,58 +8,52 @@
 *.gif binary
 *.ico binary
 
-# Keep development-only files out of the composer/npm archive. A consumer that
-# installs this package gets vendor/mhm/ui-core inside its own tree, and its
-# gates lint what they find there: Rentiva's check-js-correctness reported 95
-# no-undef findings from THIS package's *.test.js files, because jest globals
-# are undefined in the consumer's ESLint config. The package has no business
-# shipping its own test suite to a consumer's vendor directory.
-/tests/            export-ignore
-/.github/          export-ignore
-*.test.js          export-ignore
-*.test.jsx         export-ignore
-/jest.config.js    export-ignore
-/.eslintrc.js      export-ignore
-/phpcs.xml         export-ignore
-/phpstan.neon      export-ignore
-/phpunit.xml       export-ignore
-/package-lock.json export-ignore
-/.gitattributes    export-ignore
-/bin/              export-ignore
-/bin/check-error-prefix.php export-ignore
-/bin/check-no-i18n.php export-ignore
-/.stylelintrc.json export-ignore
-/docker/           export-ignore
-/phpunit-integration.xml export-ignore
+# ---------------------------------------------------------------------------
+# SHIPPED SURFACE: AN ALLOWLIST, NOT A BLACKLIST
+#
+# Composer's archive and a GitHub codeload/release archive both go through
+# `git archive`, which honours export-ignore. What survives lands in every
+# consumer's vendor/mhm/ui-core. The root is closed by default and only the
+# entries below are opened again, so a file nobody named -- a notes file, a
+# new tool config, a window card, a build/ directory -- stays out on its own
+# instead of shipping in silence until someone notices and adds a line.
+#
+# Inside src/, src-react/ and assets/ the allowlist is tests/shipped-files.txt
+# (ShippedSurfaceTest compares the archive to it by name). A git pattern such
+# as `/src/**` cannot do that job: it also matches the subdirectories, and git
+# archive skips an export-ignored directory whole.
+#
+# This does NOT reach the npm tarball -- `npm pack` ignores export-ignore --
+# so package.json carries its own allowlist in "files".
+# ---------------------------------------------------------------------------
+/*                export-ignore
 
-# gate 6's CI contract (bin/dump-kit-classes.php writes it, tests/Gate/kit-
-# parity.test.js and tests/ShippedSurfaceTest.php read it) -- nothing at
-# runtime reads it, so it has no business in a consumer's vendor tree either.
-# This line covers Composer's archive and a GitHub codeload/release archive
-# (both read export-ignore via `git archive`). It does NOT reach the npm
-# tarball -- `npm pack` ignores export-ignore entirely -- so the npm side is
-# excluded separately, in package.json's "files" (!src-react/kit-classes.json).
+/LICENSE          -export-ignore
+/README.md        -export-ignore
+/README-tr.md     -export-ignore
+/bootstrap.php    -export-ignore
+/register.php     -export-ignore
+/composer.json    -export-ignore
+/src              -export-ignore
+/src-react        -export-ignore
+/assets           -export-ignore
+
+# package.json ships on purpose. It looks like tooling, but webpack reads the
+# nearest package.json for "sideEffects" when it bundles src-react/ -- the
+# consumer imports those modules by relative path into its own build. Dropping
+# it would silently disable tree shaking for this package's modules. The
+# consumer's .distignore keeps it out of the plugin ZIP; by then the bundle is
+# already built.
+/package.json     -export-ignore
+
+# Inside an allowlisted directory, test files stay out: Rentiva's
+# check-js-correctness reported 95 no-undef findings from this package's
+# *.test.js files, because jest globals are undefined in a consumer's ESLint
+# config.
+*.test.js         export-ignore
+*.test.jsx        export-ignore
+
+# Gate 6's CI contract (bin/dump-kit-classes.php writes it, tests/Gate/kit-
+# parity.test.js and tests/ShippedSurfaceTest.php read it). Nothing at runtime
+# reads it. package.json "files" excludes it from the npm side.
 /src-react/kit-classes.json export-ignore
-
-# .gitignore has no role in a consumer's tree: it is git metadata for THIS
-# repository, and a consumer installs this package as files, not as a clone.
-# It was the last dev-only file still landing in vendor/mhm/ui-core, which
-# meant every consumer's .distignore had to name it to keep it out of the ZIP.
-# Excluding it here fixes that once, at the source, instead of once per product.
-/.gitignore        export-ignore
-
-# The window cards are harness metadata for THIS repository -- CLAUDE.md for
-# Claude Code, AGENTS.md for Codex. A consumer installs this package as files
-# into vendor/mhm/ui-core, where a card pointing at this repo's memory notebook
-# means nothing. CLAUDE.md landing in the archive is what pushed the shipped
-# surface from 52 to 53 and turned CI red on 2026-09-04; AGENTS.md is named
-# here too so the same break cannot happen the day that card gets tracked.
-/CLAUDE.md         export-ignore
-/AGENTS.md         export-ignore
-
-# package.json deliberately does NOT get export-ignore. It looks like tooling,
-# but webpack reads the nearest package.json for "sideEffects": false when it
-# bundles src-react/ — the consumer imports those modules by relative path into
-# its own build. Dropping it from the archive would silently disable tree
-# shaking for this package's modules. The consumer's .distignore is the right
-# place to keep it out of the shipped ZIP: by then the bundle is already built.
