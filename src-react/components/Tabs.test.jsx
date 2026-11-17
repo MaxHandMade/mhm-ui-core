@@ -258,4 +258,17 @@ describe( 'Tabs -- underline variant (0.16.0)', () => {
 		);
 		expect( container.querySelector( '.mhmui-tabs__badge' ) ).toBeNull();
 	} );
+
+	// Twin of Tabs.php: is_array( $props['items'] ) ? ... : array(). A null or
+	// non-array items prop used to crash the render on `.filter`.
+	test.each( [ null, {}, 'tabs', 3 ] )(
+		'treats a non-array items prop (%p) as no tabs, like PHP',
+		( items ) => {
+			const { container } = render( <Tabs items={ items } /> );
+			expect(
+				container.querySelector( 'nav.mhmui-tabs' )
+			).not.toBeNull();
+			expect( container.querySelectorAll( 'a' ) ).toHaveLength( 0 );
+		}
+	);
 } );

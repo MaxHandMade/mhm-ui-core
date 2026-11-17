@@ -74,7 +74,7 @@ export default function Tabs( {
 			}
 			aria-label={ label ? label : undefined }
 		>
-			{ items
+			{ ( Array.isArray( items ) ? items : [] )
 				.filter(
 					( item ) =>
 						item &&
