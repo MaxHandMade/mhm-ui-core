@@ -107,9 +107,13 @@ final class ShippedSurfaceTest extends TestCase {
 			'register.php',
 			'composer.json',
 			'package.json',
-			'src/Kit/StatCard.php',
-			'src-react/components/Button.jsx',
-			'assets/react/admin.css',
+			// Directories by their own name, as git archive asks: a file
+			// path inside them would read "unspecified" even with the
+			// directory closed (mutation-checked: removing `/src
+			// -export-ignore` left a file-path probe green).
+			'src',
+			'src-react',
+			'assets',
 		);
 		foreach ( $must_ship as $path ) {
 			self::assertNotSame( 'set', $this->export_ignore_of( $path ), "{$path} must ship" );
