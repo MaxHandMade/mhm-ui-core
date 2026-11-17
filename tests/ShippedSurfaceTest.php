@@ -58,7 +58,8 @@ final class ShippedSurfaceTest extends TestCase {
 			$code
 		);
 
-		return 0 === $code && array() !== array_filter( $out, static fn( $l ) => '' !== trim( $l ) );
+		// A failed `git status` cannot vouch for a clean file: count it as dirty.
+		return 0 !== $code || array() !== array_filter( $out, static fn( $l ) => '' !== trim( $l ) );
 	}
 
 	/**
@@ -154,6 +155,9 @@ final class ShippedSurfaceTest extends TestCase {
 	 * no untracked files) and holds it to the same manifest.
 	 */
 	public function test_composer_archive_matches_the_manifest(): void {
+		// The clone is of HEAD: an uncommitted attributes edit is invisible here.
+		self::assertFalse( $this->attributes_are_dirty(), '.gitattributes has uncommitted changes; commit them first.' );
+
 		$root  = dirname( __DIR__ );
 		$work  = sys_get_temp_dir() . '/mhmui-surface-' . bin2hex( random_bytes( 4 ) );
 		$clone = $work . '/clone';
