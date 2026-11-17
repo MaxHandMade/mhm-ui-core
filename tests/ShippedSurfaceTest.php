@@ -144,6 +144,51 @@ final class ShippedSurfaceTest extends TestCase {
 		self::assertSame( array(), array_values( array_diff( $manifest, $actual ) ), 'in tests/shipped-files.txt but no longer shipped' );
 	}
 
+	/**
+	 * Composer's own archiver (`composer archive`, Satis, Private Packagist)
+	 * does NOT run git archive: it parses .gitattributes itself, and its `/*`
+	 * does not match dotfiles. Measured 2026-11-17 (Fable, PR #55): with only
+	 * `/*` closing the root it shipped .github/, .eslintrc.js, .gitignore and
+	 * friends -- 83 files where git archive gave 76. Only Composer can measure
+	 * Composer, so this runs it on a clean clone of HEAD (no node_modules,
+	 * no untracked files) and holds it to the same manifest.
+	 */
+	public function test_composer_archive_matches_the_manifest(): void {
+		$root  = dirname( __DIR__ );
+		$work  = sys_get_temp_dir() . '/mhmui-surface-' . bin2hex( random_bytes( 4 ) );
+		$clone = $work . '/clone';
+		$out   = $work . '/out';
+
+		try {
+			exec( 'git clone -q --local ' . escapeshellarg( $root ) . ' ' . escapeshellarg( $clone ) . ' 2>&1', $log, $code );
+			self::assertSame( 0, $code, 'git clone failed: ' . implode( "\n", $log ) );
+
+			exec(
+				'composer archive -q --format=tar --dir=' . escapeshellarg( $out ) . ' --file=a --working-dir=' . escapeshellarg( $clone ) . ' 2>&1',
+				$log,
+				$code
+			);
+			self::assertSame( 0, $code, 'composer archive failed: ' . implode( "\n", $log ) );
+
+			// PharData, not tar: Windows tar reads "C:" as a remote host name.
+			$tar    = new \PharData( $out . '/a.tar' );
+			$prefix = 'phar://' . str_replace( '\\', '/', $tar->getPath() ) . '/';
+			$listed = array();
+			foreach ( new \RecursiveIteratorIterator( $tar ) as $file ) {
+				$listed[] = substr( str_replace( '\\', '/', $file->getPathname() ), strlen( $prefix ) );
+			}
+			unset( $tar );
+		} finally {
+			exec( ( '\\' === DIRECTORY_SEPARATOR ? 'rmdir /s /q ' : 'rm -rf ' ) . escapeshellarg( $work ) );
+		}
+
+		$actual   = $listed;
+		$manifest = file( __DIR__ . '/shipped-files.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES );
+
+		self::assertSame( array(), array_values( array_diff( $actual, $manifest ) ), 'composer archive ships what git archive does not' );
+		self::assertSame( array(), array_values( array_diff( $manifest, $actual ) ), 'composer archive drops a shipped file' );
+	}
+
 	public function test_the_gate_scripts_do_not_ship(): void {
 		foreach ( $this->shipped_files() as $path ) {
 			self::assertStringStartsNotWith( 'bin/', $path, "bin/ must not ship: {$path}" );

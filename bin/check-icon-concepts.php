@@ -1,7 +1,7 @@
 <?php
 /**
  * CLI wrapper for the icon-concept gate. THIS FILE DOES NOT SHIP
- * (.gitattributes: /bin/ export-ignore) -- a consumer requires
+ * (.gitattributes closes the root; bin/ is not on its allowlist) -- a consumer requires
  * src/Kit/IconConceptScanner.php directly; the README shows how.
  *
  *   php bin/check-icon-concepts.php [--anchor=NAME]... [--expect-raw=N] <path>...

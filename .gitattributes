@@ -11,9 +11,12 @@
 # ---------------------------------------------------------------------------
 # SHIPPED SURFACE: AN ALLOWLIST, NOT A BLACKLIST
 #
-# Composer's archive and a GitHub codeload/release archive both go through
-# `git archive`, which honours export-ignore. What survives lands in every
-# consumer's vendor/mhm/ui-core. The root is closed by default and only the
+# Two archivers read these lines. A GitHub codeload/release archive runs
+# `git archive`; `composer archive` (and Satis / Private Packagist) parses this
+# file itself -- and its `/*` does not match dotfiles, which is why `/.*` is a
+# line of its own (Fable, PR #55: without it .github/ and the lint configs
+# shipped, 83 files against git's 76). ShippedSurfaceTest measures both. What
+# survives lands in every consumer's vendor/mhm/ui-core. The root is closed by default and only the
 # entries below are opened again, so a file nobody named -- a notes file, a
 # new tool config, a window card, a build/ directory -- stays out on its own
 # instead of shipping in silence until someone notices and adds a line.
@@ -27,6 +30,7 @@
 # so package.json carries its own allowlist in "files".
 # ---------------------------------------------------------------------------
 /*                export-ignore
+/.*               export-ignore
 
 /LICENSE          -export-ignore
 /README.md        -export-ignore
