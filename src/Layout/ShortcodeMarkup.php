@@ -40,6 +40,12 @@ final class ShortcodeMarkup {
 	 * own delimiter, so a value holding both quote kinds has no correct
 	 * spelling and is refused.
 	 *
+	 * An already-encoded quote counts as the quote it encodes: esc_attr()
+	 * keeps a valid entity as it is, and 7.2 kses decodes it in post text the
+	 * same way, so `&quot;` would end a double-quoted attribute just as `"`
+	 * does. Such entities are written as the raw character, which is what a
+	 * 7.2 shortcode receives for them anyway.
+	 *
 	 * @param string               $tag  Shortcode tag, without brackets.
 	 * @param array<string,scalar> $atts Attributes.
 	 *
@@ -50,7 +56,7 @@ final class ShortcodeMarkup {
 
 		foreach ( $atts as $key => $val ) {
 			$key = esc_attr( (string) $key );
-			$val = (string) $val;
+			$val = self::decode_quotes( (string) $val );
 
 			if ( ! str_contains( $val, '"' ) ) {
 				$string .= sprintf( ' %s="%s"', $key, esc_attr( $val ) );
@@ -67,5 +73,18 @@ final class ShortcodeMarkup {
 		}
 
 		return $string . ']';
+	}
+
+	/**
+	 * Turn every character reference an HTML5 parser reads as " or ' into
+	 * that character: named (any case, `&quot` also without its semicolon, as
+	 * HTML5 allows in text), decimal and hexadecimal with any leading zeros.
+	 *
+	 * @param string $value Attribute value.
+	 */
+	private static function decode_quotes( string $value ): string {
+		$value = (string) preg_replace( '/&(?:quot|#0*34(?![0-9])|#x0*22(?![0-9a-f]));?/i', '"', $value );
+
+		return (string) preg_replace( '/&(?:apos;|#0*39(?![0-9]);?|#x0*27(?![0-9a-f]);?)/i', "'", $value );
 	}
 }

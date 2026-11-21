@@ -38,4 +38,8 @@ final class ShortcodeMarkupRoundTripTest extends WP_UnitTestCase {
 	public function test_a_plain_value_reaches_the_shortcode_intact(): void {
 		self::assertSame( array( 'title' => 'Welcome home' ), $this->received( 'Welcome home' ) );
 	}
+
+	public function test_an_encoded_double_quote_in_a_value_reaches_the_shortcode_as_a_quote(): void {
+		self::assertSame( array( 'title' => 'p "q" r"' ), $this->received( 'p &quot;q&quot; r&#34;' ) );
+	}
 }

@@ -54,4 +54,30 @@ final class ShortcodeMarkupTest extends TestCase {
 
 		ShortcodeMarkup::to_shortcode( 'hero', array( 'title' => "say \"it's\"" ) );
 	}
+
+	public function test_an_encoded_double_quote_counts_as_a_double_quote(): void {
+		// esc_attr() keeps a valid entity as it is, and 7.2 kses decodes
+		// &quot; / &#34; / &#x22; to " in post text: an already-encoded quote
+		// would close a double-quoted attribute just as a raw one does.
+		$this->assertSame(
+			"[hero a='p \"q\" r\" s\" t\";u v\"w']",
+			ShortcodeMarkup::to_shortcode( 'hero', array( 'a' => 'p &quot;q&QUOT; r&#34; s&#x0022; t&quot;;u v&quotw' ) )
+		);
+	}
+
+	public function test_an_encoded_apostrophe_beside_a_double_quote_is_refused(): void {
+		// The same decoding turns &#039; into ' inside the single quotes.
+		$this->expectException( \InvalidArgumentException::class );
+
+		ShortcodeMarkup::to_shortcode( 'hero', array( 'a' => 'say "hi" &#039;there' ) );
+	}
+
+	public function test_a_reference_to_another_character_is_not_a_quote(): void {
+		// &#340; is U+0154 and &#x220; U+0220: the digits after 34 / 22 make
+		// them different characters, so the value stays double-quoted.
+		$this->assertStringStartsWith(
+			'[hero a="',
+			ShortcodeMarkup::to_shortcode( 'hero', array( 'a' => '&#340; &#x220; &#3a' ) )
+		);
+	}
 }
