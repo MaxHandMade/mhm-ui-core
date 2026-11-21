@@ -1,8 +1,8 @@
 /**
  * @typedef {Object} ApiClient
- * @property {(path: string, params?: Object) => Promise<unknown>} get  GET, params as the query string.
- * @property {(path: string, data?: Object) => Promise<unknown>}   post POST, data as the body.
- * @property {(path: string, data?: Object) => Promise<unknown>}   del  DELETE, data as the body.
+ * @property {(path: string, params?: Record<string, (string|number|boolean)>) => Promise<unknown>} get  GET, params as the query string.
+ * @property {(path: string, data?: Object) => Promise<unknown>}                                    post POST, data as the body.
+ * @property {(path: string, data?: Object) => Promise<unknown>}                                    del  DELETE, data as the body.
  */
 
 /**

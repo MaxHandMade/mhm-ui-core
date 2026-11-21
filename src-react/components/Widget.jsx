@@ -4,6 +4,8 @@ import { usePersistentOpen } from '../hooks/usePersistentOpen';
 
 /** @typedef {import('react').ReactNode} ReactNode */
 
+const HIDDEN_STYLE = { display: 'none' };
+
 /**
  * A titled panel -- the box most admin screens are made of.
  *
@@ -37,8 +39,6 @@ import { usePersistentOpen } from '../hooks/usePersistentOpen';
  *                                                      in both modes.
  * @param {ReactNode}               props.children      Body.
  */
-const HIDDEN_STYLE = { display: 'none' };
-
 export default function Widget( {
 	title,
 	subtitle,

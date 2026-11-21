@@ -1,7 +1,7 @@
 /**
  * @typedef {Object} Formatters
- * @property {(n: number, decimals?: number) => string}                 fmtAmount The number alone.
- * @property {(n: number, symbol: string, decimals?: number) => string} fmtMoney  The number with its symbol.
+ * @property {(n: (number|string|null|undefined), decimals?: number) => string}                 fmtAmount The number alone; null/undefined read as 0.
+ * @property {(n: (number|string|null|undefined), symbol: string, decimals?: number) => string} fmtMoney  The number with its symbol.
  */
 
 /**

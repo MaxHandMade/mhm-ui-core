@@ -96,7 +96,7 @@ const requesting = ( prev, change ) => ( {
 	accepted: { ...prev.accepted, error: null },
 } );
 
-/** @typedef {(params: Object) => Promise<Object>} PageFetcher */
+/** @typedef {(params: Object) => Promise<unknown>} PageFetcher */
 /** @typedef {(res: Object) => {total: number, pages: number}} TotalsReader */
 
 /**

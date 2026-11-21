@@ -3,7 +3,7 @@ import { useState, useRef, useCallback } from '@wordpress/element';
 /**
  * @typedef {Object} TableSelection
  * @property {Array<string|number>}           selected   The selected ids on this page.
- * @property {string}                         state      'none', 'some' or 'all'.
+ * @property {'none'|'some'|'all'}            state      How much of the page is selected.
  * @property {(id: string|number) => boolean} isSelected Whether one id is selected.
  * @property {(id: string|number) => void}    toggle     Flips one id.
  * @property {(on: boolean) => void}          setAll     Selects or clears every id on the page.
