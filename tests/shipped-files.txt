@@ -1,7 +1,6 @@
 LICENSE
 README-tr.md
 README.md
-assets/README.md
 assets/react/admin.css
 assets/react/front.css
 assets/react/pro.css

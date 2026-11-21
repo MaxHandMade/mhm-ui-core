@@ -18,7 +18,7 @@ final class IconVocabularyTest extends WP_UnitTestCase {
 	/** @return list<string> Suffixes the installed WordPress defines. */
 	private function dashicon_suffixes(): array {
 		$css = (string) file_get_contents( ABSPATH . WPINC . '/css/dashicons.css' );
-		preg_match_all( '/\.dashicons-([a-z0-9-]+):before/', $css, $m );
+		preg_match_all( '/\.dashicons-([a-z0-9-]+)::?before/', $css, $m );
 
 		return array_values( array_unique( $m[1] ) );
 	}
