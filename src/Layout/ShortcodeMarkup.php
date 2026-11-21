@@ -32,9 +32,10 @@ final class ShortcodeMarkup {
 	private const DOUBLE_QUOTE_REF = '/&(?:quot|#0*34|#x0*22);/i';
 
 	/**
-	 * A reference esc_attr() keeps that decodes to `'`.
+	 * A reference esc_attr() keeps that decodes to `'`, or a raw one should an
+	 * attribute_escape filter leave it.
 	 */
-	private const APOSTROPHE_REF = '/&(?:apos|#0*39|#x0*27);/i';
+	private const APOSTROPHE_REF = "/'|&(?:apos|#0*39|#x0*27);/i";
 
 	/**
 	 * Build a WordPress shortcode string.

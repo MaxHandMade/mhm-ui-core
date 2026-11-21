@@ -79,4 +79,13 @@ final class ShortcodeMarkupRoundTripTest extends WP_UnitTestCase {
 			ShortcodeMarkup::to_shortcode( 'x', array( 'a' => 'say "hi" &#039;there' ) )
 		);
 	}
+
+	public function test_only_the_references_esc_attr_keeps_become_quotes(): void {
+		// Real esc_attr(): &quot; / &#34; / &#x0022; are kept (and become
+		// quotes), &QUOT; and a semicolon-less &quot are neutralised (and stay).
+		self::assertSame(
+			"[x a='p \"q&amp;QUOT; r\" s\" t\";u v&amp;quotw' b='5\" &#x220;']",
+			ShortcodeMarkup::to_shortcode( 'x', array( 'a' => 'p &quot;q&QUOT; r&#34; s&#x0022; t&quot;;u v&quotw', 'b' => '5" &#x220;' ) )
+		);
+	}
 }
