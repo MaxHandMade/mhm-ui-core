@@ -18,23 +18,33 @@ const { spawnSync } = require( 'node:child_process' );
 const ROOT = join( __dirname, '..', '..' );
 // The real eslint CLI in its own process, reading the repository's
 // eslint.config.cjs the way `npm run lint:js` does. In-process it cannot run
-// under Jest: ESLint 9 loads its config through import(), and
+// under Jest: ESLint loads its config through import(), and
 // @wordpress/eslint-plugin require()s an .mjs file, both of which Jest's
-// module runtime refuses on Node 22.
-// The same binary wp-scripts lint-js resolves (resolve-bin: the root copy;
-// eslint's package `exports` hide bin/ from require.resolve).
+// module runtime refuses on Node 22. eslint's package `exports` hide bin/
+// from require.resolve, hence the path.
 const ESLINT_BIN = join( ROOT, 'node_modules', 'eslint', 'bin', 'eslint.js' );
+const WP_SCRIPTS_BIN = join(
+	ROOT,
+	'node_modules',
+	'@wordpress',
+	'scripts',
+	'bin',
+	'wp-scripts.js'
+);
 
-const PROBES = {
-	'no-restricted-imports':
-		"import { __ } from '@wordpress/i18n';\nexport const a = __( 'x' );\n",
-	'no-restricted-globals': "export const a = wp.i18n.__( 'x' );\n",
-	'no-restricted-properties': "export const a = window.wp.i18n.__( 'x' );\n",
-};
+// Cold ESLint starts, one per probe.
+jest.setTimeout( 60000 );
 
-function rulesHit( code, virtualPath ) {
-	const run = spawnSync(
-		process.execPath,
+function run( args, input ) {
+	return spawnSync( process.execPath, args, {
+		cwd: ROOT,
+		input,
+		encoding: 'utf8',
+	} );
+}
+
+function lint( code, virtualPath ) {
+	const result = run(
 		[
 			ESLINT_BIN,
 			'--stdin',
@@ -43,27 +53,66 @@ function rulesHit( code, virtualPath ) {
 			'--format',
 			'json',
 		],
-		{ cwd: ROOT, input: code, encoding: 'utf8' }
+		code
 	);
 	// 0 clean, 1 findings; anything else is ESLint failing to run, and a
 	// gate that cannot run must not read as a gate that found nothing.
-	expect( [ 0, 1 ] ).toContain( run.status );
-	const [ result ] = JSON.parse( run.stdout );
-	return result.messages.map( ( m ) => m.ruleId );
+	if ( result.status !== 0 && result.status !== 1 ) {
+		throw new Error(
+			`eslint did not run (status ${ result.status }): ${ result.stderr }`
+		);
+	}
+	return {
+		status: result.status,
+		messages: JSON.parse( result.stdout )[ 0 ].messages,
+	};
 }
 
+const PROBES = {
+	'no-restricted-imports':
+		"import { __ } from '@wordpress/i18n';\nexport const a = __( 'x' );\n",
+	'no-restricted-globals': "export const a = wp.i18n.__( 'x' );\n",
+	'no-restricted-properties': "export const a = window.wp.i18n.__( 'x' );\n",
+};
+
 describe( 'src-react/ carries no translation call -- strings are props', () => {
+	test( 'the gate runs the ESLint that `npm run lint:js` runs', () => {
+		// wp-scripts lint-js passes --version through to the ESLint it
+		// resolves; a second copy in the tree would split the two.
+		const gate = run( [ ESLINT_BIN, '--version' ] );
+		const lintJs = run( [ WP_SCRIPTS_BIN, 'lint-js', '--version' ] );
+		const version = /^v\d+\.\d+\.\d+$/m;
+
+		expect( gate.stdout ).toMatch( version );
+		expect( lintJs.stdout ).toMatch( version );
+		expect( lintJs.stdout.match( version )[ 0 ] ).toBe(
+			gate.stdout.match( version )[ 0 ]
+		);
+	} );
+
 	for ( const [ rule, code ] of Object.entries( PROBES ) ) {
-		test( `${ rule } fires inside src-react/`, () => {
+		test( `${ rule } fires inside src-react/, as an error`, () => {
+			const { status, messages } = lint(
+				code,
+				'src-react/components/__probe__.jsx'
+			);
+			// An error, not a warning: `npm run lint:js` exits 0 on warnings,
+			// so a rule turned down to 'warn' would let the import through CI.
+			expect( status ).toBe( 1 );
 			expect(
-				rulesHit( code, 'src-react/components/__probe__.jsx' )
-			).toContain( rule );
+				messages.filter( ( m ) => m.ruleId === rule && m.severity === 2 )
+			).not.toHaveLength( 0 );
 		} );
 
 		test( `${ rule } does not fire outside src-react/ (the override is what catches it)`, () => {
-			expect( rulesHit( code, 'tests/Gate/__probe__.js' ) ).not.toContain(
-				rule
-			);
+			const { messages } = lint( code, 'tests/Gate/__probe__.js' );
+			// The file was really linted: an ignored file reports a null-rule
+			// warning and a parse failure a fatal one, and either would pass
+			// the absence check below for nothing.
+			expect(
+				messages.filter( ( m ) => m.ruleId === null || m.fatal )
+			).toHaveLength( 0 );
+			expect( messages.map( ( m ) => m.ruleId ) ).not.toContain( rule );
 		} );
 	}
 } );

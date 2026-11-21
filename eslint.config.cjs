@@ -1,9 +1,14 @@
 /**
- * ESLint flat config. @wordpress/scripts 37 runs ESLint 9 and reads only an
+ * ESLint flat config. @wordpress/scripts 37 runs ESLint 10 and reads only an
  * eslint.config.* file; the old .eslintrc.js was ignored without an error, so
  * its two overrides below were silently gone (jest globals: 1108 no-undef;
  * the i18n restrictions: nothing at all). Base and Jest block follow the
  * scripts 37 docs/vitest-migration.md, "Keep Jest lint rules".
+ *
+ * package.json pins eslint and @wordpress/eslint-plugin to the versions
+ * scripts 37 itself depends on, so the tree holds one copy of each: with a
+ * second root copy, `wp-scripts lint-js` ran its own nested ESLint 10 while
+ * the i18n gate ran the root 9. The gate now asserts they are one binary.
  */
 const wpPlugin = require( '@wordpress/eslint-plugin' );
 const jestPlugin = require( 'eslint-plugin-jest' );
@@ -30,7 +35,9 @@ module.exports = [
 	},
 	{
 		// .test.jsx as well as .test.js: a JSX test file must not fail on
-		// `describe` being undefined.
+		// `describe` being undefined. flat/recommended brings the jest/* rules
+		// too, not only the globals the old `env: { jest: true }` gave --
+		// kept on purpose: they flag real test mistakes.
 		...jestPlugin.configs[ 'flat/recommended' ],
 		files: TESTS,
 	},
