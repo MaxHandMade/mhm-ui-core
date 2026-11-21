@@ -6,7 +6,7 @@
  * already translated (bin/check-no-i18n.php holds the PHP side). Nothing held
  * the JSX side -- a `__()` inside src-react/ would reach no .pot and ship
  * English to every consumer. This gate lints three probes AS IF they lived in
- * src-react/ (lintText with a virtual filePath -- no fixture file inside
+ * src-react/ (the eslint CLI on stdin with a virtual --stdin-filename -- no fixture file inside
  * src-react/, which `npm run lint:js` would otherwise lint too), and the same
  * probes as if they lived OUTSIDE it, where they must pass: that second half
  * is what makes a green run mean "the src-react override catches it" rather
@@ -14,6 +14,7 @@
  */
 const { join } = require( 'node:path' );
 const { spawnSync } = require( 'node:child_process' );
+const { existsSync } = require( 'node:fs' );
 
 const ROOT = join( __dirname, '..', '..' );
 // The real eslint CLI in its own process, reading the repository's
@@ -36,10 +37,13 @@ const WP_SCRIPTS_BIN = join(
 jest.setTimeout( 60000 );
 
 function run( args, input ) {
+	// A synchronous child cannot be cut by Jest's timeout; this one can. A
+	// killed child reports status null, which the callers treat as failure.
 	return spawnSync( process.execPath, args, {
 		cwd: ROOT,
 		input,
 		encoding: 'utf8',
+		timeout: 30000,
 	} );
 }
 
@@ -88,6 +92,20 @@ describe( 'src-react/ carries no translation call -- strings are props', () => {
 		expect( lintJs.stdout.match( version )[ 0 ] ).toBe(
 			gate.stdout.match( version )[ 0 ]
 		);
+		// Same version could still be two copies; scripts' own nested copy is
+		// the one lint-js would pick, so its absence makes it one binary.
+		expect(
+			existsSync(
+				join(
+					ROOT,
+					'node_modules',
+					'@wordpress',
+					'scripts',
+					'node_modules',
+					'eslint'
+				)
+			)
+		).toBe( false );
 	} );
 
 	for ( const [ rule, code ] of Object.entries( PROBES ) ) {

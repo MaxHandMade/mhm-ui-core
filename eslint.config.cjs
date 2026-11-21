@@ -8,7 +8,8 @@
  * package.json pins eslint and @wordpress/eslint-plugin to the versions
  * scripts 37 itself depends on, so the tree holds one copy of each: with a
  * second root copy, `wp-scripts lint-js` ran its own nested ESLint 10 while
- * the i18n gate ran the root 9. The gate now asserts they are one binary.
+ * the i18n gate ran the root 9. The gate asserts one version and no nested
+ * copy.
  */
 const wpPlugin = require( '@wordpress/eslint-plugin' );
 const jestPlugin = require( 'eslint-plugin-jest' );
