@@ -97,7 +97,7 @@ const requesting = ( prev, change ) => ( {
 } );
 
 /** @typedef {(params: Object) => Promise<unknown>} PageFetcher */
-/** @typedef {(res: Object) => {total: number, pages: number}} TotalsReader */
+/** @typedef {(res: unknown) => {total: number, pages: number}} TotalsReader */
 
 /**
  * Server-paged list state (0.20.0): query, page, the last accepted answer
