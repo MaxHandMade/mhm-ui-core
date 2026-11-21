@@ -240,4 +240,75 @@ describe( 'Pagination', () => {
 		);
 		expect( status( container ) ).toBe( '1 / 0' );
 	} );
+
+	// Fable, 0.23.7 round: these were valid enough before and must stay so.
+	test( 'a fractional total rounds up -- the last partial page stays reachable', () => {
+		const onChange = jest.fn();
+		const { container } = render(
+			<Pagination
+				page={ 2 }
+				totalPages={ 2.5 }
+				onChange={ onChange }
+				labels={ labels }
+			/>
+		);
+		expect( status( container ) ).toBe( '2 / 3' );
+		fireEvent.click( buttons( container )[ 1 ] );
+		expect( onChange.mock.calls ).toEqual( [ [ 3 ] ] );
+	} );
+
+	test( 'an Infinity total (unknown) leaves next open, as before', () => {
+		const { container } = render(
+			<Pagination
+				page={ 3 }
+				totalPages={ Infinity }
+				onChange={ () => {} }
+				labels={ labels }
+			/>
+		);
+		expect( buttons( container )[ 1 ].disabled ).toBe( false );
+	} );
+
+	test( 'a fractional page is cut down, so next sends a whole number', () => {
+		const onChange = jest.fn();
+		const { container } = render(
+			<Pagination
+				page={ 2.5 }
+				totalPages={ 5 }
+				onChange={ onChange }
+				labels={ labels }
+			/>
+		);
+		fireEvent.click( buttons( container )[ 1 ] );
+		expect( onChange.mock.calls ).toEqual( [ [ 3 ] ] );
+	} );
+
+	test.each( [ '', '   ', true, null ] )(
+		'a total of %p is not numeric and reads one page',
+		( totalPages ) => {
+			const { container } = render(
+				<Pagination
+					page={ 1 }
+					totalPages={ totalPages }
+					onChange={ () => {} }
+					labels={ labels }
+				/>
+			);
+			expect( status( container ) ).toBe( '1 / 1' );
+		}
+	);
+
+	test( 'an onChange that is not a function is ignored, not called', () => {
+		const { container } = render(
+			<Pagination
+				page={ 2 }
+				totalPages={ 3 }
+				onChange="setPage"
+				labels={ labels }
+			/>
+		);
+		expect( () =>
+			fireEvent.click( buttons( container )[ 1 ] )
+		).not.toThrow();
+	} );
 } );
