@@ -133,4 +133,182 @@ describe( 'Pagination', () => {
 			container.querySelectorAll( 'nav.mhmui-pagination button' )
 		).toHaveLength( 2 );
 	} );
+
+	// 0.23.7: page and totalPages arrive from a REST response or a URL, so
+	// they can be missing or strings. A missing total wrote "NaN" and left
+	// next enabled; a string page made next send "21" (string + 1); a
+	// missing onChange threw on the first click.
+	const status = ( container ) =>
+		container.querySelector( '.mhmui-pagination__status' ).textContent;
+	const buttons = ( container ) =>
+		container.querySelectorAll( 'nav.mhmui-pagination button' );
+
+	test.each( [
+		[ 'inline', undefined, '1 / 1' ],
+		[ 'inline', null, '1 / 1' ],
+		[ 'inline', 'abc', '1 / 1' ],
+		[ 'inline', Number.NaN, '1 / 1' ],
+		[ 'footer', undefined, 'Page 1 / 1' ],
+		[ 'footer', 'abc', 'Page 1 / 1' ],
+	] )(
+		'%s variant with totalPages %p reads one page, not NaN',
+		( variant, totalPages, expected ) => {
+			const { container } = render(
+				<Pagination
+					page={ 1 }
+					totalPages={ totalPages }
+					onChange={ () => {} }
+					labels={ labels }
+					variant={ variant }
+				/>
+			);
+			expect( status( container ) ).toBe( expected );
+			expect( buttons( container )[ 1 ].disabled ).toBe( true );
+		}
+	);
+
+	test.each( [ 'inline', 'footer' ] )(
+		'%s variant: numeric strings are numbers -- next sends 3, not "21"',
+		( variant ) => {
+			const onChange = jest.fn();
+			const { container } = render(
+				<Pagination
+					page="2"
+					totalPages="3"
+					onChange={ onChange }
+					labels={ labels }
+					variant={ variant }
+				/>
+			);
+			const [ prev, next ] = buttons( container );
+			expect( next.disabled ).toBe( false );
+			fireEvent.click( next );
+			fireEvent.click( prev );
+			expect( onChange.mock.calls ).toEqual( [ [ 3 ], [ 1 ] ] );
+		}
+	);
+
+	test( 'a string page on the last page still disables next', () => {
+		const { container } = render(
+			<Pagination
+				page="3"
+				totalPages={ 3 }
+				onChange={ () => {} }
+				labels={ labels }
+			/>
+		);
+		expect( buttons( container )[ 1 ].disabled ).toBe( true );
+	} );
+
+	test( 'a missing page reads as page 1', () => {
+		const { container } = render(
+			<Pagination
+				totalPages={ 3 }
+				onChange={ () => {} }
+				labels={ labels }
+			/>
+		);
+		expect( status( container ) ).toBe( '1 / 3' );
+		expect( buttons( container )[ 0 ].disabled ).toBe( true );
+	} );
+
+	test.each( [ 'inline', 'footer' ] )(
+		'%s variant: a click without onChange does nothing instead of throwing',
+		( variant ) => {
+			const { container } = render(
+				<Pagination
+					page={ 2 }
+					totalPages={ 3 }
+					labels={ labels }
+					variant={ variant }
+				/>
+			);
+			for ( const button of buttons( container ) ) {
+				expect( () => fireEvent.click( button ) ).not.toThrow();
+			}
+		}
+	);
+
+	test( 'a valid zero total keeps its inline text (only bad input changes)', () => {
+		const { container } = render(
+			<Pagination
+				page={ 1 }
+				totalPages={ 0 }
+				onChange={ () => {} }
+				labels={ labels }
+			/>
+		);
+		expect( status( container ) ).toBe( '1 / 0' );
+	} );
+
+	// Fable, 0.23.7 round: these were valid enough before and must stay so.
+	test( 'a fractional total rounds up -- the last partial page stays reachable', () => {
+		const onChange = jest.fn();
+		const { container } = render(
+			<Pagination
+				page={ 2 }
+				totalPages={ 2.5 }
+				onChange={ onChange }
+				labels={ labels }
+			/>
+		);
+		expect( status( container ) ).toBe( '2 / 3' );
+		fireEvent.click( buttons( container )[ 1 ] );
+		expect( onChange.mock.calls ).toEqual( [ [ 3 ] ] );
+	} );
+
+	test( 'an Infinity total (unknown) leaves next open, as before', () => {
+		const { container } = render(
+			<Pagination
+				page={ 3 }
+				totalPages={ Infinity }
+				onChange={ () => {} }
+				labels={ labels }
+			/>
+		);
+		expect( buttons( container )[ 1 ].disabled ).toBe( false );
+	} );
+
+	test( 'a fractional page is cut down, so next sends a whole number', () => {
+		const onChange = jest.fn();
+		const { container } = render(
+			<Pagination
+				page={ 2.5 }
+				totalPages={ 5 }
+				onChange={ onChange }
+				labels={ labels }
+			/>
+		);
+		fireEvent.click( buttons( container )[ 1 ] );
+		expect( onChange.mock.calls ).toEqual( [ [ 3 ] ] );
+	} );
+
+	test.each( [ '', '   ', true, null ] )(
+		'a total of %p is not numeric and reads one page',
+		( totalPages ) => {
+			const { container } = render(
+				<Pagination
+					page={ 1 }
+					totalPages={ totalPages }
+					onChange={ () => {} }
+					labels={ labels }
+				/>
+			);
+			expect( status( container ) ).toBe( '1 / 1' );
+		}
+	);
+
+	test( 'an onChange that is not a function is ignored, not called', () => {
+		const { container } = render(
+			<Pagination
+				page={ 2 }
+				totalPages={ 3 }
+				onChange="setPage"
+				labels={ labels }
+			/>
+		);
+		expect( () =>
+			fireEvent.click( buttons( container )[ 1 ] )
+		).not.toThrow();
+	} );
 } );
