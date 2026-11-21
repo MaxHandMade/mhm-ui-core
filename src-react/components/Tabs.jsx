@@ -1,5 +1,8 @@
 import { isPlainLeftClick } from '../plain-left-click';
 
+/** @typedef {import('react').MouseEvent} ReactMouseEvent */
+/** @typedef {(id: string, event: ReactMouseEvent) => void} TabSelectHandler */
+
 /**
  * Page-section navigation as real links.
  *
@@ -22,22 +25,21 @@ import { isPlainLeftClick } from '../plain-left-click';
  * reads it once, not "2 2 pending". The markup is pinned byte for byte in
  * Tabs.test.jsx and tests/Kit/TabsTest.php.
  *
- * @param {Object}   props
- * @param {string}   props.label      Accessible name of the <nav>. Known limit:
- *                                    an empty one yields an unnamed nav and no gate
- *                                    catches it.
- * @param {string}   [props.current]  Id of the current item.
- * @param {Array}    props.items      { id, label, href, badge?, badgeLabel?, badgeTone? }.
- * @param {string}   [props.variant]  'pill' (default) or 'underline' -- a
- *                                    transparent row with a 2px underline on the
- *                                    current tab. Unknown falls back to pill.
- * @param {boolean}  [props.showZero] Draw a chip for a count of 0 (when the item
- *                                    carries a numeric badge). Negative never draws.
- *
- *                                    badgeTone (success|warning|danger|info|neutral) colours that item's chip;
- *                                    unknown adds no class. A CSS-only .mhmui-tabs-bar wraps tabs plus a
- *                                    right-hand link under one full-width rule.
- * @param {Function} [props.onSelect] ( id, event ) on a plain left click.
+ * @param {Object}           props
+ * @param {string}           props.label      Accessible name of the <nav>. Known limit:
+ *                                            an empty one yields an unnamed nav and no gate
+ *                                            catches it.
+ * @param {string}           [props.current]  Id of the current item.
+ * @param {Array}            props.items      { id, label, href, badge?, badgeLabel?, badgeTone? }.
+ *                                            badgeTone (success|warning|danger|info|neutral) colours that item's chip;
+ *                                            unknown adds no class. A CSS-only .mhmui-tabs-bar wraps tabs plus a
+ *                                            right-hand link under one full-width rule.
+ * @param {string}           [props.variant]  'pill' (default) or 'underline' -- a
+ *                                            transparent row with a 2px underline on the
+ *                                            current tab. Unknown falls back to pill.
+ * @param {boolean}          [props.showZero] Draw a chip for a count of 0 (when the item
+ *                                            carries a numeric badge). Negative never draws.
+ * @param {TabSelectHandler} [props.onSelect] On a plain left click.
  */
 
 const BADGE_TONES = [ 'success', 'warning', 'danger', 'info', 'neutral' ];

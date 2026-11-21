@@ -10,9 +10,10 @@ import { useState, useEffect } from '@wordpress/element';
  * The first render returns the value itself -- there is nothing to wait for
  * on mount. Unmounting clears a pending timer.
  *
- * @param {*}      value   The value to follow.
+ * @template T
+ * @param {T}      value   The value to follow.
  * @param {number} [delay] Milliseconds of quiet before the value is passed on.
- * @return {*} The last value that stood still for `delay` ms.
+ * @return {T} The last value that stood still for `delay` ms.
  */
 export function useDebouncedValue( value, delay = 300 ) {
 	// Function forms on purpose: a function value must be stored, not called.

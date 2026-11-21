@@ -15,11 +15,11 @@ import { useRef, useLayoutEffect, useId } from '@wordpress/element';
  * wide layout and visible in the stacked one, so the visible text and the
  * accessible name are the same string (WCAG 2.5.3) -- pass a short one.
  *
- * @param {Object}   props
- * @param {string}   props.state      'none' | 'some' | 'all'.
- * @param {Function} props.onChange   Called with true (select all) or false.
- * @param {string}   props.label      The box's name, e.g. "Select all".
- * @param {boolean}  [props.disabled] An empty page, for one.
+ * @param {Object}                 props
+ * @param {string}                 props.state      'none' | 'some' | 'all'.
+ * @param {(all: boolean) => void} props.onChange   Called with true (select all) or false.
+ * @param {string}                 props.label      The box's name, e.g. "Select all".
+ * @param {boolean}                [props.disabled] An empty page, for one.
  */
 export default function SelectAll( {
 	state,

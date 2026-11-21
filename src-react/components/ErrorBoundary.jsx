@@ -5,7 +5,7 @@ import { Component } from '@wordpress/element';
  *
  * The wording is a prop, not a built-in string: ui-core is a package, not a plugin, so it
  * has no text domain of its own and cannot ship a translatable message. Passing the
- * fallback in also keeps @wordpress/components out of this package's dependency surface.
+ * fallback in also keeps `@wordpress/components` out of this package's dependency surface.
  */
 class ErrorBoundary extends Component {
 	state = { hasError: false };

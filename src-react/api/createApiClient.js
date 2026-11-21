@@ -1,4 +1,11 @@
 /**
+ * @typedef {Object} ApiClient
+ * @property {(path: string, params?: Object) => Promise<unknown>} get  GET, params as the query string.
+ * @property {(path: string, data?: Object) => Promise<unknown>}   post POST, data as the body.
+ * @property {(path: string, data?: Object) => Promise<unknown>}   del  DELETE, data as the body.
+ */
+
+/**
  * Builds a REST client bound to one namespace.
  *
  * ui-core deliberately does NOT ship any product's endpoint map: a shared package that
@@ -8,9 +15,9 @@
  * The transport is injected rather than imported so that this module carries no
  * WordPress dependency and can be tested without one.
  *
- * @param {string}   namespace - REST namespace, e.g. '/my-plugin/v1'.
- * @param {Function} apiFetch  - Transport, normally @wordpress/api-fetch.
- * @return {{ get: Function, post: Function, del: Function }} Client bound to the namespace.
+ * @param {string}                                namespace - REST namespace, e.g. '/my-plugin/v1'.
+ * @param {(options: Object) => Promise<unknown>} apiFetch  - Transport, normally `@wordpress/api-fetch`.
+ * @return {ApiClient} Client bound to the namespace.
  */
 export function createApiClient( namespace, apiFetch ) {
 	if ( typeof apiFetch !== 'function' ) {

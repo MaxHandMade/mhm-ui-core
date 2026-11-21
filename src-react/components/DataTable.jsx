@@ -1,5 +1,7 @@
 import { useRef, useLayoutEffect } from '@wordpress/element';
 
+/** @typedef {import('react').ReactNode} ReactNode */
+
 const LAYOUTS = [ 'scroll', 'stack' ];
 
 const childrenByTag = ( parent, tags ) =>
@@ -57,14 +59,14 @@ function writeRoles( table ) {
  * container threshold; it needs `data-label` on the cells and writes explicit
  * table roles (see writeRoles). Widths come from a consumer `<colgroup>`.
  *
- * @param {Object}  props
- * @param {string}  props.caption         Names the table.
- * @param {boolean} [props.captionHidden] Visually hidden caption.
- * @param {*}       [props.captionMeta]   A muted aside inside the caption ("· 48").
- * @param {string}  [props.layout]        'scroll' | 'stack'.
- * @param {string}  [props.className]     Added to the table (a screen's own class).
- * @param {*}       [props.footer]        Below the table, inside the card.
- * @param {*}       props.children        colgroup / thead / tbody.
+ * @param {Object}    props
+ * @param {string}    props.caption         Names the table.
+ * @param {boolean}   [props.captionHidden] Visually hidden caption.
+ * @param {ReactNode} [props.captionMeta]   A muted aside inside the caption ("· 48").
+ * @param {string}    [props.layout]        'scroll' | 'stack'.
+ * @param {string}    [props.className]     Added to the table (a screen's own class).
+ * @param {ReactNode} [props.footer]        Below the table, inside the card.
+ * @param {ReactNode} props.children        colgroup / thead / tbody.
  */
 export default function DataTable( {
 	caption,

@@ -1,3 +1,6 @@
+/** @typedef {import('react').ReactNode} ReactNode */
+/** @typedef {import('react').MouseEvent} ReactMouseEvent */
+
 const VARIANTS = [ 'primary', 'secondary', 'danger', 'plain', 'neutral' ];
 const SIZES = [ 'md', 'sm' ];
 
@@ -24,19 +27,19 @@ function passThrough( rest ) {
  * in the tab order and keeps focus, the click is swallowed, and a link loses
  * its `href` (it is then a disabled link, not a navigation).
  *
- * @param {Object}   props
- * @param {*}        props.children
- * @param {string}   [props.variant]  primary | secondary | danger | plain | neutral;
- *                                    anything else is secondary.
- * @param {string}   [props.size]     md | sm; anything else is md.
- * @param {string}   [props.href]     Renders an <a> instead of a <button>.
- * @param {string}   [props.target]   Link only (with href); ignored on a button.
- * @param {string}   [props.rel]      Link only (with href); ignored on a button.
- * @param {*}        [props.icon]     Decorative node drawn before the label.
- * @param {boolean}  [props.disabled]
- * @param {Function} [props.onClick]
- * @param {string}   [props.type]     button type; ignored for a link.
- * @param {Object}   [props.rest]     Only id, aria-* and data-* are used.
+ * @param {Object}                           props
+ * @param {ReactNode}                        props.children
+ * @param {string}                           [props.variant]  primary | secondary | danger | plain | neutral;
+ *                                                            anything else is secondary.
+ * @param {string}                           [props.size]     md | sm; anything else is md.
+ * @param {string}                           [props.href]     Renders an <a> instead of a <button>.
+ * @param {string}                           [props.target]   Link only (with href); ignored on a button.
+ * @param {string}                           [props.rel]      Link only (with href); ignored on a button.
+ * @param {ReactNode}                        [props.icon]     Decorative node drawn before the label.
+ * @param {boolean}                          [props.disabled]
+ * @param {(event: ReactMouseEvent) => void} [props.onClick]
+ * @param {string}                           [props.type]     button type; ignored for a link.
+ * @param {Object}                           [props.rest]     Only id, aria-* and data-* are used.
  */
 export default function Button( {
 	children,
