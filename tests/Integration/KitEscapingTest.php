@@ -92,8 +92,12 @@ final class KitEscapingTest extends WP_UnitTestCase {
 	 * mark and accessible name, the sub line, and the grid's
 	 * `style="--mhmui-columns:N"`.
 	 *
-	 * It measures the WordPress this suite runs on (CI: 7.1), with core's default
-	 * allowlists. One version edge, read from core source: custom-property
+	 * It measures the WordPress this suite runs on (CI: 7.1 and the 7.2 release
+	 * candidate), with core's default allowlists. The comparison is on the
+	 * markup's meaning, not its spelling: 7.2's HTML API kses re-serialises
+	 * every tag with its attributes in name order (same DOM), so both sides go
+	 * through same_markup() first. A stripped element or attribute, or a
+	 * changed value or text, still fails it. One version edge, read from core source: custom-property
 	 * assignment passes safecss_filter_attr() since 6.1.0 (its own @since list).
 	 * DATA_KEY accepts only hyphen-separated runs of [a-z0-9], the shape kses has
 	 * kept on every version (<= 6.5 `^data(?:-[a-z0-9_]+)+$`, 6.6+
@@ -153,7 +157,7 @@ final class KitEscapingTest extends WP_UnitTestCase {
 		foreach ( array( 'style="--mhmui-columns:4"', 'dashicons-calendar-alt', 'aria-hidden="true"', 'mhmui-stat-card--success', 'mhmui-stat-card--emphasis', 'data-stat="total-bookings"', 'data-multi-key="inner hyphen"', 'data-direction="up"', 'data-direction="down"', 'data-direction="flat"', 'mhmui-stat-card__delta-sr', 'mhmui-stat-card__sub' ) as $needle ) {
 			self::assertStringContainsString( $needle, $html );
 		}
-		self::assertSame( $html, wp_kses_post( $html ) );
+		self::assertSame( self::same_markup( $html ), self::same_markup( wp_kses_post( $html ) ) );
 	}
 
 	public function test_tabs_hostile_props_come_out_inert(): void {
@@ -219,6 +223,67 @@ final class KitEscapingTest extends WP_UnitTestCase {
 		// markup is byte-identical, which is what this test guards (an
 		// attribute or element kses dropped would still fail it).
 		self::assertStringContainsString( '&#038;tab=', $html );
-		self::assertSame( str_replace( '&#038;', '&amp;', $html ), wp_kses_post( $html ) );
+		self::assertSame( self::same_markup( $html ), self::same_markup( wp_kses_post( $html ) ) );
+	}
+
+	public function test_POSITIVE_CONTROL_same_markup_ignores_only_spelling(): void {
+		// Order and entity spelling are the two things it may forget.
+		self::assertSame( self::same_markup( '<a class="x" href="?a=1&#038;b">t</a>' ), self::same_markup( '<a href="?a=1&amp;b" class="x">t</a>' ) );
+		// Everything kses could take away it must keep.
+		$base = self::same_markup( '<p class="x" data-y="1"><span aria-hidden="true">t</span></p>' );
+		foreach ( array(
+			'<p class="x"><span aria-hidden="true">t</span></p>',
+			'<p class="x" data-y="2"><span aria-hidden="true">t</span></p>',
+			'<p class="x" data-y="1"><span>t</span></p>',
+			'<p class="x" data-y="1">t</p>',
+			'<p class="x" data-y="1"><span aria-hidden="true">u</span></p>',
+		) as $stripped ) {
+			self::assertNotSame( $base, self::same_markup( $stripped ), $stripped );
+		}
+	}
+
+	/**
+	 * The markup with every spelling choice removed: each tag's attributes in
+	 * name order, values and text decoded and re-encoded one way. Anything kses
+	 * could strip or change -- an element, an attribute, a value, a text run --
+	 * stays in the string, so equality still means nothing was lost.
+	 *
+	 * @param string $html Markup.
+	 */
+	private static function same_markup( string $html ): string {
+		$out       = '';
+		$processor = new \WP_HTML_Tag_Processor( $html );
+
+		while ( $processor->next_token() ) {
+			$type = $processor->get_token_type();
+
+			if ( '#text' === $type ) {
+				$out .= htmlspecialchars( $processor->get_modifiable_text(), ENT_QUOTES, 'UTF-8' );
+				continue;
+			}
+
+			self::assertSame( '#tag', $type, "unexpected {$type} token in kit markup" );
+
+			$name = strtolower( (string) $processor->get_tag() );
+
+			if ( $processor->is_tag_closer() ) {
+				$out .= "</{$name}>";
+				continue;
+			}
+
+			$attributes = (array) $processor->get_attribute_names_with_prefix( '' );
+			sort( $attributes );
+
+			$out .= "<{$name}";
+			foreach ( $attributes as $attribute ) {
+				$value = $processor->get_attribute( $attribute );
+				$out  .= true === $value ? " {$attribute}" : sprintf( ' %s="%s"', $attribute, htmlspecialchars( (string) $value, ENT_QUOTES, 'UTF-8' ) );
+			}
+			$out .= '>';
+		}
+
+		self::assertFalse( $processor->paused_at_incomplete_token(), 'the tag processor stopped on an incomplete token' );
+
+		return $out;
 	}
 }

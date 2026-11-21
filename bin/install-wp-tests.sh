@@ -71,6 +71,21 @@ fi
 
 WP_TESTS_TAG="tags/$WP_VERSION"
 
+# A pre-release (7.2-RC2, 7.2-beta1) has a core tarball but no svn tag. Its
+# test framework lives on the release branch once core has branched, and on
+# trunk until then -- trunk IS that release before the branch exists. The
+# branch is probed through a file the checkout needs, so a missing branch
+# falls back instead of failing the svn checkout below.
+if [[ "$WP_VERSION" == *-* ]]; then
+	WP_BRANCH="branches/${WP_VERSION%%-*}"
+	if curl -sL --fail -o /dev/null "https://develop.svn.wordpress.org/${WP_BRANCH}/tests/phpunit/includes/functions.php"; then
+		WP_TESTS_TAG=$WP_BRANCH
+	else
+		WP_TESTS_TAG="trunk"
+	fi
+	echo "pre-release $WP_VERSION: test framework from $WP_TESTS_TAG"
+fi
+
 install_wp() {
 	# wp-settings.php, not the directory: the directory exists as soon as this
 	# function starts, so guarding on it would skip a re-run after a failure.
