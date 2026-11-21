@@ -22,7 +22,7 @@ A consuming plugin `require_once`s `vendor/mhm/ui-core/register.php` from its
 main file and registers its own copy:
 
 ```php
-mhmuicore_register( '0.23.5', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.23.6', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 At `plugins_loaded` priority 0 the highest registered version boots; the rest
@@ -358,12 +358,12 @@ own **ZIP**, and only these, none of which any runtime path reaches:
 
 | Keep out of the ZIP | Why |
 |---|---|
-| `src/Cli/` | `wp mhm-ui` commands are development tooling. Registration is guarded on the command class existing, so leaving them out costs the commands and nothing else. |
+| `src/Cli/` · `src/Component/ComponentScaffolder.php` | `wp mhm-ui` commands are development tooling, and the scaffolder is the engine of `make:component`, reached from nowhere else. Registration is guarded on the command class existing, so leaving them out costs the commands and nothing else. Take the two together: the scaffolder alone leaves a registered command that dies when run. |
 | `src/Seam/PurityScanner.php` | The free-core purity gate. Its vocabulary IS the list a reviewer greps for — `license_key`, `activate_license`, `upgrade_to_pro`, `pro_only` — so it reads as the thing it exists to prevent. CI calls it from `vendor/`, where it stays; no runtime path touches it. |
 | `src/Kit/IconConceptScanner.php` | The icon-concept convergence gate's engine (see "Icon concepts" below). Development tooling with no runtime path — a consumer's own CI `require`s it directly from `vendor/mhm/ui-core`, so it must ship there, but a WordPress.org reviewer greps a shipped tree and its class name and docblock read as gate machinery, the same shape `PurityScanner.php` reads as. |
 | `src-react/` (the whole directory) | The package's JSX and token SOURCE. It is build-time input, and nothing on a user's site reads it -- WordPress does not execute JSX, and what loads is the bundle your build produced. It also holds the tier-lock component, whose class a reviewer reads as a paid-feature lock. |
 | `assets/react/pro.css` | The stylesheet half of the same thing. A free core enqueues `react/admin.css` only. |
-| `README.md` · `README-tr.md` · `assets/README.md` · `package.json` | Developer documentation and build metadata. |
+| `README.md` · `README-tr.md` · `package.json` | Developer documentation and build metadata. |
 
 🔴 **Take `src-react/` as a unit, and take yours with it.** Excluding only the lock
 component was tried on a real consumer and was wrong twice over: `src-react/index.js`
@@ -390,7 +390,7 @@ build from.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.23.5', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.23.6', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 Requiring `bootstrap.php` directly defines `MHMUICORE_VERSION` immediately, which

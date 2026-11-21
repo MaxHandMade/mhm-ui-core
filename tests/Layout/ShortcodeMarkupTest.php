@@ -27,11 +27,46 @@ final class ShortcodeMarkupTest extends TestCase {
 	}
 
 	public function test_both_keys_and_values_are_escaped(): void {
-		// esc_attr() must run on both the key and the value -- a quote in either
-		// one must not be able to close the attribute early and inject a new one.
+		// esc_attr() must run on both the key and the value -- a quote in the
+		// key must not be able to close the attribute early and inject a new one.
 		$this->assertSame(
-			'[hero a&quot;b="A &quot;quoted&quot; title"]',
-			ShortcodeMarkup::to_shortcode( 'hero', array( 'a"b' => 'A "quoted" title' ) )
+			'[hero a&quot;b="&lt;b&gt; &amp; it&#039;s"]',
+			ShortcodeMarkup::to_shortcode( 'hero', array( 'a"b' => "<b> & it's" ) )
 		);
 	}
+
+	public function test_a_value_holding_a_double_quote_is_single_quoted_with_the_quote_raw(): void {
+		// An encoded &quot; inside a double-quoted attribute reaches the
+		// shortcode as the literal entity before WordPress 7.2, and from 7.2
+		// kses decodes it in post text, so the attribute ends at it. A raw "
+		// inside single quotes is read back intact by every version.
+		$this->assertSame(
+			"[hero title='A \"quoted\" &lt;b&gt; title']",
+			ShortcodeMarkup::to_shortcode( 'hero', array( 'title' => 'A "quoted" <b> title' ) )
+		);
+	}
+
+	public function test_a_value_holding_both_quote_kinds_keeps_the_old_double_quoted_form(): void {
+		// No spelling survives 7.2 kses; the old one still works before 7.2
+		// and off the kses path, and refusing would make it a fatal (Fable M1).
+		$this->assertSame(
+			'[hero title="say &quot;it&#039;s&quot;" b="x &#039;y&#039; &quot;z&quot;"]',
+			ShortcodeMarkup::to_shortcode( 'hero', array( 'title' => "say \"it's\"", 'b' => "x 'y' \"z\"" ) )
+		);
+	}
+
+	public function test_a_single_quoted_value_lets_the_next_attribute_follow(): void {
+		$this->assertSame(
+			"[hero a='5\"' b='Tom &amp; \"Jerry\"' c=\"x\"]",
+			ShortcodeMarkup::to_shortcode( 'hero', array( 'a' => '5"', 'b' => 'Tom & "Jerry"', 'c' => 'x' ) )
+		);
+	}
+
+	public function test_a_value_that_is_not_utf8_is_emptied_whole_on_both_branches(): void {
+		$this->assertSame(
+			'[hero a="" b=""]',
+			ShortcodeMarkup::to_shortcode( 'hero', array( 'a' => "Ko\xE7 \"VIP\"", 'b' => "Ko\xE7" ) )
+		);
+	}
+
 }

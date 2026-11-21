@@ -13,8 +13,8 @@ use PHPUnit\Framework\TestCase;
  * Measured 2026-09-05 against v0.8.1: `git archive HEAD` yields 53 files and
  * the consumer's vendor/mhm/ui-core tree holds exactly those 53 -- export-ignore
  * survives a Composer VCS install, so tests/, bin/, docker/ and .github/ never
- * reach a consumer at all. The consumer-side build then filters README.md,
- * assets/README.md and package.json out of the ZIP. A free core targeting
+ * reach a consumer at all. The consumer-side build then filters README.md and
+ * package.json out of the ZIP (assets/README.md stopped shipping in 0.23.6). A free core targeting
  * WordPress.org keeps more than that out, and README.md lists it by name: this
  * package ships a purity scanner whose vocabulary is the very words a reviewer
  * greps for, and a Pro-facing stylesheet.
@@ -243,7 +243,8 @@ final class ShippedSurfaceTest extends TestCase {
 		// click guard, one P1 file) to 69/61/3; 0.19.0 DataTable, SortHeader,
 		// SelectAll, RowSelect and hooks/useTableSelection (five P1 files) to 74/66/3;
 		// 0.20.0 hooks/useServerList and hooks/useDebouncedValue (two P1 files) to 76/68/3.
-		self::assertCount( 76, $files, 'shipped file count changed' );
+		// 0.23.6 assets/README.md export-ignored (developer note, not P1/P2) to 75/68/3.
+		self::assertCount( 75, $files, 'shipped file count changed' );
 		self::assertCount( 68, $p1, 'P1 file set changed' );
 		self::assertCount( 3, $p2, 'P2 file set changed' );
 	}

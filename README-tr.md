@@ -185,12 +185,12 @@ sınıfa yaptığı çağrı **fatal**dir.
 
 | ZIP'ten çıkar | Neden |
 |---|---|
-| `src/Cli/` | `wp mhm-ui` komutları geliştirme aracıdır. Kayıt, komut sınıfının varlığına bağlıdır; dışarıda bırakmak yalnız komutlara mal olur. |
+| `src/Cli/` · `src/Component/ComponentScaffolder.php` | `wp mhm-ui` komutları geliştirme aracıdır; scaffolder `make:component`'in motorudur ve başka hiçbir yerden çağrılmaz. Kayıt, komut sınıfının varlığına bağlıdır; dışarıda bırakmak yalnız komutlara mal olur. İkisini birlikte çıkar: yalnız scaffolder'ı çıkarmak kayıtlı ama çalıştırılınca ölen bir komut bırakır. |
 | `src/Seam/PurityScanner.php` | Saflık kapısı. Sözlüğü, incelemecinin **grep'lediği listenin ta kendisidir** — `license_key`, `activate_license`, `upgrade_to_pro`, `pro_only` — yani önlemek için var olduğu şey gibi okunur. CI onu `vendor/`den çağırır, orada kalır; çalışma zamanı yolu yoktur. |
 | `src/Kit/IconConceptScanner.php` | İkon-kavram yakınsama kapısının motoru (aşağıda "İkon kavramları"). Çalışma zamanı yolu olmayan geliştirme aracıdır — bir tüketicinin kendi CI'ı onu doğrudan `vendor/mhm/ui-core`'dan `require` eder, bu yüzden orada sevk edilmek zorundadır, ama bir WordPress.org incelemecisi sevk edilen ağacı grep'ler ve sınıf adı + docblock'u `PurityScanner.php`'nin okunduğu şekilde okunur, kapı makinesi gibi. |
 | `src-react/` (**dizinin tamamı**) | Paketin JSX ve token **kaynağı**. Build girdisidir; kullanıcının sitesinde onu okuyan hiçbir şey yoktur — WordPress JSX çalıştırmaz, yüklenen şey senin build'inin ürettiği bundle'dır. Ayrıca katman kilidi bileşenini de barındırır; incelemeci onun sınıfını ücretli-özellik kilidi olarak okur. |
 | `assets/react/pro.css` | Aynı şeyin stil yarısı. Ücretsiz çekirdek yalnız `react/admin.css` enqueue eder. |
-| `README.md` · `README-tr.md` · `assets/README.md` · `package.json` | Geliştirici dokümanı ve build meta verisi. |
+| `README.md` · `README-tr.md` · `package.json` | Geliştirici dokümanı ve build meta verisi. |
 
 🔴 **`src-react/`'i bir bütün olarak çıkar — ve kendi kaynaklarını da onunla birlikte.**
 Yalnız kilit bileşenini çıkarmak gerçek bir tüketicide denendi ve **iki kere** yanlıştı:
@@ -216,7 +216,7 @@ da bu tek yanlış cümle yüzünden taşıdı.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.23.5', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.23.6', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 `bootstrap.php`'yi doğrudan require etmek `MHMUICORE_VERSION`'ı anında tanımlar
@@ -629,7 +629,7 @@ yazılır ve kurulu paketle aynı olmak zorundadır — düşük yazmak eski bir
 kazanmasına yol açar ve **sessizdir**. Bu yüzden `bin/check-uicore-version.php` kapısı da
 kopyalanır; ölçüldü ki bu literal üç sürüm boyunca sürüklenmiş ve hiçbir kapı görmemişti.
 
-**3. `.distignore` — altı satır, yirmi sekiz değil.** Composer kurulumu paketin `export-ignore`
+**3. `.distignore` — beş satır, yirmi sekiz değil.** Composer kurulumu paketin `export-ignore`
 kurallarına uyar: `tests/` · `bin/` · `docker/` · `.github/` ve linter yapılandırmaları
 tüketicinin ağacına **hiç inmez** (ölçüldü: `vendor/mhm/ui-core` 28 dosya taşıyor, hepsi sevk
 yüzeyi). Dolayısıyla onları tek tek dışlayan satırlar ölü koddur. Gereken yalnız bu:
@@ -639,7 +639,6 @@ yüzeyi). Dolayısıyla onları tek tek dışlayan satırlar ölü koddur. Gerek
 !/vendor/mhm/
 /vendor/mhm/ui-core/README.md
 /vendor/mhm/ui-core/README-tr.md
-/vendor/mhm/ui-core/assets/README.md
 /vendor/mhm/ui-core/package.json
 ```
 
@@ -665,7 +664,7 @@ parite kapısı eşitlik arar, uyumluluk değil.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.23.5', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.23.6', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 🔴 Sürüm dizesi **elle yazılır** (kayıt, herhangi bir bootstrap yüklenmeden önce koşar) ve

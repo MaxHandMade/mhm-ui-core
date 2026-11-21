@@ -61,3 +61,9 @@
 # parity.test.js and tests/ShippedSurfaceTest.php read it). Nothing at runtime
 # reads it. package.json "files" excludes it from the npm side.
 /src-react/kit-classes.json export-ignore
+
+# The assets/ directory's own Turkish note on how to address the kit. It is
+# developer documentation that names the Pro kit, and every consumer had to
+# carry a .distignore line to keep it out of a WordPress.org ZIP (Slotiva
+# pre-ZIP audit, 2026-11-19). Nothing at runtime reads it.
+/assets/README.md export-ignore
