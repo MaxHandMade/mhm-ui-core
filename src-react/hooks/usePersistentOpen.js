@@ -21,7 +21,7 @@ function readOpen( key, fallback ) {
 		if ( value === '0' ) {
 			return false;
 		}
-	} catch ( e ) {
+	} catch {
 		// Storage is unavailable: the default is the answer.
 	}
 	return fallback;
@@ -67,7 +67,7 @@ export function usePersistentOpen( storageKey, defaultOpen ) {
 			}
 			try {
 				window.localStorage.setItem( storageKey, value ? '1' : '0' );
-			} catch ( e ) {
+			} catch {
 				// Storage is unavailable: the state still changes for this view.
 			}
 		},

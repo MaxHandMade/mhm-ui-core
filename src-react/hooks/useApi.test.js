@@ -50,7 +50,7 @@ describe( 'useApi', () => {
 						? Promise.resolve( 'first' )
 						: new Promise( ( resolve ) => {
 								releaseSecond = resolve;
-						  } );
+							} );
 				},
 				{ rows: [] }
 			)

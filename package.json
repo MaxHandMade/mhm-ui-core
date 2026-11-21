@@ -11,17 +11,25 @@
 		"!src-react/kit-classes.json"
 	],
 	"scripts": {
-		"test": "wp-scripts test-unit-js",
+		"test": "wp-scripts test-unit-jest",
 		"lint:js": "wp-scripts lint-js src-react",
 		"check:css-namespace": "node bin/check-css-namespace.mjs",
 		"tokens:build": "node bin/build-tokens.js",
 		"tokens:check": "node bin/build-tokens.js --check"
 	},
 	"devDependencies": {
+		"@babel/core": "^7.29.13",
 		"@babel/parser": "^7.29.12",
 		"@testing-library/react": "16.3.3",
+		"@wordpress/babel-preset-default": "8.55.0",
 		"@wordpress/element": "6.46.0",
-		"@wordpress/scripts": "30.27.0",
+		"@wordpress/eslint-plugin": "^27.1.0",
+		"@wordpress/jest-preset-default": "14.2.0",
+		"@wordpress/scripts": "37.2.0",
+		"babel-jest": "30.5.0",
+		"eslint-plugin-jest": "^29.17.1",
+		"jest": "30.5.0",
+		"jest-environment-jsdom": "30.5.0",
 		"postcss": "8.5.32",
 		"stylelint": "^16.26.1",
 		"typescript": "^6.0.3"

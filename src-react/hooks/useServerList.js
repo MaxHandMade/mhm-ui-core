@@ -168,7 +168,7 @@ export function useServerList( fetchPage, options = {} ) {
 							...prev,
 							loading: false,
 							accepted: { ...prev.accepted, error },
-					  }
+						}
 			);
 
 		let request;
@@ -248,7 +248,7 @@ export function useServerList( fetchPage, options = {} ) {
 					: requesting( prev, {
 							query: { ...prev.query, ...next },
 							page: 1,
-					  } );
+						} );
 			} ),
 		[]
 	);

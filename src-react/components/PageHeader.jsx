@@ -65,7 +65,7 @@ export default function PageHeader( {
 						event.preventDefault();
 						back.onClick( event );
 					}
-			  }
+				}
 			: undefined;
 
 	return (

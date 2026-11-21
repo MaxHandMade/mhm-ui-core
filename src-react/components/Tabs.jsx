@@ -99,7 +99,7 @@ export default function Tabs( {
 									event.preventDefault();
 									onSelect( item.id, event );
 								}
-						  }
+							}
 						: undefined;
 
 					return (
