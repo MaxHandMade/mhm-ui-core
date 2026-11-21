@@ -21,7 +21,7 @@
 		"@babel/parser": "^7.29.12",
 		"@testing-library/react": "16.3.3",
 		"@wordpress/element": "6.46.0",
-		"@wordpress/scripts": "30.27.0",
+		"@wordpress/scripts": "37.2.0",
 		"postcss": "8.5.32",
 		"stylelint": "^16.26.1",
 		"typescript": "^6.0.3"
