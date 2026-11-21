@@ -46,13 +46,27 @@ final class ShortcodeMarkupTest extends TestCase {
 		);
 	}
 
-	public function test_a_value_holding_both_quote_kinds_is_refused(): void {
-		// A shortcode attribute has no escape for its own delimiter, and an
-		// encoded quote is decoded by kses from 7.2: no string carries both.
-		$this->expectException( \InvalidArgumentException::class );
-		$this->expectExceptionMessage( 'title' );
+	public function test_a_value_holding_both_quote_kinds_keeps_the_old_double_quoted_form(): void {
+		// No spelling survives 7.2 kses; the old one still works before 7.2
+		// and off the kses path, and refusing would make it a fatal (Fable M1).
+		$this->assertSame(
+			'[hero title="say &quot;it&#039;s&quot;" b="x &#039;y&#039; &quot;z&quot;"]',
+			ShortcodeMarkup::to_shortcode( 'hero', array( 'title' => "say \"it's\"", 'b' => "x 'y' \"z\"" ) )
+		);
+	}
 
-		ShortcodeMarkup::to_shortcode( 'hero', array( 'title' => "say \"it's\"" ) );
+	public function test_a_single_quoted_value_lets_the_next_attribute_follow(): void {
+		$this->assertSame(
+			"[hero a='5\"' b='Tom &amp; \"Jerry\"' c=\"x\"]",
+			ShortcodeMarkup::to_shortcode( 'hero', array( 'a' => '5"', 'b' => 'Tom & "Jerry"', 'c' => 'x' ) )
+		);
+	}
+
+	public function test_a_value_that_is_not_utf8_is_emptied_whole_on_both_branches(): void {
+		$this->assertSame(
+			'[hero a="" b=""]',
+			ShortcodeMarkup::to_shortcode( 'hero', array( 'a' => "Ko\xE7 \"VIP\"", 'b' => "Ko\xE7" ) )
+		);
 	}
 
 	public function test_an_encoded_double_quote_counts_as_a_double_quote(): void {
@@ -65,11 +79,13 @@ final class ShortcodeMarkupTest extends TestCase {
 		);
 	}
 
-	public function test_an_encoded_apostrophe_beside_a_double_quote_is_refused(): void {
-		// The same decoding turns &#039; into ' inside the single quotes.
-		$this->expectException( \InvalidArgumentException::class );
-
-		ShortcodeMarkup::to_shortcode( 'hero', array( 'a' => 'say "hi" &#039;there' ) );
+	public function test_an_encoded_apostrophe_beside_a_double_quote_keeps_the_double_quoted_form(): void {
+		// 7.2 decodes &#039; to ' too, so inside single quotes it would end
+		// the attribute: the value counts as holding both kinds.
+		$this->assertStringStartsWith(
+			'[hero a="say &quot;hi&quot; ',
+			ShortcodeMarkup::to_shortcode( 'hero', array( 'a' => 'say "hi" &#039;there' ) )
+		);
 	}
 
 	public function test_a_reference_to_another_character_is_not_a_quote(): void {

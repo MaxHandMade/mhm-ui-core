@@ -9,8 +9,6 @@ declare(strict_types=1);
 
 namespace MHMUiCore\Layout;
 
-use InvalidArgumentException;
-
 /**
  * The generic half of the consumer's old BaseAdapter.
  *
@@ -31,45 +29,44 @@ final class ShortcodeMarkup {
 	/**
 	 * Build a WordPress shortcode string.
 	 *
-	 * A value is double-quoted and esc_attr()'d, except one that holds a
-	 * double quote: an encoded &quot; reached the shortcode as that literal
-	 * entity before WordPress 7.2, and from 7.2 kses decodes it in post text,
-	 * so the attribute ended at it. Such a value is single-quoted with its
-	 * double quotes raw and everything else still escaped, which every
-	 * version reads back intact. A shortcode attribute has no escape for its
-	 * own delimiter, so a value holding both quote kinds has no correct
-	 * spelling and is refused.
+	 * A value is double-quoted and esc_attr()'d, byte for byte as before
+	 * 0.23.6, except one that holds a double quote and no apostrophe. An
+	 * encoded &quot; reached the shortcode as that literal entity before
+	 * WordPress 7.2, and 7.2's HTML API kses decodes it in post text, so the
+	 * attribute ended at it. Such a value is single-quoted: its double quotes
+	 * reach the shortcode raw, everything else in esc_attr() form.
 	 *
-	 * An already-encoded quote counts as the quote it encodes: esc_attr()
-	 * keeps a valid entity as it is, and 7.2 kses decodes it in post text the
-	 * same way, so `&quot;` would end a double-quoted attribute just as `"`
-	 * does. Such entities are written as the raw character, which is what a
-	 * 7.2 shortcode receives for them anyway.
+	 * An already-encoded quote counts as the quote it encodes when choosing:
+	 * esc_attr() keeps a valid entity as it is and 7.2 kses decodes it the
+	 * same way, so `&quot;` ends a double-quoted attribute just as `"` does.
+	 *
+	 * A value holding both quote kinds has no spelling 7.2 kses leaves
+	 * intact -- a shortcode attribute has no escape for its own delimiter --
+	 * and keeps the old double-quoted form, which every version before 7.2
+	 * and every path that skips kses still reads correctly. Refusing here
+	 * would turn a title that rendered under 0.23.5 into a fatal on every
+	 * site this copy serves.
 	 *
 	 * @param string               $tag  Shortcode tag, without brackets.
 	 * @param array<string,scalar> $atts Attributes.
-	 *
-	 * @throws InvalidArgumentException When a value holds both ' and ".
 	 */
 	public static function to_shortcode( string $tag, array $atts ): string {
 		$string = '[' . $tag;
 
 		foreach ( $atts as $key => $val ) {
-			$key = esc_attr( (string) $key );
-			$val = self::decode_quotes( (string) $val );
+			$key     = esc_attr( (string) $key );
+			$val     = (string) $val;
+			$escaped = esc_attr( $val );
+			$decoded = self::decode_quotes( $val );
 
-			if ( ! str_contains( $val, '"' ) ) {
-				$string .= sprintf( ' %s="%s"', $key, esc_attr( $val ) );
+			// esc_attr() empties a value that is not valid UTF-8; the
+			// single-quoted branch escapes in pieces and must not keep half.
+			if ( '' === $escaped || ! str_contains( $decoded, '"' ) || str_contains( $decoded, "'" ) ) {
+				$string .= sprintf( ' %s="%s"', $key, $escaped );
 				continue;
 			}
 
-			if ( str_contains( $val, "'" ) ) {
-				throw new InvalidArgumentException(
-					esc_html( "ShortcodeMarkup: the value of {$key} holds both quote kinds; no shortcode attribute can carry it." )
-				);
-			}
-
-			$string .= sprintf( " %s='%s'", $key, implode( '"', array_map( 'esc_attr', explode( '"', $val ) ) ) );
+			$string .= sprintf( " %s='%s'", $key, implode( '"', array_map( 'esc_attr', explode( '"', $decoded ) ) ) );
 		}
 
 		return $string . ']';
