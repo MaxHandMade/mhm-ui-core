@@ -27,6 +27,16 @@ namespace MHMUiCore\Layout;
 final class ShortcodeMarkup {
 
 	/**
+	 * A reference esc_attr() keeps that decodes to `"`.
+	 */
+	private const DOUBLE_QUOTE_REF = '/&(?:quot|#0*34|#x0*22);/i';
+
+	/**
+	 * A reference esc_attr() keeps that decodes to `'`.
+	 */
+	private const APOSTROPHE_REF = '/&(?:apos|#0*39|#x0*27);/i';
+
+	/**
 	 * Build a WordPress shortcode string.
 	 *
 	 * A value is double-quoted and esc_attr()'d, byte for byte as before
@@ -36,9 +46,11 @@ final class ShortcodeMarkup {
 	 * attribute ended at it. Such a value is single-quoted: its double quotes
 	 * reach the shortcode raw, everything else in esc_attr() form.
 	 *
-	 * An already-encoded quote counts as the quote it encodes when choosing:
-	 * esc_attr() keeps a valid entity as it is and 7.2 kses decodes it the
-	 * same way, so `&quot;` ends a double-quoted attribute just as `"` does.
+	 * The choice is made on the esc_attr()'d string, which is what kses
+	 * sees: a reference that esc_attr() keeps and 7.2 kses decodes to a
+	 * quote (`&quot;`, `&#34;`, `&#x22;`) counts as that quote, and a
+	 * reference esc_attr() neutralises (`&quot` without its semicolon, as in
+	 * `?a=1&quote=2`, or `&QUOT;`) does not -- those were already safe.
 	 *
 	 * A value holding both quote kinds has no spelling 7.2 kses leaves
 	 * intact -- a shortcode attribute has no escape for its own delimiter --
@@ -55,33 +67,18 @@ final class ShortcodeMarkup {
 
 		foreach ( $atts as $key => $val ) {
 			$key     = esc_attr( (string) $key );
-			$val     = (string) $val;
-			$escaped = esc_attr( $val );
-			$decoded = self::decode_quotes( $val );
+			$escaped = esc_attr( (string) $val );
 
-			// esc_attr() empties a value that is not valid UTF-8; the
-			// single-quoted branch escapes in pieces and must not keep half.
-			if ( '' === $escaped || ! str_contains( $decoded, '"' ) || str_contains( $decoded, "'" ) ) {
+			// No quote reference, or an apostrophe beside it, or a value
+			// esc_attr() emptied as invalid UTF-8: the 0.23.5 bytes.
+			if ( 1 !== preg_match( self::DOUBLE_QUOTE_REF, $escaped ) || 1 === preg_match( self::APOSTROPHE_REF, $escaped ) ) {
 				$string .= sprintf( ' %s="%s"', $key, $escaped );
 				continue;
 			}
 
-			$string .= sprintf( " %s='%s'", $key, implode( '"', array_map( 'esc_attr', explode( '"', $decoded ) ) ) );
+			$string .= sprintf( " %s='%s'", $key, preg_replace( self::DOUBLE_QUOTE_REF, '"', $escaped ) );
 		}
 
 		return $string . ']';
-	}
-
-	/**
-	 * Turn every character reference an HTML5 parser reads as " or ' into
-	 * that character: named (any case, `&quot` also without its semicolon, as
-	 * HTML5 allows in text), decimal and hexadecimal with any leading zeros.
-	 *
-	 * @param string $value Attribute value.
-	 */
-	private static function decode_quotes( string $value ): string {
-		$value = (string) preg_replace( '/&(?:quot|#0*34(?![0-9])|#x0*22(?![0-9a-f]));?/i', '"', $value );
-
-		return (string) preg_replace( '/&(?:apos;|#0*39(?![0-9]);?|#x0*27(?![0-9a-f]);?)/i', "'", $value );
 	}
 }

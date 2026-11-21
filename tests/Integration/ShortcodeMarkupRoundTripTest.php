@@ -57,4 +57,26 @@ final class ShortcodeMarkupRoundTripTest extends WP_UnitTestCase {
 		self::assertContains( $atts['title'], array( "it's", 'it&#039;s' ) );
 		self::assertSame( 'tail', $atts['next'] );
 	}
+
+	public function test_a_reference_esc_attr_neutralises_keeps_the_0_23_5_bytes(): void {
+		// Fable tur 2 M1: a semicolon-less &quot is not a quote to kses once
+		// esc_attr() has turned it into &amp;quot; a URL parameter named
+		// quote must not become one.
+		self::assertSame(
+			'[x url="https://x.test/?a=1&amp;quote=2" b="&amp;QUOT; &#340;"]',
+			ShortcodeMarkup::to_shortcode( 'x', array( 'url' => 'https://x.test/?a=1&quote=2', 'b' => '&QUOT; &#340;' ) )
+		);
+
+		$atts = $this->received( 'https://x.test/?a=1&quote=2' );
+		self::assertContains( $atts['title'], array( 'https://x.test/?a=1&quote=2', 'https://x.test/?a=1&amp;quote=2' ) );
+		self::assertSame( 'tail', $atts['next'] );
+	}
+
+	public function test_an_encoded_apostrophe_beside_a_double_quote_keeps_the_double_quoted_form(): void {
+		// 7.2 decodes &#039; to ' too, so single quotes would end at it.
+		self::assertStringStartsWith(
+			'[x a="say &quot;hi&quot; &#039;there"',
+			ShortcodeMarkup::to_shortcode( 'x', array( 'a' => 'say "hi" &#039;there' ) )
+		);
+	}
 }
