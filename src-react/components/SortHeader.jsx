@@ -32,16 +32,16 @@ export function nextSort( sort, key, firstDirection = 'asc' ) {
  * aria-sort at all, not "none" (WAI-ARIA: apply it to one header at a time).
  * The arrow is decoration; the state lives in aria-sort.
  *
- * @param {Object}   props
- * @param {string}   props.label       Visible text and the button's name.
- * @param {string}   props.sortKey     This column's key.
- * @param {?Object}  props.sort        { key, direction: 'asc'|'desc' } or null.
- * @param {Function} props.onSort      Called with sortKey. The consumer picks
- *                                     the direction (nextSort helps) and
- *                                     resets its own page.
- * @param {string}   [props.align]     'start' (default) | 'end' (numbers).
- * @param {string}   [props.className] Added to the th, so a screen's own
- *                                     header class reaches every header.
+ * @param {Object}                    props
+ * @param {string}                    props.label       Visible text and the button's name.
+ * @param {string}                    props.sortKey     This column's key.
+ * @param {?Object}                   props.sort        { key, direction: 'asc'|'desc' } or null.
+ * @param {(sortKey: string) => void} props.onSort      Called with sortKey. The consumer picks
+ *                                                      the direction (nextSort helps) and
+ *                                                      resets its own page.
+ * @param {string}                    [props.align]     'start' (default) | 'end' (numbers).
+ * @param {string}                    [props.className] Added to the th, so a screen's own
+ *                                                      header class reaches every header.
  */
 export default function SortHeader( {
 	label,

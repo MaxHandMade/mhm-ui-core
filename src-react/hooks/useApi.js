@@ -3,14 +3,15 @@ import { useState, useEffect, useRef } from '@wordpress/element';
 /**
  * Fetch hook with loading state, error handling, and a refetch trigger.
  *
- * @param {Function} fetchFn     - Stable function that returns a Promise (use module-scope functions from the host's API map).
- * @param {*}        initialData - Pre-populated data from wp_localize_script. When supplied, the
- *                               first fetch runs WITHOUT raising `loading`: there is already
- *                               something on screen, so a spinner would be the very thing this
- *                               argument exists to prevent. Refetches and dependency changes
- *                               raise it as normal.
- * @param {Array}    deps        - Additional effect dependencies (e.g. filter values that should re-trigger fetch).
- * @return {{ data, loading, error, refetch }} Fetch state plus a refetch trigger.
+ * @template T
+ * @param {() => Promise<T>} fetchFn       - Stable function that returns a Promise (use module-scope functions from the host's API map).
+ * @param {T|null}           [initialData] - Pre-populated data from wp_localize_script. When supplied, the
+ *                                         first fetch runs WITHOUT raising `loading`: there is already
+ *                                         something on screen, so a spinner would be the very thing this
+ *                                         argument exists to prevent. Refetches and dependency changes
+ *                                         raise it as normal.
+ * @param {Array}            [deps]        - Additional effect dependencies (e.g. filter values that should re-trigger fetch).
+ * @return {{ data: (T|null), loading: boolean, error: unknown, refetch: () => void }} Fetch state plus a refetch trigger.
  */
 export function useApi( fetchFn, initialData = null, deps = [] ) {
 	const [ data, setData ] = useState( initialData );

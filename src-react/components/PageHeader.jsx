@@ -1,6 +1,8 @@
 import StatusBadge from './StatusBadge';
 import { isPlainLeftClick } from '../plain-left-click';
 
+/** @typedef {import('react').ReactNode} ReactNode */
+
 const LEVELS = [ 1, 2, 3 ];
 
 /**
@@ -17,23 +19,23 @@ const LEVELS = [ 1, 2, 3 ];
  * The badge's tone meaning lives in StatusBadge's own manifest row (its text
  * carries it), so this component declares no tone semantics.
  *
- * @param {Object} props
- * @param {string} props.title
- * @param {Object} [props.back]    { label, href, onClick? }. Skipped when href
- *                                 is empty or label is missing, a boolean or
- *                                 an empty/blank string -- no nameless link.
- *                                 A node label is drawn as given.
- * @param {Object} [props.badge]   { text, tone? } -> StatusBadge.
- * @param {Array}  [props.badges]  [ { text, tone? } ] -> more StatusBadges after
- *                                 `badge`; an item with empty text is skipped.
- *                                 Given (non-empty), badge and badges share one
- *                                 .mhmui-page-header__badges wrapper so a narrow
- *                                 screen can drop the chips to their own row.
- *                                 A call with only `badge` keeps the 0.15.2
- *                                 markup byte for byte.
- * @param {string} [props.meta]
- * @param {*}      [props.actions]
- * @param {number} [props.level]   1 | 2 | 3, default 2.
+ * @param {Object}    props
+ * @param {string}    props.title
+ * @param {Object}    [props.back]    { label, href, onClick? }. Skipped when href
+ *                                    is empty or label is missing, a boolean or
+ *                                    an empty/blank string -- no nameless link.
+ *                                    A node label is drawn as given.
+ * @param {Object}    [props.badge]   { text, tone? } -> StatusBadge.
+ * @param {Array}     [props.badges]  [ { text, tone? } ] -> more StatusBadges after
+ *                                    `badge`; an item with empty text is skipped.
+ *                                    Given (non-empty), badge and badges share one
+ *                                    .mhmui-page-header__badges wrapper so a narrow
+ *                                    screen can drop the chips to their own row.
+ *                                    A call with only `badge` keeps the 0.15.2
+ *                                    markup byte for byte.
+ * @param {string}    [props.meta]
+ * @param {ReactNode} [props.actions]
+ * @param {number}    [props.level]   1 | 2 | 3, default 2.
  */
 export default function PageHeader( {
 	title,

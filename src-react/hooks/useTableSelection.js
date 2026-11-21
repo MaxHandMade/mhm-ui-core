@@ -1,6 +1,16 @@
 import { useState, useRef, useCallback } from '@wordpress/element';
 
 /**
+ * @typedef {Object} TableSelection
+ * @property {Array<string|number>}           selected   The selected ids on this page.
+ * @property {'none'|'some'|'all'}            state      How much of the page is selected.
+ * @property {(id: string|number) => boolean} isSelected Whether one id is selected.
+ * @property {(id: string|number) => void}    toggle     Flips one id.
+ * @property {(on: boolean) => void}          setAll     Selects or clears every id on the page.
+ * @property {() => void}                     clear      Clears the selection.
+ */
+
+/**
  * Page-scoped row selection for a table (0.19.0). Optional: SelectAll and
  * RowSelect take plain props and do not need it.
  *
@@ -21,7 +31,7 @@ import { useState, useRef, useCallback } from '@wordpress/element';
  *   6. Locking while a bulk request runs is the consumer's job.
  *
  * @param {Array<string|number>} ids The ids of the rows on this page.
- * @return {{selected: Array, state: string, isSelected: Function, toggle: Function, setAll: Function, clear: Function}} Selection.
+ * @return {TableSelection} Selection.
  */
 export function useTableSelection( ids ) {
 	const key = ids.join( '\u0000' );

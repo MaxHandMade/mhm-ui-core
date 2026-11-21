@@ -12,7 +12,7 @@
 	],
 	"scripts": {
 		"test": "wp-scripts test-unit-jest",
-		"lint:js": "wp-scripts lint-js src-react",
+		"lint:js": "wp-scripts lint-js src-react --max-warnings=0",
 		"check:css-namespace": "node bin/check-css-namespace.mjs",
 		"tokens:build": "node bin/build-tokens.js",
 		"tokens:check": "node bin/build-tokens.js --check"

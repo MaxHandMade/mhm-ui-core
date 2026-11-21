@@ -1,5 +1,23 @@
 import { isPlainLeftClick } from '../plain-left-click';
 
+/** @typedef {import('react').MouseEvent} ReactMouseEvent */
+/** @typedef {(id: (string|number|undefined), event: ReactMouseEvent) => void} TabSelectHandler */
+
+const BADGE_TONES = [ 'success', 'warning', 'danger', 'info', 'neutral' ];
+
+// A number, or a numeric string -- mirrors the PHP twin's is_numeric() + (int).
+// null when there is no count at all (so showZero never invents a "0").
+function badgeCount( badge ) {
+	if ( typeof badge === 'number' ) {
+		return Number.isFinite( badge ) ? Math.trunc( badge ) : null;
+	}
+	if ( typeof badge === 'string' && badge.trim() !== '' ) {
+		const n = Number( badge );
+		return Number.isFinite( n ) ? Math.trunc( n ) : null;
+	}
+	return null;
+}
+
 /**
  * Page-section navigation as real links.
  *
@@ -22,39 +40,26 @@ import { isPlainLeftClick } from '../plain-left-click';
  * reads it once, not "2 2 pending". The markup is pinned byte for byte in
  * Tabs.test.jsx and tests/Kit/TabsTest.php.
  *
- * @param {Object}   props
- * @param {string}   props.label      Accessible name of the <nav>. Known limit:
- *                                    an empty one yields an unnamed nav and no gate
- *                                    catches it.
- * @param {string}   [props.current]  Id of the current item.
- * @param {Array}    props.items      { id, label, href, badge?, badgeLabel?, badgeTone? }.
- * @param {string}   [props.variant]  'pill' (default) or 'underline' -- a
- *                                    transparent row with a 2px underline on the
- *                                    current tab. Unknown falls back to pill.
- * @param {boolean}  [props.showZero] Draw a chip for a count of 0 (when the item
- *                                    carries a numeric badge). Negative never draws.
+ * A CSS-only .mhmui-tabs-bar (not drawn here) wraps the tabs plus a right-hand
+ * link under one full-width rule.
  *
- *                                    badgeTone (success|warning|danger|info|neutral) colours that item's chip;
- *                                    unknown adds no class. A CSS-only .mhmui-tabs-bar wraps tabs plus a
- *                                    right-hand link under one full-width rule.
- * @param {Function} [props.onSelect] ( id, event ) on a plain left click.
+ * @param {Object}           props
+ * @param {string}           props.label      Accessible name of the <nav>. Known limit:
+ *                                            an empty one yields an unnamed nav and no gate
+ *                                            catches it.
+ * @param {string}           [props.current]  Id of the current item. Compared as a string with
+ *                                            ===, so an item whose id is a number is never current.
+ * @param {Array}            props.items      { id, label, href, badge?, badgeLabel?, badgeTone? }.
+ *                                            badgeTone (success|warning|danger|info|neutral) colours that item's chip;
+ *                                            unknown adds no class.
+ * @param {string}           [props.variant]  'pill' (default) or 'underline' -- a
+ *                                            transparent row with a 2px underline on the
+ *                                            current tab. Unknown falls back to pill.
+ * @param {boolean}          [props.showZero] Draw a chip for a count of 0 (when the item
+ *                                            carries a numeric badge). Negative never draws.
+ * @param {TabSelectHandler} [props.onSelect] On a plain left click, with the item's id as given
+ *                                            (not converted; undefined for an item without one).
  */
-
-const BADGE_TONES = [ 'success', 'warning', 'danger', 'info', 'neutral' ];
-
-// A number, or a numeric string -- mirrors the PHP twin's is_numeric() + (int).
-// null when there is no count at all (so showZero never invents a "0").
-function badgeCount( badge ) {
-	if ( typeof badge === 'number' ) {
-		return Number.isFinite( badge ) ? Math.trunc( badge ) : null;
-	}
-	if ( typeof badge === 'string' && badge.trim() !== '' ) {
-		const n = Number( badge );
-		return Number.isFinite( n ) ? Math.trunc( n ) : null;
-	}
-	return null;
-}
-
 export default function Tabs( {
 	label,
 	current,

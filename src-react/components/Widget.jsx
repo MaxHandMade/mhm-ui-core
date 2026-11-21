@@ -2,6 +2,10 @@ import { useEffect, useId, useLayoutEffect, useRef } from '@wordpress/element';
 import { resolveIcon } from '../icons';
 import { usePersistentOpen } from '../hooks/usePersistentOpen';
 
+/** @typedef {import('react').ReactNode} ReactNode */
+
+const HIDDEN_STYLE = { display: 'none' };
+
 /**
  * A titled panel -- the box most admin screens are made of.
  *
@@ -12,31 +16,29 @@ import { usePersistentOpen } from '../hooks/usePersistentOpen';
  * focus inside its body or its actions, focus moves to the toggle. A call without
  * `collapsible` renders the 0.16.0 markup unchanged.
  *
- * @param {Object}         props
- * @param {string}         props.title         Translated title.
- * @param {string}         [props.subtitle]    Translated subtitle.
- * @param {string}         [props.icon]        Dashicons class suffix, or a registered
- *                                             icon concept (see src-react/icons.js).
- * @param {*}              [props.actions]     Nodes rendered at the right of the header
- *                                             (a collapsible card shows them only while open).
- * @param {2|3}            [props.level]       Heading level; 2 (a page section) or 3
- *                                             (default). Anything else is 3.
- * @param {'card'|'plain'} [props.variant]     `plain` drops the header band and
- *                                             pads the card itself. Anything else is card.
- * @param {boolean}        [props.collapsible] Opt-in disclosure mode. Default false.
- * @param {boolean}        [props.defaultOpen] Uncontrolled start state when nothing is
- *                                             stored. Default true.
- * @param {string}         [props.storageKey]  Uncontrolled only: localStorage key that
- *                                             remembers the state ('1' open, '0' closed).
- * @param {boolean}        [props.open]        Controlled state. When given, `defaultOpen`
- *                                             and `storageKey` are ignored and a click
- *                                             only calls `onToggle( ! open )`.
- * @param {Function}       [props.onToggle]    Called with the next state on every click,
- *                                             in both modes.
- * @param {*}              props.children      Body.
+ * @param {Object}                  props
+ * @param {string}                  props.title         Translated title.
+ * @param {string}                  [props.subtitle]    Translated subtitle.
+ * @param {string}                  [props.icon]        Dashicons class suffix, or a registered
+ *                                                      icon concept (see src-react/icons.js).
+ * @param {ReactNode}               [props.actions]     Nodes rendered at the right of the header
+ *                                                      (a collapsible card shows them only while open).
+ * @param {2|3}                     [props.level]       Heading level; 2 (a page section) or 3
+ *                                                      (default). Anything else is 3.
+ * @param {'card'|'plain'}          [props.variant]     `plain` drops the header band and
+ *                                                      pads the card itself. Anything else is card.
+ * @param {boolean}                 [props.collapsible] Opt-in disclosure mode. Default false.
+ * @param {boolean}                 [props.defaultOpen] Uncontrolled start state when nothing is
+ *                                                      stored. Default true.
+ * @param {string}                  [props.storageKey]  Uncontrolled only: localStorage key that
+ *                                                      remembers the state ('1' open, '0' closed).
+ * @param {boolean}                 [props.open]        Controlled state. When given, `defaultOpen`
+ *                                                      and `storageKey` are ignored and a click
+ *                                                      only calls `onToggle( ! open )`.
+ * @param {(open: boolean) => void} [props.onToggle]    Called with the next state on every click,
+ *                                                      in both modes.
+ * @param {ReactNode}               props.children      Body.
  */
-const HIDDEN_STYLE = { display: 'none' };
-
 export default function Widget( {
 	title,
 	subtitle,

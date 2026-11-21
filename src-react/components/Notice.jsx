@@ -1,11 +1,14 @@
+/** @typedef {import('react').ReactNode} ReactNode */
+/** @typedef {import('react').MouseEvent} ReactMouseEvent */
+
 /**
  * An inline admin notice in WordPress's own notice shape.
  *
- * @param {Object}   props
- * @param {string}   [props.tone]         success | warning | danger | info.
- * @param {*}        props.children       Translated message.
- * @param {Function} [props.onDismiss]    When given, a dismiss button is rendered.
- * @param {string}   [props.dismissLabel] Accessible label for the dismiss button.
+ * @param {Object}                           props
+ * @param {string}                           [props.tone]         success | warning | danger | info.
+ * @param {ReactNode}                        props.children       Translated message.
+ * @param {(event: ReactMouseEvent) => void} [props.onDismiss]    When given, a dismiss button is rendered.
+ * @param {string}                           [props.dismissLabel] Accessible label for the dismiss button.
  */
 export default function Notice( {
 	tone = 'info',

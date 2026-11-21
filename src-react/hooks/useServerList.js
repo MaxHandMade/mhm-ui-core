@@ -96,6 +96,9 @@ const requesting = ( prev, change ) => ( {
 	accepted: { ...prev.accepted, error: null },
 } );
 
+/** @typedef {(params: Object) => Promise<unknown>} PageFetcher */
+/** @typedef {(res: unknown) => {total: number, pages: number}} TotalsReader */
+
 /**
  * Server-paged list state (0.20.0): query, page, the last accepted answer
  * and a ready `pagination` for the kit Pagination.
@@ -114,13 +117,13 @@ const requesting = ( prev, change ) => ( {
  * - In React StrictMode (development) the mount effect runs twice, so two
  *   mount requests go out and only the second is accepted.
  *
- * @param {Function} fetchPage              Called with the params (the query
- *                                          without '', null and undefined,
- *                                          then page and per_page); returns a Promise.
- * @param {Object}   [options]              Options.
- * @param {Object}   [options.initialQuery] The consumer's query keys.
- * @param {number}   [options.perPage]      Sent as `per_page`; enables `range`.
- * @param {Function} [options.readTotals]   ( res ) => ( { total, pages } ).
+ * @param {PageFetcher}  fetchPage              Called with the params (the query
+ *                                              without '', null and undefined,
+ *                                              then page and per_page); returns a Promise.
+ * @param {Object}       [options]              Options.
+ * @param {Object}       [options.initialQuery] The consumer's query keys.
+ * @param {number}       [options.perPage]      Sent as `per_page`; enables `range`.
+ * @param {TotalsReader} [options.readTotals]   Reads the totals off a response.
  * @return {Object} query, setQuery, page, setPage, data, loading, error,
  *                  refetch, total, totalPages, range and pagination.
  */

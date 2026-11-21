@@ -10,11 +10,11 @@ import { useId } from '@wordpress/element';
  * kit (`tr:has( .mhmui-table__row-select:checked )`); the consumer adds no
  * class for it.
  *
- * @param {Object}   props
- * @param {boolean}  props.checked
- * @param {Function} props.onChange   Called with no argument.
- * @param {string}   props.label      Names the row: "Select Burak Demir".
- * @param {boolean}  [props.disabled]
+ * @param {Object}     props
+ * @param {boolean}    props.checked
+ * @param {() => void} props.onChange   Called with no argument.
+ * @param {string}     props.label      Names the row: "Select Burak Demir".
+ * @param {boolean}    [props.disabled]
  */
 export default function RowSelect( {
 	checked,

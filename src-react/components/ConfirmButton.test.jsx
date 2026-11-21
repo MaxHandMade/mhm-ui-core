@@ -164,7 +164,6 @@ describe( 'ConfirmButton -- two steps, in the page', () => {
 	async function settleWithObservedRejection( run ) {
 		const original = Promise.prototype.finally;
 		const seen = [];
-		// eslint-disable-next-line no-extend-native -- one test, restored in finally.
 		Promise.prototype.finally = function ( callback ) {
 			const derived = original.call( this, callback );
 			derived.catch( ( error ) => seen.push( error ) );
@@ -176,7 +175,6 @@ describe( 'ConfirmButton -- two steps, in the page', () => {
 				await new Promise( ( resolve ) => setTimeout( resolve, 0 ) );
 			} );
 		} finally {
-			// eslint-disable-next-line no-extend-native -- restoring the original.
 			Promise.prototype.finally = original;
 		}
 		return seen;

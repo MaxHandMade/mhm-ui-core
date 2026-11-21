@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect, useId } from '@wordpress/element';
 
+/** @typedef {import('react').ReactNode} ReactNode */
+
 const VARIANT_CLASS = {
 	primary: 'mhmui-confirm mhmui-confirm--primary',
 	secondary: 'mhmui-confirm mhmui-confirm--secondary',
@@ -42,29 +44,29 @@ const FOCUSABLE =
  *      aria-describedby (use describedBy), onClick and ref win. An aria-label
  *      must contain the visible label (WCAG 2.5.3).
  *
- * @param {Object}   props
- * @param {string}   props.label             Trigger text.
- * @param {string}   props.confirmText       The question.
- * @param {string}   props.confirmLabel
- * @param {string}   props.cancelLabel
- * @param {string}   props.busyText          Confirm text while busy.
- *                                           Known limit: an empty label,
- *                                           confirmLabel, cancelLabel or
- *                                           busyText draws a nameless button
- *                                           and no gate catches it (as Tabs'
- *                                           empty label); the trigger is not
- *                                           hidden -- a silently missing
- *                                           action is worse.
- * @param {Function} props.onConfirm         () => void | Promise.
- * @param {string}   [props.variant]         primary | secondary | danger.
- * @param {string}   [props.size]            default | compact (36px targets,
- *                                           44px at 782px and below; the
- *                                           prompt is a box). Anything else
- *                                           is default. No effect on focus.
- * @param {boolean}  [props.confirmDisabled]
- * @param {boolean}  [props.disabled]
- * @param {string}   [props.describedBy]     Id of a hint for the trigger.
- * @param {*}        [props.children]        Prompt body (e.g. a reason field).
+ * @param {Object}                        props
+ * @param {string}                        props.label             Trigger text.
+ * @param {string}                        props.confirmText       The question.
+ * @param {string}                        props.confirmLabel
+ * @param {string}                        props.cancelLabel
+ * @param {string}                        props.busyText          Confirm text while busy.
+ *                                                                Known limit: an empty label,
+ *                                                                confirmLabel, cancelLabel or
+ *                                                                busyText draws a nameless button
+ *                                                                and no gate catches it (as Tabs'
+ *                                                                empty label); the trigger is not
+ *                                                                hidden -- a silently missing
+ *                                                                action is worse.
+ * @param {() => (void|Promise<unknown>)} props.onConfirm         A Promise keeps the lock until it settles.
+ * @param {string}                        [props.variant]         primary | secondary | danger.
+ * @param {string}                        [props.size]            default | compact (36px targets,
+ *                                                                44px at 782px and below; the
+ *                                                                prompt is a box). Anything else
+ *                                                                is default. No effect on focus.
+ * @param {boolean}                       [props.confirmDisabled]
+ * @param {boolean}                       [props.disabled]
+ * @param {string}                        [props.describedBy]     Id of a hint for the trigger.
+ * @param {ReactNode}                     [props.children]        Prompt body (e.g. a reason field).
  */
 export default function ConfirmButton( {
 	label,

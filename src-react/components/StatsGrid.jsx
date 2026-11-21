@@ -33,8 +33,8 @@ const NUMERIC_STRING =
  * finite (NaN, Infinity, '1e400') is 1: PHP's (int) casts it to 0. Not mirrored:
  * a finite value past PHP_INT_MAX (PHP clamps, JS keeps it) -- both are absurd.
  *
- * @param {*}      columns  Raw prop.
- * @param {number} fallback Ceiling for a non-numeric value (4 here, 2 in DetailList).
+ * @param {unknown} columns  Raw prop.
+ * @param {number}  fallback Ceiling for a non-numeric value (4 here, 2 in DetailList).
  */
 export function numericCeiling( columns, fallback ) {
 	const numeric =

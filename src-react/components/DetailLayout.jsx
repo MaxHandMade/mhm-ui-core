@@ -1,3 +1,5 @@
+/** @typedef {import('react').ReactNode} ReactNode */
+
 /**
  * Two-column detail layout: main column and a sticky aside that drops below
  * the main column when the container gets narrow (flex-wrap -- the admin
@@ -5,10 +7,10 @@
  * StatsGrid formula). Both columns stack their children with a gap, and a kit
  * Widget inside loses its own top margin here (the gap already spaces it).
  *
- * @param {Object} props
- * @param {*}      props.children     Main column.
- * @param {*}      [props.aside]      Side column.
- * @param {string} [props.asideLabel] Accessible name of the <aside>.
+ * @param {Object}    props
+ * @param {ReactNode} props.children     Main column.
+ * @param {ReactNode} [props.aside]      Side column.
+ * @param {string}    [props.asideLabel] Accessible name of the <aside>.
  */
 export default function DetailLayout( { children, aside, asideLabel } ) {
 	return (

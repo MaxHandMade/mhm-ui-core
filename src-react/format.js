@@ -1,4 +1,10 @@
 /**
+ * @typedef {Object} Formatters
+ * @property {(n: (number|string|null|undefined), decimals?: number) => string}                 fmtAmount The number alone; null/undefined read as 0.
+ * @property {(n: (number|string|null|undefined), symbol: string, decimals?: number) => string} fmtMoney  The number with its symbol.
+ */
+
+/**
  * Currency formatting for MHM admin screens.
  *
  * The host owns the settings. In a WooCommerce-backed plugin they come from
@@ -12,7 +18,7 @@
  * @param {string} config.thousandSep      - Thousands separator.
  * @param {number} config.numDecimals      - Default decimal places.
  * @param {string} config.currencyPosition - left | left_space | right | right_space.
- * @return {{ fmtAmount: Function, fmtMoney: Function }} Formatters bound to that config.
+ * @return {Formatters} Formatters bound to that config.
  */
 export function createFormatter( config = {} ) {
 	const decimalSep = config.decimalSep ?? ',';

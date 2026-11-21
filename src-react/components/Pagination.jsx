@@ -1,13 +1,13 @@
 /**
  * Previous / page x of y / next.
  *
- * @param {Object}   props
- * @param {number}   props.page       Current page, 1-based.
- * @param {number}   props.totalPages Total pages.
- * @param {Function} props.onChange   Called with the new page number.
- * @param {Object}   props.labels     { previous, next, of, navigation, page } -- translated by the consumer.
- * @param {string}   [props.variant]  'inline' (default) or 'footer' (table-card footer).
- * @param {string}   [props.summary]  Footer only: range text shown on the left.
+ * @param {Object}                 props
+ * @param {number}                 props.page       Current page, 1-based.
+ * @param {number}                 props.totalPages Total pages.
+ * @param {(page: number) => void} props.onChange   Called with the new page number.
+ * @param {Object}                 props.labels     { previous, next, of, navigation, page } -- translated by the consumer.
+ * @param {string}                 [props.variant]  'inline' (default) or 'footer' (table-card footer).
+ * @param {string}                 [props.summary]  Footer only: range text shown on the left.
  */
 export default function Pagination( {
 	page,
