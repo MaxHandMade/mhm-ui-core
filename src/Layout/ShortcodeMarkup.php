@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace MHMUiCore\Layout;
 
+use InvalidArgumentException;
+
 /**
  * The generic half of the consumer's old BaseAdapter.
  *
@@ -29,14 +31,39 @@ final class ShortcodeMarkup {
 	/**
 	 * Build a WordPress shortcode string.
 	 *
+	 * A value is double-quoted and esc_attr()'d, except one that holds a
+	 * double quote: an encoded &quot; reached the shortcode as that literal
+	 * entity before WordPress 7.2, and from 7.2 kses decodes it in post text,
+	 * so the attribute ended at it. Such a value is single-quoted with its
+	 * double quotes raw and everything else still escaped, which every
+	 * version reads back intact. A shortcode attribute has no escape for its
+	 * own delimiter, so a value holding both quote kinds has no correct
+	 * spelling and is refused.
+	 *
 	 * @param string               $tag  Shortcode tag, without brackets.
 	 * @param array<string,scalar> $atts Attributes.
+	 *
+	 * @throws InvalidArgumentException When a value holds both ' and ".
 	 */
 	public static function to_shortcode( string $tag, array $atts ): string {
 		$string = '[' . $tag;
 
 		foreach ( $atts as $key => $val ) {
-			$string .= sprintf( ' %s="%s"', esc_attr( (string) $key ), esc_attr( (string) $val ) );
+			$key = esc_attr( (string) $key );
+			$val = (string) $val;
+
+			if ( ! str_contains( $val, '"' ) ) {
+				$string .= sprintf( ' %s="%s"', $key, esc_attr( $val ) );
+				continue;
+			}
+
+			if ( str_contains( $val, "'" ) ) {
+				throw new InvalidArgumentException(
+					esc_html( "ShortcodeMarkup: the value of {$key} holds both quote kinds; no shortcode attribute can carry it." )
+				);
+			}
+
+			$string .= sprintf( " %s='%s'", $key, implode( '"', array_map( 'esc_attr', explode( '"', $val ) ) ) );
 		}
 
 		return $string . ']';
