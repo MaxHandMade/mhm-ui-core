@@ -96,9 +96,22 @@ jobs:
         run: npm run check:css-namespace
 
   phpunit-wp:
-    name: PHPUnit (WordPress)
+    name: PHPUnit (WordPress ${{ matrix.wp }})
     runs-on: ubuntu-latest
     timeout-minutes: 20
+
+    # 7.1 is the release the consumers ship against today; the second entry is
+    # the next release while it is a candidate. 7.2 rewrote kses on the HTML API
+    # (on by default in default-filters.php) and changed what a shortcode
+    # attribute receives -- 0.23.6 was measured against RC2 by hand, and only
+    # this entry keeps it measured. Its core is the RC2 tarball, but its test
+    # framework is trunk (later branches/7.2) at HEAD, so this entry is not
+    # pinned the way 7.1 is. When 7.2 ships, the matrix becomes [ '7.1', '7.2' ];
+    # when 7.3 reaches beta, add its candidate as a third entry.
+    strategy:
+      fail-fast: false
+      matrix:
+        wp: [ '7.1', '7.2-RC2' ]
 
     services:
       mysql:
@@ -131,12 +144,12 @@ jobs:
       - name: Install Composer dependencies
         run: composer install --no-interaction --no-progress --prefer-dist
 
-      # The version is pinned rather than passed as `latest`. The installer
+      # The versions are named rather than passed as `latest`. The installer
       # resolves `latest` to the current stable tag, but pinning is what keeps a
       # WordPress release from turning this job red with no change to the
       # package -- and a red job nobody caused is a red job nobody reads.
       - name: Install the WordPress test suite
-        run: bash bin/install-wp-tests.sh wordpress_test root root 127.0.0.1:3306 7.1
+        run: bash bin/install-wp-tests.sh wordpress_test root root 127.0.0.1:3306 "${{ matrix.wp }}"
 
       - name: PHPUnit (integration)
         env:

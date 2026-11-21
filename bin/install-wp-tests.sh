@@ -71,6 +71,31 @@ fi
 
 WP_TESTS_TAG="tags/$WP_VERSION"
 
+# A pre-release (7.2-RC2, 7.2-beta1, 7.2.1-RC1) has a core tarball but no svn
+# tag. Its test framework lives on the X.Y release branch once core has
+# branched, and on trunk until then -- trunk IS that release before the
+# branch exists. Only a 404 means "not branched yet": any other answer (a
+# timeout, a 429, a 5xx) stops the install, because falling back to trunk
+# after the branch exists would pair a newer framework with this core and
+# turn the job red with no change to the package.
+if [[ "$WP_VERSION" == *-* ]]; then
+	if [[ ! "$WP_VERSION" =~ ^([0-9]+\.[0-9]+)(\.[0-9]+)?-(beta|RC)[0-9]+$ ]]; then
+		echo "not a WordPress version: $WP_VERSION (expected X.Y, X.Y.Z, or X.Y[.Z]-betaN / -RCN)" >&2
+		exit 1
+	fi
+	WP_BRANCH="branches/${BASH_REMATCH[1]}"
+	PROBE=$(curl -sL --retry 3 --max-time 30 -o /dev/null -w '%{http_code}' "https://develop.svn.wordpress.org/${WP_BRANCH}/tests/phpunit/includes/functions.php" || true)
+	case "$PROBE" in
+		200) WP_TESTS_TAG=$WP_BRANCH ;;
+		404) WP_TESTS_TAG="trunk" ;;
+		*)
+			echo "could not tell whether ${WP_BRANCH} exists (HTTP ${PROBE:-none})" >&2
+			exit 1
+			;;
+	esac
+	echo "pre-release $WP_VERSION: test framework from $WP_TESTS_TAG"
+fi
+
 install_wp() {
 	# wp-settings.php, not the directory: the directory exists as soon as this
 	# function starts, so guarding on it would skip a re-run after a failure.

@@ -92,8 +92,12 @@ final class KitEscapingTest extends WP_UnitTestCase {
 	 * mark and accessible name, the sub line, and the grid's
 	 * `style="--mhmui-columns:N"`.
 	 *
-	 * It measures the WordPress this suite runs on (CI: 7.1), with core's default
-	 * allowlists. One version edge, read from core source: custom-property
+	 * It measures the WordPress this suite runs on (CI: 7.1 and the 7.2 release
+	 * candidate), with core's default allowlists. The comparison is on the
+	 * markup's meaning, not its spelling: 7.2's HTML API kses re-serialises
+	 * every tag with its attributes in name order (same DOM), so both sides go
+	 * through same_markup() first. A stripped element or attribute, or a
+	 * changed value or text, still fails it. One version edge, read from core source: custom-property
 	 * assignment passes safecss_filter_attr() since 6.1.0 (its own @since list).
 	 * DATA_KEY accepts only hyphen-separated runs of [a-z0-9], the shape kses has
 	 * kept on every version (<= 6.5 `^data(?:-[a-z0-9_]+)+$`, 6.6+
@@ -152,8 +156,11 @@ final class KitEscapingTest extends WP_UnitTestCase {
 		// The branches are really in the markup, so the equality below is not vacuous.
 		foreach ( array( 'style="--mhmui-columns:4"', 'dashicons-calendar-alt', 'aria-hidden="true"', 'mhmui-stat-card--success', 'mhmui-stat-card--emphasis', 'data-stat="total-bookings"', 'data-multi-key="inner hyphen"', 'data-direction="up"', 'data-direction="down"', 'data-direction="flat"', 'mhmui-stat-card__delta-sr', 'mhmui-stat-card__sub' ) as $needle ) {
 			self::assertStringContainsString( $needle, $html );
+			// Each needle is one attribute or class, so kses' attribute order
+			// cannot move it: a second proof that does not rest on same_markup().
+			self::assertStringContainsString( $needle, wp_kses_post( $html ) );
 		}
-		self::assertSame( $html, wp_kses_post( $html ) );
+		self::assertSame( self::same_markup( $html ), self::same_markup( wp_kses_post( $html ) ) );
 	}
 
 	public function test_tabs_hostile_props_come_out_inert(): void {
@@ -213,12 +220,98 @@ final class KitEscapingTest extends WP_UnitTestCase {
 		foreach ( array( '<nav class="mhmui-tabs" aria-label="Sections">', 'aria-current="page"', 'aria-hidden="true"', 'mhmui-tabs__badge-sr', 'mhmui-tabs__tab--current' ) as $needle ) {
 			self::assertStringContainsString( $needle, $html );
 		}
+		foreach ( array( 'aria-label="Sections"', 'aria-current="page"', 'aria-hidden="true"', 'mhmui-tabs__badge-sr', 'mhmui-tabs__tab--current' ) as $needle ) {
+			self::assertStringContainsString( $needle, wp_kses_post( $html ) );
+		}
 		// Measured 2026-09-23 on WP 7.1: kses normalises the entity esc_url()
 		// writes for '&' (&#038;) to &amp; -- the same character, spelled
-		// differently. Nothing is stripped: after that one respelling the
-		// markup is byte-identical, which is what this test guards (an
-		// attribute or element kses dropped would still fail it).
+		// differently; 7.2 also reorders attributes. Nothing is stripped, and
+		// same_markup() forgets exactly those spellings (an attribute or
+		// element kses dropped would still fail it).
 		self::assertStringContainsString( '&#038;tab=', $html );
-		self::assertSame( str_replace( '&#038;', '&amp;', $html ), wp_kses_post( $html ) );
+		self::assertSame( self::same_markup( $html ), self::same_markup( wp_kses_post( $html ) ) );
+	}
+
+	public function test_POSITIVE_CONTROL_same_markup_ignores_only_spelling(): void {
+		// What it may forget: attribute order and quoting, entity spelling, name
+		// case and a void tag's slash -- all the same DOM.
+		self::assertSame( self::same_markup( '<a class="x" href="?a=1&#038;b">t<br/></a>' ), self::same_markup( "<A HREF='?a=1&amp;b'  class=x>t<br></a>" ) );
+		// Everything kses could take away it must keep.
+		$base = self::same_markup( '<p class="x" data-y="1"><span aria-hidden="true">t</span></p>' );
+		foreach ( array(
+			'<p class="x"><span aria-hidden="true">t</span></p>',
+			'<p class="x" data-y="2"><span aria-hidden="true">t</span></p>',
+			'<p class="x" data-y="1"><span>t</span></p>',
+			'<p class="x" data-y="1">t</p>',
+			'<p class="x" data-y="1"><span aria-hidden="true">u</span></p>',
+			'<p class="x" data-y="1"><span aria-hidden="true"> t</span></p>',
+			'<p class="X" data-y="1"><span aria-hidden="true">t</span></p>',
+			'<p class="x" data-y="1">&lt;span aria-hidden="true"&gt;t&lt;/span&gt;</p>',
+		) as $stripped ) {
+			self::assertNotSame( $base, self::same_markup( $stripped ), $stripped );
+		}
+		// A boolean attribute, a valued one and none are three DOMs.
+		self::assertNotSame( self::same_markup( '<p hidden>t</p>' ), self::same_markup( '<p hidden="x">t</p>' ) );
+		self::assertNotSame( self::same_markup( '<p hidden>t</p>' ), self::same_markup( '<p>t</p>' ) );
+		// An atomic element's content is one token with the tag; it still counts.
+		self::assertNotSame( self::same_markup( '<textarea>a</textarea>' ), self::same_markup( '<textarea>b</textarea>' ) );
+	}
+
+	/**
+	 * The markup with every spelling choice removed: each tag's attributes in
+	 * name order, values and text decoded and re-encoded one way. An element,
+	 * an attribute, a value or a text run -- an atomic element's (textarea,
+	 * title, script, style) included -- stays in the string, so equality
+	 * still means kses lost nothing. Comments, doctypes and other token kinds
+	 * fail the walk instead of being forgotten. It parses with the same HTML
+	 * API 7.2 kses uses, so a parse defect common to both would not show.
+	 *
+	 * @param string $html Markup.
+	 */
+	private static function same_markup( string $html ): string {
+		$out       = '';
+		$processor = new \WP_HTML_Tag_Processor( $html );
+
+		while ( $processor->next_token() ) {
+			$type = $processor->get_token_type();
+
+			if ( '#text' === $type ) {
+				$out .= self::encode( $processor->get_modifiable_text() );
+				continue;
+			}
+
+			self::assertSame( '#tag', $type, "unexpected {$type} token" );
+
+			$name = strtolower( (string) $processor->get_tag() );
+
+			if ( $processor->is_tag_closer() ) {
+				$out .= "</{$name}>";
+				continue;
+			}
+
+			$attributes = (array) $processor->get_attribute_names_with_prefix( '' );
+			sort( $attributes );
+
+			$out .= "<{$name}";
+			foreach ( $attributes as $attribute ) {
+				$value = $processor->get_attribute( $attribute );
+				$out  .= true === $value ? " {$attribute}" : sprintf( ' %s="%s"', $attribute, self::encode( (string) $value ) );
+			}
+			$out .= '>' . self::encode( $processor->get_modifiable_text() );
+		}
+
+		self::assertFalse( $processor->paused_at_incomplete_token(), 'the tag processor stopped on an incomplete token' );
+
+		return $out;
+	}
+
+	/**
+	 * One spelling for text: ENT_SUBSTITUTE, so a value that is not valid UTF-8
+	 * still differs from another instead of both collapsing to ''.
+	 *
+	 * @param string $text Decoded text.
+	 */
+	private static function encode( string $text ): string {
+		return htmlspecialchars( $text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8' );
 	}
 }
