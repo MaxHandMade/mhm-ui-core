@@ -216,7 +216,7 @@ da bu tek yanlış cümle yüzünden taşıdı.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.24.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.25.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 `bootstrap.php`'yi doğrudan require etmek `MHMUICORE_VERSION`'ı anında tanımlar
@@ -720,7 +720,7 @@ parite kapısı eşitlik arar, uyumluluk değil.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.24.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.25.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 🔴 Sürüm dizesi **elle yazılır** (kayıt, herhangi bir bootstrap yüklenmeden önce koşar) ve
@@ -977,3 +977,47 @@ son kabul edilen yanıt ve `Pagination` için hazır `pagination`. Hiçbir şey
 Bu, başvurulabilir yüzey ekler (`src-react/hooks/` altında yeni dosyalar), bu
 yüzden minördür: `^0.19` bunu almaz; tüketici `^0.20` ile katılır. Mevcut hiçbir
 sınıf, token ya da prop değişmedi.
+
+### Bir değer kısa koda girebilir mi? (0.25.0+)
+
+`MHMUiCore\Layout\ShortcodeMarkup::to_shortcode()` her değeri yazar, ama bazı
+değerler kısa kodun geri çağrısına her WordPress sürümünde eksiksiz ulaşamaz.
+`ShortcodeMarkup::can_carry( string $value ): bool` bunu gönderi içeriğini
+yazmadan önce söyler. Şunlarda false döner:
+
+- `]`: kısa kod her sürümde orada biter. `&#93;` / `&#x5d;` de bozar, çünkü
+  WordPress 7.2'nin kses'i bunları gönderi metninde çözer;
+- aynı değerde çift tırnak VE kesme işareti: 7.2'den itibaren kses ikisini de
+  çözer ve bir özniteliğin kendi sınırlayıcısı için kaçışı yoktur (tek türü
+  sorun değil);
+- ters eğik çizgi: öznitelik ayrıştırıcısı onu kaçış olarak çözer (`\t` sekme
+  olarak gelir);
+- BÖLÜNMEZ BOŞLUK ya da SIFIR GENİŞLİKLİ BOŞLUK: ayrıştırıcı düz boşluğa
+  çevirir; yani bölünmez boşlukla yazılmış `10 000 TL` düz boşlukla gelir;
+- sekme ve satır sonu dışındaki bir denetim karakteri ve satır başı: kses
+  onları siler ya da (7.2) `\r\n`'yi `\n`'ye katlar;
+- DEL'e ya da 128-159'a giden bir referans (`&#127;`, `&#128;`): 7.2 DEL'i
+  siler, 128-159'u Windows-1252 olarak okur (`&#128;` `€` olarak gelir);
+- `esc_attr()`'ın boşalttığı geçersiz UTF-8.
+
+Her kural karakterin referanslarını da sayar (`&#92;`, `&nbsp;`, `&#13;` ...),
+çünkü 7.2'nin kses'i `esc_attr()`'ın koruduğu referansları çözer; onun
+etkisizleştirdiği bir referans (ör. `&rsqb;`) olduğu gibi gelir ve sorun
+değildir.
+
+7.1 ve 7.2-RC2'de `wp_kses_post()` sonrası `do_shortcode()` ile ölçüldü
+(`tests/Integration/ShortcodeMarkupRoundTripTest.php`). `to_shortcode()`'un
+kendisi değişmedi; bugün yazdığınız değerler aynı baytlarla yazılır. Değeri
+reddedin ya da öznitelik dışında saklayın. Yükleyiciyi eski bir kopya hâlâ
+kazanabilir, çağrıyı koruyun:
+
+```php
+use MHMUiCore\Layout\ShortcodeMarkup;
+
+if ( method_exists( ShortcodeMarkup::class, 'can_carry' ) && ! ShortcodeMarkup::can_carry( $title ) ) {
+	return new WP_Error( 'my_plugin_title_unsafe', __( 'This title cannot be stored in a shortcode.', 'my-plugin' ) );
+}
+```
+
+Yeni bir genel metot ekler, bu yüzden minördür: `^0.24` bunu almaz; tüketici
+`^0.25` ile katılır.

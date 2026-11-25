@@ -22,7 +22,7 @@ A consuming plugin `require_once`s `vendor/mhm/ui-core/register.php` from its
 main file and registers its own copy:
 
 ```php
-mhmuicore_register( '0.24.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.25.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 At `plugins_loaded` priority 0 the highest registered version boots; the rest
@@ -214,6 +214,48 @@ or `adapters`) is the one exception: `mhmuicore_layout_engine()` lets
 `InvalidArgumentException` propagate uncaught, because that is a programmer
 error, not a domain error — no runtime path can recover from it.
 
+### Can a value go into a shortcode? (0.25.0+)
+
+`MHMUiCore\Layout\ShortcodeMarkup::to_shortcode()` writes any value, but some
+values cannot reach the shortcode callback whole on every WordPress version.
+`ShortcodeMarkup::can_carry( string $value ): bool` tells you before you write
+post content. It returns false for:
+
+- a `]`: the shortcode ends at it on every version. `&#93;` / `&#x5d;` break
+  it too, because WordPress 7.2's kses decodes them in post text;
+- a double quote AND an apostrophe in the same value: from 7.2 kses decodes
+  both, and an attribute has no escape for its own delimiter (one kind alone
+  is fine);
+- a backslash: the attribute parser unescapes it (`\t` arrives as a tab);
+- a NO-BREAK SPACE or ZERO WIDTH SPACE: the parser turns it into a plain
+  space, so `10 000 TL` written with a no-break space arrives with a plain one;
+- a control character other than tab and line feed, and a carriage return:
+  kses drops them, or (7.2) folds `\r\n` into `\n`;
+- a reference to DEL or to 128-159 (`&#127;`, `&#128;`): 7.2 drops DEL and
+  reads 128-159 as Windows-1252 (`&#128;` arrives as `€`);
+- invalid UTF-8, which `esc_attr()` empties.
+
+Each rule counts the character's references too (`&#92;`, `&nbsp;`, `&#13;`
+...), because 7.2's kses decodes the references `esc_attr()` keeps; one it
+neutralises, such as `&rsqb;`, arrives literally and is fine.
+
+Measured with `do_shortcode()` after `wp_kses_post()` on 7.1 and 7.2-RC2
+(`tests/Integration/ShortcodeMarkupRoundTripTest.php`). `to_shortcode()` itself
+is unchanged, so what you already write keeps its bytes. Refuse the value, or
+store it somewhere other than an attribute. An older copy can still win the
+loader, so guard the call:
+
+```php
+use MHMUiCore\Layout\ShortcodeMarkup;
+
+if ( method_exists( ShortcodeMarkup::class, 'can_carry' ) && ! ShortcodeMarkup::can_carry( $title ) ) {
+	return new WP_Error( 'my_plugin_title_unsafe', __( 'This title cannot be stored in a shortcode.', 'my-plugin' ) );
+}
+```
+
+This adds a public method, so it is a minor release: `^0.24` does not pick it
+up; a consumer opts in with `^0.25`.
+
 Design: the six-phase design document lives in MHM's internal development repo, not here.
 
 ## Component factory
@@ -390,7 +432,7 @@ build from.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.24.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.25.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 Requiring `bootstrap.php` directly defines `MHMUICORE_VERSION` immediately, which

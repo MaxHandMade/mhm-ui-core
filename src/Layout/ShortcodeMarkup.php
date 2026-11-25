@@ -38,6 +38,71 @@ final class ShortcodeMarkup {
 	private const APOSTROPHE_REF = "/'|&(?:apos|#0*39|#x0*27);/i";
 
 	/**
+	 * Characters no attribute value carries whole: `]` ends the shortcode,
+	 * `\` is unescaped by the attribute parser, NO-BREAK SPACE and ZERO WIDTH
+	 * SPACE become a plain space there, kses drops C0 controls other than tab
+	 * and line feed, and 7.2 kses folds a carriage return into the line feed.
+	 */
+	private const UNCARRIED = '/[\]\x5C\x00-\x08\x0B-\x1F]|\x{00A0}|\x{200B}/u';
+
+	/**
+	 * A numeric reference, as esc_attr() keeps it, that html_entity_decode()'s
+	 * HTML5 mode leaves encoded but 7.2 kses decodes all the same: a C0
+	 * control other than tab and line feed (`&#13;` becomes a carriage
+	 * return), DEL (dropped), and 128-159 (read as Windows-1252, so `&#128;`
+	 * becomes `€`). Matched on esc_attr()'s output: a reference esc_attr()
+	 * neutralises (`&amp;#1;`) arrives literally and is fine.
+	 */
+	private const CONTROL_REF = '/&#(?:0*(?:[0-8]|1[1-9]|2[0-9]|3[01]|12[7-9]|1[3-5][0-9])|x0*(?:[0-8]|[b-f]|1[0-9a-f]|7f|[89][0-9a-f]));/i';
+
+	/**
+	 * Whether a value reaches a shortcode callback as the same text on every
+	 * supported WordPress version, after to_shortcode() and the kses pass post
+	 * content goes through. (The same text, not the same bytes: an apostrophe
+	 * arrives as `&#039;` before 7.2 and raw from 7.2.)
+	 *
+	 * The value is judged as text twice: as written (what versions before 7.2
+	 * see) and with the references esc_attr() keeps decoded (what 7.2's HTML
+	 * API kses makes of post text). A reference esc_attr() neutralises, such
+	 * as `&rsqb;`, stays literal in both. It is false when either text holds
+	 * an UNCARRIED character, or a double quote and an apostrophe together
+	 * (an attribute has no escape for its own delimiter), and for text
+	 * esc_attr() empties (invalid UTF-8). Measured with do_shortcode() after
+	 * wp_kses_post() on 7.1 and 7.2-RC2
+	 * (tests/Integration/ShortcodeMarkupRoundTripTest.php).
+	 *
+	 * to_shortcode() still writes such a value as before (refusing there would
+	 * be a fatal on sites a newer copy serves); this is the consumer's check,
+	 * before it writes post content.
+	 *
+	 * @param string $value Attribute value, unescaped.
+	 */
+	public static function can_carry( string $value ): bool {
+		$escaped = esc_attr( $value );
+
+		if ( '' === $escaped ) {
+			return '' === $value;
+		}
+
+		if ( 1 === preg_match( self::CONTROL_REF, $escaped ) ) {
+			return false;
+		}
+
+		$decoded = html_entity_decode( $escaped, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+
+		foreach ( array( $value, $decoded ) as $text ) {
+			if ( 1 === preg_match( self::UNCARRIED, $text ) ) {
+				return false;
+			}
+			if ( false !== strpos( $text, '"' ) && false !== strpos( $text, "'" ) ) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	/**
 	 * Build a WordPress shortcode string.
 	 *
 	 * A value is double-quoted and esc_attr()'d, byte for byte as before
