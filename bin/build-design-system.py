@@ -152,8 +152,10 @@ files["components/stat-card.html"] = page(
 
 files["components/stats-grid.html"] = page(
     "Components", "StatsGrid",
-    "<b>StatsGrid</b> — StatCard satırı. Prop'lar: cards[] (StatCard prop nesneleri, key = label), columns (varsayılan 4).",
-    '<div class="mhmui-stats-grid" style="--mhmui-columns:4">'
+    "<b>StatsGrid</b> — StatCard satırı. Prop'lar: cards[] (StatCard prop nesneleri, key = label), columns (varsayılan 4). "
+    "Kartlar 4 ya da 6 tavanının tam satırlarını doldurunca --pairs eklenir: dar kapta 3+1 yerine 2+2 düşer (\"4 ya da 2, asla 3\").",
+    '<div class="ds-label">4 kart, tavan 4 → --pairs</div>'
+    '<div class="mhmui-stats-grid mhmui-stats-grid--pairs" style="--mhmui-columns:4">'
     + stat_card("Rezervasyon", "1.284", "info", delta=("up", "%12 bu ay"))
     + stat_card("Gelir", "₺418.900", "success", delta=("up", "%8 bu ay"))
     + stat_card("Aktif Araç", "37", "warning", sub="52 toplam")
@@ -166,15 +168,19 @@ files["components/stats-grid.html"] = page(
 # writing). Its look did not go away -- it is
 # what StatCard renders when no tone is given -- so the sheet shows that state
 # next to the toned ones instead of documenting a second component.
-def quiet_card(value, label):
-    return ('<div class="mhmui-stat-card"><div class="mhmui-stat-card__body">'
+def quiet_card(value, label, emphasis=False):
+    return ('<div class="mhmui-stat-card%s"><div class="mhmui-stat-card__body">'
             '<p class="mhmui-stat-card__label">%s</p>'
-            '<p class="mhmui-stat-card__value">%s</p></div></div>' % (label, value))
+            '<p class="mhmui-stat-card__value">%s</p></div></div>'
+            % (" mhmui-stat-card--emphasis" if emphasis else "", label, value))
 files["components/stat-card-quiet.html"] = page(
     "Components", "StatCard (tonsuz)",
     "<b>StatCard</b> ton verilmediğinde sessiz çerçeveli kutudur. Renk <i>opt-in</i>'dir: "
-    "anahtar rakam, anlamı gerektirmedikçe renk taşımaz. Ton verilince kart dolgulu hale gelir.",
-    '<div class="ds-row">' + quiet_card("%92", "Doluluk") + quiet_card("18", "Bekleyen") + quiet_card("₺12.400", "Depozito") + "</div>",
+    "anahtar rakam, anlamı gerektirmedikçe renk taşımaz. Ton verilince kart dolgulu hale gelir. "
+    "emphasis: tonsuz kartta değer vurgu renginde (dolgu değil); tonlu kartta etkisiz.",
+    '<div class="ds-row">' + quiet_card("%92", "Doluluk") + quiet_card("18", "Bekleyen") + quiet_card("₺12.400", "Depozito") + "</div>"
+    '<div class="ds-label">emphasis</div>'
+    '<div class="ds-row">' + quiet_card("₺418.900", "Bu ay gelir", emphasis=True) + quiet_card("63", "Kiralayan") + "</div>",
 )
 
 files["components/status-badge.html"] = page(
@@ -552,6 +558,9 @@ COMPOUND_ONLY_MODIFIERS = {
     # alignment via .mhmui-table__th--end .mhmui-table__sort.
     "mhmui-table__row-select",
     "mhmui-table__th--end",
+    # 0.26.0, first shown on a card: `.mhmui-stat-card--emphasis
+    # .mhmui-stat-card__value` recolours the value only.
+    "mhmui-stat-card--emphasis",
 }
 
 missing = []

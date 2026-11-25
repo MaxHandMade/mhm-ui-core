@@ -22,6 +22,16 @@ final class StatsGridTest extends TestCase {
 		self::assertStringStartsWith( '<div class="mhmui-stats-grid" style="--mhmui-columns:2">', $html );
 	}
 
+	public function test_an_object_card_is_drawn_like_the_jsx_twin_draws_it(): void {
+		// 0.26.0: a json_decode() row used to be skipped here while StatsGrid.jsx drew it.
+		$cards = json_decode( '[{"label":"A","value":"1"},{"label":"B","value":"2"}]' );
+		self::assertIsArray( $cards );
+		self::assertSame(
+			StatsGrid::render_html( array( array( 'label' => 'A', 'value' => '1' ), array( 'label' => 'B', 'value' => '2' ) ), 2 ),
+			StatsGrid::render_html( $cards, 2 )
+		);
+	}
+
 	/** @return array<string, array{0: mixed, 1: int}> */
 	public function ceilings(): array {
 		return array(

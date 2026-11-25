@@ -30,6 +30,7 @@ src-react/components/Tabs.jsx
 src-react/components/Widget.jsx
 src-react/format.js
 src-react/hooks/useApi.js
+src-react/hooks/useBrowserLayoutEffect.js
 src-react/hooks/useContainerWidth.js
 src-react/hooks/useDebouncedValue.js
 src-react/hooks/usePersistentOpen.js

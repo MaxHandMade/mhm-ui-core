@@ -86,6 +86,25 @@ describe( 'Tabs -- page sections as real links', () => {
 		).toBe( '3' );
 	} );
 
+	test( 'a numeric href and id are read as the PHP twin reads them (0.26.0)', () => {
+		const { container } = render(
+			<Tabs
+				label="Sections"
+				current="2"
+				items={ [
+					{ id: 2, label: 'Two', href: 5 },
+					{ id: 'x', label: 'X', href: null },
+					{ id: 'y', label: 'Y', href: false },
+				] }
+			/>
+		);
+		const links = screen.getAllByRole( 'link' );
+		expect( links.map( ( a ) => a.textContent ) ).toEqual( [ 'Two' ] );
+		expect( links[ 0 ].getAttribute( 'href' ) ).toBe( '5' );
+		expect( links[ 0 ].getAttribute( 'aria-current' ) ).toBe( 'page' );
+		expect( container.querySelectorAll( 'a' ) ).toHaveLength( 1 );
+	} );
+
 	test( 'an item with an empty href is skipped', () => {
 		render(
 			<Tabs

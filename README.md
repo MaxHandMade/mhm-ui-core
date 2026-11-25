@@ -22,7 +22,7 @@ A consuming plugin `require_once`s `vendor/mhm/ui-core/register.php` from its
 main file and registers its own copy:
 
 ```php
-mhmuicore_register( '0.25.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.26.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 At `plugins_loaded` priority 0 the highest registered version boots; the rest
@@ -432,7 +432,7 @@ build from.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.25.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.26.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 Requiring `bootstrap.php` directly defines `MHMUICORE_VERSION` immediately, which
@@ -668,7 +668,7 @@ Custom-property assignment in inline styles is allowed by
 `[a-z0-9]` (0.22.0 tightened this: a leading, trailing or doubled hyphen was
 stripped by kses on WordPress ≤ 6.5, so the kit no longer emits it). A plugin
 filtering `wp_kses_allowed_html` or `safe_style_css` can still strip them.
-The integration suite pins this on the WordPress version CI runs (7.1):
+The integration suite pins this on every WordPress version CI runs (6.6, 7.1 and the 7.2 candidate, since 0.26.0):
 `tests/Integration/KitEscapingTest.php`, so a kit change that kses would
 strip fails there first.
 
@@ -1136,3 +1136,26 @@ const summary = list.range
 This adds referenceable surface (new files under `src-react/hooks/`), so it is
 a minor: `^0.19` does not pick it up; a consumer opts in with `^0.20`. No
 existing class, token or prop changed.
+
+### Twin parity and small fixes (0.26.0+)
+
+- **Objects are read like arrays in PHP.** `mhmuicore_stats_grid_html()` and
+  `mhmuicore_tabs_html()` used to skip a card or tab that was an object (a
+  `json_decode()` row) while the JSX twins drew it. Both now read an object's
+  public properties. Anything that is neither an array nor an object is still
+  skipped silently, in both twins: no placeholder, no notice.
+- **`Tabs` reads `href`, `id` and `current` as the PHP twin does.** A number is
+  its decimal string, so `href: 5` draws and `id: 2` is current for
+  `current: '2'`; `null`, `false` and other non-scalars are empty, and an item
+  with an empty `href` is skipped. `onSelect` still receives `id` as given.
+- **`Pagination` warns once.** A click on a page button when `onChange` is not
+  a function logs one `console.warn` for that component (a misspelt prop name
+  was silent before). Nothing is logged on render.
+- **Server rendering is quiet.** DataTable, SelectAll and Widget use a layout
+  effect only where there is a DOM, so `renderToString` no longer logs React
+  18's "useLayoutEffect does nothing on the server".
+- CI runs the integration suite on WordPress 6.6 too, the version the kses
+  sentence above promises.
+
+`Tabs` and the two PHP functions draw more for input that used to be skipped,
+so this is a minor: `^0.25` does not pick it up; a consumer opts in with `^0.26`.

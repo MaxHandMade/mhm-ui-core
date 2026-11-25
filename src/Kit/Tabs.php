@@ -42,6 +42,11 @@ final class Tabs {
 		$html = '<nav class="' . ( $underline ? 'mhmui-tabs mhmui-tabs--underline' : 'mhmui-tabs' ) . '"' . ( '' !== $label ? ' aria-label="' . esc_attr( $label ) . '"' : '' ) . '>';
 
 		foreach ( $items as $item ) {
+			// An object (a json_decode() row) is read as its public properties,
+			// the way the JSX twin reads any object (0.26.0).
+			if ( is_object( $item ) ) {
+				$item = get_object_vars( $item );
+			}
 			if ( ! is_array( $item ) ) {
 				continue;
 			}

@@ -226,6 +226,7 @@ describe( 'Pagination', () => {
 			for ( const button of buttons( container ) ) {
 				expect( () => fireEvent.click( button ) ).not.toThrow();
 			}
+			expect( console ).toHaveWarned();
 		}
 	);
 
@@ -299,6 +300,9 @@ describe( 'Pagination', () => {
 	);
 
 	test( 'an onChange that is not a function is ignored, not called', () => {
+		const warn = jest
+			.spyOn( console, 'warn' )
+			.mockImplementation( () => {} );
 		const { container } = render(
 			<Pagination
 				page={ 2 }
@@ -310,5 +314,74 @@ describe( 'Pagination', () => {
 		expect( () =>
 			fireEvent.click( buttons( container )[ 1 ] )
 		).not.toThrow();
+		warn.mockRestore();
+	} );
+
+	test( 'a click with no onChange warns the developer once, not on render', () => {
+		const warn = jest
+			.spyOn( console, 'warn' )
+			.mockImplementation( () => {} );
+		const { container } = render(
+			<Pagination
+				page={ 2 }
+				totalPages={ 3 }
+				onPageChange={ () => {} }
+				labels={ labels }
+			/>
+		);
+		expect( warn ).not.toHaveBeenCalled();
+		fireEvent.click( buttons( container )[ 1 ] );
+		fireEvent.click( buttons( container )[ 0 ] );
+		expect( warn ).toHaveBeenCalledTimes( 1 );
+		expect( warn.mock.calls[ 0 ][ 0 ] ).toMatch( /Pagination.*onChange/ );
+		warn.mockRestore();
+	} );
+
+	test( 'a working onChange never warns', () => {
+		const warn = jest
+			.spyOn( console, 'warn' )
+			.mockImplementation( () => {} );
+		const { container } = render(
+			<Pagination
+				page={ 2 }
+				totalPages={ 3 }
+				onChange={ () => {} }
+				labels={ labels }
+			/>
+		);
+		fireEvent.click( buttons( container )[ 1 ] );
+		expect( warn ).not.toHaveBeenCalled();
+		warn.mockRestore();
+	} );
+
+	// Fable 0.23.7: these stayed green under a parseInt() mutation and an
+	// unguarded Infinity page.
+	test.each( [
+		[ '12px', '1 / 3' ],
+		[ ' 2 ', '2 / 3' ],
+		[ Infinity, '1 / 3' ],
+		[ -Infinity, '1 / 3' ],
+	] )( 'page %p reads as %p', ( page, expected ) => {
+		const { container } = render(
+			<Pagination
+				page={ page }
+				totalPages={ 3 }
+				onChange={ () => {} }
+				labels={ labels }
+			/>
+		);
+		expect( status( container ) ).toBe( expected );
+	} );
+
+	test( 'an Infinity total prints as Infinity in the status', () => {
+		const { container } = render(
+			<Pagination
+				page={ 3 }
+				totalPages={ Infinity }
+				onChange={ () => {} }
+				labels={ labels }
+			/>
+		);
+		expect( status( container ) ).toBe( '3 / Infinity' );
 	} );
 } );

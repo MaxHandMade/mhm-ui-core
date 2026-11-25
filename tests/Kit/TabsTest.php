@@ -92,6 +92,13 @@ final class TabsTest extends TestCase {
 		self::assertStringContainsString( '<span class="mhmui-tabs__badge">3</span>', $html );
 	}
 
+	public function test_an_object_item_is_drawn_like_the_jsx_twin_draws_it(): void {
+		// 0.26.0: a json_decode() row used to be skipped here while Tabs.jsx drew it.
+		$props          = self::props();
+		$props['items'] = json_decode( (string) wp_json_encode( $props['items'] ) );
+		self::assertSame( Tabs::render_html( self::props() ), Tabs::render_html( $props ) );
+	}
+
 	public function test_raw_empty_href_is_skipped_before_escaping(): void {
 		$html = self::unmark(
 			Tabs::render_html(
