@@ -106,12 +106,16 @@ jobs:
     # attribute receives -- 0.23.6 was measured against RC2 by hand, and only
     # this entry keeps it measured. Its core is the RC2 tarball, but its test
     # framework is trunk (later branches/7.2) at HEAD, so this entry is not
-    # pinned the way 7.1 is. When 7.2 ships, the matrix becomes [ '7.1', '7.2' ];
-    # when 7.3 reaches beta, add its candidate as a third entry.
+    # pinned the way 7.1 is. When 7.2 ships, the matrix becomes [ '6.6', '7.1', '7.2' ];
+    # when 7.3 reaches beta, add its candidate as the last entry.
+    # 6.6 (0.26.0) is the floor the README promises for kses ("every branch the
+    # kit renders passes byte for byte on WordPress 6.6+"); before this entry
+    # that sentence was measured on 7.1 only. 6.6's esc_attr() also differs
+    # (it turns `&amp;#93;` into `&#093;`), which can_carry() must answer for.
     strategy:
       fail-fast: false
       matrix:
-        wp: [ '7.1', '7.2-RC2' ]
+        wp: [ '6.6', '7.1', '7.2-RC2' ]
 
     services:
       mysql:

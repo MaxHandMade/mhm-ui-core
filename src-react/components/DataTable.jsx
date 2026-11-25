@@ -1,4 +1,5 @@
-import { useRef, useLayoutEffect } from '@wordpress/element';
+import { useRef } from '@wordpress/element';
+import useBrowserLayoutEffect from '../hooks/useBrowserLayoutEffect';
 
 /** @typedef {import('react').ReactNode} ReactNode */
 
@@ -83,7 +84,7 @@ export default function DataTable( {
 
 	// No deps on purpose: a consumer's new rows re-render this component too,
 	// and after the first pass every element already has its role (cheap).
-	useLayoutEffect( () => {
+	useBrowserLayoutEffect( () => {
 		if ( stack && table.current ) {
 			writeRoles( table.current );
 		}

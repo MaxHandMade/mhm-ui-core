@@ -42,6 +42,12 @@ final class Tabs {
 		$html = '<nav class="' . ( $underline ? 'mhmui-tabs mhmui-tabs--underline' : 'mhmui-tabs' ) . '"' . ( '' !== $label ? ' aria-label="' . esc_attr( $label ) . '"' : '' ) . '>';
 
 		foreach ( $items as $item ) {
+			// A json_decode() row (stdClass) is read as its public properties,
+			// as the JSX twin reads it (0.26.0). Other objects (a Closure, a
+			// WP_Error) are still skipped: their properties are not props.
+			if ( $item instanceof \stdClass ) {
+				$item = get_object_vars( $item );
+			}
 			if ( ! is_array( $item ) ) {
 				continue;
 			}

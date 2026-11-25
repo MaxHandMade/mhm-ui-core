@@ -113,6 +113,10 @@ final class StatCard {
 	 */
 	private static function line( array $props ): string {
 		$delta = $props['delta'] ?? null;
+		// A json_decode() card carries its delta as a stdClass too (0.26.0).
+		if ( $delta instanceof \stdClass ) {
+			$delta = get_object_vars( $delta );
+		}
 		if ( is_array( $delta ) ) {
 			$direction = self::text( $delta['direction'] ?? '' );
 			if ( array_key_exists( $direction, self::DIRECTION_MARKS ) ) {
@@ -164,6 +168,9 @@ final class StatCard {
 	 * @param mixed $data Key/value map.
 	 */
 	private static function data_attributes( $data ): string {
+		if ( $data instanceof \stdClass ) {
+			$data = get_object_vars( $data );
+		}
 		if ( ! is_array( $data ) ) {
 			return '';
 		}

@@ -86,6 +86,45 @@ describe( 'Tabs -- page sections as real links', () => {
 		).toBe( '3' );
 	} );
 
+	test( 'a numeric href and id are read as the PHP twin reads them (0.26.0)', () => {
+		const { container } = render(
+			<Tabs
+				label="Sections"
+				current="2"
+				items={ [
+					{ id: 2, label: 'Two', href: 5 },
+					{ id: 'x', label: 'X', href: null },
+					{ id: 'y', label: 'Y', href: false },
+				] }
+			/>
+		);
+		const links = screen.getAllByRole( 'link' );
+		expect( links.map( ( a ) => a.textContent ) ).toEqual( [ 'Two' ] );
+		expect( links[ 0 ].getAttribute( 'href' ) ).toBe( '5' );
+		expect( links[ 0 ].getAttribute( 'aria-current' ) ).toBe( 'page' );
+		expect( container.querySelectorAll( 'a' ) ).toHaveLength( 1 );
+	} );
+
+	test( 'a numeric current and a true href follow PHP too (Fable 0.26.0 mutants)', () => {
+		render(
+			<Tabs
+				label="Sections"
+				current={ 2 }
+				items={ [
+					{ id: '2', label: 'Two', href: true },
+					{ id: '3', label: 'Three', href: '?3' },
+				] }
+			/>
+		);
+		const links = screen.getAllByRole( 'link' );
+		expect( links.map( ( a ) => a.getAttribute( 'href' ) ) ).toEqual( [
+			'1',
+			'?3',
+		] );
+		expect( links[ 0 ].getAttribute( 'aria-current' ) ).toBe( 'page' );
+		expect( links[ 1 ].getAttribute( 'aria-current' ) ).toBeNull();
+	} );
+
 	test( 'an item with an empty href is skipped', () => {
 		render(
 			<Tabs

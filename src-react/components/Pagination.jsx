@@ -1,3 +1,5 @@
+import { useRef } from '@wordpress/element';
+
 /**
  * A number from a number or a numeric string; `null` for anything else
  * (missing, null, NaN, '', 'abc', a boolean). page and totalPages often come
@@ -25,7 +27,10 @@ function numeric( value ) {
  *                                                  page), Infinity stays open-ended. Not
  *                                                  numeric -> 1.
  * @param {(page: number) => void} props.onChange   Called with the new page number, always a
- *                                                  number. Missing -> clicks do nothing.
+ *                                                  number. Missing -> clicks do nothing,
+ *                                                  and the first click logs one
+ *                                                  console warning (a misspelt
+ *                                                  prop name is otherwise silent).
  * @param {Object}                 props.labels     { previous, next, of, navigation, page } -- translated by the consumer.
  * @param {string}                 [props.variant]  'inline' (default) or 'footer' (table-card footer).
  * @param {string}                 [props.summary]  Footer only: range text shown on the left.
@@ -53,9 +58,21 @@ export default function Pagination( {
 			? Math.trunc( pageNumber )
 			: 1;
 	const totalPages = totalNumber === null ? 1 : Math.ceil( totalNumber );
+	const warned = useRef( false );
 	const go = ( next ) => {
 		if ( typeof onChange === 'function' ) {
 			onChange( next );
+			return;
+		}
+		// On a click, not on render: a page with no onChange on purpose (a
+		// static status line) never clicks, and a build-time switch such as
+		// process.env.NODE_ENV is not defined in every consumer's bundle.
+		if ( ! warned.current ) {
+			warned.current = true;
+			// eslint-disable-next-line no-console
+			console.warn(
+				'mhm-ui-core Pagination: a page button was clicked but onChange is not a function, so nothing happens.'
+			);
 		}
 	};
 	const atStart = page <= 1;

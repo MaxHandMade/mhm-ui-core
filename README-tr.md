@@ -216,7 +216,7 @@ da bu tek yanlış cümle yüzünden taşıdı.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.25.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.26.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 `bootstrap.php`'yi doğrudan require etmek `MHMUICORE_VERSION`'ı anında tanımlar
@@ -427,7 +427,7 @@ bayt bayt geçer. Satır içi stilde özel özellik ataması `safecss_filter_att
 (0.22.0'da sıkılaştı: başta, sonda ya da art arda tire WordPress ≤ 6.5'te kses tarafından
 siliniyordu, kit artık bunu üretmez). `wp_kses_allowed_html` ya da `safe_style_css`
 filtreleyen bir eklenti bunları yine silebilir. Entegrasyon takımı bunu CI'ın koştuğu
-WordPress sürümünde (7.1) sabitler: `tests/Integration/KitEscapingTest.php`; kses'in sileceği
+her WordPress sürümünde (0.26.0'dan beri 6.6, 7.1 ve 7.2 adayı) sabitler: `tests/Integration/KitEscapingTest.php`; kses'in sileceği
 bir kit değişikliği önce orada düşer.
 
 ### Sayfa düzeni (0.11.0+)
@@ -720,7 +720,7 @@ parite kapısı eşitlik arar, uyumluluk değil.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.25.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.26.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 🔴 Sürüm dizesi **elle yazılır** (kayıt, herhangi bir bootstrap yüklenmeden önce koşar) ve
@@ -1021,3 +1021,38 @@ if ( method_exists( ShortcodeMarkup::class, 'can_carry' ) && ! ShortcodeMarkup::
 
 Yeni bir genel metot ekler, bu yüzden minördür: `^0.24` bunu almaz; tüketici
 `^0.25` ile katılır.
+
+### İkiz eşitliği ve küçük düzeltmeler (0.26.0+)
+
+- **PHP bir `json_decode()` satırını dizi gibi okur.** `mhmuicore_stats_grid_html()`
+  ve `mhmuicore_tabs_html()`, `stdClass` olan bir kartı ya da sekmeyi
+  atlıyordu; JSX ikizleri ise çiziyordu. Kartın `delta` ve `data` alanları da
+  aynı biçimde okunur. Başka nesneler (Closure, istisna, `ArrayObject`) ve ne
+  dizi ne `stdClass` olan her şey yine sessizce atlanır: yer tutucu yok, uyarı
+  yok.
+- **`Tabs`, `href`, `id` ve `current`'ı PHP ikizi gibi okur.** Tam sayı ondalık
+  dizgesidir; yani `href: 5` çizilir ve `id: 2`, `current: '2'` için güncel
+  sekmedir. `true` `'1'`dir; `null`, `false`, nesneler ve diziler boştur;
+  `href`'i boş öğe atlanır. Ondalıklı sayılar iki ikizde farklı yazılabilir
+  (`1e21`, `0.1 + 0.2`), dizge geçin. `onSelect` `id`'yi yine verildiği gibi
+  alır.
+- **`Pagination` bir kez uyarır.** `onChange` bir işlev değilken bir sayfa
+  düğmesine tıklanırsa takılı her bileşen için tek bir `console.warn` yazılır
+  (yanlış yazılmış bir prop adı önceden sessizdi). Çizimde hiçbir şey yazılmaz.
+  `@wordpress/jest-console` altında `onChange`'siz Pagination'a tıklayan bir
+  tüketici testi artık bunu beklemeli: `expect( console ).toHaveWarned()`.
+- **Sunucu tarafı render sessiz.** DataTable, SelectAll ve Widget yerleşim
+  efektini yalnız `window` olan yerde kullanır; Node'da `renderToString`
+  artık React 18'in "useLayoutEffect does nothing on the server" uyarısını
+  basmaz (`window`'un bulunduğu jsdom altında yine basar).
+- CI entegrasyon takımını WordPress 6.6'da da koşar; yukarıdaki kses cümlesinin
+  söz verdiği sürüm budur.
+
+Hangi yarı kime ulaşır: JSX değişiklikleri (`Tabs`, `Pagination`, yerleşim
+efekti) her tüketicinin kendi paketinde gider; tüketici `^0.26`'ya geçip
+yeniden derleyince alır. PHP değişikliğini yükleyici servis eder: bir sitedeki
+herhangi bir eklenti 0.26'yı taşıdığı an oradaki her tüketici, `^0.25`
+olanlar dahil, onu alır. Çıktıyı yalnız `stdClass` girdide değiştirir: önceden
+atlanan bir `stdClass` kart ya da sekme artık çizilir; `mhmuicore_stat_card_html()`
+dahil, bir `stdClass` `delta` 0.25'in `sub`'a düştüğü yerde delta satırını
+çizer ve bir `stdClass` `data` kendi `data-*` özniteliklerini ekler.

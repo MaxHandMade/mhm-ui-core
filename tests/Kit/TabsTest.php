@@ -92,6 +92,35 @@ final class TabsTest extends TestCase {
 		self::assertStringContainsString( '<span class="mhmui-tabs__badge">3</span>', $html );
 	}
 
+	public function test_an_object_item_is_drawn_like_the_jsx_twin_draws_it(): void {
+		// 0.26.0: a json_decode() row used to be skipped here while Tabs.jsx drew it.
+		$props          = self::props();
+		$props['items'] = json_decode( (string) wp_json_encode( $props['items'] ) );
+		self::assertSame( Tabs::render_html( self::props() ), Tabs::render_html( $props ) );
+
+		$skipped          = self::props();
+		// An object WITH a public href: is_object() instead of stdClass would draw it.
+		$skipped['items'] = array(
+			static fn() => 1,
+			new \RuntimeException( 'x' ),
+			new class() {
+				/**
+				 * Looks like a tab, is not a row.
+				 *
+				 * @var string
+				 */
+				public $href = '/a';
+				/**
+				 * Looks like a tab, is not a row.
+				 *
+				 * @var string
+				 */
+				public $label = 'A';
+			},
+		);
+		self::assertStringNotContainsString( '<a ', Tabs::render_html( $skipped ) );
+	}
+
 	public function test_raw_empty_href_is_skipped_before_escaping(): void {
 		$html = self::unmark(
 			Tabs::render_html(

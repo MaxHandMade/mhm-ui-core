@@ -1,4 +1,5 @@
-import { useRef, useLayoutEffect, useId } from '@wordpress/element';
+import { useRef, useId } from '@wordpress/element';
+import useBrowserLayoutEffect from '../hooks/useBrowserLayoutEffect';
 
 /**
  * The header box that selects every row on the page (0.19.0).
@@ -33,7 +34,7 @@ export default function SelectAll( {
 
 	// A layout effect (0.20.1): written before paint, so no frame shows the
 	// previous box. Admin screens render client-side only (createRoot).
-	useLayoutEffect( () => {
+	useBrowserLayoutEffect( () => {
 		if ( box.current ) {
 			box.current.indeterminate = mixed;
 		}

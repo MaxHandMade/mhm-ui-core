@@ -1,4 +1,5 @@
-import { useEffect, useId, useLayoutEffect, useRef } from '@wordpress/element';
+import { useEffect, useId, useRef } from '@wordpress/element';
+import useBrowserLayoutEffect from '../hooks/useBrowserLayoutEffect';
 import { resolveIcon } from '../icons';
 import { usePersistentOpen } from '../hooks/usePersistentOpen';
 
@@ -95,7 +96,7 @@ export default function Widget( {
 		[]
 	);
 	const wasOpen = useRef( isOpen );
-	useLayoutEffect( () => {
+	useBrowserLayoutEffect( () => {
 		const closed = wasOpen.current && ! isOpen;
 		wasOpen.current = isOpen;
 		const body = bodyRef.current;

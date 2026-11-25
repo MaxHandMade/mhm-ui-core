@@ -31,7 +31,9 @@ function badgeCount( badge ) {
  * middle click keeps the browser's own behaviour (new tab/window).
  *
  * An item whose href is empty is skipped, before any escaping, so the PHP
- * twin (src/Kit/Tabs.php) and this file drop the same items. This file does
+ * twin (src/Kit/Tabs.php) and this file drop the same items. href, id and
+ * current are read as the twin reads them (0.26.0): a number is its decimal
+ * string, so `href: 5` draws and `id: 2` matches `current: '2'`. This file does
  * NOT sanitise href: a hostile value (javascript:) is the consumer's
  * responsibility here; the PHP twin additionally drops what esc_url() empties.
  *
@@ -60,6 +62,23 @@ function badgeCount( badge ) {
  * @param {TabSelectHandler} [props.onSelect] On a plain left click, with the item's id as given
  *                                            (not converted; undefined for an item without one).
  */
+/**
+ * A scalar as text, the PHP twin's `is_scalar() ? (string) $value : ''`: a
+ * number is its decimal string, true is '1', false and anything else ''.
+ *
+ * @param {unknown} value Raw prop.
+ * @return {string} The text.
+ */
+function text( value ) {
+	if ( typeof value === 'string' ) {
+		return value;
+	}
+	if ( typeof value === 'number' ) {
+		return String( value );
+	}
+	return value === true ? '1' : '';
+}
+
 export default function Tabs( {
 	label,
 	current,
@@ -68,7 +87,7 @@ export default function Tabs( {
 	showZero = false,
 	onSelect,
 } ) {
-	const hasCurrent = typeof current === 'string' && current !== '';
+	const currentId = text( current );
 
 	return (
 		<nav
@@ -82,12 +101,13 @@ export default function Tabs( {
 			{ ( Array.isArray( items ) ? items : [] )
 				.filter(
 					( item ) =>
-						item &&
-						typeof item.href === 'string' &&
-						item.href !== ''
+						item !== null &&
+						typeof item === 'object' &&
+						text( item.href ) !== ''
 				)
 				.map( ( item, index ) => {
-					const isCurrent = hasCurrent && item.id === current;
+					const isCurrent =
+						currentId !== '' && text( item.id ) === currentId;
 					const count = badgeCount( item.badge );
 					const showChip =
 						count !== null &&
@@ -112,9 +132,9 @@ export default function Tabs( {
 							key={
 								item.id
 									? `id:${ item.id }`
-									: `at:${ index }:${ item.href }`
+									: `at:${ index }:${ text( item.href ) }`
 							}
-							href={ item.href }
+							href={ text( item.href ) }
 							className={
 								isCurrent
 									? 'mhmui-tabs__tab mhmui-tabs__tab--current'

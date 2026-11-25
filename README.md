@@ -22,7 +22,7 @@ A consuming plugin `require_once`s `vendor/mhm/ui-core/register.php` from its
 main file and registers its own copy:
 
 ```php
-mhmuicore_register( '0.25.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.26.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 At `plugins_loaded` priority 0 the highest registered version boots; the rest
@@ -432,7 +432,7 @@ build from.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.25.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.26.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 Requiring `bootstrap.php` directly defines `MHMUICORE_VERSION` immediately, which
@@ -668,7 +668,7 @@ Custom-property assignment in inline styles is allowed by
 `[a-z0-9]` (0.22.0 tightened this: a leading, trailing or doubled hyphen was
 stripped by kses on WordPress ≤ 6.5, so the kit no longer emits it). A plugin
 filtering `wp_kses_allowed_html` or `safe_style_css` can still strip them.
-The integration suite pins this on the WordPress version CI runs (7.1):
+The integration suite pins this on every WordPress version CI runs (6.6, 7.1 and the 7.2 candidate, since 0.26.0):
 `tests/Integration/KitEscapingTest.php`, so a kit change that kses would
 strip fails there first.
 
@@ -1136,3 +1136,38 @@ const summary = list.range
 This adds referenceable surface (new files under `src-react/hooks/`), so it is
 a minor: `^0.19` does not pick it up; a consumer opts in with `^0.20`. No
 existing class, token or prop changed.
+
+### Twin parity and small fixes (0.26.0+)
+
+- **PHP reads a `json_decode()` row like an array.** `mhmuicore_stats_grid_html()`
+  and `mhmuicore_tabs_html()` used to skip a card or tab that was a `stdClass`
+  while the JSX twins drew it; a card's `delta` and `data` are read the same
+  way. Other objects (a Closure, an exception, an `ArrayObject`) and anything
+  that is neither an array nor a `stdClass` are still skipped silently: no
+  placeholder, no notice.
+- **`Tabs` reads `href`, `id` and `current` as the PHP twin does.** An integer
+  is its decimal string, so `href: 5` draws and `id: 2` is current for
+  `current: '2'`; `true` is `'1'`; `null`, `false`, objects and arrays are
+  empty, and an item with an empty `href` is skipped. Floats can still differ
+  in spelling between the twins (`1e21`, `0.1 + 0.2`), so pass strings. `onSelect`
+  still receives `id` as given.
+- **`Pagination` warns once.** A click on a page button when `onChange` is not
+  a function logs one `console.warn` per mounted component (a misspelt prop
+  name was silent before). Nothing is logged on render. A consumer test that
+  clicks a Pagination without `onChange` under `@wordpress/jest-console` must
+  now expect it: `expect( console ).toHaveWarned()`.
+- **Server rendering is quiet.** DataTable, SelectAll and Widget use a layout
+  effect only where there is a `window`, so `renderToString` in Node no
+  longer logs React 18's "useLayoutEffect does nothing on the server" (under
+  jsdom, where `window` exists, it still does).
+- CI runs the integration suite on WordPress 6.6 too, the version the kses
+  sentence above promises.
+
+Which half reaches whom: the JSX changes (`Tabs`, `Pagination`, the layout
+effect) ship in each consumer's own bundle, so a consumer gets them when it
+moves to `^0.26` and rebuilds. The PHP change is served by the loader: once
+any plugin on a site ships 0.26, every consumer there gets it, `^0.25` ones
+included. It changes output only for `stdClass` input: a `stdClass` card or
+tab used to be skipped and now draws, and in `mhmuicore_stat_card_html()` too
+a `stdClass` `delta` now draws the delta line where 0.25 fell back to `sub`,
+and a `stdClass` `data` adds its `data-*` attributes.
