@@ -553,6 +553,13 @@ aralanır.
 
 Ritim üyeleri: `.mhmui-stats-grid`, `.mhmui-widget`, `.mhmui-pagination`, `.mhmui-notice`, `.mhmui-tabs`, `.mhmui-page-header`, `.mhmui-detail-layout`, `.mhmui-toolbar`, `.mhmui-table-card`
 
+**0.24.0 varsayılan değişikliği:** kabuğun doğrudan çocuğu olan ve öncesinde
+bir kardeşi bulunan DataTable (`.mhmui-table-card`) artık üstünden 12px alır
+(önce: 0). Yükleyici en yeni kopyayı site genelinde servis eder; yani bu,
+yeniden derlemeden görünür. Onu zaten kendisi aralayan bir ekran -- örneğin
+kendi `gap`'i olan bir flex sütunu da olan bir kabuk -- kendi boşluğunu
+düşürmeli, yoksa ikisi toplanır.
+
 Yalnız kabuğun bu sınıflardan birini taşıyan DOĞRUDAN çocuğu aralanır. Kendi
 bloğunuz (kendi sınıfınızla bir süzgeç çubuğu, bir düğme satırı) kabuktan
 boşluk almaz -- yalnız kendi taşıdığı dış boşluk kalır, düz bir `div` için bu

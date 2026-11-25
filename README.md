@@ -749,6 +749,12 @@ nested in a wrapper is spaced by its wrapper.
 
 Rhythm members: `.mhmui-stats-grid`, `.mhmui-widget`, `.mhmui-pagination`, `.mhmui-notice`, `.mhmui-tabs`, `.mhmui-page-header`, `.mhmui-detail-layout`, `.mhmui-toolbar`, `.mhmui-table-card`
 
+**0.24.0 default change:** a DataTable (`.mhmui-table-card`) that is a direct
+child of the shell, after a sibling, now gets 12px above it (before: 0). The
+loader serves the newest copy site-wide, so this shows without a rebuild. A
+screen that already spaces it itself -- for example a shell that is also a
+flex column with its own `gap` -- should drop its own spacing, or the two add up.
+
 Only a DIRECT child of the shell that carries one of these classes is spaced. A
 block of your own (a filter bar, a button row in your own class) gets no
 spacing from the shell -- only whatever margin it carries itself, which for a
