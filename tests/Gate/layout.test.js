@@ -450,13 +450,54 @@ describe( 'vertical rhythm is owned by the page shell (0.14.0)', () => {
 	const admin = read( 'admin.css' );
 	const front = read( 'front.css' );
 
-	const RHYTHM =
-		'> * + :is( .mhmui-stats-grid, .mhmui-widget, .mhmui-pagination, .mhmui-notice, .mhmui-tabs, .mhmui-page-header, .mhmui-detail-layout )';
+	// 0.24.0: `.mhmui-toolbar` joins -- the button row under a KPI band was
+	// spaced by no rule at all (Rentiva measured 0px, 2026-11-25) -- and so
+	// does DataTable's `.mhmui-table-card`, the block that usually follows it.
+	const MEMBERS = [
+		'.mhmui-stats-grid',
+		'.mhmui-widget',
+		'.mhmui-pagination',
+		'.mhmui-notice',
+		'.mhmui-tabs',
+		'.mhmui-page-header',
+		'.mhmui-detail-layout',
+		'.mhmui-toolbar',
+		'.mhmui-table-card',
+	];
+	const RHYTHM = `> * + :is( ${ MEMBERS.join( ', ' ) } )`;
 
 	test( 'the stats grid no longer carries its own outer margin', () => {
 		const body = ruleBody( admin, '.mhmui-stats-grid' );
 		expect( body ).not.toBeNull();
 		expect( body ).not.toMatch( /margin(-top|-block-start)?\s*:/ );
+	} );
+
+	test( 'the toolbar has a rule in both kits and carries no outer margin of its own', () => {
+		for ( const [ name, css, sel ] of [
+			[ 'admin.css', admin, '.mhmui-toolbar' ],
+			[ 'front.css', front, '.mhmui-front .mhmui-toolbar' ],
+		] ) {
+			const body = ruleBody( css, sel );
+			expect( [ name, body ] ).not.toEqual( [ name, null ] );
+			expect( body ).toMatch( /display:\s*flex/ );
+			expect( body ).toMatch( /flex-wrap:\s*wrap/ );
+			expect( body ).toMatch( /gap:\s*var\(\s*--mhmui-space-2\s*\)/ );
+			expect( body ).not.toMatch( /margin[a-z-]*\s*:/ );
+		}
+	} );
+
+	/** The member list is written in three places a consumer reads: the two
+	 * shells' selectors and the README table. A member added to one and not
+	 * the others is the gap this release closes, so the README list is pinned
+	 * to the same array as the CSS. */
+	test( 'both READMEs list exactly the shell rhythm members', () => {
+		for ( const file of [ 'README.md', 'README-tr.md' ] ) {
+			const text = readFileSync( join( __dirname, '..', '..', file ), 'utf8' );
+			const line = text.split( '\n' ).find( ( l ) => l.startsWith( 'Rhythm members:' ) || l.startsWith( 'Ritim üyeleri:' ) );
+			expect( [ file, line ] ).not.toEqual( [ file, undefined ] );
+			const listed = [ ...line.matchAll( /`([^`]+)`/g ) ].map( ( m ) => m[ 1 ] );
+			expect( [ file, listed ] ).toEqual( [ file, MEMBERS ] );
+		}
 	} );
 
 	test( 'both shells space their kit-member children with --mhmui-space-3', () => {

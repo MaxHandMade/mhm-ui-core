@@ -477,9 +477,21 @@
    its own notebook, not papered over here.
 
    0.15.0: tabs, page header and detail layout join the list; they are spaced
-   only as DIRECT children of the shell. */
-.mhmui-admin-page > * + :is( .mhmui-stats-grid, .mhmui-widget, .mhmui-pagination, .mhmui-notice, .mhmui-tabs, .mhmui-page-header, .mhmui-detail-layout ) {
+   only as DIRECT children of the shell. 0.24.0: the toolbar and the
+   DataTable card join too (the table under a toolbar was spaced 0px). */
+.mhmui-admin-page > * + :is( .mhmui-stats-grid, .mhmui-widget, .mhmui-pagination, .mhmui-notice, .mhmui-tabs, .mhmui-page-header, .mhmui-detail-layout, .mhmui-toolbar, .mhmui-table-card ) {
 	margin-block-start: var( --mhmui-space-3 );
+}
+
+/* Toolbar (0.24.0): a row of actions between two blocks of the page -- the
+   buttons under a KPI band, above a table. A rhythm member like the rest, so
+   it carries no outer margin; the shell spaces it. Wraps instead of
+   overflowing on a narrow screen. */
+.mhmui-toolbar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var( --mhmui-space-2 );
 }
 
 .mhmui-measure { max-width: var( --mhmui-measure ); }

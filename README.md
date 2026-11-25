@@ -22,7 +22,7 @@ A consuming plugin `require_once`s `vendor/mhm/ui-core/register.php` from its
 main file and registers its own copy:
 
 ```php
-mhmuicore_register( '0.23.7', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.24.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 At `plugins_loaded` priority 0 the highest registered version boots; the rest
@@ -390,7 +390,7 @@ build from.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.23.7', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.24.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 Requiring `bootstrap.php` directly defines `MHMUICORE_VERSION` immediately, which
@@ -746,6 +746,59 @@ template literal, a quoted key, and any file that mentions no anchor.
 `--mhmui-space-3`. Core's spacing of headings, paragraphs and notices is
 untouched. A surface that does not use the shell gets no rhythm, and a grid
 nested in a wrapper is spaced by its wrapper.
+
+Rhythm members: `.mhmui-stats-grid`, `.mhmui-widget`, `.mhmui-pagination`, `.mhmui-notice`, `.mhmui-tabs`, `.mhmui-page-header`, `.mhmui-detail-layout`, `.mhmui-toolbar`, `.mhmui-table-card`
+
+**0.24.0 default change:** a DataTable (`.mhmui-table-card`) that is a direct
+child of the shell, after a sibling, now gets 12px above it (before: 0). The
+loader serves the newest copy site-wide, so this shows without a rebuild. A
+screen that already spaces it itself -- for example a shell that is also a
+flex column with its own `gap` -- should drop its own spacing, or the two add up.
+
+Only a DIRECT child of the shell that carries one of these classes is spaced. A
+block of your own (a filter bar, a button row in your own class) gets no
+spacing from the shell -- only whatever margin it carries itself, which for a
+plain `div` is none. Put it on a member class or inside one.
+
+**0.24.0: `.mhmui-toolbar`** is the row of actions between two blocks (the
+buttons under a KPI band, above a table): a wrapping flex row with an 8px gap
+(`--mhmui-space-2`), no outer margin of its own, in both kits (on the front end
+the wrapper is `mhmui-front mhmui-front-page`, and core's `.button` classes are
+admin-only -- use your theme's buttons there). Markup only, no component:
+
+```html
+<div class="mhmui-admin mhmui-admin-page">
+	<!-- StatsGrid -->
+	<div class="mhmui-toolbar">
+		<a class="button button-primary" href="…">Add new</a>
+		<a class="button" href="…">Export</a>
+	</div>
+	<!-- DataTable (.mhmui-table-card) -->
+</div>
+```
+
+**Sub-pages carry a back link.** A screen reached from a list -- detail, edit,
+add -- starts with a `PageHeader` whose `back` points at that list, as the
+shell's first child. A top-level screen (the list itself, a settings page) has
+no back link: the admin menu is its way back.
+
+```jsx
+<div className="mhmui-admin mhmui-admin-page">
+	<PageHeader
+		back={ { label: __( 'All bookings', 'my-plugin' ), href: listUrl } }
+		title={ booking.title }
+		level={ 1 }
+	/>
+	{ /* … */ }
+</div>
+```
+
+`PageHeader` draws no link when `back.label` or `back.href` is empty, so a
+sub-page that passes a missing URL loses its way back silently -- test that
+your sub-pages render `.mhmui-page-header__back`. The package can only check
+its own half: the rhythm list is the same in both kits and in this README, and
+`PageHeader` draws the link from `back` (`tests/Gate/layout.test.js`,
+`PageHeader.test.jsx`). Which of your screens are sub-pages only you know.
 
 ### Detail views (0.15.0+)
 

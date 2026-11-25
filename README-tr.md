@@ -216,7 +216,7 @@ da bu tek yanlış cümle yüzünden taşıdı.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.23.7', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.24.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 `bootstrap.php`'yi doğrudan require etmek `MHMUICORE_VERSION`'ı anında tanımlar
@@ -551,6 +551,62 @@ aralaması dokunulmadan kalıyor. Kabuğu kullanmayan bir yüzey ritim almaz;
 bir sarmalayıcı içine yerleşmiş bir ızgara kendi sarmalayıcısı tarafından
 aralanır.
 
+Ritim üyeleri: `.mhmui-stats-grid`, `.mhmui-widget`, `.mhmui-pagination`, `.mhmui-notice`, `.mhmui-tabs`, `.mhmui-page-header`, `.mhmui-detail-layout`, `.mhmui-toolbar`, `.mhmui-table-card`
+
+**0.24.0 varsayılan değişikliği:** kabuğun doğrudan çocuğu olan ve öncesinde
+bir kardeşi bulunan DataTable (`.mhmui-table-card`) artık üstünden 12px alır
+(önce: 0). Yükleyici en yeni kopyayı site genelinde servis eder; yani bu,
+yeniden derlemeden görünür. Onu zaten kendisi aralayan bir ekran -- örneğin
+kendi `gap`'i olan bir flex sütunu da olan bir kabuk -- kendi boşluğunu
+düşürmeli, yoksa ikisi toplanır.
+
+Yalnız kabuğun bu sınıflardan birini taşıyan DOĞRUDAN çocuğu aralanır. Kendi
+bloğunuz (kendi sınıfınızla bir süzgeç çubuğu, bir düğme satırı) kabuktan
+boşluk almaz -- yalnız kendi taşıdığı dış boşluk kalır, düz bir `div` için bu
+sıfırdır. Bir üye sınıfa koyun ya da bir üyenin içine alın.
+
+**0.24.0: `.mhmui-toolbar`**, iki blok arasındaki eylem satırıdır (KPI bandının
+altındaki, tablonun üstündeki düğmeler): 8px boşluklu (`--mhmui-space-2`),
+satır kıran bir flex satırı; kendi dış boşluğu yok, iki kitte de var (ön yüzde
+sarmalayıcı `mhmui-front mhmui-front-page`'dir ve çekirdeğin `.button`
+sınıfları yalnız yöneticide biçimlenir -- orada temanızın düğmelerini
+kullanın). Yalnız işaretleme, bileşen yok:
+
+```html
+<div class="mhmui-admin mhmui-admin-page">
+	<!-- StatsGrid -->
+	<div class="mhmui-toolbar">
+		<a class="button button-primary" href="…">Yeni ekle</a>
+		<a class="button" href="…">Dışa aktar</a>
+	</div>
+	<!-- DataTable (.mhmui-table-card) -->
+</div>
+```
+
+**Alt sayfalar geri bağlantı taşır.** Bir listeden açılan ekran (ayrıntı,
+düzenle, ekle), kabuğun ilk çocuğu olarak `back`'i o listeyi gösteren bir
+`PageHeader` ile başlar. Üst düzey bir ekranın (listenin kendisi, bir ayar
+sayfası) geri bağlantısı yoktur: dönüş yolu yönetici menüsüdür.
+
+```jsx
+<div className="mhmui-admin mhmui-admin-page">
+	<PageHeader
+		back={ { label: __( 'All bookings', 'my-plugin' ), href: listUrl } }
+		title={ booking.title }
+		level={ 1 }
+	/>
+	{ /* … */ }
+</div>
+```
+
+`back.label` ya da `back.href` boşsa `PageHeader` bağlantı çizmez; yani adresi
+eksik geçen bir alt sayfa dönüş yolunu sessizce kaybeder -- alt sayfalarınızın
+`.mhmui-page-header__back` çizdiğini test edin. Paket yalnız kendi yarısını
+denetleyebilir: ritim listesi iki kitte ve bu README'de aynıdır, `PageHeader`
+bağlantıyı `back`'ten çizer (`tests/Gate/layout.test.js`,
+`PageHeader.test.jsx`). Hangi ekranınızın alt sayfa olduğunu yalnız siz
+bilirsiniz.
+
 ### Detay görünümleri (0.15.0+)
 
 0.15.1: ConfirmButton'ın kuralları WordPress çekirdeğinin `.wp-core-ui .button`
@@ -664,7 +720,7 @@ parite kapısı eşitlik arar, uyumluluk değil.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.23.7', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.24.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 🔴 Sürüm dizesi **elle yazılır** (kayıt, herhangi bir bootstrap yüklenmeden önce koşar) ve
