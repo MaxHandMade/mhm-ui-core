@@ -88,4 +88,65 @@ final class ShortcodeMarkupRoundTripTest extends WP_UnitTestCase {
 			ShortcodeMarkup::to_shortcode( 'x', array( 'a' => 'p &quot;q&QUOT; r&#34; s&#x0022; t&quot;;u v&quotw', 'b' => '5" &#x220;' ) )
 		);
 	}
+
+	/**
+	 * What a registered shortcode's callback receives for one value, through
+	 * kses and WordPress's own shortcode regex (not a regex of this test's).
+	 *
+	 * @return bool Whether the value arrived whole and the next attribute too.
+	 */
+	private function arrives_whole( string $value ): bool {
+		$received = null;
+		add_shortcode(
+			'mhmuicore_probe',
+			static function ( $atts ) use ( &$received ) {
+				$received = $atts;
+				return '';
+			}
+		);
+		$rest = do_shortcode( wp_kses_post( ShortcodeMarkup::to_shortcode( 'mhmuicore_probe', array( 'title' => $value, 'next' => 'tail' ) ) ) );
+		remove_shortcode( 'mhmuicore_probe' );
+
+		return '' === $rest
+			&& is_array( $received )
+			&& array( 'title', 'next' ) === array_keys( $received )
+			&& 'tail' === $received['next']
+			&& html_entity_decode( (string) $received['title'], ENT_QUOTES | ENT_HTML5, 'UTF-8' ) === html_entity_decode( $value, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+	}
+
+	public function test_every_value_can_carry_accepts_arrives_whole_on_this_version(): void {
+		$corpus = array(
+			'plain', 'say "hi"', "it's", "say \"hi\" it's", 'a]b', 'a[b', '[x]', 'a &#93; b', 'a &#x5d; b',
+			'<b>bold</b>', 'a < b', 'a/b', 'end/', 'back\slash', "line\nbreak", 'é ü ğ', "\xC3\x28",
+			'x=y', "a\"b'c", '&quot;&#039;', '%22', '/]', 'a/]b', 'https://x.test/?a=1&quote=2', 'kampanya kis "2027"',
+		);
+
+		$accepted = 0;
+		$broken   = array();
+		foreach ( $corpus as $value ) {
+			$whole = $this->arrives_whole( $value );
+			if ( ShortcodeMarkup::can_carry( $value ) ) {
+				++$accepted;
+				self::assertTrue( $whole, 'can_carry() accepted a value WordPress ' . get_bloginfo( 'version' ) . ' breaks: ' . wp_json_encode( $value ) );
+			}
+			if ( ! $whole ) {
+				$broken[] = $value;
+			}
+		}
+
+		// Not vacuous: the predicate accepts most of the corpus, and the probe
+		// does see breakage on this version (a raw ] breaks on every version).
+		self::assertGreaterThanOrEqual( 12, $accepted );
+		self::assertContains( 'a]b', $broken );
+	}
+
+	public function test_on_7_2_a_value_holding_both_quote_kinds_breaks_and_can_carry_refuses_it(): void {
+		if ( version_compare( get_bloginfo( 'version' ), '7.2-alpha', '<' ) ) {
+			self::markTestSkipped( 'The HTML API kses that decodes quote references arrives in 7.2.' );
+		}
+		foreach ( array( "say \"hi\" it's", 'a &#93; b' ) as $value ) {
+			self::assertFalse( $this->arrives_whole( $value ), wp_json_encode( $value ) );
+			self::assertFalse( ShortcodeMarkup::can_carry( $value ), wp_json_encode( $value ) );
+		}
+	}
 }

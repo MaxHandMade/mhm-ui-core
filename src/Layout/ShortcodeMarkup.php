@@ -38,6 +38,45 @@ final class ShortcodeMarkup {
 	private const APOSTROPHE_REF = "/'|&(?:apos|#0*39|#x0*27);/i";
 
 	/**
+	 * A raw `]`, or a reference esc_attr() keeps that 7.2 kses decodes to one.
+	 */
+	private const CLOSING_BRACKET = '/\]|&(?:rsqb|rbrack|#0*93|#x0*5d);/i';
+
+	/**
+	 * Whether a value reaches a shortcode callback whole on every supported
+	 * WordPress version, after to_shortcode() and the kses pass post content
+	 * goes through.
+	 *
+	 * False for the values no spelling carries -- measured with do_shortcode()
+	 * on 7.1 and 7.2-RC2 (tests/Integration/ShortcodeMarkupRoundTripTest.php):
+	 * - a `]`: the shortcode ends at it on every version. `&#93;` / `&#x5d;`
+	 *   too, since 7.2 kses decodes them in post text;
+	 * - a double quote AND an apostrophe: from 7.2 kses decodes both
+	 *   references, and an attribute has no escape for its own delimiter;
+	 * - a backslash: shortcode_parse_atts() runs stripcslashes() on values;
+	 * - text esc_attr() empties (invalid UTF-8).
+	 *
+	 * to_shortcode() still writes such a value as before (refusing there would
+	 * be a fatal on sites a newer copy serves); this is the consumer's check,
+	 * before it writes post content.
+	 *
+	 * @param string $value Attribute value, unescaped.
+	 */
+	public static function can_carry( string $value ): bool {
+		$escaped = esc_attr( $value );
+
+		if ( '' === $escaped ) {
+			return '' === $value;
+		}
+
+		if ( false !== strpos( $value, '\\' ) || 1 === preg_match( self::CLOSING_BRACKET, $escaped ) ) {
+			return false;
+		}
+
+		return ! ( 1 === preg_match( self::DOUBLE_QUOTE_REF, $escaped ) && 1 === preg_match( self::APOSTROPHE_REF, $escaped ) );
+	}
+
+	/**
 	 * Build a WordPress shortcode string.
 	 *
 	 * A value is double-quoted and esc_attr()'d, byte for byte as before

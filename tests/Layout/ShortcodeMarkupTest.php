@@ -69,4 +69,43 @@ final class ShortcodeMarkupTest extends TestCase {
 		);
 	}
 
+	/**
+	 * @return array<string,array{0:string,1:bool}>
+	 */
+	public static function carry_cases(): array {
+		return array(
+			'plain'                    => array( 'Welcome home', true ),
+			'empty'                    => array( '', true ),
+			'double quotes only'       => array( 'say "hi"', true ),
+			'apostrophe only'          => array( "it's", true ),
+			'opening bracket'          => array( 'a[b', true ),
+			'slash'                    => array( 'a/b', true ),
+			'markup'                   => array( '<b>bold</b>', true ),
+			'both quote kinds'         => array( "say \"hi\" it's", false ),
+			'closing bracket'          => array( 'a]b', false ),
+			'a whole shortcode'        => array( '[x]', false ),
+			'slash before bracket'     => array( '/]', false ),
+			'backslash'                => array( 'back\slash', false ),
+		);
+	}
+
+	/**
+	 * @dataProvider carry_cases
+	 */
+	public function test_can_carry_answers_whether_every_supported_version_reads_the_value_back( string $value, bool $expected ): void {
+		$this->assertSame( $expected, ShortcodeMarkup::can_carry( $value ) );
+	}
+
+	public function test_can_carry_refuses_a_value_esc_attr_empties(): void {
+		// The stub is htmlspecialchars(), which empties invalid UTF-8 the same
+		// way esc_attr() does.
+		$this->assertFalse( ShortcodeMarkup::can_carry( "\xC3\x28" ) );
+	}
+
+	public function test_can_carry_does_not_change_what_to_shortcode_writes(): void {
+		$this->assertSame(
+			'[x a="say &quot;hi&quot; it&#039;s" b="a]b"]',
+			ShortcodeMarkup::to_shortcode( 'x', array( 'a' => "say \"hi\" it's", 'b' => 'a]b' ) )
+		);
+	}
 }
