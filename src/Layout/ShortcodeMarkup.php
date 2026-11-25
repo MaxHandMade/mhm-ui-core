@@ -46,16 +46,20 @@ final class ShortcodeMarkup {
 	private const UNCARRIED = '/[\]\x5C\x00-\x08\x0B-\x1F]|\x{00A0}|\x{200B}/u';
 
 	/**
-	 * A numeric reference to one of UNCARRIED's control characters.
-	 * html_entity_decode()'s HTML5 mode leaves these encoded; 7.2 kses decodes
-	 * `&#13;` to a carriage return all the same.
+	 * A numeric reference, as esc_attr() keeps it, that html_entity_decode()'s
+	 * HTML5 mode leaves encoded but 7.2 kses decodes all the same: a C0
+	 * control other than tab and line feed (`&#13;` becomes a carriage
+	 * return), DEL (dropped), and 128-159 (read as Windows-1252, so `&#128;`
+	 * becomes `€`). Matched on esc_attr()'s output: a reference esc_attr()
+	 * neutralises (`&amp;#1;`) arrives literally and is fine.
 	 */
-	private const CONTROL_REF = '/&#(?:0*(?:[0-8]|1[1-9]|2[0-9]|3[01])|x0*(?:[0-8]|[b-f]|1[0-9a-f]));/i';
+	private const CONTROL_REF = '/&#(?:0*(?:[0-8]|1[1-9]|2[0-9]|3[01]|12[7-9]|1[3-5][0-9])|x0*(?:[0-8]|[b-f]|1[0-9a-f]|7f|[89][0-9a-f]));/i';
 
 	/**
-	 * Whether a value reaches a shortcode callback byte for byte on every
+	 * Whether a value reaches a shortcode callback as the same text on every
 	 * supported WordPress version, after to_shortcode() and the kses pass post
-	 * content goes through.
+	 * content goes through. (The same text, not the same bytes: an apostrophe
+	 * arrives as `&#039;` before 7.2 and raw from 7.2.)
 	 *
 	 * The value is judged as text twice: as written (what versions before 7.2
 	 * see) and with the references esc_attr() keeps decoded (what 7.2's HTML
@@ -80,11 +84,11 @@ final class ShortcodeMarkup {
 			return '' === $value;
 		}
 
-		$decoded = html_entity_decode( $escaped, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
-
-		if ( 1 === preg_match( self::CONTROL_REF, $decoded ) ) {
+		if ( 1 === preg_match( self::CONTROL_REF, $escaped ) ) {
 			return false;
 		}
+
+		$decoded = html_entity_decode( $escaped, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
 
 		foreach ( array( $value, $decoded ) as $text ) {
 			if ( 1 === preg_match( self::UNCARRIED, $text ) ) {

@@ -127,6 +127,9 @@ final class ShortcodeMarkupRoundTripTest extends WP_UnitTestCase {
 			// kses drops, and values esc_attr() neutralises.
 			'C:&#92;temp', 'a&#x5c;nb', '&bsol;', "10\u{00A0}000 TL", "a\u{200B}b", 'a&nbsp;b', 'a&#160;b', 'a&#8203;b',
 			"a\x00b", "a\x01b", "a\x0Bb", "a\r\nb", "a\tb", '', '&rsqb;', '&Hat;', "&QUOT;x'", '&apos;"', 'a&#13;b',
+			// Fable 0.25.0 delta: DEL and 128-159 references 7.2 decodes, and
+			// control references esc_attr() neutralises (these must stay accepted).
+			'a&#127;b', 'a&#x7f;b', 'a&#128;b', 'a&#x9f;b', 'a&#0;b', 'a&#x1f;b', 'a&amp;#1;b',
 		);
 
 		$accepted = 0;
@@ -146,6 +149,12 @@ final class ShortcodeMarkupRoundTripTest extends WP_UnitTestCase {
 		// does see breakage on this version (a raw ] breaks on every version).
 		self::assertGreaterThanOrEqual( 12, $accepted );
 		self::assertContains( 'a]b', $broken );
+
+		// Not over-strict: references esc_attr() neutralises arrive literally
+		// and stay accepted (Fable 0.25.0 delta: 757 such values were refused).
+		foreach ( array( 'a&#0;b', 'a&#x1f;b', 'a&amp;#1;b', '&rsqb;' ) as $value ) {
+			self::assertTrue( ShortcodeMarkup::can_carry( $value ), wp_json_encode( $value ) );
+		}
 	}
 
 	public function test_on_7_2_a_value_holding_both_quote_kinds_breaks_and_can_carry_refuses_it(): void {

@@ -231,6 +231,8 @@ post content. It returns false for:
   space, so `10 000 TL` written with a no-break space arrives with a plain one;
 - a control character other than tab and line feed, and a carriage return:
   kses drops them, or (7.2) folds `\r\n` into `\n`;
+- a reference to DEL or to 128-159 (`&#127;`, `&#128;`): 7.2 drops DEL and
+  reads 128-159 as Windows-1252 (`&#128;` arrives as `€`);
 - invalid UTF-8, which `esc_attr()` empties.
 
 Each rule counts the character's references too (`&#92;`, `&nbsp;`, `&#13;`

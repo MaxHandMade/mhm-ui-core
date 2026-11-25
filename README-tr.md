@@ -996,6 +996,8 @@ yazmadan önce söyler. Şunlarda false döner:
   çevirir; yani bölünmez boşlukla yazılmış `10 000 TL` düz boşlukla gelir;
 - sekme ve satır sonu dışındaki bir denetim karakteri ve satır başı: kses
   onları siler ya da (7.2) `\r\n`'yi `\n`'ye katlar;
+- DEL'e ya da 128-159'a giden bir referans (`&#127;`, `&#128;`): 7.2 DEL'i
+  siler, 128-159'u Windows-1252 olarak okur (`&#128;` `€` olarak gelir);
 - `esc_attr()`'ın boşalttığı geçersiz UTF-8.
 
 Her kural karakterin referanslarını da sayar (`&#92;`, `&nbsp;`, `&#13;` ...),
