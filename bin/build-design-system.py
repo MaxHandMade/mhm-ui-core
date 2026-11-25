@@ -302,6 +302,23 @@ files["components/page-header.html"] = page(
     width=720,
 )
 
+files["components/toolbar.html"] = page(
+    "Components", "Toolbar",
+    "<b>.mhmui-toolbar</b> (0.24.0) — iki blok arasındaki eylem satırı; bileşen değil, yalnız sınıf. Kendi dış boşluğu yok: "
+    "sayfa kabuğunun ritim üyesi, üstündeki bloktan --mhmui-space-3 (12px) alır. Düğmeler arası --mhmui-space-2 (8px); dar kapta satır kırar. "
+    "Alt sayfa (ayrıntı · düzenle · ekle) kabuğun ilk çocuğu olarak back'li bir PageHeader ile başlar.",
+    '<div class="mhmui-admin-page">'
+    '<div class="mhmui-stats-grid" style="--mhmui-columns:3">'
+    + stat_card("Rezervasyon", "1.284", "info")
+    + stat_card("Gelir", "₺418.900", "success")
+    + stat_card("Aktif Araç", "37", "warning")
+    + '</div>'
+    '<div class="mhmui-toolbar"><a href="#" class="button button-primary">Yeni ekle</a><a href="#" class="button">Dışa aktar</a></div>'
+    '<div class="mhmui-notice notice notice-info"><p>Tablo burada başlar.</p></div>'
+    '</div>',
+    width=960,
+)
+
 files["components/detail-list.html"] = page(
     "Components", "DetailList",
     "<b>DetailList</b> — etiket/değer çiftleri. Boş değer gri metin; ton metni boyamaz, önüne nokta koyar. Prop'lar: items{label,value,tone}, emptyText, columns, layout (stacked|inline).",
@@ -458,7 +475,7 @@ Burada çizilen, WordPress'te aynen render olur.
 - Claude Design **üretim kodu üretmez**; devir paketi üretir, kodu Claude Code yazar.
 
 ## Bileşenler
-StatCard · StatsGrid · StatusBadge · Pagination · ProLock · Notice · Widget · Button · Tabs · PageHeader · DetailList · DetailLayout · ConfirmButton
+StatCard · StatsGrid · StatusBadge · Pagination · ProLock · Notice · Widget · Button · Tabs · PageHeader · Toolbar (yalnız sınıf) · DetailList · DetailLayout · ConfirmButton
 (+ görünmeyenler: ErrorBoundary, createApiClient, useApi, createFormatter)
 
 ## Senkron
