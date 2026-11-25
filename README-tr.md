@@ -1052,4 +1052,7 @@ Hangi yarı kime ulaşır: JSX değişiklikleri (`Tabs`, `Pagination`, yerleşim
 efekti) her tüketicinin kendi paketinde gider; tüketici `^0.26`'ya geçip
 yeniden derleyince alır. PHP değişikliğini yükleyici servis eder: bir sitedeki
 herhangi bir eklenti 0.26'yı taşıdığı an oradaki her tüketici, `^0.25`
-olanlar dahil, onu alır. Yalnız önceden atlanan girdiyi çizer.
+olanlar dahil, onu alır. Çıktıyı yalnız `stdClass` girdide değiştirir: önceden
+atlanan bir `stdClass` kart ya da sekme artık çizilir; `mhmuicore_stat_card_html()`
+dahil, bir `stdClass` `delta` 0.25'in `sub`'a düştüğü yerde delta satırını
+çizer ve bir `stdClass` `data` kendi `data-*` özniteliklerini ekler.

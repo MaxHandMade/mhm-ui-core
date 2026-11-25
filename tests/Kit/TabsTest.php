@@ -99,7 +99,25 @@ final class TabsTest extends TestCase {
 		self::assertSame( Tabs::render_html( self::props() ), Tabs::render_html( $props ) );
 
 		$skipped          = self::props();
-		$skipped['items'] = array( static fn() => 1, new \RuntimeException( 'x' ) );
+		// An object WITH a public href: is_object() instead of stdClass would draw it.
+		$skipped['items'] = array(
+			static fn() => 1,
+			new \RuntimeException( 'x' ),
+			new class() {
+				/**
+				 * Looks like a tab, is not a row.
+				 *
+				 * @var string
+				 */
+				public $href = '/a';
+				/**
+				 * Looks like a tab, is not a row.
+				 *
+				 * @var string
+				 */
+				public $label = 'A';
+			},
+		);
 		self::assertStringNotContainsString( '<a ', Tabs::render_html( $skipped ) );
 	}
 

@@ -1167,4 +1167,7 @@ Which half reaches whom: the JSX changes (`Tabs`, `Pagination`, the layout
 effect) ship in each consumer's own bundle, so a consumer gets them when it
 moves to `^0.26` and rebuilds. The PHP change is served by the loader: once
 any plugin on a site ships 0.26, every consumer there gets it, `^0.25` ones
-included. It only draws input that used to be skipped.
+included. It changes output only for `stdClass` input: a `stdClass` card or
+tab used to be skipped and now draws, and in `mhmuicore_stat_card_html()` too
+a `stdClass` `delta` now draws the delta line where 0.25 fell back to `sub`,
+and a `stdClass` `data` adds its `data-*` attributes.
