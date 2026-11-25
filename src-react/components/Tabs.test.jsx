@@ -105,6 +105,26 @@ describe( 'Tabs -- page sections as real links', () => {
 		expect( container.querySelectorAll( 'a' ) ).toHaveLength( 1 );
 	} );
 
+	test( 'a numeric current and a true href follow PHP too (Fable 0.26.0 mutants)', () => {
+		render(
+			<Tabs
+				label="Sections"
+				current={ 2 }
+				items={ [
+					{ id: '2', label: 'Two', href: true },
+					{ id: '3', label: 'Three', href: '?3' },
+				] }
+			/>
+		);
+		const links = screen.getAllByRole( 'link' );
+		expect( links.map( ( a ) => a.getAttribute( 'href' ) ) ).toEqual( [
+			'1',
+			'?3',
+		] );
+		expect( links[ 0 ].getAttribute( 'aria-current' ) ).toBe( 'page' );
+		expect( links[ 1 ].getAttribute( 'aria-current' ) ).toBeNull();
+	} );
+
 	test( 'an item with an empty href is skipped', () => {
 		render(
 			<Tabs

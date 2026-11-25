@@ -24,12 +24,23 @@ final class StatsGridTest extends TestCase {
 
 	public function test_an_object_card_is_drawn_like_the_jsx_twin_draws_it(): void {
 		// 0.26.0: a json_decode() row used to be skipped here while StatsGrid.jsx drew it.
-		$cards = json_decode( '[{"label":"A","value":"1"},{"label":"B","value":"2"}]' );
+		// Fable 0.26.0: the nested delta and data are stdClass too and must
+		// draw the same delta line and data-* attribute as the array form.
+		$json  = '[{"label":"A","value":"1","tone":"info","delta":{"direction":"up","text":"12%","label":"rise"},"data":{"k":"v"}},{"label":"B","value":"2","sub":"of 9"}]';
+		$cards = json_decode( $json );
 		self::assertIsArray( $cards );
-		self::assertSame(
-			StatsGrid::render_html( array( array( 'label' => 'A', 'value' => '1' ), array( 'label' => 'B', 'value' => '2' ) ), 2 ),
-			StatsGrid::render_html( $cards, 2 )
-		);
+		$html = StatsGrid::render_html( $cards, 2 );
+		self::assertSame( StatsGrid::render_html( json_decode( $json, true ), 2 ), $html );
+		self::assertStringContainsString( 'mhmui-stat-card__delta--up', $html );
+		self::assertStringContainsString( 'data-k="v"', $html );
+		self::assertStringContainsString( 'of 9', $html );
+	}
+
+	public function test_objects_that_are_not_rows_are_still_skipped(): void {
+		// Only a stdClass row is props; a Closure or an exception would draw an
+		// empty card from its (absent) public properties.
+		$html = StatsGrid::render_html( array( static fn() => 1, new \RuntimeException( 'x' ), new \ArrayObject( array( 'label' => 'A' ) ) ), 4 );
+		self::assertSame( 0, substr_count( $html, 'mhmui-stat-card' ) );
 	}
 
 	/** @return array<string, array{0: mixed, 1: int}> */

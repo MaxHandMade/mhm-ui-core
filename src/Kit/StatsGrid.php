@@ -19,7 +19,7 @@ final class StatsGrid {
 	/**
 	 * Render a row of stat cards to an HTML string.
 	 *
-	 * @param array<int|string, mixed> $cards   StatCard prop arrays or objects (public properties); anything else is skipped.
+	 * @param array<int|string, mixed> $cards   StatCard prop arrays or stdClass rows (json_decode()); anything else is skipped.
 	 * @param mixed                    $columns Most columns on a wide container. Numeric -> max(1, n); otherwise 4.
 	 * @return string Escaped HTML.
 	 */
@@ -29,9 +29,10 @@ final class StatsGrid {
 		$body  = '';
 		$drawn = 0;
 		foreach ( $cards as $card ) {
-			// An object (a json_decode() row) is read as its public properties,
-			// the way the JSX twin reads any object (0.26.0).
-			if ( is_object( $card ) ) {
+			// A json_decode() row (stdClass) is read as its public properties,
+			// as the JSX twin reads it (0.26.0). Other objects (a Closure, a
+			// WP_Error) are still skipped: their properties are not props.
+			if ( $card instanceof \stdClass ) {
 				$card = get_object_vars( $card );
 			}
 			if ( is_array( $card ) ) {

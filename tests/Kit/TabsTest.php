@@ -97,6 +97,10 @@ final class TabsTest extends TestCase {
 		$props          = self::props();
 		$props['items'] = json_decode( (string) wp_json_encode( $props['items'] ) );
 		self::assertSame( Tabs::render_html( self::props() ), Tabs::render_html( $props ) );
+
+		$skipped          = self::props();
+		$skipped['items'] = array( static fn() => 1, new \RuntimeException( 'x' ) );
+		self::assertStringNotContainsString( '<a ', Tabs::render_html( $skipped ) );
 	}
 
 	public function test_raw_empty_href_is_skipped_before_escaping(): void {

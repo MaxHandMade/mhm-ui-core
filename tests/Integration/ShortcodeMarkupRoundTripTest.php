@@ -177,13 +177,14 @@ final class ShortcodeMarkupRoundTripTest extends WP_UnitTestCase {
 		// can_carry() answers with the running site's esc_attr(): on 6.6 it turns
 		// `&amp;#93;` into `&#093;` (7.1 keeps it), the callback then reads `]`,
 		// and can_carry() rightly says false there. So the corpus is filtered by
-		// the predicate, not asserted all-true; most of it must still pass.
-		$checked = 0;
+		// the predicate, and what it refuses is pinned exactly per version: a
+		// regression that refuses one more value must go red too (Fable 0.26.0).
+		$refused = array();
 		foreach ( $corpus as $value ) {
 			if ( ! ShortcodeMarkup::can_carry( $value ) ) {
+				$refused[] = $value;
 				continue;
 			}
-			++$checked;
 
 			$code = ShortcodeMarkup::to_shortcode( 'mhmuicore_probe', array( 'title' => $value, 'next' => 'tail' ) );
 			$id   = self::factory()->post->create( array( 'post_content' => $code ) );
@@ -195,7 +196,10 @@ final class ShortcodeMarkupRoundTripTest extends WP_UnitTestCase {
 			}
 		}
 
-		self::assertGreaterThanOrEqual( 16, $checked, 'the predicate accepts most of the corpus' );
+		// Measured: 6.6 refuses it, 7.1 and 7.2-RC2 accept it. The esc_attr()
+		// change lies somewhere between; CI runs no version in that gap.
+		$expected = version_compare( get_bloginfo( 'version' ), '7.0-alpha', '<' ) ? array( 'a&amp;#93;b' ) : array();
+		self::assertSame( $expected, $refused, 'can_carry() refused exactly these on WordPress ' . get_bloginfo( 'version' ) );
 	}
 
 	/**

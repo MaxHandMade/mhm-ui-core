@@ -1024,23 +1024,32 @@ Yeni bir genel metot ekler, bu yüzden minördür: `^0.24` bunu almaz; tüketici
 
 ### İkiz eşitliği ve küçük düzeltmeler (0.26.0+)
 
-- **PHP nesneleri diziler gibi okur.** `mhmuicore_stats_grid_html()` ve
-  `mhmuicore_tabs_html()`, nesne olan bir kartı ya da sekmeyi (bir
-  `json_decode()` satırı) atlıyordu; JSX ikizleri ise çiziyordu. İkisi de artık
-  nesnenin genel özelliklerini okur. Ne dizi ne nesne olan her şey iki ikizde
-  de sessizce atlanır: yer tutucu yok, uyarı yok.
-- **`Tabs`, `href`, `id` ve `current`'ı PHP ikizi gibi okur.** Sayı ondalık
+- **PHP bir `json_decode()` satırını dizi gibi okur.** `mhmuicore_stats_grid_html()`
+  ve `mhmuicore_tabs_html()`, `stdClass` olan bir kartı ya da sekmeyi
+  atlıyordu; JSX ikizleri ise çiziyordu. Kartın `delta` ve `data` alanları da
+  aynı biçimde okunur. Başka nesneler (Closure, istisna, `ArrayObject`) ve ne
+  dizi ne `stdClass` olan her şey yine sessizce atlanır: yer tutucu yok, uyarı
+  yok.
+- **`Tabs`, `href`, `id` ve `current`'ı PHP ikizi gibi okur.** Tam sayı ondalık
   dizgesidir; yani `href: 5` çizilir ve `id: 2`, `current: '2'` için güncel
-  sekmedir. `null`, `false` ve skaler olmayanlar boştur; `href`'i boş öğe
-  atlanır. `onSelect` `id`'yi yine verildiği gibi alır.
+  sekmedir. `true` `'1'`dir; `null`, `false`, nesneler ve diziler boştur;
+  `href`'i boş öğe atlanır. Ondalıklı sayılar iki ikizde farklı yazılabilir
+  (`1e21`, `0.1 + 0.2`), dizge geçin. `onSelect` `id`'yi yine verildiği gibi
+  alır.
 - **`Pagination` bir kez uyarır.** `onChange` bir işlev değilken bir sayfa
-  düğmesine tıklanırsa o bileşen için tek bir `console.warn` yazılır (yanlış
-  yazılmış bir prop adı önceden sessizdi). Çizimde hiçbir şey yazılmaz.
+  düğmesine tıklanırsa takılı her bileşen için tek bir `console.warn` yazılır
+  (yanlış yazılmış bir prop adı önceden sessizdi). Çizimde hiçbir şey yazılmaz.
+  `@wordpress/jest-console` altında `onChange`'siz Pagination'a tıklayan bir
+  tüketici testi artık bunu beklemeli: `expect( console ).toHaveWarned()`.
 - **Sunucu tarafı render sessiz.** DataTable, SelectAll ve Widget yerleşim
-  efektini yalnız DOM olan yerde kullanır; `renderToString` artık React 18'in
-  "useLayoutEffect does nothing on the server" uyarısını basmaz.
+  efektini yalnız `window` olan yerde kullanır; Node'da `renderToString`
+  artık React 18'in "useLayoutEffect does nothing on the server" uyarısını
+  basmaz (`window`'un bulunduğu jsdom altında yine basar).
 - CI entegrasyon takımını WordPress 6.6'da da koşar; yukarıdaki kses cümlesinin
   söz verdiği sürüm budur.
 
-`Tabs` ve iki PHP fonksiyonu önceden atlanan girdide daha fazlasını çizer; bu
-yüzden minördür: `^0.25` bunu almaz; tüketici `^0.26` ile katılır.
+Hangi yarı kime ulaşır: JSX değişiklikleri (`Tabs`, `Pagination`, yerleşim
+efekti) her tüketicinin kendi paketinde gider; tüketici `^0.26`'ya geçip
+yeniden derleyince alır. PHP değişikliğini yükleyici servis eder: bir sitedeki
+herhangi bir eklenti 0.26'yı taşıdığı an oradaki her tüketici, `^0.25`
+olanlar dahil, onu alır. Yalnız önceden atlanan girdiyi çizer.
