@@ -157,6 +157,59 @@ final class ShortcodeMarkupRoundTripTest extends WP_UnitTestCase {
 		}
 	}
 
+	/**
+	 * The real save path, not wp_kses_post() alone: an author (no
+	 * unfiltered_html, so content_save_pre runs kses on slashed data) saves the
+	 * shortcode, then re-saves what was stored twice. kses on already-filtered
+	 * content must not decode anything further (measured 2026-11-25 on 7.1 and
+	 * 7.2-RC2: stable from the first save).
+	 */
+	public function test_a_value_can_carry_accepts_survives_saving_and_resaving_as_an_author(): void {
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'author' ) ) );
+		self::assertFalse( current_user_can( 'unfiltered_html' ) );
+		self::assertSame( 10, has_filter( 'content_save_pre', 'wp_filter_post_kses' ), 'kses runs on save for this user' );
+
+		$corpus = array(
+			'plain', 'say "hi"', "it's", 'kampanya kis "2027"', 'a &amp; b', 'a < b', '<b>x</b>', 'é ü ğ', 'a[b',
+			'https://x.test/?a=1&quote=2', '&quot;q&quot;', '&#039;', '&lt;b&gt;', 'a&#9;b', '&rsqb;', 'a&amp;#93;b', 'a&#34;b', "line\nbreak",
+		);
+
+		foreach ( $corpus as $value ) {
+			self::assertTrue( ShortcodeMarkup::can_carry( $value ), wp_json_encode( $value ) );
+
+			$code = ShortcodeMarkup::to_shortcode( 'mhmuicore_probe', array( 'title' => $value, 'next' => 'tail' ) );
+			$id   = self::factory()->post->create( array( 'post_content' => $code ) );
+
+			for ( $save = 1; $save <= 3; $save++ ) {
+				$stored = get_post_field( 'post_content', $id, 'raw' );
+				self::assertTrue( $this->content_carries( $stored, $value ), "save {$save}: " . wp_json_encode( $stored ) );
+				wp_update_post( wp_slash( array( 'ID' => $id, 'post_content' => $stored ) ) );
+			}
+		}
+	}
+
+	/**
+	 * Whether stored post content hands the probe shortcode `$value` whole.
+	 */
+	private function content_carries( string $content, string $value ): bool {
+		$received = null;
+		add_shortcode(
+			'mhmuicore_probe',
+			static function ( $atts ) use ( &$received ) {
+				$received = $atts;
+				return '';
+			}
+		);
+		$rest = do_shortcode( $content );
+		remove_shortcode( 'mhmuicore_probe' );
+
+		return '' === $rest
+			&& is_array( $received )
+			&& array( 'title', 'next' ) === array_keys( $received )
+			&& 'tail' === $received['next']
+			&& html_entity_decode( (string) $received['title'], ENT_QUOTES | ENT_HTML5, 'UTF-8' ) === html_entity_decode( esc_attr( $value ), ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+	}
+
 	public function test_on_7_2_a_value_holding_both_quote_kinds_breaks_and_can_carry_refuses_it(): void {
 		if ( version_compare( get_bloginfo( 'version' ), '7.2-alpha', '<' ) ) {
 			self::markTestSkipped( 'The HTML API kses that decodes quote references arrives in 7.2.' );
