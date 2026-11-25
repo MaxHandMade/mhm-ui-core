@@ -451,7 +451,8 @@ describe( 'vertical rhythm is owned by the page shell (0.14.0)', () => {
 	const front = read( 'front.css' );
 
 	// 0.24.0: `.mhmui-toolbar` joins -- the button row under a KPI band was
-	// spaced by no rule at all (Rentiva measured 0px, 2026-11-25).
+	// spaced by no rule at all (Rentiva measured 0px, 2026-11-25) -- and so
+	// does DataTable's `.mhmui-table-card`, the block that usually follows it.
 	const MEMBERS = [
 		'.mhmui-stats-grid',
 		'.mhmui-widget',
@@ -461,6 +462,7 @@ describe( 'vertical rhythm is owned by the page shell (0.14.0)', () => {
 		'.mhmui-page-header',
 		'.mhmui-detail-layout',
 		'.mhmui-toolbar',
+		'.mhmui-table-card',
 	];
 	const RHYTHM = `> * + :is( ${ MEMBERS.join( ', ' ) } )`;
 
@@ -479,7 +481,8 @@ describe( 'vertical rhythm is owned by the page shell (0.14.0)', () => {
 			expect( [ name, body ] ).not.toEqual( [ name, null ] );
 			expect( body ).toMatch( /display:\s*flex/ );
 			expect( body ).toMatch( /flex-wrap:\s*wrap/ );
-			expect( body ).not.toMatch( /margin(-top|-block-start|-block)?\s*:/ );
+			expect( body ).toMatch( /gap:\s*var\(\s*--mhmui-space-2\s*\)/ );
+			expect( body ).not.toMatch( /margin[a-z-]*\s*:/ );
 		}
 	} );
 
@@ -492,7 +495,7 @@ describe( 'vertical rhythm is owned by the page shell (0.14.0)', () => {
 			const text = readFileSync( join( __dirname, '..', '..', file ), 'utf8' );
 			const line = text.split( '\n' ).find( ( l ) => l.startsWith( 'Rhythm members:' ) || l.startsWith( 'Ritim üyeleri:' ) );
 			expect( [ file, line ] ).not.toEqual( [ file, undefined ] );
-			const listed = [ ...line.matchAll( /`(\.mhmui-[a-z-]+)`/g ) ].map( ( m ) => m[ 1 ] );
+			const listed = [ ...line.matchAll( /`([^`]+)`/g ) ].map( ( m ) => m[ 1 ] );
 			expect( [ file, listed ] ).toEqual( [ file, MEMBERS ] );
 		}
 	} );

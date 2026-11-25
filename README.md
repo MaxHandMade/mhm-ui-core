@@ -747,16 +747,18 @@ template literal, a quoted key, and any file that mentions no anchor.
 untouched. A surface that does not use the shell gets no rhythm, and a grid
 nested in a wrapper is spaced by its wrapper.
 
-Rhythm members: `.mhmui-stats-grid`, `.mhmui-widget`, `.mhmui-pagination`, `.mhmui-notice`, `.mhmui-tabs`, `.mhmui-page-header`, `.mhmui-detail-layout`, `.mhmui-toolbar`
+Rhythm members: `.mhmui-stats-grid`, `.mhmui-widget`, `.mhmui-pagination`, `.mhmui-notice`, `.mhmui-tabs`, `.mhmui-page-header`, `.mhmui-detail-layout`, `.mhmui-toolbar`, `.mhmui-table-card`
 
 Only a DIRECT child of the shell that carries one of these classes is spaced. A
-block of your own (a filter bar, a button row in your own class) gets 0px from
-the block above it -- put it on a member class or inside one.
+block of your own (a filter bar, a button row in your own class) gets no
+spacing from the shell -- only whatever margin it carries itself, which for a
+plain `div` is none. Put it on a member class or inside one.
 
 **0.24.0: `.mhmui-toolbar`** is the row of actions between two blocks (the
 buttons under a KPI band, above a table): a wrapping flex row with an 8px gap
-(`--mhmui-space-2`), no outer margin of its own, in both kits. Markup only, no
-component:
+(`--mhmui-space-2`), no outer margin of its own, in both kits (on the front end
+the wrapper is `mhmui-front mhmui-front-page`, and core's `.button` classes are
+admin-only -- use your theme's buttons there). Markup only, no component:
 
 ```html
 <div class="mhmui-admin mhmui-admin-page">
@@ -765,7 +767,7 @@ component:
 		<a class="button button-primary" href="…">Add new</a>
 		<a class="button" href="…">Export</a>
 	</div>
-	<!-- table -->
+	<!-- DataTable (.mhmui-table-card) -->
 </div>
 ```
 

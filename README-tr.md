@@ -551,16 +551,19 @@ aralaması dokunulmadan kalıyor. Kabuğu kullanmayan bir yüzey ritim almaz;
 bir sarmalayıcı içine yerleşmiş bir ızgara kendi sarmalayıcısı tarafından
 aralanır.
 
-Ritim üyeleri: `.mhmui-stats-grid`, `.mhmui-widget`, `.mhmui-pagination`, `.mhmui-notice`, `.mhmui-tabs`, `.mhmui-page-header`, `.mhmui-detail-layout`, `.mhmui-toolbar`
+Ritim üyeleri: `.mhmui-stats-grid`, `.mhmui-widget`, `.mhmui-pagination`, `.mhmui-notice`, `.mhmui-tabs`, `.mhmui-page-header`, `.mhmui-detail-layout`, `.mhmui-toolbar`, `.mhmui-table-card`
 
 Yalnız kabuğun bu sınıflardan birini taşıyan DOĞRUDAN çocuğu aralanır. Kendi
-bloğunuz (kendi sınıfınızla bir süzgeç çubuğu, bir düğme satırı) üstündeki
-bloktan 0px alır -- bir üye sınıfa koyun ya da bir üyenin içine alın.
+bloğunuz (kendi sınıfınızla bir süzgeç çubuğu, bir düğme satırı) kabuktan
+boşluk almaz -- yalnız kendi taşıdığı dış boşluk kalır, düz bir `div` için bu
+sıfırdır. Bir üye sınıfa koyun ya da bir üyenin içine alın.
 
 **0.24.0: `.mhmui-toolbar`**, iki blok arasındaki eylem satırıdır (KPI bandının
 altındaki, tablonun üstündeki düğmeler): 8px boşluklu (`--mhmui-space-2`),
-satır kıran bir flex satırı; kendi dış boşluğu yok, iki kitte de var. Yalnız
-işaretleme, bileşen yok:
+satır kıran bir flex satırı; kendi dış boşluğu yok, iki kitte de var (ön yüzde
+sarmalayıcı `mhmui-front mhmui-front-page`'dir ve çekirdeğin `.button`
+sınıfları yalnız yöneticide biçimlenir -- orada temanızın düğmelerini
+kullanın). Yalnız işaretleme, bileşen yok:
 
 ```html
 <div class="mhmui-admin mhmui-admin-page">
@@ -569,7 +572,7 @@ işaretleme, bileşen yok:
 		<a class="button button-primary" href="…">Yeni ekle</a>
 		<a class="button" href="…">Dışa aktar</a>
 	</div>
-	<!-- tablo -->
+	<!-- DataTable (.mhmui-table-card) -->
 </div>
 ```
 
