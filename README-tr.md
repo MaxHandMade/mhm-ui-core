@@ -990,8 +990,18 @@ yazmadan önce söyler. Şunlarda false döner:
 - aynı değerde çift tırnak VE kesme işareti: 7.2'den itibaren kses ikisini de
   çözer ve bir özniteliğin kendi sınırlayıcısı için kaçışı yoktur (tek türü
   sorun değil);
-- ters eğik çizgi: `shortcode_parse_atts()` onu siler (`stripcslashes()`);
+- ters eğik çizgi: öznitelik ayrıştırıcısı onu kaçış olarak çözer (`\t` sekme
+  olarak gelir);
+- BÖLÜNMEZ BOŞLUK ya da SIFIR GENİŞLİKLİ BOŞLUK: ayrıştırıcı düz boşluğa
+  çevirir; yani bölünmez boşlukla yazılmış `10 000 TL` düz boşlukla gelir;
+- sekme ve satır sonu dışındaki bir denetim karakteri ve satır başı: kses
+  onları siler ya da (7.2) `\r\n`'yi `\n`'ye katlar;
 - `esc_attr()`'ın boşalttığı geçersiz UTF-8.
+
+Her kural karakterin referanslarını da sayar (`&#92;`, `&nbsp;`, `&#13;` ...),
+çünkü 7.2'nin kses'i `esc_attr()`'ın koruduğu referansları çözer; onun
+etkisizleştirdiği bir referans (ör. `&rsqb;`) olduğu gibi gelir ve sorun
+değildir.
 
 7.1 ve 7.2-RC2'de `wp_kses_post()` sonrası `do_shortcode()` ile ölçüldü
 (`tests/Integration/ShortcodeMarkupRoundTripTest.php`). `to_shortcode()`'un

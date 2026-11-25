@@ -38,23 +38,34 @@ final class ShortcodeMarkup {
 	private const APOSTROPHE_REF = "/'|&(?:apos|#0*39|#x0*27);/i";
 
 	/**
-	 * A raw `]`, or a reference esc_attr() keeps that 7.2 kses decodes to one.
+	 * Characters no attribute value carries whole: `]` ends the shortcode,
+	 * `\` is unescaped by the attribute parser, NO-BREAK SPACE and ZERO WIDTH
+	 * SPACE become a plain space there, kses drops C0 controls other than tab
+	 * and line feed, and 7.2 kses folds a carriage return into the line feed.
 	 */
-	private const CLOSING_BRACKET = '/\]|&(?:rsqb|rbrack|#0*93|#x0*5d);/i';
+	private const UNCARRIED = '/[\]\x5C\x00-\x08\x0B-\x1F]|\x{00A0}|\x{200B}/u';
 
 	/**
-	 * Whether a value reaches a shortcode callback whole on every supported
-	 * WordPress version, after to_shortcode() and the kses pass post content
-	 * goes through.
+	 * A numeric reference to one of UNCARRIED's control characters.
+	 * html_entity_decode()'s HTML5 mode leaves these encoded; 7.2 kses decodes
+	 * `&#13;` to a carriage return all the same.
+	 */
+	private const CONTROL_REF = '/&#(?:0*(?:[0-8]|1[1-9]|2[0-9]|3[01])|x0*(?:[0-8]|[b-f]|1[0-9a-f]));/i';
+
+	/**
+	 * Whether a value reaches a shortcode callback byte for byte on every
+	 * supported WordPress version, after to_shortcode() and the kses pass post
+	 * content goes through.
 	 *
-	 * False for the values no spelling carries -- measured with do_shortcode()
-	 * on 7.1 and 7.2-RC2 (tests/Integration/ShortcodeMarkupRoundTripTest.php):
-	 * - a `]`: the shortcode ends at it on every version. `&#93;` / `&#x5d;`
-	 *   too, since 7.2 kses decodes them in post text;
-	 * - a double quote AND an apostrophe: from 7.2 kses decodes both
-	 *   references, and an attribute has no escape for its own delimiter;
-	 * - a backslash: shortcode_parse_atts() runs stripcslashes() on values;
-	 * - text esc_attr() empties (invalid UTF-8).
+	 * The value is judged as text twice: as written (what versions before 7.2
+	 * see) and with the references esc_attr() keeps decoded (what 7.2's HTML
+	 * API kses makes of post text). A reference esc_attr() neutralises, such
+	 * as `&rsqb;`, stays literal in both. It is false when either text holds
+	 * an UNCARRIED character, or a double quote and an apostrophe together
+	 * (an attribute has no escape for its own delimiter), and for text
+	 * esc_attr() empties (invalid UTF-8). Measured with do_shortcode() after
+	 * wp_kses_post() on 7.1 and 7.2-RC2
+	 * (tests/Integration/ShortcodeMarkupRoundTripTest.php).
 	 *
 	 * to_shortcode() still writes such a value as before (refusing there would
 	 * be a fatal on sites a newer copy serves); this is the consumer's check,
@@ -69,11 +80,22 @@ final class ShortcodeMarkup {
 			return '' === $value;
 		}
 
-		if ( false !== strpos( $value, '\\' ) || 1 === preg_match( self::CLOSING_BRACKET, $escaped ) ) {
+		$decoded = html_entity_decode( $escaped, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+
+		if ( 1 === preg_match( self::CONTROL_REF, $decoded ) ) {
 			return false;
 		}
 
-		return ! ( 1 === preg_match( self::DOUBLE_QUOTE_REF, $escaped ) && 1 === preg_match( self::APOSTROPHE_REF, $escaped ) );
+		foreach ( array( $value, $decoded ) as $text ) {
+			if ( 1 === preg_match( self::UNCARRIED, $text ) ) {
+				return false;
+			}
+			if ( false !== strpos( $text, '"' ) && false !== strpos( $text, "'" ) ) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	/**

@@ -111,7 +111,10 @@ final class ShortcodeMarkupRoundTripTest extends WP_UnitTestCase {
 			&& is_array( $received )
 			&& array( 'title', 'next' ) === array_keys( $received )
 			&& 'tail' === $received['next']
-			&& html_entity_decode( (string) $received['title'], ENT_QUOTES | ENT_HTML5, 'UTF-8' ) === html_entity_decode( $value, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+			// The value as text: what esc_attr() makes of it, decoded. Decoding
+			// the raw value instead calls `&rsqb;` broken, though esc_attr()
+			// neutralises it and it arrives byte for byte.
+			&& html_entity_decode( (string) $received['title'], ENT_QUOTES | ENT_HTML5, 'UTF-8' ) === html_entity_decode( esc_attr( $value ), ENT_QUOTES | ENT_HTML5, 'UTF-8' );
 	}
 
 	public function test_every_value_can_carry_accepts_arrives_whole_on_this_version(): void {
@@ -119,6 +122,11 @@ final class ShortcodeMarkupRoundTripTest extends WP_UnitTestCase {
 			'plain', 'say "hi"', "it's", "say \"hi\" it's", 'a]b', 'a[b', '[x]', 'a &#93; b', 'a &#x5d; b',
 			'<b>bold</b>', 'a < b', 'a/b', 'end/', 'back\slash', "line\nbreak", 'é ü ğ', "\xC3\x28",
 			'x=y', "a\"b'c", '&quot;&#039;', '%22', '/]', 'a/]b', 'https://x.test/?a=1&quote=2', 'kampanya kis "2027"',
+			// Fable 0.25.0: references 7.2 decodes into a backslash or a space,
+			// characters the parser turns into a space, control characters
+			// kses drops, and values esc_attr() neutralises.
+			'C:&#92;temp', 'a&#x5c;nb', '&bsol;', "10\u{00A0}000 TL", "a\u{200B}b", 'a&nbsp;b', 'a&#160;b', 'a&#8203;b',
+			"a\x00b", "a\x01b", "a\x0Bb", "a\r\nb", "a\tb", '', '&rsqb;', '&Hat;', "&QUOT;x'", '&apos;"', 'a&#13;b',
 		);
 
 		$accepted = 0;

@@ -86,6 +86,12 @@ final class ShortcodeMarkupTest extends TestCase {
 			'a whole shortcode'        => array( '[x]', false ),
 			'slash before bracket'     => array( '/]', false ),
 			'backslash'                => array( 'back\slash', false ),
+			'tab and line feed'        => array( "a\tb\nc", true ),
+			'no-break space'           => array( "10\u{00A0}000 TL", false ),
+			'zero width space'         => array( "a\u{200B}b", false ),
+			'NUL'                      => array( "a\x00b", false ),
+			'vertical tab'             => array( "a\x0Bb", false ),
+			'carriage return'          => array( "a\r\nb", false ),
 		);
 	}
 
