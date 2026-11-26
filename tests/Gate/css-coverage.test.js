@@ -44,7 +44,7 @@ function emitted( src ) {
 }
 
 const mentions = ( css, cls ) =>
-	new RegExp( `\\.${ cls.replace( /[-]/g, '\\-' ) }(?![\\w-])` ).test( stripCss( css ) );
+	new RegExp( `\\.${ cls.replace( /[.*+?^${}()|[\]\\-]/g, '\\$&' ) }(?![\\w-])` ).test( stripCss( css ) );
 
 /** Classes (and template prefixes) of `src` that `css` never mentions. */
 function missing( src, css ) {
