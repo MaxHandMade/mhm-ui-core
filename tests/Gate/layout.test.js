@@ -6,15 +6,6 @@ const { ruleBody, mediaBlock } = require( './helpers' );
 const ROOT = join( __dirname, '..', '..' );
 const read = ( f ) => readFileSync( join( ROOT, 'assets', 'react', f ), 'utf8' );
 
-/** No `width` declaration on the admin shell: it sits on the SAME element as
- * WP core's own `.wrap` (margin: 10px 20px 0 2px), and a block box already
- * fills its container's content box on its own while respecting its own
- * margins -- that IS "flows full width". Forcing `width: 100%` on top of
- * that margin pushes the box past its container by exactly the horizontal
- * margins (measured 2026-09-18, Chrome 1905px: .wrap.mhmui-admin.mhmui-admin-page
- * grew to 1907, the fourth KPI card clipped, page grew a horizontal
- * scrollbar). The lookbehind excludes `max-width` (and would exclude
- * `min-width`), whose hyphen sits directly before "width:". */
 /**
  * Every rule selector in the sheet that names `cls` as a whole class,
  * at any depth (inside @media / @supports too); comments are not rules.
@@ -35,6 +26,15 @@ function selectorsNaming( css, cls ) {
 	return found;
 }
 
+/** No `width` declaration on the admin shell: it sits on the SAME element as
+ * WP core's own `.wrap` (margin: 10px 20px 0 2px), and a block box already
+ * fills its container's content box on its own while respecting its own
+ * margins -- that IS "flows full width". Forcing `width: 100%` on top of
+ * that margin pushes the box past its container by exactly the horizontal
+ * margins (measured 2026-09-18, Chrome 1905px: .wrap.mhmui-admin.mhmui-admin-page
+ * grew to 1907, the fourth KPI card clipped, page grew a horizontal
+ * scrollbar). The lookbehind excludes `max-width` (and would exclude
+ * `min-width`), whose hyphen sits directly before "width:". */
 function adminPageFlows( css ) {
 	const body = ruleBody( css, '.mhmui-admin-page' );
 	return body !== null
