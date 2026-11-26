@@ -1571,6 +1571,16 @@ describe( 'DataTable (0.19.0)', () => {
 		expect( px( ruleBody( narrow, '.mhmui-table thead th' ), 'height' ) ).toBe( narrowSort );
 
 		expect( ruleBody( stack, '.mhmui-table--stack thead th' ) ).toMatch( /height:\s*auto/ );
+
+		// Fable 0.27.1: the release only holds while (a) the clipped plain
+		// header keeps its 1px (it wins on specificity, 0,3,2) and (b) the
+		// stacked `height: auto` comes AFTER the 782px `height: 44px` -- same
+		// specificity, so source order decides.
+		expect( ruleBody( stack, HIDDEN_HEADERS ) ).toMatch( /(?:^|[;{\s])height:\s*1px/ );
+		const narrowAt = css.search( /\.mhmui-table thead th\s*\{\s*height:\s*44px/ );
+		const stackAt = css.indexOf( '@container mhmui-table' );
+		expect( narrowAt ).toBeGreaterThan( -1 );
+		expect( stackAt ).toBeGreaterThan( narrowAt );
 	} );
 
 	test( 'wide hit area is at least 24px; 44px below 782px', () => {

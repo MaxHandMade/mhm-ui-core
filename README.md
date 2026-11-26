@@ -1243,8 +1243,10 @@ non-string `actions`) the twins can differ.
 
 - **Default change:** a plain `th` in a `DataTable` head is now as tall as a
   sortable one (40px, 44px at 782px and below). A table with no `SortHeader`
-  used to draw a header about 20px tall. Served by the loader, so it shows
-  without a rebuild; stacked tables are unchanged.
+  used to draw a header as short as its text (24px with a select column).
+  Served by the loader, so it shows without a rebuild. A `layout="stack"`
+  table changes only while it is drawn wide; once stacked its header height
+  is released as before.
 - `src-react/components.json` types `StatsGrid.cards`, `Tabs.items` and
   `DetailList.items` as their item shapes instead of `array`, and
   `StatCard.delta.direction` as `up|down|flat`. Nothing renders differently.

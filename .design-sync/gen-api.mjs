@@ -121,7 +121,9 @@ function paramDocs( doc ) {
 	const out = {};
 	const tags = doc.split( /\n(?=@)/ ).filter( ( t ) => t.startsWith( '@param' ) );
 	for ( const tag of tags ) {
-		const m = /^@param\s+\{[^}]*\}\s+\[?props\.([A-Za-z0-9_]+)[^\]\s]*\]?\s*([\s\S]*)$/.exec( tag );
+		// props.x only: a nested props.x.y line documents a field of x, not x
+		// (Fable 0.27.1: StatCard's delta.label overwrote delta's note).
+		const m = /^@param\s+\{[^}]*\}\s+\[?props\.([A-Za-z0-9_]+)(?:=[^\]\s]*)?\]?(?=\s)\s*([\s\S]*)$/.exec( tag );
 		if ( m ) out[ m[ 1 ] ] = m[ 2 ].replace( /\s+/g, ' ' ).trim();
 	}
 	return out;

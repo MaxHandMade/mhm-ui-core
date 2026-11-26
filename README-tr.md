@@ -1125,8 +1125,10 @@ dize olmayan `actions`) ikizler ayrışabilir.
 
 - **Varsayılan değişikliği:** `DataTable` başlığındaki düz bir `th` artık
   sıralanabilir olan kadar yüksek (40px; 782px ve altında 44px). `SortHeader`'ı
-  olmayan bir tablo önceden yaklaşık 20px'lik bir başlık çiziyordu. Yükleyici
-  servis eder, yani yeniden derlemeden görünür; yığılmış tablolar değişmedi.
+  olmayan bir tablo önceden metni kadar kısa bir başlık çiziyordu (seçim
+  sütunuyla 24px). Yükleyici servis eder, yani yeniden derlemeden görünür.
+  `layout="stack"` bir tablo yalnız geniş çizildiğinde değişir; yığıldığında
+  başlık yüksekliği eskisi gibi serbesttir.
 - `src-react/components.json`, `StatsGrid.cards`, `Tabs.items` ve
   `DetailList.items`'ı `array` yerine öğe biçimleriyle, `StatCard.delta.direction`'ı
   da `up|down|flat` olarak tipler. Çizimde değişen bir şey yok.

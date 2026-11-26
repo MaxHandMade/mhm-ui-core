@@ -40,7 +40,7 @@
   "StatsGrid": {
     "interactive": false, "tone_semantics": false,
     "php": "mhmuicore_stats_grid_html",
-    "props": { "cards": "Array<{ label: string, value: string, icon: icon?, tone: role?, sub: string?, delta: { direction: up|down|flat, text: string, label: string? }?, emphasis: boolean? }>", "columns": "number?" },
+    "props": { "cards": "Array<{ label: string, value: string, icon: icon?, tone: role?, sub: string?, delta: { direction: up|down|flat, text: string, label: string? }?, emphasis: boolean?, data: { [key: string]: string }? }>", "columns": "number?" },
     "fixtures": [
       { "cards": [ { "label": "A", "value": "1" }, { "label": "B", "value": "2", "tone": "info" } ], "columns": 2 },
       { "cards": [ { "label": "A", "value": "1" } ], "columns": 0 },
@@ -83,7 +83,7 @@
   },
   "Tabs": {
     "interactive": true, "tone_semantics": false, "php": "mhmuicore_tabs_html",
-    "props": { "label": "string", "current": "string?", "items": "Array<{ id: string, label: string, href: string, badge: number?, badgeLabel: string?, badgeTone: role? }>", "variant": "pill|underline?", "showZero": "boolean?", "onSelect": "function?" },
+    "props": { "label": "string", "current": "string?", "items": "Array<{ id: string?, label: string, href: string, badge: number?, badgeLabel: string?, badgeTone: role? }>", "variant": "pill|underline?", "showZero": "boolean?", "onSelect": "function?" },
     "fixtures": [
       { "label": "Sections", "current": "a", "items": [
         { "id": "a", "label": "A", "href": "?tab=a", "badge": 2, "badgeLabel": "2 pending" },
@@ -110,7 +110,7 @@
   },
   "DetailList": {
     "interactive": false, "tone_semantics": false,
-    "props": { "items": "Array<{ label: string, value: string, tone: role? }>", "emptyText": "string", "columns": "number?", "layout": "stacked|inline?" },
+    "props": { "items": "Array<{ label: string, value: string|number?, tone: role? }>", "emptyText": "string", "columns": "number?", "layout": "stacked|inline?" },
     "fixtures": [
       { "emptyText": "Not entered", "items": [ { "label": "City", "value": "Muğla" }, { "label": "Tax office", "value": "" } ] },
       { "emptyText": "Not entered", "layout": "inline", "items": [ { "label": "Documents", "value": "2 missing", "tone": "warning" } ] }
