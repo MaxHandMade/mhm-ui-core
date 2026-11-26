@@ -1242,8 +1242,10 @@ a `null` tone is neutral, a boolean badge text draws no badge, a
 whole-number float `level` (`1.0` from `json_decode()`) is that level,
 `actions` that are a number, blank or an empty list draw no wrapper, and a
 `back.label` of only spaces in JS's sense (no-break and other Unicode
-spaces) draws no link. They can still differ on a non-string `tone` or a
-node where the PHP twin takes text.
+spaces) draws no link. They can still differ on a `tone` that is not a
+role name (PHP runs it through `sanitize_html_class()`), a node or a
+non-empty list where the PHP twin takes text, or a float of 1e15 or more
+as text (spelled differently).
 
 ### PageHeader twin edges and number head cells (0.27.2)
 

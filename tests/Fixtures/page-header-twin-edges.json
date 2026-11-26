@@ -52,6 +52,11 @@
 			"html": "<div class=\"mhmui-page-header\"><div class=\"mhmui-page-header__title-row\"><h2 class=\"mhmui-page-header__title\">T</h2></div></div>"
 		},
 		{
+			"name": "boolean actions draw no wrapper",
+			"props": { "title": "T", "actions": true },
+			"html": "<div class=\"mhmui-page-header\"><div class=\"mhmui-page-header__title-row\"><h2 class=\"mhmui-page-header__title\">T</h2></div></div>"
+		},
+		{
 			"name": "empty array actions draw no wrapper",
 			"props": { "title": "T", "actions": [] },
 			"html": "<div class=\"mhmui-page-header\"><div class=\"mhmui-page-header__title-row\"><h2 class=\"mhmui-page-header__title\">T</h2></div></div>"

@@ -34,7 +34,9 @@ const LEVELS = [ 1, 2, 3 ];
  *                                    A call with only `badge` keeps the 0.15.2
  *                                    markup byte for byte.
  * @param {string}    [props.meta]
- * @param {ReactNode} [props.actions]
+ * @param {ReactNode} [props.actions] Nothing is drawn (no wrapper) for a
+ *                                    number, boolean, blank string or empty
+ *                                    list -- as in the PHP twin.
  * @param {number}    [props.level]   1 | 2 | 3, default 2.
  */
 export default function PageHeader( {

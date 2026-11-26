@@ -305,6 +305,23 @@ final class KitEscapingTest extends WP_UnitTestCase {
 		}
 	}
 
+	/** Invalid UTF-8 is not blank: kses keeps the actions; esc_html() empties the label, so no nameless link (Fable 0.27.2). */
+	public function test_page_header_invalid_utf8_keeps_actions_and_draws_no_nameless_link(): void {
+		self::assertSame( 'UTF-8', get_option( 'blog_charset' ) );
+		$html = mhmuicore_page_header_html(
+			array(
+				'title'   => 'T',
+				'back'    => array(
+					'label' => "Zur\xFCck",
+					'href'  => '?b',
+				),
+				'actions' => "<a href=\"?e\">Zur\xFCck</a>",
+			)
+		);
+		self::assertStringContainsString( '<div class="mhmui-page-header__actions"><a href="?e">', $html );
+		self::assertStringNotContainsString( '__back', $html );
+	}
+
 	public function test_page_header_survives_wp_kses_post_byte_for_byte(): void {
 		$html = mhmuicore_page_header_html(
 			array(

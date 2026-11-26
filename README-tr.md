@@ -1124,8 +1124,10 @@ metin olarak düz dize verin. 0.27.2'den beri ikizler şu uçlarda da aynı
 rozet metni rozet çizmez, tamsayı değerli ondalıklı `level` (`json_decode()`'dan
 gelen `1.0`) o seviyedir, sayı, boş ya da boş liste olan `actions` sarmalayıcı
 çizmez, yalnız JS anlamında boşluktan (bölünmez ve diğer Unicode boşlukları)
-oluşan `back.label` bağlantı çizmez. Dize olmayan bir `tone`'da ya da PHP
-ikizinin metin beklediği yerde düğüm verildiğinde hâlâ ayrışabilirler.
+oluşan `back.label` bağlantı çizmez. Rol adı olmayan bir `tone`'da (PHP onu
+`sanitize_html_class()`'tan geçirir), PHP ikizinin metin beklediği yerde düğüm
+ya da boş olmayan liste verildiğinde, ya da metin olarak 1e15 ve üstü bir
+ondalık sayıda (farklı yazılır) hâlâ ayrışabilirler.
 
 ### PageHeader ikiz uçları ve sayı başlık hücreleri (0.27.2)
 
