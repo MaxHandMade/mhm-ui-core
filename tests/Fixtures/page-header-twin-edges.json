@@ -1,0 +1,80 @@
+{
+	"_comment": "Edge props both PageHeader twins must draw byte for byte alike (0.27.2). Read by tests/Gate/page-header-twin-edges.test.js and tests/Kit/PageHeaderTest.php. JSON on purpose: \"level\": 1.0 is a float to PHP's json_decode and 1 to JS, the way a consumer's decoded row reaches each twin.",
+	"cases": [
+		{
+			"name": "a null tone is neutral",
+			"props": { "title": "T", "badge": { "text": "X", "tone": null } },
+			"html": "<div class=\"mhmui-page-header\"><div class=\"mhmui-page-header__title-row\"><h2 class=\"mhmui-page-header__title\">T</h2><span class=\"mhmui-status mhmui-status--neutral\">X</span></div></div>"
+		},
+		{
+			"name": "a null tone in badges is neutral",
+			"props": { "title": "T", "badge": { "text": "X" }, "badges": [ { "text": "Y", "tone": null } ] },
+			"html": "<div class=\"mhmui-page-header\"><div class=\"mhmui-page-header__title-row\"><h2 class=\"mhmui-page-header__title\">T</h2><div class=\"mhmui-page-header__badges\"><span class=\"mhmui-status mhmui-status--neutral\">X</span><span class=\"mhmui-status mhmui-status--neutral\">Y</span></div></div></div>"
+		},
+		{
+			"name": "a boolean badge text draws no badge",
+			"props": { "title": "T", "badge": { "text": true, "tone": "info" } },
+			"html": "<div class=\"mhmui-page-header\"><div class=\"mhmui-page-header__title-row\"><h2 class=\"mhmui-page-header__title\">T</h2></div></div>"
+		},
+		{
+			"name": "a boolean text in badges is skipped",
+			"props": { "title": "T", "badges": [ { "text": true }, { "text": "Y", "tone": "danger" } ] },
+			"html": "<div class=\"mhmui-page-header\"><div class=\"mhmui-page-header__title-row\"><h2 class=\"mhmui-page-header__title\">T</h2><div class=\"mhmui-page-header__badges\"><span class=\"mhmui-status mhmui-status--danger\">Y</span></div></div></div>"
+		},
+		{
+			"name": "a whole-number float level is that level",
+			"props": { "title": "T", "level": 1.0 },
+			"html": "<div class=\"mhmui-page-header\"><div class=\"mhmui-page-header__title-row\"><h1 class=\"mhmui-page-header__title\">T</h1></div></div>"
+		},
+		{
+			"name": "a fractional level falls back to h2",
+			"props": { "title": "T", "level": 2.5 },
+			"html": "<div class=\"mhmui-page-header\"><div class=\"mhmui-page-header__title-row\"><h2 class=\"mhmui-page-header__title\">T</h2></div></div>"
+		},
+		{
+			"name": "number actions draw no wrapper",
+			"props": { "title": "T", "actions": 5 },
+			"html": "<div class=\"mhmui-page-header\"><div class=\"mhmui-page-header__title-row\"><h2 class=\"mhmui-page-header__title\">T</h2></div></div>"
+		},
+		{
+			"name": "zero actions draw no wrapper and no 0",
+			"props": { "title": "T", "actions": 0 },
+			"html": "<div class=\"mhmui-page-header\"><div class=\"mhmui-page-header__title-row\"><h2 class=\"mhmui-page-header__title\">T</h2></div></div>"
+		},
+		{
+			"name": "blank actions draw no wrapper",
+			"props": { "title": "T", "actions": " \t " },
+			"html": "<div class=\"mhmui-page-header\"><div class=\"mhmui-page-header__title-row\"><h2 class=\"mhmui-page-header__title\">T</h2></div></div>"
+		},
+		{
+			"name": "no-break-space actions draw no wrapper",
+			"props": { "title": "T", "actions": " " },
+			"html": "<div class=\"mhmui-page-header\"><div class=\"mhmui-page-header__title-row\"><h2 class=\"mhmui-page-header__title\">T</h2></div></div>"
+		},
+		{
+			"name": "boolean actions draw no wrapper",
+			"props": { "title": "T", "actions": true },
+			"html": "<div class=\"mhmui-page-header\"><div class=\"mhmui-page-header__title-row\"><h2 class=\"mhmui-page-header__title\">T</h2></div></div>"
+		},
+		{
+			"name": "empty array actions draw no wrapper",
+			"props": { "title": "T", "actions": [] },
+			"html": "<div class=\"mhmui-page-header\"><div class=\"mhmui-page-header__title-row\"><h2 class=\"mhmui-page-header__title\">T</h2></div></div>"
+		},
+		{
+			"name": "a no-break-space back label draws no link",
+			"props": { "title": "T", "back": { "label": " ", "href": "?b" } },
+			"html": "<div class=\"mhmui-page-header\"><div class=\"mhmui-page-header__title-row\"><h2 class=\"mhmui-page-header__title\">T</h2></div></div>"
+		},
+		{
+			"name": "an em-space and BOM back label draws no link",
+			"props": { "title": "T", "back": { "label": " ﻿ ", "href": "?b" } },
+			"html": "<div class=\"mhmui-page-header\"><div class=\"mhmui-page-header__title-row\"><h2 class=\"mhmui-page-header__title\">T</h2></div></div>"
+		},
+		{
+			"name": "a label with a no-break space inside still draws",
+			"props": { "title": "T", "back": { "label": " Back", "href": "?b" } },
+			"html": "<div class=\"mhmui-page-header\"><a class=\"mhmui-page-header__back\" href=\"?b\"><span aria-hidden=\"true\">← </span> Back</a><div class=\"mhmui-page-header__title-row\"><h2 class=\"mhmui-page-header__title\">T</h2></div></div>"
+		}
+	]
+}

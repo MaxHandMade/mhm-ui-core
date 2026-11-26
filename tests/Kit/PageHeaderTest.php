@@ -126,6 +126,34 @@ final class PageHeaderTest extends TestCase {
 		self::assertStringNotContainsString( '__actions', self::render( array( 'title' => 'T', 'actions' => array( 'x' ) ) ) );
 	}
 
+	/** @return array<string, array{0: array<string, mixed>, 1: string}> */
+	public static function twin_edges(): array {
+		$corpus = json_decode( (string) file_get_contents( __DIR__ . '/../Fixtures/page-header-twin-edges.json' ), true );
+		$cases  = array();
+		foreach ( $corpus['cases'] as $case ) {
+			$cases[ $case['name'] ] = array( $case['props'], $case['html'] );
+		}
+		return $cases;
+	}
+
+	/**
+	 * The corpus tests/Gate/page-header-twin-edges.test.js draws with the JSX twin (0.27.2).
+	 *
+	 * @dataProvider twin_edges
+	 * @param array<string, mixed> $props Props.
+	 * @param string               $html  The markup both twins draw.
+	 */
+	public function test_edge_props_draw_what_the_jsx_twin_draws( array $props, string $html ): void {
+		self::assertSame( $html, self::render( $props ) );
+	}
+
+	public function test_the_corpus_keeps_a_float_level(): void {
+		$corpus = json_decode( (string) file_get_contents( __DIR__ . '/../Fixtures/page-header-twin-edges.json' ), true );
+		$levels = array_column( array_column( $corpus['cases'], 'props' ), 'level' );
+		self::assertContains( 1.0, $levels );
+		self::assertIsFloat( $levels[ array_search( 1.0, $levels, false ) ] ); // phpcs:ignore WordPress.PHP.StrictInArray.MissingTrueStrict -- finds the float.
+	}
+
 	public function test_badge_text_follows_js_truthiness(): void {
 		self::assertStringNotContainsString( 'mhmui-status', self::render( array( 'title' => 'T', 'badge' => array( 'text' => 0 ) ) ) );
 		self::assertStringContainsString( '>0</span>', self::render( array( 'title' => 'T', 'badge' => array( 'text' => '0' ) ) ) );

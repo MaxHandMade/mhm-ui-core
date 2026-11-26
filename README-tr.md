@@ -216,7 +216,7 @@ da bu tek yanlış cümle yüzünden taşıdı.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.27.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.27.2', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 `bootstrap.php`'yi doğrudan require etmek `MHMUICORE_VERSION`'ı anında tanımlar
@@ -721,7 +721,7 @@ parite kapısı eşitlik arar, uyumluluk değil.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.27.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.27.2', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 🔴 Sürüm dizesi **elle yazılır** (kayıt, herhangi bir bootstrap yüklenmeden önce koşar) ve
@@ -1118,8 +1118,30 @@ dosyasıyla başlamayan göreli yolun önüne `http://` eklenir (`customers/list
 `http://customers/list`) -- `admin_url( … )` ya da bir `?page=…` sorgusu verin.
 JSX'teki gibi `back.label` eksik, mantıksal ya da boşsa veya `back.href` boşsa
 bağlantı çizilmez; `stdClass` satır dizi gibi okunur. `tone` olarak bir rol adı,
-metin olarak düz dize verin: başka değerlerde (`null`, `true`, ondalıklı `level`,
-dize olmayan `actions`) ikizler ayrışabilir.
+metin olarak düz dize verin. 0.27.2'den beri ikizler şu uçlarda da aynı
+çizer; bunu iki test takımının birlikte okuduğu tek bir korpus tutar
+(`tests/Fixtures/page-header-twin-edges.json`): `null` ton nötrdür, mantıksal
+rozet metni rozet çizmez, tamsayı değerli ondalıklı `level` (`json_decode()`'dan
+gelen `1.0`) o seviyedir, sayı, boş ya da boş liste olan `actions` sarmalayıcı
+çizmez, yalnız JS anlamında boşluktan (bölünmez ve diğer Unicode boşlukları)
+oluşan `back.label` bağlantı çizmez. Rol adı olmayan bir `tone`'da (PHP onu
+`sanitize_html_class()`'tan geçirir), PHP ikizinin metin beklediği yerde düğüm
+ya da boş olmayan liste verildiğinde, ya da metin olarak 1e15 ve üstü bir
+ondalık sayıda (farklı yazılır) hâlâ ayrışabilirler.
+
+### PageHeader ikiz uçları ve sayı başlık hücreleri (0.27.2)
+
+- **`PageHeader` (JSX):** `null` rozet tonu nötrdür (`mhmui-status--null`
+  basıyordu); mantıksal rozet metni rozet çizmez (boş bir hap çiziyordu);
+  sayı, boş dize ya da boş liste olan `actions` sarmalayıcı çizmez --
+  `actions={ 0 }` çıplak bir `0` basıyordu.
+- **`mhmuicore_page_header_html()` (PHP):** tamsayı değerli ondalıklı `level`
+  o seviyedir (`1.0` h2 çiziyordu); yalnız bölünmez ya da diğer Unicode
+  boşluklarından oluşan `back.label` veya `actions`, JS'nin `trim()`'i gibi boş
+  sayılır (bölünmez boşluklu etiket adsız bir bağlantı çiziyordu).
+- **`DataTable`:** `className="mhmui-table__num"` taşıyan düz bir başlık
+  hücresi artık rakamlarının üstünde, sonda durur. Sıralanabilir başlık hâlâ
+  `SortHeader align="end"` ile hizalanır. Yükleyici servis eder.
 
 ### Tablo başlık yüksekliği ve tipli prop'lar (0.27.1)
 

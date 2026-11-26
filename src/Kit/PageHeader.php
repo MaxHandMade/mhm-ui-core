@@ -39,6 +39,12 @@ final class PageHeader {
 	 */
 	public static function render_html( array $props ): string {
 		$level = $props['level'] ?? 2;
+		// JS cannot tell 1.0 from 1, and json_decode() hands PHP the float:
+		// a whole-number float is that level, as in the JSX (0.27.2).
+		// Bounded before the cast: (int) of a huge float is out of range.
+		if ( is_float( $level ) && $level >= 1 && $level <= 3 && floor( $level ) === $level ) {
+			$level = (int) $level;
+		}
 		$level = in_array( $level, self::LEVELS, true ) ? $level : 2;
 		$badge = self::row( $props['badge'] ?? null );
 
@@ -63,9 +69,11 @@ final class PageHeader {
 
 		// Emptiness is judged after kses: actions that were only an <input>
 		// draw no empty wrapper (Fable 0.27.0).
+		// Blank is judged before kses too: a blank string draws no wrapper
+		// whatever kses makes of it (0.27.2).
 		$actions = $props['actions'] ?? '';
-		$actions = is_string( $actions ) && '' !== $actions ? trim( wp_kses_post( $actions ) ) : '';
-		if ( '' !== $actions ) {
+		$actions = is_string( $actions ) && ! self::is_blank( $actions ) ? trim( wp_kses_post( $actions ) ) : '';
+		if ( ! self::is_blank( $actions ) ) {
 			$html .= '<div class="mhmui-page-header__actions">' . $actions . '</div>';
 		}
 
@@ -91,14 +99,18 @@ final class PageHeader {
 		}
 		$label = $back['label'] ?? null;
 		$raw   = $back['href'] ?? '';
-		if ( ! is_string( $raw ) || '' === $raw || ! is_scalar( $label ) || is_bool( $label ) || '' === trim( (string) $label ) ) {
+		if ( ! is_string( $raw ) || '' === $raw || ! is_scalar( $label ) || is_bool( $label ) || self::is_blank( (string) $label ) ) {
 			return '';
 		}
+		// Judged on the escaped text too: on a UTF-8 site esc_html() empties an
+		// invalid-UTF-8 label, which would draw a nameless link; on a site with
+		// another charset it keeps the label, and so does the link (Fable 0.27.2).
+		$name = esc_html( (string) $label );
 		$href = esc_url( $raw );
-		if ( '' === $href ) {
+		if ( '' === $href || '' === $name ) {
 			return '';
 		}
-		return '<a class="mhmui-page-header__back" href="' . $href . '"><span aria-hidden="true">← </span>' . esc_html( (string) $label ) . '</a>';
+		return '<a class="mhmui-page-header__back" href="' . $href . '"><span aria-hidden="true">← </span>' . $name . '</a>';
 	}
 
 	/**
@@ -146,6 +158,19 @@ final class PageHeader {
 			$value = get_object_vars( $value );
 		}
 		return is_array( $value ) ? $value : null;
+	}
+
+	/**
+	 * Blank the way JS String.prototype.trim() sees it -- PHP's trim() leaves a
+	 * no-break space, so a "\u{00A0}" label drew a nameless link the JSX twin
+	 * skipped (Fable 0.27.0). Invalid UTF-8 is not blank (the match fails):
+	 * kses keeps such actions, and back() judges a label on its escaped text.
+	 *
+	 * @param string $value Text.
+	 * @return bool
+	 */
+	private static function is_blank( string $value ): bool {
+		return 1 === preg_match( '/^[\p{Zs}\x{09}\x{0A}\x{0B}\x{0C}\x{0D}\x{FEFF}\x{2028}\x{2029}]*$/u', $value );
 	}
 
 	/**

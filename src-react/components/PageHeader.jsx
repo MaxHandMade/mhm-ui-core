@@ -34,7 +34,9 @@ const LEVELS = [ 1, 2, 3 ];
  *                                    A call with only `badge` keeps the 0.15.2
  *                                    markup byte for byte.
  * @param {string}    [props.meta]
- * @param {ReactNode} [props.actions]
+ * @param {ReactNode} [props.actions] Nothing is drawn (no wrapper) for a
+ *                                    number, boolean, blank string or empty
+ *                                    list -- as in the PHP twin.
  * @param {number}    [props.level]   1 | 2 | 3, default 2.
  */
 export default function PageHeader( {
@@ -55,7 +57,22 @@ export default function PageHeader( {
 		back.label !== undefined &&
 		typeof back.label !== 'boolean' &&
 		( typeof back.label !== 'string' || back.label.trim() !== '' );
-	const hasText = ( item ) => Boolean( item && item.text );
+	// A boolean text draws nothing in React, so it counts as no text -- as in
+	// the PHP twin (0.27.2). A node text still draws as given.
+	const hasText = ( item ) =>
+		Boolean( item && item.text ) && typeof item.text !== 'boolean';
+	// A null tone would skip StatusBadge's default and print `--null`.
+	const toneOf = ( item ) => item.tone ?? undefined;
+	// What the PHP twin draws no wrapper for: nothing, a boolean, a number
+	// (React would print it; `0 &&` printed a bare 0), a blank string or an
+	// empty list (0.27.2).
+	const hasActions =
+		actions !== null &&
+		actions !== undefined &&
+		typeof actions !== 'boolean' &&
+		typeof actions !== 'number' &&
+		( typeof actions !== 'string' || actions.trim() !== '' ) &&
+		! ( Array.isArray( actions ) && actions.length === 0 );
 	const hasBadges =
 		Array.isArray( badges ) &&
 		badges.length > 0 &&
@@ -93,7 +110,7 @@ export default function PageHeader( {
 								hasText( item ) && (
 									<StatusBadge
 										key={ index }
-										tone={ item.tone }
+										tone={ toneOf( item ) }
 									>
 										{ item.text }
 									</StatusBadge>
@@ -102,12 +119,12 @@ export default function PageHeader( {
 					</div>
 				) : (
 					hasText( badge ) && (
-						<StatusBadge tone={ badge.tone }>
+						<StatusBadge tone={ toneOf( badge ) }>
 							{ badge.text }
 						</StatusBadge>
 					)
 				) }
-				{ actions && (
+				{ hasActions && (
 					<div className="mhmui-page-header__actions">
 						{ actions }
 					</div>
