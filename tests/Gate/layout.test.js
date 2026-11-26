@@ -23,7 +23,9 @@ const read = ( f ) => readFileSync( join( ROOT, 'assets', 'react', f ), 'utf8' )
  * @return {string[]} The selectors.
  */
 function selectorsNaming( css, cls ) {
-	const re = new RegExp( cls.replace( /[.]/g, '\\.' ) + '(?![\\w-])' );
+	const re = new RegExp(
+		cls.replace( /[.*+?^${}()|[\]\\]/g, '\\$&' ) + '(?![\\w-])'
+	);
 	const found = [];
 	postcss.parse( css ).walkRules( ( rule ) => {
 		if ( re.test( rule.selector ) ) {
