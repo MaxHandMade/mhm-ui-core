@@ -1,0 +1,58 @@
+{
+  "pkg": "@mhm/ui-core",
+  "globalName": "MHMUiCore",
+  "shape": "package",
+  "entry": "./src-react/index.js",
+  "srcDir": "src-react",
+  "tsconfig": ".design-sync/tsconfig.json",
+  "cssEntry": "assets/react/admin.css",
+  "extraEntries": [
+    "./.design-sync/shell.jsx"
+  ],
+  "provider": {
+    "component": "AdminShell"
+  },
+  "componentSrcMap": {
+    "Button": "src-react/components/Button.jsx",
+    "ConfirmButton": "src-react/components/ConfirmButton.jsx",
+    "DataTable": "src-react/components/DataTable.jsx",
+    "DetailLayout": "src-react/components/DetailLayout.jsx",
+    "DetailList": "src-react/components/DetailList.jsx",
+    "ErrorBoundary": "src-react/components/ErrorBoundary.jsx",
+    "Notice": "src-react/components/Notice.jsx",
+    "PageHeader": "src-react/components/PageHeader.jsx",
+    "Pagination": "src-react/components/Pagination.jsx",
+    "ProLock": "src-react/components/ProLock.jsx",
+    "RowSelect": "src-react/components/RowSelect.jsx",
+    "SelectAll": "src-react/components/SelectAll.jsx",
+    "SortHeader": "src-react/components/SortHeader.jsx",
+    "StatCard": "src-react/components/StatCard.jsx",
+    "StatsGrid": "src-react/components/StatsGrid.jsx",
+    "StatusBadge": "src-react/components/StatusBadge.jsx",
+    "Tabs": "src-react/components/Tabs.jsx",
+    "Widget": "src-react/components/Widget.jsx"
+  },
+  "buildCmd": "node .design-sync/gen-api.mjs",
+  "dtsPropsFor": {
+    "Button": "children: React.ReactNode; variant?: \"primary\" | \"secondary\" | \"danger\" | \"plain\" | \"neutral\"; size?: \"md\" | \"sm\"; href?: string; target?: string; rel?: string; icon?: React.ReactNode; disabled?: boolean; onClick?: (...args: any[]) => void; type?: string;",
+    "ConfirmButton": "label: string; confirmText: string; confirmLabel: string; cancelLabel: string; busyText: string; onConfirm: (...args: any[]) => void; variant?: \"primary\" | \"secondary\" | \"danger\"; size?: \"default\" | \"compact\"; confirmDisabled?: boolean; disabled?: boolean; describedBy?: string; children?: React.ReactNode;",
+    "DataTable": "caption: string; captionHidden?: boolean; captionMeta?: React.ReactNode; layout?: \"scroll\" | \"stack\"; className?: string; footer?: React.ReactNode; children: React.ReactNode;",
+    "DetailLayout": "children: React.ReactNode; aside?: React.ReactNode; asideLabel?: string;",
+    "DetailList": "items: any[]; emptyText: string; columns?: number; layout?: \"stacked\" | \"inline\";",
+    "ErrorBoundary": "children: React.ReactNode; fallback?: React.ReactNode;",
+    "Notice": "children: React.ReactNode; tone?: \"success\" | \"warning\" | \"danger\" | \"info\"; onDismiss?: (...args: any[]) => void; dismissLabel?: string;",
+    "PageHeader": "title: string; back?: { label: string; href: string; onClick?: (...args: any[]) => void }; badge?: { text: string; tone?: \"success\" | \"warning\" | \"danger\" | \"info\" | \"neutral\" }; badges?: Array<{ text: string; tone?: \"success\" | \"warning\" | \"danger\" | \"info\" | \"neutral\" }>; meta?: string; actions?: React.ReactNode; level?: number;",
+    "Pagination": "page: number; totalPages: number; onChange: (...args: any[]) => void; labels: { previous: string; of: string; next: string; navigation: string; page?: string }; variant?: \"inline\" | \"footer\"; summary?: string;",
+    "ProLock": "unlocked: boolean; fallback?: React.ReactNode; children: React.ReactNode;",
+    "RowSelect": "checked: boolean; onChange: (...args: any[]) => void; label: string; disabled?: boolean;",
+    "SelectAll": "state: \"none\" | \"some\" | \"all\"; onChange: (...args: any[]) => void; label: string; disabled?: boolean;",
+    "SortHeader": "label: string; sortKey: string; sort?: { key: string; direction: \"asc\" | \"desc\" }; onSort: (...args: any[]) => void; align?: \"start\" | \"end\"; className?: string;",
+    "StatCard": "label: string; value: string; icon?: string; tone?: \"success\" | \"warning\" | \"danger\" | \"info\" | \"neutral\"; sub?: string; delta?: { direction: string; text: string; label?: string }; emphasis?: boolean; data?: { [key: string]: string };",
+    "StatsGrid": "cards: any[]; columns?: number;",
+    "StatusBadge": "children: React.ReactNode; tone?: \"success\" | \"warning\" | \"danger\" | \"info\" | \"neutral\";",
+    "Tabs": "label: string; current?: string; items: any[]; variant?: \"pill\" | \"underline\"; showZero?: boolean; onSelect?: (...args: any[]) => void;",
+    "Widget": "title: string; subtitle?: string; icon?: string; actions?: React.ReactNode; level?: 2 | 3; variant?: \"card\" | \"plain\"; collapsible?: boolean; defaultOpen?: boolean; storageKey?: string; open?: boolean; onToggle?: (...args: any[]) => void; children: React.ReactNode;"
+  },
+  "docsDir": ".design-sync/.cache/docs",
+  "readmeHeader": ".design-sync/conventions.md"
+}
