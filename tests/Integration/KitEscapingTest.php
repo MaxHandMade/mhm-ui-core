@@ -232,6 +232,67 @@ final class KitEscapingTest extends WP_UnitTestCase {
 		self::assertSame( self::same_markup( $html ), self::same_markup( wp_kses_post( $html ) ) );
 	}
 
+	public function test_page_header_hostile_props_come_out_inert(): void {
+		self::assertTrue( function_exists( 'mhmuicore_page_header_html' ), 'an older ui-core copy booted first; this test cannot measure 0.27.0' );
+		$html = mhmuicore_page_header_html(
+			array(
+				'title'   => '<script>alert(1)</script>',
+				'back'    => array(
+					'label' => 'Hostile',
+					'href'  => 'javascript:alert(2)',
+				),
+				'badge'   => array(
+					'text' => '<b>x</b>',
+					'tone' => '"><i',
+				),
+				'meta'    => '<img src=x onerror=alert(3)>',
+				'actions' => '<a class="button" href="?e" onclick="alert(4)">Edit</a><script>alert(5)</script><input name="q">',
+			)
+		);
+
+		self::assertStringNotContainsString( '<script', $html );
+		self::assertStringNotContainsString( '<b>', $html );
+		self::assertStringNotContainsString( '<img', $html );
+		self::assertStringNotContainsString( 'onclick', $html );
+		self::assertStringNotContainsString( '<input', $html );
+		self::assertStringContainsString( '&lt;script&gt;alert(1)&lt;/script&gt;', $html );
+		self::assertStringContainsString( 'mhmui-status mhmui-status--i"', $html );
+		// esc_url() empties javascript: -- no back link, not href="".
+		self::assertStringNotContainsString( 'Hostile', $html );
+		self::assertStringNotContainsString( 'href=""', $html );
+		self::assertStringNotContainsString( 'javascript', $html );
+		self::assertStringContainsString( '>Edit</a>', $html );
+	}
+
+	public function test_page_header_survives_wp_kses_post_byte_for_byte(): void {
+		$html = mhmuicore_page_header_html(
+			array(
+				'title'   => 'Marmaris Cars',
+				'back'    => array(
+					'label' => 'All customers',
+					'href'  => 'admin.php?page=x&tab=a',
+				),
+				'badge'   => array(
+					'text' => 'Pending',
+					'tone' => 'warning',
+				),
+				'badges'  => array(
+					array(
+						'text' => 'Urgent',
+						'tone' => 'danger',
+					),
+				),
+				'meta'    => '#9292',
+				'actions' => '<a class="button" href="?edit=1">Edit</a>',
+				'level'   => 1,
+			)
+		);
+		foreach ( array( 'mhmui-page-header__back', 'aria-hidden="true"', '<h1 class="mhmui-page-header__title">', 'mhmui-page-header__badges', 'mhmui-status--danger', 'mhmui-page-header__actions', 'mhmui-page-header__meta', '&#038;tab=' ) as $needle ) {
+			self::assertStringContainsString( $needle, $html );
+		}
+		self::assertSame( self::same_markup( $html ), self::same_markup( wp_kses_post( $html ) ) );
+	}
+
 	public function test_POSITIVE_CONTROL_same_markup_ignores_only_spelling(): void {
 		// What it may forget: attribute order and quoting, entity spelling, name
 		// case and a void tag's slash -- all the same DOM.

@@ -463,7 +463,39 @@ describe( 'vertical rhythm is owned by the page shell (0.14.0)', () => {
 		'.mhmui-detail-layout',
 		'.mhmui-toolbar',
 		'.mhmui-table-card',
+		// 0.27.0: the tabs bar was a direct child of the shell spaced by no
+		// package rule (Rentiva measured 20px and 24px, 2026-11-25), and an
+		// app's own block had no member class to wear at all.
+		'.mhmui-tabs-bar',
+		'.mhmui-section',
 	];
+
+	/** `.mhmui-section` is a rhythm hook and nothing else: any rule of its own
+	 * in either kit would put a box model on every app block that wears it. */
+	test( 'the section class carries no rule of its own in either kit', () => {
+		for ( const [ name, css ] of [
+			[ 'admin.css', admin ],
+			[ 'front.css', front ],
+		] ) {
+			const own = css
+				.replace( /\/\*[\s\S]*?\*\//g, '' )
+				.split( '}' )
+				.map( ( r ) => r.split( '{' )[ 0 ] )
+				.filter( ( sel ) => /\.mhmui-section(?![\w-])/.test( sel ) );
+			// Exactly one selector names it: the shell's rhythm rule.
+			expect( [ name, own.length ] ).toEqual( [ name, 1 ] );
+			expect( own[ 0 ] ).toMatch( /-page > \* \+ :is\(/ );
+		}
+	} );
+
+	test( 'the section-class check is not vacuous: a rule of its own is counted', () => {
+		const css = `.x > * + :is( .mhmui-section ) { a: b; }\n.mhmui-section { margin: 0; }`;
+		const own = css
+			.split( '}' )
+			.map( ( r ) => r.split( '{' )[ 0 ] )
+			.filter( ( sel ) => /\.mhmui-section(?![\w-])/.test( sel ) );
+		expect( own.length ).toBe( 2 );
+	} );
 	const RHYTHM = `> * + :is( ${ MEMBERS.join( ', ' ) } )`;
 
 	test( 'the stats grid no longer carries its own outer margin', () => {

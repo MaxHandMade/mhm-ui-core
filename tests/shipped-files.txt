@@ -54,6 +54,7 @@ src/Component/Surfaces/LayoutAdapterSurface.php
 src/Component/Surfaces/ShortcodeSurface.php
 src/Kit/IconConceptScanner.php
 src/Kit/Icons.php
+src/Kit/PageHeader.php
 src/Kit/StatCard.php
 src/Kit/StatsGrid.php
 src/Kit/Tabs.php

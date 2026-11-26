@@ -245,8 +245,9 @@ final class ShippedSurfaceTest extends TestCase {
 		// 0.20.0 hooks/useServerList and hooks/useDebouncedValue (two P1 files) to 76/68/3.
 		// 0.23.6 assets/README.md export-ignored (developer note, not P1/P2) to 75/68/3.
 		// 0.26.0 hooks/useBrowserLayoutEffect (internal, one P1 file) to 76/69/3.
-		self::assertCount( 76, $files, 'shipped file count changed' );
-		self::assertCount( 69, $p1, 'P1 file set changed' );
+		// 0.27.0 src/Kit/PageHeader.php (PageHeader's PHP twin, one P1 file) to 77/70/3.
+		self::assertCount( 77, $files, 'shipped file count changed' );
+		self::assertCount( 70, $p1, 'P1 file set changed' );
 		self::assertCount( 3, $p2, 'P2 file set changed' );
 	}
 }

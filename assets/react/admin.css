@@ -478,8 +478,13 @@
 
    0.15.0: tabs, page header and detail layout join the list; they are spaced
    only as DIRECT children of the shell. 0.24.0: the toolbar and the
-   DataTable card join too (the table under a toolbar was spaced 0px). */
-.mhmui-admin-page > * + :is( .mhmui-stats-grid, .mhmui-widget, .mhmui-pagination, .mhmui-notice, .mhmui-tabs, .mhmui-page-header, .mhmui-detail-layout, .mhmui-toolbar, .mhmui-table-card ) {
+   DataTable card join too (the table under a toolbar was spaced 0px).
+   0.27.0: the tabs bar joins (it was a direct child spaced by nothing the
+   package owns: 20px on one screen, 24px on the next), and so does
+   `.mhmui-section` -- a class with no rule of its own, for a block of the
+   app's own (a filter bar, a two-column layout, a card) to take the same
+   rhythm without a local margin. */
+.mhmui-admin-page > * + :is( .mhmui-stats-grid, .mhmui-widget, .mhmui-pagination, .mhmui-notice, .mhmui-tabs, .mhmui-page-header, .mhmui-detail-layout, .mhmui-toolbar, .mhmui-table-card, .mhmui-tabs-bar, .mhmui-section ) {
 	margin-block-start: var( --mhmui-space-3 );
 }
 

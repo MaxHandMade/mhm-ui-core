@@ -90,8 +90,7 @@ export default function PageHeader( {
 					<div className="mhmui-page-header__badges">
 						{ [ badge, ...badges ].map(
 							( item, index ) =>
-								item &&
-								item.text && (
+								hasText( item ) && (
 									<StatusBadge
 										key={ index }
 										tone={ item.tone }
@@ -102,8 +101,7 @@ export default function PageHeader( {
 						) }
 					</div>
 				) : (
-					badge &&
-					badge.text && (
+					hasText( badge ) && (
 						<StatusBadge tone={ badge.tone }>
 							{ badge.text }
 						</StatusBadge>
