@@ -15,6 +15,24 @@ const read = ( f ) => readFileSync( join( ROOT, 'assets', 'react', f ), 'utf8' )
  * grew to 1907, the fourth KPI card clipped, page grew a horizontal
  * scrollbar). The lookbehind excludes `max-width` (and would exclude
  * `min-width`), whose hyphen sits directly before "width:". */
+/**
+ * Every rule selector in the sheet that names `cls` as a whole class,
+ * at any depth (inside @media / @supports too); comments are not rules.
+ * @param {string} css
+ * @param {string} cls e.g. '.mhmui-section'
+ * @return {string[]} The selectors.
+ */
+function selectorsNaming( css, cls ) {
+	const re = new RegExp( cls.replace( /[.]/g, '\\.' ) + '(?![\\w-])' );
+	const found = [];
+	postcss.parse( css ).walkRules( ( rule ) => {
+		if ( re.test( rule.selector ) ) {
+			found.push( rule.selector );
+		}
+	} );
+	return found;
+}
+
 function adminPageFlows( css ) {
 	const body = ruleBody( css, '.mhmui-admin-page' );
 	return body !== null
@@ -477,25 +495,24 @@ describe( 'vertical rhythm is owned by the page shell (0.14.0)', () => {
 			[ 'admin.css', admin ],
 			[ 'front.css', front ],
 		] ) {
-			const own = css
-				.replace( /\/\*[\s\S]*?\*\//g, '' )
-				.split( '}' )
-				.map( ( r ) => r.split( '{' )[ 0 ] )
-				.filter( ( sel ) => /\.mhmui-section(?![\w-])/.test( sel ) );
+			const own = selectorsNaming( css, '.mhmui-section' );
 			// Exactly one selector names it: the shell's rhythm rule.
 			expect( [ name, own.length ] ).toEqual( [ name, 1 ] );
 			expect( own[ 0 ] ).toMatch( /-page > \* \+ :is\(/ );
 		}
 	} );
 
-	test( 'the section-class check is not vacuous: a rule of its own is counted', () => {
-		const css = `.x > * + :is( .mhmui-section ) { a: b; }\n.mhmui-section { margin: 0; }`;
-		const own = css
-			.split( '}' )
-			.map( ( r ) => r.split( '{' )[ 0 ] )
-			.filter( ( sel ) => /\.mhmui-section(?![\w-])/.test( sel ) );
-		expect( own.length ).toBe( 2 );
+	/** Runs the same function the check above runs (Fable 0.27.0: an inline
+	 * copy stayed green while the real parser missed rules inside @media). */
+	test( 'the section-class check is not vacuous: a rule of its own is counted, inside @media too', () => {
+		const css = `.x > * + :is( .mhmui-section ) { a: b; }
+.mhmui-section { margin: 0; }
+@media ( max-width: 600px ) { .y .mhmui-section { padding: 0; } }
+/* .mhmui-section in a comment is not a rule */
+.mhmui-section-x { a: b; }`;
+		expect( selectorsNaming( css, '.mhmui-section' ) ).toHaveLength( 3 );
 	} );
+
 	const RHYTHM = `> * + :is( ${ MEMBERS.join( ', ' ) } )`;
 
 	test( 'the stats grid no longer carries its own outer margin', () => {

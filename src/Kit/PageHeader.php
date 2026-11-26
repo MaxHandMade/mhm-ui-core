@@ -61,9 +61,12 @@ final class PageHeader {
 			$html .= self::status( $badge );
 		}
 
+		// Emptiness is judged after kses: actions that were only an <input>
+		// draw no empty wrapper (Fable 0.27.0).
 		$actions = $props['actions'] ?? '';
-		if ( is_string( $actions ) && '' !== $actions ) {
-			$html .= '<div class="mhmui-page-header__actions">' . wp_kses_post( $actions ) . '</div>';
+		$actions = is_string( $actions ) && '' !== $actions ? trim( wp_kses_post( $actions ) ) : '';
+		if ( '' !== $actions ) {
+			$html .= '<div class="mhmui-page-header__actions">' . $actions . '</div>';
 		}
 
 		$html .= '</div>';

@@ -264,6 +264,32 @@ final class KitEscapingTest extends WP_UnitTestCase {
 		self::assertStringContainsString( '>Edit</a>', $html );
 	}
 
+	/** Where esc_url() makes the PHP twin differ from the JSX (README 0.27.0; Fable 0.27.0). */
+	public function test_page_header_href_and_actions_edges(): void {
+		$header = static function ( string $href, string $actions = '' ): string {
+			return mhmuicore_page_header_html(
+				array(
+					'title'   => 'T',
+					'back'    => array(
+						'label' => 'Back',
+						'href'  => $href,
+					),
+					'actions' => $actions,
+				)
+			);
+		};
+		// A relative path without /, ?, # or a leading *.php gets http:// -- the JSX draws it as given.
+		self::assertStringContainsString( 'href="http://customers/list"', $header( 'customers/list' ) );
+		// Paths that start with /, ? or #, or with a *.php file, are kept.
+		self::assertStringContainsString( 'href="/wp-admin/x"', $header( '/wp-admin/x' ) );
+		self::assertStringContainsString( 'href="admin.php?page=x"', $header( 'admin.php?page=x' ) );
+		// A blank href is emptied by esc_url(): no link (the JSX draws href=" ").
+		self::assertStringNotContainsString( '__back', $header( '   ' ) );
+		// Actions that kses strips to nothing draw no empty wrapper.
+		self::assertStringNotContainsString( '__actions', $header( '?b', '<input name="q">' ) );
+		self::assertStringContainsString( '__actions', $header( '?b', '<a href="?e">Edit</a>' ) );
+	}
+
 	public function test_page_header_survives_wp_kses_post_byte_for_byte(): void {
 		$html = mhmuicore_page_header_html(
 			array(

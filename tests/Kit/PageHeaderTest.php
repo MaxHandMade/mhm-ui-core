@@ -38,6 +38,13 @@ final class PageHeaderTest extends TestCase {
 		self::assertSame( self::JSX_ROW_2, self::render( $manifest['PageHeader']['fixtures'][1] ) );
 	}
 
+	/** JSX_ROW_2 is a copy; this ties it to the string the JSX test pins (Fable 0.27.0). */
+	public function test_the_pinned_string_is_the_one_the_jsx_test_pins(): void {
+		$jsx = (string) file_get_contents( __DIR__ . '/../../src-react/components/PageHeader.test.jsx' );
+		self::assertSame( 1, preg_match( "/const BASE_0152_PAGE_HEADER =\\s*'([^']+)';/", $jsx, $m ) );
+		self::assertSame( self::JSX_ROW_2, $m[1] );
+	}
+
 	public function test_the_public_function_is_the_twin(): void {
 		self::assertTrue( function_exists( 'mhmuicore_page_header_html' ) );
 		$props = array( 'title' => 'T' );

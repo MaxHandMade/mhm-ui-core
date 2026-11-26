@@ -1228,7 +1228,13 @@ if ( function_exists( 'mhmuicore_page_header_html' ) ) {
 Props as in the JSX, with these differences: `title`, labels, badge text and
 `meta` are text; `actions` is an HTML string, run through `wp_kses_post()`
 inside the function (so an `<input>` in it is stripped -- put form
-controls after the header); `back` has no `onClick`; an `href` that
-`esc_url()` empties (`javascript:`) draws no back link. As in the JSX, no
-link is drawn when `back.label` is missing, a boolean or blank, or
-`back.href` is empty; a `stdClass` row reads like an array.
+controls after the header, and actions kses strips to nothing draw no
+wrapper); `back` has no `onClick`. `back.href` goes through `esc_url()`: an
+`href` it empties (`javascript:`, a blank string) draws no back link, and a
+relative path that does not start with `/`, `?`, `#` or a `*.php` file gets
+`http://` in front (`customers/list` becomes `http://customers/list`) -- pass
+`admin_url( … )` or a `?page=…` query. As in the JSX, no link is drawn when
+`back.label` is missing, a boolean or blank, or `back.href` is empty; a
+`stdClass` row reads like an array. Pass a role name as `tone` and plain
+strings as text: for other values (`null`, `true`, a float `level`, a
+non-string `actions`) the twins can differ.

@@ -1111,7 +1111,12 @@ if ( function_exists( 'mhmuicore_page_header_html' ) ) {
 Prop'lar JSX'teki gibi, şu farklarla: `title`, etiketler, rozet metni ve `meta`
 metindir; `actions` bir HTML dizesidir ve fonksiyonun içinde `wp_kses_post()`'tan
 geçer (içindeki `<input>` sökülür -- form denetimlerini başlığın
-altına koyun); `back`'in `onClick`'i yok; `esc_url()`'nin boşalttığı bir `href`
-(`javascript:`) geri bağlantı çizmez. JSX'teki gibi `back.label` eksik, mantıksal
-ya da boşsa veya `back.href` boşsa bağlantı çizilmez; `stdClass` satır dizi gibi
-okunur.
+altına koyun; kses'in tamamen sildiği eylemler sarmalayıcı çizmez); `back`'in
+`onClick`'i yok. `back.href` `esc_url()`'den geçer: onun boşalttığı bir `href`
+(`javascript:`, boş dize) geri bağlantı çizmez; `/`, `?`, `#` ya da bir `*.php`
+dosyasıyla başlamayan göreli yolun önüne `http://` eklenir (`customers/list` →
+`http://customers/list`) -- `admin_url( … )` ya da bir `?page=…` sorgusu verin.
+JSX'teki gibi `back.label` eksik, mantıksal ya da boşsa veya `back.href` boşsa
+bağlantı çizilmez; `stdClass` satır dizi gibi okunur. `tone` olarak bir rol adı,
+metin olarak düz dize verin: başka değerlerde (`null`, `true`, ondalıklı `level`,
+dize olmayan `actions`) ikizler ayrışabilir.
