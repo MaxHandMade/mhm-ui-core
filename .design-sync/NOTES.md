@@ -17,8 +17,8 @@ Target: the Design System artifact in `.design-sync/artifact.json`. First sync 2
 - Tokens live on `.mhmui-admin`, and Button/ConfirmButton/Pagination ride on WordPress core's
   `.button`. `.design-sync/shell.jsx` (extraEntries) exports `AdminShell` = `wp-core-ui mhmui-admin`
   (+ `mhmui-admin-page` with `page`), used as `provider`, and imports:
-  - `wp/wp-chrome.css`: core button/notice rules copied from bin/build-design-system.py WP_CHROME
-    (WP 7.1.2 values) + body font on the shell + core link colours. Keep in step with the .py.
+  - `wp/wp-chrome.css`: core button/notice rules (WP 7.1.2 values, verbatim) + body font on the
+    shell + core link colours. The only copy (bin/build-design-system.py retired 2026-11-26).
   - `wp/dashicons.css` + `wp/dashicons.woff2`: WordPress 6.5.5 core Dashicons (GPL-2.0+), copied
     from a local WP install; font-face repointed at the woff2.
   - `assets/react/pro.css` (ProLock). `cssEntry` = `assets/react/admin.css`.
@@ -37,7 +37,7 @@ Target: the Design System artifact in `.design-sync/artifact.json`. First sync 2
   finds the converter's import()/fetch code. CI never has them. Delete both after a sync, or
   move them out before `composer check`.
 
-- `wp/wp-chrome.css` duplicates bin/build-design-system.py's WP_CHROME; if one changes, change both.
+- `wp/wp-chrome.css` quotes WP 7.1.2 core; when the pinned core moves, re-read buttons.css/forms.css.
 - Dashicons are 6.5.5's; newer glyphs added to core later are missing.
 - `componentSrcMap` is a hand list: a component added to the barrel is not synced until listed.
 - Previews use English Rentiva-like content; they import only public exports.
