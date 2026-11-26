@@ -22,6 +22,14 @@ Target: the Design System artifact in `.design-sync/artifact.json`. First sync 2
   - `wp/dashicons.css` + `wp/dashicons.woff2`: WordPress 6.5.5 core Dashicons (GPL-2.0+), copied
     from a local WP install; font-face repointed at the woff2.
   - `assets/react/pro.css` (ProLock). `cssEntry` = `assets/react/admin.css`.
+- `AdminShell` is also a card (group `design-sync`, 2026-11-26): `componentSrcMap` points at
+  `.design-sync/shell.jsx`, `previews/AdminShell.tsx` shows `page` vs no `page`. It is not in
+  `components.json`, so its props live in gen-api.mjs's `LOCAL` table -- a prop added to the
+  shell goes there too, or gen-api drops its type on the next run.
+- `wp/wp-chrome.css` also quotes WP 7.1.5 forms.css's checkbox/radio rules and declares the
+  default scheme's `--wp-admin-theme-color*` on the shell (forms.css reads it with no fallback;
+  WordPress prints it inline). Before this the cards drew the browser's native checkbox, so the
+  kit's SelectAll/RowSelect rules were never exercised (cross-engine audit, 2026-11-26).
 - Link colour MUST stay at core's weight: `:where(.wp-core-ui.mhmui-admin) a`. A (0,2,1) version
   overrode a link-styled primary Button's white text (ProLock "Upgrade to Pro" went invisible).
 

@@ -134,9 +134,17 @@ const docsDir = join( ROOT, docsRel );
 rmSync( docsDir, { recursive: true, force: true } );
 mkdirSync( docsDir, { recursive: true } );
 
+// Design-sync-only components (not in the package, so not in its manifest):
+// their props are declared here in the manifest's own hint syntax, so the
+// artifact still gets a typed card. AdminShell is the wp-admin stand-in
+// every design wraps itself in (.design-sync/shell.jsx).
+const LOCAL = {
+	AdminShell: { props: { children: 'node', page: 'boolean?' } },
+};
+
 const dtsPropsFor = {};
 for ( const name of Object.keys( cfg.componentSrcMap ).sort() ) {
-	const entry = manifest[ name ];
+	const entry = manifest[ name ] || LOCAL[ name ];
 	const src = readFileSync( join( ROOT, cfg.componentSrcMap[ name ] ), 'utf8' );
 	const props = entry ? entry.props || {} : {};
 	const body = Object.entries( props ).map( ( [ k, raw ] ) => {

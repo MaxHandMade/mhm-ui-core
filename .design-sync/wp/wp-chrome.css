@@ -36,3 +36,120 @@
    them, as it does in wp-admin (a link-styled Button keeps its own colour). */
 :where(.wp-core-ui.mhmui-admin) a { color: #2271b1; }
 :where(.wp-core-ui.mhmui-admin) a:hover, :where(.wp-core-ui.mhmui-admin) a:active { color: #135e96; }
+
+/* ---- WordPress 7.1.5 core forms.css, checkbox and radio rules verbatim
+   (forms.css:109-116, 126-147, 158-162, 180-188, 190-197, 199-202, 321-333, 1610-1636 (in the 782px block at 1582)). Without them a preview drew the browser's
+   own checkbox (accent-color), so the kit's SelectAll/RowSelect rules --
+   which outrank these in wp-admin -- were never exercised: measured
+   2026-11-26 in Chromium, Firefox and WebKit (mhm-ui-core-dev
+   audits/2026-11-26-kit-cross-engine). Update with the pinned core version. ---- */
+/* WordPress prints the admin colour scheme's variables inline in the page
+   head; forms.css reads --wp-admin-theme-color with no fallback, so the
+   shell declares the default scheme's values (the same ones the button
+   rules above fall back to). */
+.wp-core-ui.mhmui-admin { --wp-admin-theme-color: #3858e9; --wp-admin-theme-color--rgb: 56, 88, 233; --wp-admin-theme-color-darker-10: #2145e6; --wp-admin-theme-color-darker-20: #183ad6; }
+/* Checkbox and radio use outset focus style */
+input[type="checkbox"]:focus,
+input[type="radio"]:focus {
+	border-color: #1e1e1e;
+	box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--wp-admin-theme-color);
+	/* Only visible in Windows High Contrast mode */
+	outline: 2px solid transparent;
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+	border: 1px solid #1e1e1e;
+	border-radius: 2px;
+	background: #fff;
+	color: #1e1e1e;
+	clear: none;
+	cursor: pointer;
+	display: inline-block;
+	line-height: 0;
+	height: 1rem;
+	margin: -0.25rem 0.25rem 0 0;
+	outline: 0;
+	padding: 0 !important;
+	text-align: center;
+	vertical-align: middle;
+	width: 1rem;
+	min-width: 1rem;
+	-webkit-appearance: none;
+	box-shadow: none;
+	transition: .05s border-color ease-in-out;
+}
+
+td > input[type="checkbox"],
+.wp-admin p input[type="checkbox"],
+.wp-admin p input[type="radio"] {
+	margin-top: 0;
+}
+
+input[type="checkbox"]:checked::before,
+input[type="radio"]:checked::before {
+	float: left;
+	display: inline-block;
+	vertical-align: middle;
+	width: 1rem;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+input[type="checkbox"]:checked::before {
+	/* Use the "Yes" SVG Dashicon */
+	content: url("data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2020%2020%27%3E%3Cpath%20d%3D%27M14.83%204.89l1.34.94-5.81%208.38H9.02L5.78%209.67l1.34-1.25%202.57%202.4z%27%20fill%3D%27%23ffffff%27%2F%3E%3C%2Fsvg%3E");
+	content: url("data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2020%2020%27%3E%3Cpath%20d%3D%27M14.83%204.89l1.34.94-5.81%208.38H9.02L5.78%209.67l1.34-1.25%202.57%202.4z%27%20fill%3D%27%23ffffff%27%2F%3E%3C%2Fsvg%3E") / '';
+	margin: -0.1875rem 0 0 -0.25rem;
+	height: 1.3125rem;
+	width: 1.3125rem;
+}
+
+input[type="checkbox"]:checked {
+	background: var(--wp-admin-theme-color);
+	border-color: var(--wp-admin-theme-color);
+}
+
+input[type="checkbox"]:disabled,
+input[type="checkbox"].disabled,
+input[type="checkbox"][aria-disabled="true"],
+input[type="radio"]:disabled,
+input[type="radio"].disabled,
+input[type="radio"][aria-disabled="true"],
+input[type="checkbox"]:disabled:checked:before,
+input[type="checkbox"].disabled:checked:before,
+input[type="radio"]:disabled:checked:before,
+input[type="radio"].disabled:checked:before {
+	opacity: 0.7;
+	cursor: default;
+}
+
+@media screen and (max-width: 782px) {
+	input[type="checkbox"],
+	.widefat th input[type="checkbox"],
+	.widefat thead td input[type="checkbox"],
+	.widefat tfoot td input[type="checkbox"] {
+		-webkit-appearance: none;
+	}
+
+	.widefat th input[type="checkbox"],
+	.widefat thead td input[type="checkbox"],
+	.widefat tfoot td input[type="checkbox"] {
+		margin-bottom: 8px;
+	}
+
+	input[type="checkbox"]:checked:before,
+	.widefat th input[type="checkbox"]:before,
+	.widefat thead td input[type="checkbox"]:before,
+	.widefat tfoot td input[type="checkbox"]:before {
+		width: 1.875rem;
+		height: 1.875rem;
+		margin: -0.1875rem -0.3125rem;
+	}
+
+	input[type="radio"],
+	input[type="checkbox"] {
+		height: 1.5625rem;
+		width: 1.5625rem;
+	}
+}
