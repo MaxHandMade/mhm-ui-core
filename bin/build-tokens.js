@@ -86,9 +86,8 @@ function renderTokensBlock( doc, selector ) {
 /**
  * The legacy flat view of the token document.
  *
- * tokens.json is a public export (package.json `exports`, index.js, the
- * design-system generator). External readers that access the raw file (like
- * build-design-system.py) expect a top-level `tokens` key. We maintain it as
+ * tokens.json is a public export (package.json `exports`, index.js).
+ * External readers that access the raw file expect a top-level `tokens` key. We maintain it as
  * a mirror of scopes['.mhmui-admin'], pinned by test gate. This view is
  * deliberately NOT what the generator counts — the generator counts from
  * scopes['.mhmui-admin'] so the count always matches what was rendered.

@@ -1,6 +1,6 @@
 /* wp-admin chrome the kit leans on in a real admin screen, for previews and
-   designs outside WordPress. Copied from bin/build-design-system.py's
-   WP_CHROME (WordPress 7.1.2 core values, verbatim); keep the two in step.
+   designs outside WordPress. WordPress 7.1.2 core values, verbatim (this is
+   the single copy since bin/build-design-system.py retired, 2026-11-26).
    The body font/colour WordPress sets on <body> sits on the shell instead. */
 .wp-core-ui.mhmui-admin { color: #1d2327; font: 13px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif; }
 /* ---- WordPress 7.1.2 core, values verbatim, reflowed one rule per line
