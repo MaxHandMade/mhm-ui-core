@@ -1243,7 +1243,7 @@ non-string `actions`) the twins can differ.
 
 - **Default change:** a plain `th` in a `DataTable` head is now as tall as a
   sortable one (40px, 44px at 782px and below). A table with no `SortHeader`
-  used to draw a header as short as its text (24px with a select column).
+  used to draw a header as short as its text (16px measured).
   Served by the loader, so it shows without a rebuild. A `layout="stack"`
   table changes only while it is drawn wide; once stacked its header height
   is released as before.
