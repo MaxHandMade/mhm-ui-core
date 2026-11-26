@@ -290,6 +290,21 @@ final class KitEscapingTest extends WP_UnitTestCase {
 		self::assertStringContainsString( '__actions', $header( '?b', '<a href="?e">Edit</a>' ) );
 	}
 
+	/**
+	 * The twin-edge corpus under real esc_html()/esc_url()/wp_kses_post(): the
+	 * unit suite draws it under marking stubs, so this is where a real escaper
+	 * turning a no-break space into an entity, or kses keeping a blank, would
+	 * show (0.27.2). Every case's markup is plain enough that real escaping
+	 * leaves it byte for byte.
+	 */
+	public function test_page_header_twin_edges_hold_under_real_escaping(): void {
+		$corpus = json_decode( (string) file_get_contents( dirname( __DIR__ ) . '/Fixtures/page-header-twin-edges.json' ), true );
+		self::assertGreaterThan( 10, count( $corpus['cases'] ) );
+		foreach ( $corpus['cases'] as $case ) {
+			self::assertSame( $case['html'], mhmuicore_page_header_html( $case['props'] ), $case['name'] );
+		}
+	}
+
 	public function test_page_header_survives_wp_kses_post_byte_for_byte(): void {
 		$html = mhmuicore_page_header_html(
 			array(

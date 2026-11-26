@@ -1284,6 +1284,12 @@ h1.mhmui-page-header__title.mhmui-page-header__title {
 	text-align: end;
 	font-variant-numeric: tabular-nums;
 }
+/* A plain (unsortable) head cell over a number column: the label sits over
+   the figures. (0,2,2) beats the (0,1,2) `thead th` start rule; a sortable
+   head cell aligns through SortHeader's align="end" instead (0.27.2). */
+.mhmui-table thead th.mhmui-table__num {
+	text-align: end;
+}
 /* Sortable header: the whole cell is the button. */
 .mhmui-table thead th.mhmui-table__th--sortable {
 	padding: 0;

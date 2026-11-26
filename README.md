@@ -22,7 +22,7 @@ A consuming plugin `require_once`s `vendor/mhm/ui-core/register.php` from its
 main file and registers its own copy:
 
 ```php
-mhmuicore_register( '0.27.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.27.2', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 At `plugins_loaded` priority 0 the highest registered version boots; the rest
@@ -432,7 +432,7 @@ build from.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.27.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.27.2', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 Requiring `bootstrap.php` directly defines `MHMUICORE_VERSION` immediately, which
@@ -1236,8 +1236,28 @@ relative path that does not start with `/`, `?`, `#` or a `*.php` file gets
 `admin_url( … )` or a `?page=…` query. As in the JSX, no link is drawn when
 `back.label` is missing, a boolean or blank, or `back.href` is empty; a
 `stdClass` row reads like an array. Pass a role name as `tone` and plain
-strings as text: for other values (`null`, `true`, a float `level`, a
-non-string `actions`) the twins can differ.
+strings as text. Since 0.27.2 the twins agree on these edges too, held by
+one corpus both test suites draw (`tests/Fixtures/page-header-twin-edges.json`):
+a `null` tone is neutral, a boolean badge text draws no badge, a
+whole-number float `level` (`1.0` from `json_decode()`) is that level,
+`actions` that are a number, blank or an empty list draw no wrapper, and a
+`back.label` of only spaces in JS's sense (no-break and other Unicode
+spaces) draws no link. They can still differ on a non-string `tone` or a
+node where the PHP twin takes text.
+
+### PageHeader twin edges and number head cells (0.27.2)
+
+- **`PageHeader` (JSX):** a `null` badge tone is neutral (it printed
+  `mhmui-status--null`); a boolean badge text draws no badge (it drew an
+  empty pill); `actions` that are a number, a blank string or an empty list
+  draw no wrapper -- `actions={ 0 }` printed a bare `0`.
+- **`mhmuicore_page_header_html()` (PHP):** a whole-number float `level` is
+  that level (`1.0` drew an h2); a `back.label` or `actions` of only
+  no-break or other Unicode spaces counts as blank, as JS's `trim()` sees it
+  (a no-break-space label drew a nameless link).
+- **`DataTable`:** a plain head cell with `className="mhmui-table__num"` now
+  sits at the end, over its figures. A sortable one still aligns through
+  `SortHeader align="end"`. Served by the loader.
 
 ### Table header height and typed props (0.27.1)
 
