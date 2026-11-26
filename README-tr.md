@@ -216,7 +216,7 @@ da bu tek yanlış cümle yüzünden taşıdı.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.26.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.27.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 `bootstrap.php`'yi doğrudan require etmek `MHMUICORE_VERSION`'ı anında tanımlar
@@ -551,7 +551,7 @@ aralaması dokunulmadan kalıyor. Kabuğu kullanmayan bir yüzey ritim almaz;
 bir sarmalayıcı içine yerleşmiş bir ızgara kendi sarmalayıcısı tarafından
 aralanır.
 
-Ritim üyeleri: `.mhmui-stats-grid`, `.mhmui-widget`, `.mhmui-pagination`, `.mhmui-notice`, `.mhmui-tabs`, `.mhmui-page-header`, `.mhmui-detail-layout`, `.mhmui-toolbar`, `.mhmui-table-card`
+Ritim üyeleri: `.mhmui-stats-grid`, `.mhmui-widget`, `.mhmui-pagination`, `.mhmui-notice`, `.mhmui-tabs`, `.mhmui-page-header`, `.mhmui-detail-layout`, `.mhmui-toolbar`, `.mhmui-table-card`, `.mhmui-tabs-bar`, `.mhmui-section`
 
 **0.24.0 varsayılan değişikliği:** kabuğun doğrudan çocuğu olan ve öncesinde
 bir kardeşi bulunan DataTable (`.mhmui-table-card`) artık üstünden 12px alır
@@ -563,7 +563,8 @@ düşürmeli, yoksa ikisi toplanır.
 Yalnız kabuğun bu sınıflardan birini taşıyan DOĞRUDAN çocuğu aralanır. Kendi
 bloğunuz (kendi sınıfınızla bir süzgeç çubuğu, bir düğme satırı) kabuktan
 boşluk almaz -- yalnız kendi taşıdığı dış boşluk kalır, düz bir `div` için bu
-sıfırdır. Bir üye sınıfa koyun ya da bir üyenin içine alın.
+sıfırdır. Bir üye sınıfa koyun ya da bir üyenin içine alın -- kendi
+bloğunuz için o sınıf `.mhmui-section`'dır (0.27.0+, aşağıda).
 
 **0.24.0: `.mhmui-toolbar`**, iki blok arasındaki eylem satırıdır (KPI bandının
 altındaki, tablonun üstündeki düğmeler): 8px boşluklu (`--mhmui-space-2`),
@@ -720,7 +721,7 @@ parite kapısı eşitlik arar, uyumluluk değil.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.26.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.27.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 🔴 Sürüm dizesi **elle yazılır** (kayıt, herhangi bir bootstrap yüklenmeden önce koşar) ve
@@ -1056,3 +1057,66 @@ olanlar dahil, onu alır. Çıktıyı yalnız `stdClass` girdide değiştirir: �
 atlanan bir `stdClass` kart ya da sekme artık çizilir; `mhmuicore_stat_card_html()`
 dahil, bir `stdClass` `delta` 0.25'in `sub`'a düştüğü yerde delta satırını
 çizer ve bir `stdClass` `data` kendi `data-*` özniteliklerini ekler.
+
+### Bölüm ritmi ve PHP sayfa başlığı (0.27.0+)
+
+**İki ritim üyesi eklendi.** `.mhmui-tabs-bar` (sekmeler + sağdaki denetim) ve
+`.mhmui-section` kabuk tarafından diğerleri gibi aralanır: `.mhmui-admin-page` /
+`.mhmui-front-page`'in doğrudan çocuğu olup öncesinde bir kardeşi varsa
+üstünden `--mhmui-space-3` (12px) alır.
+
+`.mhmui-section` kendi kuralı olmayan bir kancadır -- dış/iç boşluk, kenarlık,
+`display` yok. Kendi bloğunuza (KPI satırı, iki sütunlu düzen, süzgeç çubuğu,
+kart, alt bilgi) yerel bir `margin` vermek yerine onu koyun:
+
+```html
+<div class="mhmui-admin mhmui-admin-page">
+	<!-- PageHeader -->
+	<div class="mhmui-section my-plugin-filters">…</div>
+	<div class="mhmui-section my-plugin-two-columns">…</div>
+</div>
+```
+
+Kabuğun kuralı (0,2,0)'dır; tek sınıflı bir `margin-top`'unuzu ezer, kalan bir
+`margin-bottom` ise yine eklenir. **Varsayılan değişikliği:** kabuğun doğrudan
+çocuğu olan `.mhmui-tabs-bar` artık yükleyicinin CSS'inden, site genelinde ve
+yeniden derlemeden üstünden 12px alır; onu kendisi aralayan bir ekran (daha
+ağır bir seçiciyle ya da kabukta flex `gap` ile) kendi boşluğunu düşürmeli.
+
+**`mhmuicore_page_header_html( array $props ): string`** -- `PageHeader`'ın PHP
+ikizi; PHP ile çizilen alt sayfalar (ayrıntı, düzenle, ekle) için. İşaretleme
+ve sınıflar JSX ile aynı (kapı 6 karşılaştırır); `function_exists()` ile
+koruyun ve `wp_kses_post()` ile basın:
+
+```php
+if ( function_exists( 'mhmuicore_page_header_html' ) ) {
+	echo wp_kses_post(
+		mhmuicore_page_header_html(
+			array(
+				'back'    => array(
+					'label' => __( 'All customers', 'my-plugin' ),
+					'href'  => admin_url( 'admin.php?page=my-plugin-customers' ),
+				),
+				'title'   => $customer->name,
+				'badge'   => array( 'text' => __( 'Active', 'my-plugin' ), 'tone' => 'success' ),
+				'meta'    => sprintf( '#%d', $customer->id ),
+				'actions' => '<a class="button" href="' . esc_url( $edit_url ) . '">' . esc_html__( 'Edit', 'my-plugin' ) . '</a>',
+				'level'   => 1,
+			)
+		)
+	);
+}
+```
+
+Prop'lar JSX'teki gibi, şu farklarla: `title`, etiketler, rozet metni ve `meta`
+metindir; `actions` bir HTML dizesidir ve fonksiyonun içinde `wp_kses_post()`'tan
+geçer (içindeki `<input>` sökülür -- form denetimlerini başlığın
+altına koyun; kses'in tamamen sildiği eylemler sarmalayıcı çizmez); `back`'in
+`onClick`'i yok. `back.href` `esc_url()`'den geçer: onun boşalttığı bir `href`
+(`javascript:`, boş dize) geri bağlantı çizmez; `/`, `?`, `#` ya da bir `*.php`
+dosyasıyla başlamayan göreli yolun önüne `http://` eklenir (`customers/list` →
+`http://customers/list`) -- `admin_url( … )` ya da bir `?page=…` sorgusu verin.
+JSX'teki gibi `back.label` eksik, mantıksal ya da boşsa veya `back.href` boşsa
+bağlantı çizilmez; `stdClass` satır dizi gibi okunur. `tone` olarak bir rol adı,
+metin olarak düz dize verin: başka değerlerde (`null`, `true`, ondalıklı `level`,
+dize olmayan `actions`) ikizler ayrışabilir.

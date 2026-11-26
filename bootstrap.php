@@ -17,7 +17,7 @@ if ( defined( 'MHMUICORE_VERSION' ) ) {
 	return;
 }
 
-define( 'MHMUICORE_VERSION', '0.26.0' );
+define( 'MHMUICORE_VERSION', '0.27.0' );
 define( 'MHMUICORE_DIR', __DIR__ );
 
 /*
@@ -297,6 +297,24 @@ if ( ! function_exists( 'mhmuicore_tabs_html' ) ) {
 	 */
 	function mhmuicore_tabs_html( array $props ): string {
 		return \MHMUiCore\Kit\Tabs::render_html( $props );
+	}
+}
+
+if ( ! function_exists( 'mhmuicore_page_header_html' ) ) {
+	/**
+	 * A detail view's header (back link, title, badges, meta, actions) as
+	 * escaped HTML. See MHMUiCore\Kit\PageHeader::render_html().
+	 *
+	 * Born in 0.27.0 -- guard calls with function_exists() while an older copy
+	 * can still win the loader. Consumers echo it through wp_kses_post(), like
+	 * mhmuicore_tabs_html(); tests/Integration/KitEscapingTest.php pins that
+	 * the markup survives it.
+	 *
+	 * @param array<string, mixed> $props { title, back?, badge?, badges?, meta?, actions?, level? }.
+	 * @return string
+	 */
+	function mhmuicore_page_header_html( array $props ): string {
+		return \MHMUiCore\Kit\PageHeader::render_html( $props );
 	}
 }
 

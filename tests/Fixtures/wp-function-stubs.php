@@ -311,6 +311,19 @@ if ( ! function_exists( 'esc_attr' ) ) {
 	}
 }
 
+if ( ! function_exists( 'wp_kses_post' ) ) {
+	/**
+	 * Marking stub, like esc_html: proves the call happens. Real kses is
+	 * measured only on real WordPress (tests/Integration/KitEscapingTest.php).
+	 *
+	 * @param string $data Post content.
+	 * @return string
+	 */
+	function wp_kses_post( string $data ): string {
+		return 'wp_kses_post(' . $data . ')';
+	}
+}
+
 if ( ! function_exists( 'sanitize_html_class' ) ) {
 	/**
 	 * WordPress's own algorithm: strip percent-encoded octets, then anything

@@ -8,6 +8,7 @@ import StatCard, {
 } from '../../src-react/components/StatCard';
 import StatsGrid from '../../src-react/components/StatsGrid';
 import Tabs from '../../src-react/components/Tabs';
+import PageHeader from '../../src-react/components/PageHeader';
 import { SEED } from '../../src-react/icons';
 
 const ROOT = join( __dirname, '..', '..' );
@@ -17,7 +18,7 @@ const manifest = JSON.parse(
 const snapshot = JSON.parse(
 	readFileSync( join( ROOT, 'src-react', 'kit-classes.json' ), 'utf8' )
 );
-const COMPONENTS = { StatCard, StatsGrid, Tabs };
+const COMPONENTS = { StatCard, StatsGrid, Tabs, PageHeader };
 
 // Pins the JSX vocabulary to the PHP twin's, parsed straight from its source
 // (not re-typed here): StatCard::DIRECTIONS and the keys of its private

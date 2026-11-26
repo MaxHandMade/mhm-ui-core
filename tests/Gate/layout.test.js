@@ -6,6 +6,26 @@ const { ruleBody, mediaBlock } = require( './helpers' );
 const ROOT = join( __dirname, '..', '..' );
 const read = ( f ) => readFileSync( join( ROOT, 'assets', 'react', f ), 'utf8' );
 
+/**
+ * Every rule selector in the sheet that names `cls` as a whole class,
+ * at any depth (inside @media / @supports too); comments are not rules.
+ * @param {string} css
+ * @param {string} cls e.g. '.mhmui-section'
+ * @return {string[]} The selectors.
+ */
+function selectorsNaming( css, cls ) {
+	const re = new RegExp(
+		cls.replace( /[.*+?^${}()|[\]\\]/g, '\\$&' ) + '(?![\\w-])'
+	);
+	const found = [];
+	postcss.parse( css ).walkRules( ( rule ) => {
+		if ( re.test( rule.selector ) ) {
+			found.push( rule.selector );
+		}
+	} );
+	return found;
+}
+
 /** No `width` declaration on the admin shell: it sits on the SAME element as
  * WP core's own `.wrap` (margin: 10px 20px 0 2px), and a block box already
  * fills its container's content box on its own while respecting its own
@@ -463,7 +483,38 @@ describe( 'vertical rhythm is owned by the page shell (0.14.0)', () => {
 		'.mhmui-detail-layout',
 		'.mhmui-toolbar',
 		'.mhmui-table-card',
+		// 0.27.0: the tabs bar was a direct child of the shell spaced by no
+		// package rule (Rentiva measured 20px and 24px, 2026-11-25), and an
+		// app's own block had no member class to wear at all.
+		'.mhmui-tabs-bar',
+		'.mhmui-section',
 	];
+
+	/** `.mhmui-section` is a rhythm hook and nothing else: any rule of its own
+	 * in either kit would put a box model on every app block that wears it. */
+	test( 'the section class carries no rule of its own in either kit', () => {
+		for ( const [ name, css ] of [
+			[ 'admin.css', admin ],
+			[ 'front.css', front ],
+		] ) {
+			const own = selectorsNaming( css, '.mhmui-section' );
+			// Exactly one selector names it: the shell's rhythm rule.
+			expect( [ name, own.length ] ).toEqual( [ name, 1 ] );
+			expect( own[ 0 ] ).toMatch( /-page > \* \+ :is\(/ );
+		}
+	} );
+
+	/** Runs the same function the check above runs (Fable 0.27.0: an inline
+	 * copy stayed green while the real parser missed rules inside @media). */
+	test( 'the section-class check is not vacuous: a rule of its own is counted, inside @media too', () => {
+		const css = `.x > * + :is( .mhmui-section ) { a: b; }
+.mhmui-section { margin: 0; }
+@media ( max-width: 600px ) { .y .mhmui-section { padding: 0; } }
+/* .mhmui-section in a comment is not a rule */
+.mhmui-section-x { a: b; }`;
+		expect( selectorsNaming( css, '.mhmui-section' ) ).toHaveLength( 3 );
+	} );
+
 	const RHYTHM = `> * + :is( ${ MEMBERS.join( ', ' ) } )`;
 
 	test( 'the stats grid no longer carries its own outer margin', () => {

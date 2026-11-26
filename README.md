@@ -22,7 +22,7 @@ A consuming plugin `require_once`s `vendor/mhm/ui-core/register.php` from its
 main file and registers its own copy:
 
 ```php
-mhmuicore_register( '0.26.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.27.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 At `plugins_loaded` priority 0 the highest registered version boots; the rest
@@ -432,7 +432,7 @@ build from.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.26.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.27.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 Requiring `bootstrap.php` directly defines `MHMUICORE_VERSION` immediately, which
@@ -789,7 +789,7 @@ template literal, a quoted key, and any file that mentions no anchor.
 untouched. A surface that does not use the shell gets no rhythm, and a grid
 nested in a wrapper is spaced by its wrapper.
 
-Rhythm members: `.mhmui-stats-grid`, `.mhmui-widget`, `.mhmui-pagination`, `.mhmui-notice`, `.mhmui-tabs`, `.mhmui-page-header`, `.mhmui-detail-layout`, `.mhmui-toolbar`, `.mhmui-table-card`
+Rhythm members: `.mhmui-stats-grid`, `.mhmui-widget`, `.mhmui-pagination`, `.mhmui-notice`, `.mhmui-tabs`, `.mhmui-page-header`, `.mhmui-detail-layout`, `.mhmui-toolbar`, `.mhmui-table-card`, `.mhmui-tabs-bar`, `.mhmui-section`
 
 **0.24.0 default change:** a DataTable (`.mhmui-table-card`) that is a direct
 child of the shell, after a sibling, now gets 12px above it (before: 0). The
@@ -800,7 +800,8 @@ flex column with its own `gap` -- should drop its own spacing, or the two add up
 Only a DIRECT child of the shell that carries one of these classes is spaced. A
 block of your own (a filter bar, a button row in your own class) gets no
 spacing from the shell -- only whatever margin it carries itself, which for a
-plain `div` is none. Put it on a member class or inside one.
+plain `div` is none. Put it on a member class or inside one -- for a block
+of your own, that class is `.mhmui-section` (0.27.0+, below).
 
 **0.24.0: `.mhmui-toolbar`** is the row of actions between two blocks (the
 buttons under a KPI band, above a table): a wrapping flex row with an 8px gap
@@ -1171,3 +1172,69 @@ included. It changes output only for `stdClass` input: a `stdClass` card or
 tab used to be skipped and now draws, and in `mhmuicore_stat_card_html()` too
 a `stdClass` `delta` now draws the delta line where 0.25 fell back to `sub`,
 and a `stdClass` `data` adds its `data-*` attributes.
+
+### Section rhythm and the PHP page header (0.27.0+)
+
+**Two rhythm members join.** `.mhmui-tabs-bar` (tabs plus a trailing control)
+and `.mhmui-section` are spaced by the shell like the rest: a direct child of
+`.mhmui-admin-page` / `.mhmui-front-page`, after a sibling, gets
+`--mhmui-space-3` (12px) above it.
+
+`.mhmui-section` is a hook with no rule of its own -- no margin, padding,
+border or display. Put it on a block of your own (a KPI row, a two-column
+layout, a filter bar, a card, a footer) instead of giving that block a local
+margin:
+
+```html
+<div class="mhmui-admin mhmui-admin-page">
+	<!-- PageHeader -->
+	<div class="mhmui-section my-plugin-filters">…</div>
+	<div class="mhmui-section my-plugin-two-columns">…</div>
+</div>
+```
+
+The shell's rule is (0,2,0), so it overrides a one-class `margin-top` of
+yours; a `margin-bottom` you keep still adds. **Default change:** a
+`.mhmui-tabs-bar` that is a direct child of the shell now gets 12px above it
+from the loader's CSS, site-wide, without a rebuild; a screen that spaced it
+itself (with a heavier selector, or a flex `gap` on the shell) should drop
+that spacing.
+
+**`mhmuicore_page_header_html( array $props ): string`** -- the PHP twin of
+`PageHeader`, for sub-pages drawn in PHP (detail, edit, add). Same markup and
+classes as the JSX (gate 6 compares them); guard with `function_exists()`
+and echo through `wp_kses_post()`:
+
+```php
+if ( function_exists( 'mhmuicore_page_header_html' ) ) {
+	echo wp_kses_post(
+		mhmuicore_page_header_html(
+			array(
+				'back'    => array(
+					'label' => __( 'All customers', 'my-plugin' ),
+					'href'  => admin_url( 'admin.php?page=my-plugin-customers' ),
+				),
+				'title'   => $customer->name,
+				'badge'   => array( 'text' => __( 'Active', 'my-plugin' ), 'tone' => 'success' ),
+				'meta'    => sprintf( '#%d', $customer->id ),
+				'actions' => '<a class="button" href="' . esc_url( $edit_url ) . '">' . esc_html__( 'Edit', 'my-plugin' ) . '</a>',
+				'level'   => 1,
+			)
+		)
+	);
+}
+```
+
+Props as in the JSX, with these differences: `title`, labels, badge text and
+`meta` are text; `actions` is an HTML string, run through `wp_kses_post()`
+inside the function (so an `<input>` in it is stripped -- put form
+controls after the header, and actions kses strips to nothing draw no
+wrapper); `back` has no `onClick`. `back.href` goes through `esc_url()`: an
+`href` it empties (`javascript:`, a blank string) draws no back link, and a
+relative path that does not start with `/`, `?`, `#` or a `*.php` file gets
+`http://` in front (`customers/list` becomes `http://customers/list`) -- pass
+`admin_url( … )` or a `?page=…` query. As in the JSX, no link is drawn when
+`back.label` is missing, a boolean or blank, or `back.href` is empty; a
+`stdClass` row reads like an array. Pass a role name as `tone` and plain
+strings as text: for other values (`null`, `true`, a float `level`, a
+non-string `actions`) the twins can differ.

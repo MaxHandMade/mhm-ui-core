@@ -261,5 +261,39 @@
             "mhmui-tabs__badge",
             "mhmui-tabs__tab"
         ]
+    ],
+    "PageHeader": [
+        [
+            "mhmui-page-header",
+            "mhmui-page-header__title",
+            "mhmui-page-header__title-row"
+        ],
+        [
+            "mhmui-page-header",
+            "mhmui-page-header__back",
+            "mhmui-page-header__meta",
+            "mhmui-page-header__title",
+            "mhmui-page-header__title-row",
+            "mhmui-status",
+            "mhmui-status--warning"
+        ],
+        [
+            "mhmui-page-header",
+            "mhmui-page-header__back",
+            "mhmui-page-header__badges",
+            "mhmui-page-header__meta",
+            "mhmui-page-header__title",
+            "mhmui-page-header__title-row",
+            "mhmui-status",
+            "mhmui-status--danger",
+            "mhmui-status--warning"
+        ],
+        [
+            "mhmui-page-header",
+            "mhmui-page-header__actions",
+            "mhmui-page-header__back",
+            "mhmui-page-header__title",
+            "mhmui-page-header__title-row"
+        ]
     ]
 }
