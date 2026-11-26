@@ -79,20 +79,54 @@ function convType( t ) {
 	}
 }
 
-/** The JSDoc block directly above `export default function <Name>`. */
+/** Every /** block of a file as [start, end, text]. */
+function blocks( src ) {
+	const out = [];
+	for ( const m of src.matchAll( /\/\*\*([\s\S]*?)\*\//g ) ) {
+		const text = m[ 1 ]
+			.split( '\n' )
+			.map( ( l ) => l.replace( /^\s*\*\s?/, '' ) )
+			.join( '\n' )
+			.trim();
+		out.push( [ m.index, m.index + m[ 0 ].length, text ] );
+	}
+	return out;
+}
+
+/**
+ * The component's own doc block. Measured on this package: it is not always
+ * directly above `export default function X` (a helper or a typedef can sit
+ * between, StatsGrid documents itself at the top of the file, ErrorBoundary is
+ * a class exported by name at the end). In order:
+ *   1. the block directly above `export default function|class X`, `class X`
+ *      or `function X`;
+ *   2. the first block that documents `props` (`@param {Object} props`);
+ *   3. the file's leading block.
+ */
 function jsdoc( src, name ) {
-	const m = new RegExp( `export\\s+default\\s+(?:function|class)\\s+${ name }\\b` ).exec( src );
-	if ( ! m ) return '';
-	const before = src.slice( 0, m.index );
-	const end = before.lastIndexOf( '*/' );
-	if ( end < 0 || before.slice( end + 2 ).trim() !== '' ) return '';
-	const start = before.lastIndexOf( '/**', end );
-	return before
-		.slice( start + 3, end )
-		.split( '\n' )
-		.map( ( l ) => l.replace( /^\s*\*\s?/, '' ) )
-		.join( '\n' )
-		.trim();
+	const all = blocks( src ).filter( ( b ) => ! /^@typedef\b/.test( b[ 2 ] ) );
+	const decl = new RegExp( `(?:export\\s+default\\s+)?(?:function|class)\\s+${ name }\\b` ).exec( src );
+	if ( decl ) {
+		const above = all.filter( ( b ) => b[ 1 ] <= decl.index ).pop();
+		if ( above && src.slice( above[ 1 ], decl.index ).trim() === '' ) return above[ 2 ];
+	}
+	const withProps = all.find( ( b ) => /@param\s+\{Object\}\s+props\b/.test( b[ 2 ] ) );
+	if ( withProps ) return withProps[ 2 ];
+	const lead = all[ 0 ];
+	return lead && src.slice( 0, lead[ 0 ] ).replace( /^import[^\n]*\n/gm, '' ).trim() === '' ? lead[ 2 ] : '';
+}
+
+/** The doc's @param lines for props.x, as { name: description }. */
+function paramDocs( doc ) {
+	const out = {};
+	const tags = doc.split( /\n(?=@)/ ).filter( ( t ) => t.startsWith( '@param' ) );
+	for ( const tag of tags ) {
+		// props.x only: a nested props.x.y line documents a field of x, not x
+		// (Fable 0.27.1: StatCard's delta.label overwrote delta's note).
+		const m = /^@param\s+\{[^}]*\}\s+\[?props\.([A-Za-z0-9_]+)(?:=[^\]\s]*)?\]?(?=\s)\s*([\s\S]*)$/.exec( tag );
+		if ( m ) out[ m[ 1 ] ] = m[ 2 ].replace( /\s+/g, ' ' ).trim();
+	}
+	return out;
 }
 
 const docsRel = '.design-sync/.cache/docs';
@@ -111,11 +145,15 @@ for ( const name of Object.keys( cfg.componentSrcMap ).sort() ) {
 	} );
 	if ( body.length ) dtsPropsFor[ name ] = body.join( ' ' );
 
-	const doc = jsdoc( src, name ).replace( /^@param[\s\S]*$/m, '' ).trim();
+	const full = jsdoc( src, name );
+	const doc = full.replace( /^@(?:param|return)[\s\S]*$/m, '' ).trim();
+	const notes = paramDocs( full );
 	const lines = [ doc || `${ name } -- a component of @mhm/ui-core.`, '' ];
 	if ( body.length ) {
 		lines.push( '## Props', '' );
-		for ( const [ k, raw ] of Object.entries( props ) ) lines.push( `- \`${ k }\`: \`${ raw }\`` );
+		for ( const [ k, raw ] of Object.entries( props ) ) {
+			lines.push( `- \`${ k }\`: \`${ raw }\`${ notes[ k ] ? ` — ${ notes[ k ] }` : '' }` );
+		}
 		lines.push( '' );
 	}
 	// Examples come from the verified preview (.design-sync/previews/<Name>.tsx),

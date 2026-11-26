@@ -22,7 +22,7 @@ A consuming plugin `require_once`s `vendor/mhm/ui-core/register.php` from its
 main file and registers its own copy:
 
 ```php
-mhmuicore_register( '0.27.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.27.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 At `plugins_loaded` priority 0 the highest registered version boots; the rest
@@ -432,7 +432,7 @@ build from.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.27.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.27.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 Requiring `bootstrap.php` directly defines `MHMUICORE_VERSION` immediately, which
@@ -1238,3 +1238,15 @@ relative path that does not start with `/`, `?`, `#` or a `*.php` file gets
 `stdClass` row reads like an array. Pass a role name as `tone` and plain
 strings as text: for other values (`null`, `true`, a float `level`, a
 non-string `actions`) the twins can differ.
+
+### Table header height and typed props (0.27.1)
+
+- **Default change:** a plain `th` in a `DataTable` head is now as tall as a
+  sortable one (40px, 44px at 782px and below). A table with no `SortHeader`
+  used to draw a header as short as its text (16px measured).
+  Served by the loader, so it shows without a rebuild. A `layout="stack"`
+  table changes only while it is drawn wide; once stacked its header height
+  is released as before.
+- `src-react/components.json` types `StatsGrid.cards`, `Tabs.items` and
+  `DetailList.items` as their item shapes instead of `array`, and
+  `StatCard.delta.direction` as `up|down|flat`. Nothing renders differently.

@@ -216,7 +216,7 @@ da bu tek yanlış cümle yüzünden taşıdı.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.27.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.27.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 `bootstrap.php`'yi doğrudan require etmek `MHMUICORE_VERSION`'ı anında tanımlar
@@ -721,7 +721,7 @@ parite kapısı eşitlik arar, uyumluluk değil.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.27.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.27.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 🔴 Sürüm dizesi **elle yazılır** (kayıt, herhangi bir bootstrap yüklenmeden önce koşar) ve
@@ -1120,3 +1120,15 @@ JSX'teki gibi `back.label` eksik, mantıksal ya da boşsa veya `back.href` boşs
 bağlantı çizilmez; `stdClass` satır dizi gibi okunur. `tone` olarak bir rol adı,
 metin olarak düz dize verin: başka değerlerde (`null`, `true`, ondalıklı `level`,
 dize olmayan `actions`) ikizler ayrışabilir.
+
+### Tablo başlık yüksekliği ve tipli prop'lar (0.27.1)
+
+- **Varsayılan değişikliği:** `DataTable` başlığındaki düz bir `th` artık
+  sıralanabilir olan kadar yüksek (40px; 782px ve altında 44px). `SortHeader`'ı
+  olmayan bir tablo önceden metni kadar kısa bir başlık çiziyordu (ölçülen:
+  16px). Yükleyici servis eder, yani yeniden derlemeden görünür.
+  `layout="stack"` bir tablo yalnız geniş çizildiğinde değişir; yığıldığında
+  başlık yüksekliği eskisi gibi serbesttir.
+- `src-react/components.json`, `StatsGrid.cards`, `Tabs.items` ve
+  `DetailList.items`'ı `array` yerine öğe biçimleriyle, `StatCard.delta.direction`'ı
+  da `up|down|flat` olarak tipler. Çizimde değişen bir şey yok.
