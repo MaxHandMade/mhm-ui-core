@@ -13,6 +13,7 @@
     "component": "AdminShell"
   },
   "componentSrcMap": {
+    "AdminShell": ".design-sync/shell.jsx",
     "Button": "src-react/components/Button.jsx",
     "ConfirmButton": "src-react/components/ConfirmButton.jsx",
     "DataTable": "src-react/components/DataTable.jsx",
@@ -34,6 +35,7 @@
   },
   "buildCmd": "node .design-sync/gen-api.mjs",
   "dtsPropsFor": {
+    "AdminShell": "children: React.ReactNode; page?: boolean;",
     "Button": "children: React.ReactNode; variant?: \"primary\" | \"secondary\" | \"danger\" | \"plain\" | \"neutral\"; size?: \"md\" | \"sm\"; href?: string; target?: string; rel?: string; icon?: React.ReactNode; disabled?: boolean; onClick?: (...args: any[]) => void; type?: string;",
     "ConfirmButton": "label: string; confirmText: string; confirmLabel: string; cancelLabel: string; busyText: string; onConfirm: (...args: any[]) => void; variant?: \"primary\" | \"secondary\" | \"danger\"; size?: \"default\" | \"compact\"; confirmDisabled?: boolean; disabled?: boolean; describedBy?: string; children?: React.ReactNode;",
     "DataTable": "caption: string; captionHidden?: boolean; captionMeta?: React.ReactNode; layout?: \"scroll\" | \"stack\"; className?: string; footer?: React.ReactNode; children: React.ReactNode;",

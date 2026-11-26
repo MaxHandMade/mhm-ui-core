@@ -13,6 +13,20 @@ import './wp/wp-chrome.css';
 import './wp/dashicons.css';
 import '../assets/react/pro.css';
 
+/**
+ * The wp-admin screen a design is drawn on: WordPress core's button and
+ * notice styles, Dashicons, the admin body font and the kit's tokens. Wrap a
+ * whole design in it once. Design-sync only -- a real plugin screen gets the
+ * same surface from WordPress and its own `mhmui-admin` wrapper.
+ *
+ * @param {Object}    props
+ * @param {ReactNode} props.children The page or component being designed.
+ * @param {boolean}   [props.page]   true for a full page: adds `mhmui-admin-page`,
+ *                                   the shell that spaces its direct children
+ *                                   (PageHeader, StatsGrid, Widget...) at the
+ *                                   kit's vertical rhythm. Leave it off for a
+ *                                   single component.
+ */
 export function AdminShell( { children, page = false } ) {
 	return (
 		<div className={ page ? 'wp-core-ui mhmui-admin mhmui-admin-page' : 'wp-core-ui mhmui-admin' }>
