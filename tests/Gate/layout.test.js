@@ -1552,6 +1552,27 @@ describe( 'DataTable (0.19.0)', () => {
 		expect( body ).toMatch( /clip:\s*auto/ );
 	} );
 
+	/** 0.27.1: a table with no SortHeader drew a ~20px header (the row took its
+	 * height from the sort buttons only). A plain header cell is pinned to the
+	 * sort button's own minimum, read from the same stylesheet, at both widths;
+	 * stacked, the cells are blocks and the height is released. */
+	test( 'a plain header cell is as tall as a sortable one, wide and below 782px', () => {
+		const px = ( body, prop ) => {
+			const m = body && body.match( new RegExp( `(?:^|[;{\\s])${ prop }:\\s*(\\d+)px` ) );
+			return m ? Number( m[ 1 ] ) : null;
+		};
+		const wideSort = px( ruleBody( css, '.mhmui-table__sort' ), 'min-height' );
+		expect( wideSort ).toBe( 40 );
+		expect( px( ruleBody( css, '.mhmui-table thead th' ), 'height' ) ).toBe( wideSort );
+
+		const narrow = '}' + mediaBlock( css, '( max-width: 782px )' );
+		const narrowSort = px( ruleBody( narrow, '.mhmui-table__sort' ), 'min-height' );
+		expect( narrowSort ).toBe( 44 );
+		expect( px( ruleBody( narrow, '.mhmui-table thead th' ), 'height' ) ).toBe( narrowSort );
+
+		expect( ruleBody( stack, '.mhmui-table--stack thead th' ) ).toMatch( /height:\s*auto/ );
+	} );
+
 	test( 'wide hit area is at least 24px; 44px below 782px', () => {
 		const body = ruleBody( css, '.mhmui-table__select-hit' );
 		expect( body ).toMatch( /min-width:\s*24px/ );

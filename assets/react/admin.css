@@ -1245,7 +1245,11 @@ h1.mhmui-page-header__title.mhmui-page-header__title {
 .mhmui-table thead tr {
 	border-bottom: 1px solid var( --mhmui-border );
 }
+/* A plain header cell is as tall as a sortable one (0.27.1): the row used to
+   take its height from the sort buttons alone, so a table with no SortHeader
+   drew a ~20px header. `height` on a table cell is a minimum. */
 .mhmui-table thead th {
+	height: 40px;
 	padding: 0 12px;
 	text-align: start;
 	font-weight: 400;
@@ -1397,6 +1401,9 @@ h1.mhmui-page-header__title.mhmui-page-header__title {
 	.mhmui-table__sort {
 		min-height: 44px;
 	}
+	.mhmui-table thead th {
+		height: 44px;
+	}
 	.mhmui-table__select-hit {
 		min-width: 44px;
 		min-height: 44px;
@@ -1433,6 +1440,7 @@ h1.mhmui-page-header__title.mhmui-page-header__title {
 	}
 	.mhmui-table--stack thead th {
 		display: block;
+		height: auto;
 		padding: 0;
 		width: auto;
 	}

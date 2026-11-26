@@ -49,8 +49,9 @@ function badgeCount( badge ) {
  * @param {string}           props.label      Accessible name of the <nav>. Known limit:
  *                                            an empty one yields an unnamed nav and no gate
  *                                            catches it.
- * @param {string}           [props.current]  Id of the current item. Compared as a string with
- *                                            ===, so an item whose id is a number is never current.
+ * @param {string}           [props.current]  Id of the current item. Both sides are read as
+ *                                            text first (0.26.0), so `id: 2` is current for
+ *                                            `current: '2'`.
  * @param {Array}            props.items      { id, label, href, badge?, badgeLabel?, badgeTone? }.
  *                                            badgeTone (success|warning|danger|info|neutral) colours that item's chip;
  *                                            unknown adds no class.
