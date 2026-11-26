@@ -854,7 +854,7 @@ namespace X;
 	 */
 	public function test_this_package_carries_none_of_the_three_forbidden_things(): void {
 		$package  = dirname( __DIR__, 2 );
-		$findings = ( new PurityScanner() )->scan( $package );
+		$findings = self::without_gitignored( ( new PurityScanner() )->scan( $package ), $package );
 
 		// Positive control: a scan that reached nothing would also be silent.
 		self::assertGreaterThan(
@@ -882,5 +882,99 @@ namespace X;
 				)
 			)
 		);
+	}
+
+	/**
+	 * Drops findings in paths git ignores (2026-11-26).
+	 *
+	 * The scan walks the working tree, so local scratch a tool leaves behind
+	 * (design-sync's .ds-sync/ and ds-bundle/, a node_modules of its own) made
+	 * this gate red on a developer machine while CI, which never has them,
+	 * stayed green. A gate that is red only locally teaches people to read red
+	 * as "probably that folder again". Only IGNORED paths are dropped: a new
+	 * file that is merely not added yet is still measured. Without git (not a
+	 * checkout, no binary) nothing is dropped -- the test stays strict.
+	 *
+	 * PurityScanner itself is not changed: consumers point it at plugin trees
+	 * that need not be git checkouts at all.
+	 *
+	 * @param list<array<string, mixed>> $findings Scanner findings.
+	 * @param string                     $package  Root the scan ran on.
+	 * @return list<array<string, mixed>>
+	 */
+	private static function without_gitignored( array $findings, string $package ): array {
+		if ( array() === $findings ) {
+			return $findings;
+		}
+		$root = rtrim( str_replace( '\\', '/', $package ), '/' ) . '/';
+		$rel  = array();
+		foreach ( $findings as $f ) {
+			$rel[] = str_replace( $root, '', str_replace( '\\', '/', (string) $f['file'] ) );
+		}
+		$proc = proc_open(
+			array( 'git', '-C', $package, 'check-ignore', '--stdin' ),
+			array(
+				0 => array( 'pipe', 'r' ),
+				1 => array( 'pipe', 'w' ),
+				2 => array( 'pipe', 'w' ),
+			),
+			$pipes
+		);
+		if ( ! is_resource( $proc ) ) {
+			return $findings;
+		}
+		fwrite( $pipes[0], implode( "\n", array_unique( $rel ) ) . "\n" );
+		fclose( $pipes[0] );
+		$out = (string) stream_get_contents( $pipes[1] );
+		fclose( $pipes[1] );
+		fclose( $pipes[2] );
+		$code = proc_close( $proc );
+		// 0: some paths ignored, 1: none. Anything else (128: not a repo) -> no filter.
+		if ( 0 !== $code ) {
+			return $findings;
+		}
+		$ignored = array_flip( array_filter( array_map( 'trim', explode( "\n", str_replace( "\r", '', $out ) ) ) ) );
+		$kept    = array();
+		foreach ( $findings as $i => $f ) {
+			if ( ! isset( $ignored[ $rel[ $i ] ] ) ) {
+				$kept[] = $f;
+			}
+		}
+		return $kept;
+	}
+
+	/**
+	 * Both halves of the filter, on real files: forbidden code in an ignored
+	 * directory is dropped, the same code in a file that is only untracked is
+	 * still reported. Without the second half the filter could swallow
+	 * everything and the gate above would go quiet for good.
+	 */
+	public function test_gitignored_paths_are_dropped_but_untracked_files_still_count(): void {
+		$package = dirname( __DIR__, 2 );
+		$token   = 'purity-probe-' . bin2hex( random_bytes( 4 ) ) . '.js';
+		$dir     = $package . '/ds-bundle';
+		$made    = ! is_dir( $dir ) && mkdir( $dir );
+		$ignored = $dir . '/' . $token;
+		$loose   = $package . '/' . $token;
+		$code    = "fetch( 'https://api.example.com/collect' );\n";
+		file_put_contents( $ignored, $code );
+		file_put_contents( $loose, $code );
+		try {
+			$where = array_map(
+				static function ( array $f ): string {
+					$path = str_replace( '\\', '/', (string) $f['file'] );
+					return basename( dirname( $path ) ) . '/' . basename( $path );
+				},
+				self::without_gitignored( ( new PurityScanner() )->scan( $package ), $package )
+			);
+			self::assertContains( basename( $package ) . '/' . $token, $where, 'an untracked, not-ignored file must still be measured' );
+			self::assertNotContains( 'ds-bundle/' . $token, $where, 'a file under a gitignored directory must be dropped' );
+		} finally {
+			unlink( $ignored );
+			unlink( $loose );
+			if ( $made ) {
+				rmdir( $dir );
+			}
+		}
 	}
 }
