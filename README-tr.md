@@ -1147,9 +1147,11 @@ ondalık sayıda (farklı yazılır) hâlâ ayrışabilirler.
 - **Simge yoksa ayırıcı da yok:** `fmtMoney( n, '' )` (ya da `null` /
   `undefined`) her konumda yalnız tutarı basar.
 - **`StatsGrid` dışında** (genişliği verilmemiş flex satır öğesi,
-  inline-block, float, `fit-content`) kart 24px'lik değerin istediği kadar
-  geniştir: gövde `contain-intrinsic-inline-size: var( --mhmui-card-min )`
-  taşır.
+  inline-block, float, `fit-content`) gövde içeriği kadar değil
+  `--mhmui-card-min` kadar geniştir (11rem; değer 24px çizilir): gövde
+  `contain-intrinsic-inline-size: var( --mhmui-card-min )` taşır. Bu
+  gövdeden uzun bir değer orada taşabilir; böyle bir karta genişlik ver ya
+  da onu bir `StatsGrid` içine koy.
 - **Kapsam dışı:** ön yüz kartı (`front.css`) sabit `1.75rem` değerli tek
   sütunlu bir ızgaradır; bu değişiklik yalnız admin içindir.
 - Yükleyiciden servis edilir; ikisi de yeniden derlemeden görünür.

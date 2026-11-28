@@ -1264,8 +1264,11 @@ as text (spelled differently).
 - **No symbol, no separator:** `fmtMoney( n, '' )` (or `null` / `undefined`)
   prints the amount alone in every position.
 - **Outside a `StatsGrid`** (a flex row item with no width, inline-block,
-  float, `fit-content`) a card is as wide as a 24px value needs: the body
-  carries `contain-intrinsic-inline-size: var( --mhmui-card-min )`.
+  float, `fit-content`) the body is `--mhmui-card-min` wide (11rem, so the
+  value draws at 24px), not as wide as its content: it carries
+  `contain-intrinsic-inline-size: var( --mhmui-card-min )`. A value longer
+  than that body can overflow there; give such a card a width or put it in a
+  `StatsGrid`.
 - **Not covered:** the front-end card (`front.css`) is a one-column grid with
   a fixed `1.75rem` value; this change is admin-only.
 - Served by the loader, so both show without a rebuild.
