@@ -1325,6 +1325,34 @@ describe( 'DataTable (0.19.0)', () => {
 		expect( stack ).not.toBe( '' );
 	} );
 
+	/*
+	 * 0.28.0: DataTable sets --no-fit on the wrap when the rows do not fit
+	 * above the 40rem floor. The stacked block is repeated for it, rule for
+	 * rule; a property edited in one and not the other would draw two
+	 * different stacked layouts depending on why the table stacked.
+	 */
+	test( 'the --no-fit twin repeats the stacked block exactly, specificity unchanged', () => {
+		const PREFIX = ':where( .mhmui-table-wrap--no-fit ) ';
+		const all = rules( css );
+		const floor = all
+			.filter( ( [ , , at ] ) =>
+				at.some( ( a ) => a.replace( /\s+/g, '' ) === '@containermhmui-table(max-width:40rem)' )
+			)
+			.map( ( [ sel, body ] ) => [ sel, body ] );
+		const twin = all
+			.filter( ( [ sel, , at ] ) => sel.startsWith( PREFIX ) && at.length === 0 )
+			.map( ( [ sel, body ] ) => [ sel.slice( PREFIX.length ), body ] );
+		expect( floor.length ).toBeGreaterThan( 20 );
+		expect( twin ).toEqual( floor );
+		for ( const [ sel ] of floor ) {
+			expect( specificity( PREFIX + sel ) ).toEqual( specificity( sel ) );
+		}
+		// Nothing else names the class: the twin is its only use.
+		expect(
+			all.filter( ( [ sel ] ) => sel.includes( 'mhmui-table-wrap--no-fit' ) )
+		).toHaveLength( twin.length );
+	} );
+
 	test( 'non-sortable column headers are clipped, never display:none, and only in thead', () => {
 		const body = ruleBody( stack, HIDDEN_HEADERS );
 		expect( body ).not.toBeNull();
