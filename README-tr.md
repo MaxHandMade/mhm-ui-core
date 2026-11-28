@@ -1135,12 +1135,17 @@ ondalık sayıda (farklı yazılır) hâlâ ayrışabilirler.
   artık `overflow-wrap: anywhere` ve `min-width: 0` taşır. Tiresiz bir
   e-posta ya da uzun bir URL hücresinden taşıyordu (320px'te 118px) ve bütün
   yığılmış kart yana kayıyordu. Tüketicinin yığılmış hücrelere yazdığı kendi
-  `overflow-wrap` yaması kaldırılabilir. Geniş (kaydırmalı) düzen değişmedi.
+  `overflow-wrap` yaması kaldırılabilir. Etiketler (`data-label`), sayı
+  hücreleri (`.mhmui-table__num`) ve durum hapları `overflow-wrap: normal`
+  kalır; kelime ortasından ya da rakamlar arasından bölünmezler. Geniş
+  (kaydırmalı) düzen değişmedi.
 - **Başlık hücresi, hücre sırası ne olursa olsun checkbox'ın yanındadır.**
   `.mhmui-table__primary` kartın ilk satırına sabitlendi. Sıraya göre
   yerleşince ondan önce yazılmış etiketli bir hücre 2. satırı alıyor, başlığı
   3. satıra itiyordu; checkbox 1. satırda yalnız kalıyordu. Tüketicinin daha
-  özgül `grid-row` kuralları yine kazanır.
+  özgül `grid-row` kuralları yine kazanır. **Satır başına tek başlık
+  hücresi:** bir satırdaki iki `.mhmui-table__primary` artık ilk satırı
+  paylaşır ve üst üste biner.
 - Yükleyiciden servis edilir; ikisi de yeniden derlemeden görünür.
 
 ### Geniş tablolar ve yığılmış ayrıntı yan sütunu (0.27.3)

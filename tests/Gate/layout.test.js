@@ -1717,6 +1717,17 @@ describe( 'DataTable (0.19.0)', () => {
 		expect(
 			ruleBody( stack, '.mhmui-table--stack td[data-label]::before' )
 		).toMatch( /overflow-wrap:\s*normal/ );
+		// Nor a figure or a pill: a squeezed amount split between digits.
+		let reset = '';
+		postcss.parse( stack.replace( /^\}/, '' ) ).walkRules( ( rule ) => {
+			if (
+				rule.selectors.includes( '.mhmui-table--stack tbody td.mhmui-table__num' ) &&
+				rule.selectors.includes( '.mhmui-table--stack tbody .mhmui-status' )
+			) {
+				reset = rule.toString();
+			}
+		} );
+		expect( reset ).toMatch( /overflow-wrap:\s*normal/ );
 	} );
 
 	/* 0.27.4: placed by order, a labelled cell written before the title took

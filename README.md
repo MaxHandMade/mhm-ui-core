@@ -1253,12 +1253,17 @@ as text (spelled differently).
   carry `overflow-wrap: anywhere` and `min-width: 0`. An e-mail with no
   hyphen or a long URL used to overflow its cell (118px at 320px) and the
   whole stacked card scrolled sideways. A consumer's own `overflow-wrap`
-  patch on stacked cells can go. The wide (scroll) layout is unchanged.
+  patch on stacked cells can go. Labels (`data-label`), number cells
+  (`.mhmui-table__num`) and status pills keep `overflow-wrap: normal`, so
+  they never split mid-word or between digits. The wide (scroll) layout is
+  unchanged.
 - **The title cell sits beside the checkbox whatever the cell order.**
   `.mhmui-table__primary` is pinned to the card's first row. Placed by
   order, a labelled cell written before it took row 2 and pushed the title
   to row 3, leaving the checkbox alone on row 1. A consumer's own
-  `grid-row` rules still win where they are more specific.
+  `grid-row` rules still win where they are more specific. **One title cell
+  per row:** two `.mhmui-table__primary` cells in a row would now share the
+  first row and overlap.
 - Served by the loader, so both show without a rebuild.
 
 ### Wide tables and the stacked detail aside (0.27.3)
