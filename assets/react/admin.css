@@ -1606,3 +1606,141 @@ h1.mhmui-page-header__title.mhmui-page-header__title {
 		content: none;
 	}
 }
+
+/* The same stacked layout, drawn above the 40rem floor when DataTable
+   measures that the rows do not fit (0.28.0): it sets --no-fit on the wrap,
+   up to a 64rem container. A container query cannot be OR-ed with a class,
+   so the block above is repeated rule for rule -- the gate test checks the
+   two stay identical; edit both. :where() keeps each selector's specificity
+   equal to its twin above, so a consumer override that beats one beats both.
+   The floor stays a container query: a consumer bundling an older DataTable
+   (no --no-fit) still stacks below 40rem with this stylesheet. */
+:where( .mhmui-table-wrap--no-fit ) .mhmui-table--stack,
+:where( .mhmui-table-wrap--no-fit ) .mhmui-table--stack thead,
+:where( .mhmui-table-wrap--no-fit ) .mhmui-table--stack tbody,
+:where( .mhmui-table-wrap--no-fit ) .mhmui-table--stack caption {
+	display: block;
+}
+:where( .mhmui-table-wrap--no-fit ) .mhmui-table--stack thead tr {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	padding: 10px 16px;
+}
+:where( .mhmui-table-wrap--no-fit ) .mhmui-table--stack thead th:not( .mhmui-table__th--sortable ):not( .mhmui-table__select ) {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect( 0, 0, 0, 0 );
+	white-space: nowrap;
+	border: 0;
+}
+:where( .mhmui-table-wrap--no-fit ) .mhmui-table--stack thead th {
+	display: block;
+	height: auto;
+	padding: 0;
+	width: auto;
+}
+:where( .mhmui-table-wrap--no-fit ) .mhmui-table--stack .mhmui-table__sort {
+	min-height: 44px;
+	padding: 0 12px;
+	border: 1px solid var( --mhmui-border );
+	border-radius: 999px;
+	font-size: 13px;
+	background: var( --mhmui-surface );
+}
+:where( .mhmui-table-wrap--no-fit ) .mhmui-table--stack .mhmui-table__sort:focus-visible {
+	outline-offset: 2px;
+}
+:where( .mhmui-table-wrap--no-fit ) .mhmui-table--stack thead th[aria-sort] .mhmui-table__sort {
+	background: var( --mhmui-info-soft );
+	border-color: var( --mhmui-accent );
+	color: var( --mhmui-info-strong );
+	font-weight: 600;
+}
+:where( .mhmui-table-wrap--no-fit ) .mhmui-table--stack .mhmui-table__select-label {
+	position: static;
+	width: auto;
+	height: auto;
+	margin: 0;
+	overflow: visible;
+	clip: auto;
+	white-space: normal;
+}
+:where( .mhmui-table-wrap--no-fit ) .mhmui-table--stack .mhmui-table__select-hit {
+	gap: 8px;
+	min-width: 44px;
+	min-height: 44px;
+}
+:where( .mhmui-table-wrap--no-fit ) .mhmui-table--stack .mhmui-table__select-hit input {
+	width: 20px;
+	height: 20px;
+}
+:where( .mhmui-table-wrap--no-fit ) .mhmui-table--stack .mhmui-table__select-hit input[type="checkbox"]:checked::before {
+	width: 26px;
+	height: 26px;
+	margin: -4px 0 0;
+	margin-inline-start: -5px;
+}
+:where( .mhmui-table-wrap--no-fit ) .mhmui-table--stack .mhmui-table__select-hit input[type="checkbox"]:indeterminate::before {
+	width: 10px;
+	margin: 8px auto 0;
+}
+:where( .mhmui-table-wrap--no-fit ) .mhmui-table--stack tbody tr {
+	display: grid;
+	grid-template-columns: auto minmax( 0, 1fr );
+	column-gap: 0;
+	row-gap: 6px;
+	padding: 14px 16px;
+}
+:where( .mhmui-table-wrap--no-fit ) .mhmui-table--stack tbody td,
+:where( .mhmui-table-wrap--no-fit ) .mhmui-table--stack tbody th {
+	display: flex;
+	justify-content: space-between;
+	gap: 12px;
+	grid-column: 2;
+	min-width: 0;
+	padding: 0;
+	text-align: end;
+	overflow-wrap: anywhere;
+}
+:where( .mhmui-table-wrap--no-fit ) .mhmui-table--stack tbody td:not( .mhmui-table__select ):not( .mhmui-table__primary ) {
+	grid-column: 1 / -1;
+}
+:where( .mhmui-table-wrap--no-fit ) .mhmui-table--stack td[data-label]::before {
+	content: attr( data-label );
+	color: var( --mhmui-text-secondary );
+	font-size: 13px;
+	text-align: start;
+	overflow-wrap: normal;
+}
+:where( .mhmui-table-wrap--no-fit ) .mhmui-table--stack tbody td.mhmui-table__num,
+:where( .mhmui-table-wrap--no-fit ) .mhmui-table--stack tbody .mhmui-status {
+	overflow-wrap: normal;
+}
+:where( .mhmui-table-wrap--no-fit ) .mhmui-table--stack tbody .mhmui-table__select {
+	grid-column: 1;
+	grid-row: 1;
+	width: auto;
+	margin: -10px 0 0;
+	margin-inline-start: -12px;
+}
+:where( .mhmui-table-wrap--no-fit ) .mhmui-table--stack tbody .mhmui-table__primary,
+:where( .mhmui-table-wrap--no-fit ) .mhmui-table--stack tbody .mhmui-table__actions {
+	display: block;
+	text-align: start;
+}
+:where( .mhmui-table-wrap--no-fit ) .mhmui-table--stack tbody .mhmui-table__primary {
+	grid-row: 1;
+}
+:where( .mhmui-table-wrap--no-fit ) .mhmui-table--stack tbody .mhmui-table__select::before {
+	content: none;
+}
+:where( .mhmui-table-wrap--no-fit ) .mhmui-table--stack tbody .mhmui-table__primary::before,
+:where( .mhmui-table-wrap--no-fit ) .mhmui-table--stack tbody .mhmui-table__actions::before {
+	content: none;
+}
