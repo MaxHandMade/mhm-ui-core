@@ -22,7 +22,7 @@ A consuming plugin `require_once`s `vendor/mhm/ui-core/register.php` from its
 main file and registers its own copy:
 
 ```php
-mhmuicore_register( '0.27.3', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.27.4', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 At `plugins_loaded` priority 0 the highest registered version boots; the rest
@@ -432,7 +432,7 @@ build from.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.27.3', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.27.4', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 Requiring `bootstrap.php` directly defines `MHMUICORE_VERSION` immediately, which
@@ -1246,6 +1246,20 @@ spaces) draws no link. They can still differ on a `tone` that is not a
 role name (PHP runs it through `sanitize_html_class()`), a node or a
 non-empty list where the PHP twin takes text, or a float of 1e15 or more
 as text (spelled differently).
+
+### Stacked table cards: long values and the title row (0.27.4)
+
+- **Long unbroken values break inside the card.** Stacked body cells now
+  carry `overflow-wrap: anywhere` and `min-width: 0`. An e-mail with no
+  hyphen or a long URL used to overflow its cell (118px at 320px) and the
+  whole stacked card scrolled sideways. A consumer's own `overflow-wrap`
+  patch on stacked cells can go. The wide (scroll) layout is unchanged.
+- **The title cell sits beside the checkbox whatever the cell order.**
+  `.mhmui-table__primary` is pinned to the card's first row. Placed by
+  order, a labelled cell written before it took row 2 and pushed the title
+  to row 3, leaving the checkbox alone on row 1. A consumer's own
+  `grid-row` rules still win where they are more specific.
+- Served by the loader, so both show without a rebuild.
 
 ### Wide tables and the stacked detail aside (0.27.3)
 

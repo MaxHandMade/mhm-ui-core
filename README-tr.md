@@ -216,7 +216,7 @@ da bu tek yanlış cümle yüzünden taşıdı.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.27.3', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.27.4', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 `bootstrap.php`'yi doğrudan require etmek `MHMUICORE_VERSION`'ı anında tanımlar
@@ -721,7 +721,7 @@ parite kapısı eşitlik arar, uyumluluk değil.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.27.3', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.27.4', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 🔴 Sürüm dizesi **elle yazılır** (kayıt, herhangi bir bootstrap yüklenmeden önce koşar) ve
@@ -1128,6 +1128,20 @@ oluşan `back.label` bağlantı çizmez. Rol adı olmayan bir `tone`'da (PHP onu
 `sanitize_html_class()`'tan geçirir), PHP ikizinin metin beklediği yerde düğüm
 ya da boş olmayan liste verildiğinde, ya da metin olarak 1e15 ve üstü bir
 ondalık sayıda (farklı yazılır) hâlâ ayrışabilirler.
+
+### Yığılmış tablo kartları: uzun değerler ve başlık satırı (0.27.4)
+
+- **Bölünmeyen uzun değer kartın içinde bölünür.** Yığılmış gövde hücreleri
+  artık `overflow-wrap: anywhere` ve `min-width: 0` taşır. Tiresiz bir
+  e-posta ya da uzun bir URL hücresinden taşıyordu (320px'te 118px) ve bütün
+  yığılmış kart yana kayıyordu. Tüketicinin yığılmış hücrelere yazdığı kendi
+  `overflow-wrap` yaması kaldırılabilir. Geniş (kaydırmalı) düzen değişmedi.
+- **Başlık hücresi, hücre sırası ne olursa olsun checkbox'ın yanındadır.**
+  `.mhmui-table__primary` kartın ilk satırına sabitlendi. Sıraya göre
+  yerleşince ondan önce yazılmış etiketli bir hücre 2. satırı alıyor, başlığı
+  3. satıra itiyordu; checkbox 1. satırda yalnız kalıyordu. Tüketicinin daha
+  özgül `grid-row` kuralları yine kazanır.
+- Yükleyiciden servis edilir; ikisi de yeniden derlemeden görünür.
 
 ### Geniş tablolar ve yığılmış ayrıntı yan sütunu (0.27.3)
 
