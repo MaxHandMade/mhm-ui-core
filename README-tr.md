@@ -216,7 +216,7 @@ da bu tek yanlış cümle yüzünden taşıdı.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.27.2', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.27.3', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 `bootstrap.php`'yi doğrudan require etmek `MHMUICORE_VERSION`'ı anında tanımlar
@@ -721,7 +721,7 @@ parite kapısı eşitlik arar, uyumluluk değil.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.27.2', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.27.3', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 🔴 Sürüm dizesi **elle yazılır** (kayıt, herhangi bir bootstrap yüklenmeden önce koşar) ve
@@ -1128,6 +1128,20 @@ oluşan `back.label` bağlantı çizmez. Rol adı olmayan bir `tone`'da (PHP onu
 `sanitize_html_class()`'tan geçirir), PHP ikizinin metin beklediği yerde düğüm
 ya da boş olmayan liste verildiğinde, ya da metin olarak 1e15 ve üstü bir
 ondalık sayıda (farklı yazılır) hâlâ ayrışabilirler.
+
+### Geniş tablolar ve yığılmış ayrıntı yan sütunu (0.27.3)
+
+- **`DataTable` kaydırma kutusu:** `.mhmui-table-wrap` artık
+  `position: relative`; içinde mutlak konumlanan şey -- başlık hücresindeki WP
+  çekirdeğinin `.screen-reader-text`'i -- kaydırma kutusunun içinde kalır.
+  Ekrandan geniş bir tablo önceden bütün sayfayı yatay kaydırıyordu (360px'te
+  45px ölçüldü).
+- **`DetailLayout`:** 782px ve altında yan sütun artık sabitlenmez
+  (`position: static`, görünüm yüksekliği sınırı yok). Yığılmış düzende ana
+  sütundan önce konan yan sütun yapışık kalıyor ve altından kayanı örtüyordu.
+  782px üstünde değişen bir şey yok. Tüketicinin yerel `position: static`
+  yaması kaldırılabilir.
+- Yükleyici servis eder, yani ikisi de yeniden derlemeden görünür.
 
 ### PageHeader ikiz uçları ve sayı başlık hücreleri (0.27.2)
 

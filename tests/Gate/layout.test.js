@@ -575,6 +575,22 @@ describe( 'vertical rhythm is owned by the page shell (0.14.0)', () => {
 		expect( body ).toMatch( /overflow-y:\s*auto/ );
 	} );
 
+	/** rentiva-dev 2026-11-26 (Places screen, 390px): stacked at <= 782px,
+	 * an aside placed BEFORE main (a form above its table) stayed sticky and,
+	 * once a collapsed Widget left it short, covered the toolbar while the
+	 * table scrolled under it. Stacked, there is nothing to pin beside; the
+	 * aside flows, and the viewport cap goes with the pin. */
+	test( 'the stacked detail aside does not pin at 782px and below', () => {
+		const body = ruleBody(
+			mediaBlock( admin, '( max-width: 782px )' ),
+			'.mhmui-detail-layout__aside'
+		);
+		expect( body ).not.toBeNull();
+		expect( body ).toMatch( /position:\s*static/ );
+		expect( body ).toMatch( /max-height:\s*none/ );
+		expect( body ).toMatch( /overflow-y:\s*visible/ );
+	} );
+
 	test( 'ConfirmButton targets are at least 44px (WCAG 2.2 2.5.8 asks 24; the kit asks 44)', () => {
 		const body = ruleBody(
 			admin,
@@ -1650,5 +1666,15 @@ describe( 'DataTable (0.19.0)', () => {
 
 	test( 'the scroll layout scrolls sideways', () => {
 		expect( ruleBody( css, '.mhmui-table-wrap' ) ).toMatch( /overflow-x:\s*auto/ );
+	} );
+
+	/** rentiva-dev 2026-11-28 (Pro Export, simulator): a header cell's
+	 * `.screen-reader-text` is WP core's `position: absolute`. With no
+	 * positioned ancestor its containing block is the page, not the scroll
+	 * box, so a table wider than the screen placed that text past the box and
+	 * the whole page scrolled sideways (360px: scrollX 45, 384px: 21). The
+	 * scroll box is the containing block, so what overflows stays inside it. */
+	test( 'the scroll box contains its absolutely positioned descendants', () => {
+		expect( ruleBody( css, '.mhmui-table-wrap' ) ).toMatch( /position:\s*relative/ );
 	} );
 } );

@@ -22,7 +22,7 @@ A consuming plugin `require_once`s `vendor/mhm/ui-core/register.php` from its
 main file and registers its own copy:
 
 ```php
-mhmuicore_register( '0.27.2', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.27.3', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 At `plugins_loaded` priority 0 the highest registered version boots; the rest
@@ -432,7 +432,7 @@ build from.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.27.2', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.27.3', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 Requiring `bootstrap.php` directly defines `MHMUICORE_VERSION` immediately, which
@@ -1246,6 +1246,19 @@ spaces) draws no link. They can still differ on a `tone` that is not a
 role name (PHP runs it through `sanitize_html_class()`), a node or a
 non-empty list where the PHP twin takes text, or a float of 1e15 or more
 as text (spelled differently).
+
+### Wide tables and the stacked detail aside (0.27.3)
+
+- **`DataTable` scroll box:** `.mhmui-table-wrap` is now `position: relative`,
+  so what is absolutely positioned inside it -- WP core's
+  `.screen-reader-text` in a header cell -- stays inside the scroll box. A
+  table wider than the screen used to scroll the whole page sideways (45px
+  measured at 360px).
+- **`DetailLayout`:** at 782px and below the aside no longer pins
+  (`position: static`, no viewport cap). Stacked, an aside placed before
+  main stayed sticky and covered what scrolled under it. Above 782px nothing
+  changes. A consumer's local `position: static` patch can go.
+- Served by the loader, so both show without a rebuild.
 
 ### PageHeader twin edges and number head cells (0.27.2)
 
