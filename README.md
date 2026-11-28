@@ -22,7 +22,7 @@ A consuming plugin `require_once`s `vendor/mhm/ui-core/register.php` from its
 main file and registers its own copy:
 
 ```php
-mhmuicore_register( '0.27.4', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.27.5', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 At `plugins_loaded` priority 0 the highest registered version boots; the rest
@@ -432,7 +432,7 @@ build from.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.27.4', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.27.5', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 Requiring `bootstrap.php` directly defines `MHMUICORE_VERSION` immediately, which
@@ -1246,6 +1246,32 @@ spaces) draws no link. They can still differ on a `tone` that is not a
 role name (PHP runs it through `sanitize_html_class()`), a node or a
 non-empty list where the PHP twin takes text, or a float of 1e15 or more
 as text (spelled differently).
+
+### Long money values in a narrow StatCard (0.27.5)
+
+- **`fmtMoney` joins symbol and number with a no-break space** (U+00A0) for
+  `left_space` and `right_space`, as WooCommerce's own price format does
+  (`&nbsp;`, `get_woocommerce_price_format()`). It used a plain space, so a
+  narrow card wrapped the symbol onto its own line. A consumer test that
+  compares the output with a plain-space string needs a U+00A0 there.
+- **A narrow `StatCard` keeps its value inside.** The card wraps: when the
+  body cannot keep `8rem` beside the icon, it takes its own line under it,
+  and the value scales with the body (`clamp( 16px, 14cqi, 24px )`, 24px from
+  a 172px body up). Measured in Chrome: at 390px the two-column grid left the
+  body 94px and "152.050,00 ₺" overflowed it by 24px (44px with the no-break
+  space alone); now 0 from 320px to 1920px. Wide cards (1280px and up with
+  four columns) look as before. Applies to the PHP twin too (same markup).
+- **No symbol, no separator:** `fmtMoney( n, '' )` (or `null` / `undefined`)
+  prints the amount alone in every position.
+- **Outside a `StatsGrid`** (a flex row item with no width, inline-block,
+  float, `fit-content`) the body is `--mhmui-card-min` wide (11rem, so the
+  value draws at 24px), not as wide as its content: it carries
+  `contain-intrinsic-inline-size: var( --mhmui-card-min )`. A value longer
+  than that body can overflow there; give such a card a width or put it in a
+  `StatsGrid`.
+- **Not covered:** the front-end card (`front.css`) is a one-column grid with
+  a fixed `1.75rem` value; this change is admin-only.
+- Served by the loader, so both show without a rebuild.
 
 ### Stacked table cards: long values and the title row (0.27.4)
 

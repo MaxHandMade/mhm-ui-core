@@ -353,9 +353,15 @@
 /* Base = the quiet bordered box (what KpiBox used to be). A tone modifier
    fills it. Colour is opt-in so a screen cannot go coloured by default --
    that default is how one screen ended up blue and the next one neutral. */
+/* flex-wrap + the body's 8rem basis (0.27.5): when the body cannot keep 8rem
+   beside the icon, it takes its own line under it. At 390px the two-column
+   grid left the body 94px and "152.050,00 ₺" overflowed it by 24px
+   (rentiva-dev 2026-11-28). */
 .mhmui-stat-card {
 	display: flex;
+	flex-wrap: wrap;
 	align-items: center;
+	align-content: center;
 	gap: 14px;
 	padding: 18px 20px;
 	border-radius: var( --mhmui-radius );
@@ -374,9 +380,19 @@
 .mhmui-stat-card--danger  { background: linear-gradient( 135deg, var( --mhmui-danger ),  var( --mhmui-danger-strong )  ); }
 .mhmui-stat-card--neutral { background: linear-gradient( 135deg, var( --mhmui-neutral ), var( --mhmui-neutral-strong ) ); }
 .mhmui-stat-card .dashicons { font-size: 28px; width: 28px; height: 28px; opacity: .9; color: var( --mhmui-accent ); }
-.mhmui-stat-card__body { flex: 1; min-width: 0; }
+/* The body is an inline-size container so the value can scale with it. In a
+   StatsGrid track the card's width comes from the track. Outside a grid, in a
+   parent that sizes to its content (a flex row item with no width, inline-
+   block, float, fit-content), containment counts the body as empty: the card
+   fell to 84px, 42px with no icon, and the value overflowed by 50-92px (Fable
+   0.27.5, measured). contain-intrinsic-inline-size gives it --mhmui-card-min
+   instead, so such a card is as wide as a 24px value needs. The value: 24px
+   from a 172px body up, down to 16px; the fixed 24px stays as the fallback
+   where cqi is unknown. The front-end card (front.css) is not covered: it
+   is a one-column grid with a fixed 1.75rem value. */
+.mhmui-stat-card__body { flex: 1 1 8rem; min-width: 0; container-type: inline-size; contain-intrinsic-inline-size: var( --mhmui-card-min ); }
 .mhmui-stat-card__label { margin: 0; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; opacity: .9; }
-.mhmui-stat-card__value { margin: 2px 0 0; font-size: 24px; font-weight: 600; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.mhmui-stat-card__value { margin: 2px 0 0; font-size: 24px; font-size: clamp( 16px, 14cqi, 24px ); font-weight: 600; line-height: 1.2; font-variant-numeric: tabular-nums; }
 .mhmui-stat-card__sub,
 .mhmui-stat-card__delta { margin: 4px 0 0; font-size: 12px; opacity: .9; }
 .mhmui-stat-card__delta--up { color: var( --mhmui-success-strong ); }

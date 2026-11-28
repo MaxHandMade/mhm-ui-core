@@ -216,7 +216,7 @@ da bu tek yanlış cümle yüzünden taşıdı.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.27.4', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.27.5', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 `bootstrap.php`'yi doğrudan require etmek `MHMUICORE_VERSION`'ı anında tanımlar
@@ -721,7 +721,7 @@ parite kapısı eşitlik arar, uyumluluk değil.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.27.4', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.27.5', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 🔴 Sürüm dizesi **elle yazılır** (kayıt, herhangi bir bootstrap yüklenmeden önce koşar) ve
@@ -1128,6 +1128,33 @@ oluşan `back.label` bağlantı çizmez. Rol adı olmayan bir `tone`'da (PHP onu
 `sanitize_html_class()`'tan geçirir), PHP ikizinin metin beklediği yerde düğüm
 ya da boş olmayan liste verildiğinde, ya da metin olarak 1e15 ve üstü bir
 ondalık sayıda (farklı yazılır) hâlâ ayrışabilirler.
+
+### Dar StatCard'da uzun tutar (0.27.5)
+
+- **`fmtMoney` simge ile sayıyı bölünmez boşlukla birleştirir** (U+00A0):
+  `left_space` ve `right_space` için, WooCommerce'in kendi fiyat biçimi gibi
+  (`&nbsp;`, `get_woocommerce_price_format()`). Düz boşluk kullanıyordu; dar
+  kartta simge kendi satırına düşüyordu. Çıktıyı düz boşluklu bir dizeyle
+  karşılaştıran tüketici testi orada U+00A0 ister.
+- **Dar `StatCard` değeri içinde tutar.** Kart sarılır: gövde simgenin
+  yanında `8rem` tutamazsa simgenin altında kendi satırına geçer, değer de
+  gövdeyle birlikte ölçeklenir (`clamp( 16px, 14cqi, 24px )`; 172px gövdeden
+  itibaren 24px). Chrome'da ölçüldü: 390px'te iki sütunlu ızgara gövdeye 94px
+  bırakıyordu ve "152.050,00 ₺" 24px taşıyordu (yalnız bölünmez boşlukla
+  44px); şimdi 320px'ten 1920px'e 0. Geniş kartlar (dört sütunda 1280px ve
+  üstü) eskisi gibi görünür. Aynı işaretleme olduğu için PHP ikizine de
+  uygulanır.
+- **Simge yoksa ayırıcı da yok:** `fmtMoney( n, '' )` (ya da `null` /
+  `undefined`) her konumda yalnız tutarı basar.
+- **`StatsGrid` dışında** (genişliği verilmemiş flex satır öğesi,
+  inline-block, float, `fit-content`) gövde içeriği kadar değil
+  `--mhmui-card-min` kadar geniştir (11rem; değer 24px çizilir): gövde
+  `contain-intrinsic-inline-size: var( --mhmui-card-min )` taşır. Bu
+  gövdeden uzun bir değer orada taşabilir; böyle bir karta genişlik ver ya
+  da onu bir `StatsGrid` içine koy.
+- **Kapsam dışı:** ön yüz kartı (`front.css`) sabit `1.75rem` değerli tek
+  sütunlu bir ızgaradır; bu değişiklik yalnız admin içindir.
+- Yükleyiciden servis edilir; ikisi de yeniden derlemeden görünür.
 
 ### Yığılmış tablo kartları: uzun değerler ve başlık satırı (0.27.4)
 
