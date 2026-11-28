@@ -216,7 +216,7 @@ da bu tek yanlış cümle yüzünden taşıdı.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.27.5', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.28.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 `bootstrap.php`'yi doğrudan require etmek `MHMUICORE_VERSION`'ı anında tanımlar
@@ -721,7 +721,7 @@ parite kapısı eşitlik arar, uyumluluk değil.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.27.5', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.28.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 🔴 Sürüm dizesi **elle yazılır** (kayıt, herhangi bir bootstrap yüklenmeden önce koşar) ve
@@ -906,7 +906,8 @@ bölümüne bakın; kurallar aynı:
   hiçbir şey seçilmez). `toggle`, `setAll` ve `clear` kimliklerini korur;
   `isSelected` her çizimde yenidir. Toplu istek sırasında kilitlemek sizin.
 - `layout="scroll"` (varsayılan) dar kapta yana kayar. `layout="stack"` 40rem
-  altındaki kapta satırları karta çevirir: her hücreye bir `data-label` verin
+  altındaki kapta, 64rem'e kadar olan kapta da satırlar sığmadığında (0.28.0)
+  satırları karta çevirir: her hücreye bir `data-label` verin
   (sütun adı; görünür ve okunur), başlık hücresini `mhmui-table__primary`, eylem
   hücresini `mhmui-table__actions` ile işaretleyin. Ekran okuyucunun her satırı
   bu hücreyle duyurmasını istiyorsanız `<th scope="row">` kullanın. Kendi
@@ -1128,6 +1129,30 @@ oluşan `back.label` bağlantı çizmez. Rol adı olmayan bir `tone`'da (PHP onu
 `sanitize_html_class()`'tan geçirir), PHP ikizinin metin beklediği yerde düğüm
 ya da boş olmayan liste verildiğinde, ya da metin olarak 1e15 ve üstü bir
 ondalık sayıda (farklı yazılır) hâlâ ayrışabilirler.
+
+### Sığmayan yığın tablosu yığılır (0.28.0)
+
+- **`layout="stack"` artık satırlar sığmadığında da yığılır**, yalnız 40rem
+  altındaki kapta değil. `DataTable` tablonun doğal genişliğini kutusuyla
+  ölçer (ilk çizimde, her çizimde ve kutunun genişliği değişince); kap
+  **64rem**'e kadarsa ve tablo daha genişse kutuya
+  `.mhmui-table-wrap--no-fit` koyar. Chrome'da dokuz sütunlu bir tabloda
+  ölçüldü (Rentiva Pro ödemeleri, Almanca etiketler): 783–1024px ekranlarda
+  11–431px yana kayıyordu, artık orada kart çizer. 64rem'den geniş kapta
+  sığmayan tablo yine kayar (o genişlikte kart, etiketle değerini bir ekran
+  uzağa koyar).
+- **40rem tabanı değişmedi** ve kap sorgusu olarak kalır: orada tablo
+  betiksiz de yığılır, eski bir `DataTable` derleyen tüketici (`--no-fit`
+  koymaz) bu stil dosyasıyla tam eskisi gibi davranır. Yeni davranış
+  tüketicinin paketinde `^0.28` ister; **yalnız yükleyiciyle gelmez.**
+- `admin.css` yığılmış bloğu `--no-fit` için kural kural,
+  `:where( .mhmui-table-wrap--no-fit )` altında tekrarlar; her seçicinin
+  özgüllüğü ikiziyle aynı kalır: yığılmış bir kuralı yenen tüketici kuralı
+  onu yine yener. Bir kapı testi iki bloğu birebir eşit tutar.
+- `layout="scroll"` (varsayılan) değişmedi: ölçmez, yığılmaz.
+- `offsetWidth` ve `clientWidth` ile ölçülür: içeriğiyle büyüyen bir
+  ebeveynin (`min-width: auto` olan flex/grid öğesi) içindeki tablo hep
+  "sığar" ve sayfayı eskisi gibi kaydırır; o ebeveyne `min-width: 0` verin.
 
 ### Dar StatCard'da uzun tutar (0.27.5)
 

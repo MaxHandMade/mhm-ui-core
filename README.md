@@ -22,7 +22,7 @@ A consuming plugin `require_once`s `vendor/mhm/ui-core/register.php` from its
 main file and registers its own copy:
 
 ```php
-mhmuicore_register( '0.27.5', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.28.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 At `plugins_loaded` priority 0 the highest registered version boots; the rest
@@ -432,7 +432,7 @@ build from.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.27.5', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.28.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 Requiring `bootstrap.php` directly defines `MHMUICORE_VERSION` immediately, which
@@ -1034,7 +1034,8 @@ const selection = useTableSelection( rows.map( ( r ) => r.id ) );
   selects nothing). `toggle`, `setAll` and `clear` keep their identity;
   `isSelected` is per render. Locking during a bulk request is yours.
 - `layout="scroll"` (default) scrolls sideways in a narrow container.
-  `layout="stack"` turns rows into cards below a 40rem container: give every
+  `layout="stack"` turns rows into cards below a 40rem container, and up to a
+  64rem container whenever the rows do not fit (0.28.0): give every
   cell a `data-label` (its column name, spoken and shown), mark the title cell
   `mhmui-table__primary` and an actions cell `mhmui-table__actions`. Use
   `<th scope="row">` for the title cell if you want screen readers to announce
@@ -1246,6 +1247,32 @@ spaces) draws no link. They can still differ on a `tone` that is not a
 role name (PHP runs it through `sanitize_html_class()`), a node or a
 non-empty list where the PHP twin takes text, or a float of 1e15 or more
 as text (spelled differently).
+
+### A stack table that does not fit stacks (0.28.0)
+
+- **`layout="stack"` now stacks whenever the rows do not fit**, not only
+  below a 40rem container. `DataTable` measures the table's natural width
+  against its wrap (on mount, on every render, and when the wrap's width
+  changes) and, up to a **64rem** container, sets
+  `.mhmui-table-wrap--no-fit` on the wrap when the table is wider. Measured
+  in Chrome on a nine-column table (Rentiva Pro payouts, German labels):
+  from 783px to 1024px screens it scrolled sideways by 11–431px; now it
+  draws cards there. Above a 64rem container a table that does not fit
+  still scrolls (cards that wide put a label and its value a screen apart).
+- **The 40rem floor is unchanged** and stays a container query, so a table
+  still stacks there with no script, and a consumer bundling an older
+  `DataTable` (which never sets `--no-fit`) behaves exactly as before with
+  this stylesheet. The new behaviour needs `^0.28` in the consumer's bundle;
+  **it is not served by the loader alone.**
+- `admin.css` repeats the stacked block for `--no-fit`, rule for rule, under
+  `:where( .mhmui-table-wrap--no-fit )`, so each selector keeps its twin's
+  specificity: a consumer override that beat a stacked rule still beats it.
+  A gate test keeps the two blocks identical.
+- `layout="scroll"` (the default) is unchanged: it never measures or stacks.
+- Measured with `offsetWidth` and `clientWidth`: a table inside a parent
+  that grows with its content (a flex or grid item with `min-width: auto`)
+  always "fits" and scrolls the page as before; give that parent
+  `min-width: 0`.
 
 ### Long money values in a narrow StatCard (0.27.5)
 
