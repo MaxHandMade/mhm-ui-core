@@ -1757,6 +1757,11 @@ describe( 'StatCard keeps a long value inside a narrow card (0.27.5)', () => {
 		expect( body ).toMatch( /flex:\s*1 1 8rem/ );
 		expect( body ).toMatch( /min-width:\s*0/ );
 		expect( body ).toMatch( /container-type:\s*inline-size/ );
+		// Outside a grid the card sized to an empty body (84px, 42px without
+		// an icon) until the container got an intrinsic width (Fable 0.27.5).
+		expect( body ).toMatch(
+			/contain-intrinsic-inline-size:\s*var\(\s*--mhmui-card-min\s*\)/
+		);
 	} );
 
 	test( 'the value scales with the body between 16px and 24px', () => {

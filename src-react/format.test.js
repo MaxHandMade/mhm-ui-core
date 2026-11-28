@@ -95,6 +95,19 @@ describe( 'createFormatter', () => {
 				expect( out ).not.toContain( ' ' );
 			}
 		);
+
+		/* Fable 0.27.5: `currency ?? ''` call sites (Lite StatsCards, Pro
+		 * export) got a trailing no-break space, which does not collapse. */
+		it.each( [ 'left', 'left_space', 'right', 'right_space' ] )(
+			'%s prints the amount alone when there is no symbol',
+			( position ) => {
+				for ( const symbol of [ '', null, undefined ] ) {
+					expect( build( position ).fmtMoney( 1234.5, symbol ) ).toBe(
+						'1.234,50'
+					);
+				}
+			}
+		);
 	} );
 
 	it( 'does not read any global — two formatters stay independent', () => {
