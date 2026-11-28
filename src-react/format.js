@@ -41,18 +41,23 @@ export function createFormatter( config = {} ) {
 			: intFormatted;
 	}
 
+	// A no-break space (U+00A0) between symbol and number, as WooCommerce's own
+	// price format puts `&nbsp;` there (get_woocommerce_price_format()). With a
+	// plain space a narrow card wrapped the symbol onto its own line (0.27.5).
+	const NBSP = ' ';
+
 	function fmtMoney( n, symbol, decimals ) {
 		const amount = fmtAmount( n, decimals );
 		switch ( currencyPosition ) {
 			case 'left':
 				return `${ symbol }${ amount }`;
 			case 'left_space':
-				return `${ symbol } ${ amount }`;
+				return `${ symbol }${ NBSP }${ amount }`;
 			case 'right':
 				return `${ amount }${ symbol }`;
 			case 'right_space':
 			default:
-				return `${ amount } ${ symbol }`;
+				return `${ amount }${ NBSP }${ symbol }`;
 		}
 	}
 

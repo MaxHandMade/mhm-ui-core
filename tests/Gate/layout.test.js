@@ -1738,3 +1738,30 @@ describe( 'DataTable (0.19.0)', () => {
 		).toMatch( /grid-row:\s*1\s*;/ );
 	} );
 } );
+
+/*
+ * 0.27.5 (rentiva-dev 2026-11-28): at 390px the two-column grid gave a card
+ * body of 94px and "152.050,00 ₺" needed 118px, so the value overflowed by
+ * 24px (the symbol fell to its own line). With the no-break space alone it
+ * overflowed by 44px. The card wraps its icon above the body when the body
+ * cannot keep 8rem beside it, and the value scales with the body's own width
+ * (an inline-size container: the body's width comes from its flex basis,
+ * never from its content, so the containment cannot collapse it).
+ */
+describe( 'StatCard keeps a long value inside a narrow card (0.27.5)', () => {
+	const css = read( 'admin.css' );
+
+	test( 'the card wraps, and the body keeps an 8rem basis beside the icon', () => {
+		expect( ruleBody( css, '.mhmui-stat-card' ) ).toMatch( /flex-wrap:\s*wrap/ );
+		const body = ruleBody( css, '.mhmui-stat-card__body' );
+		expect( body ).toMatch( /flex:\s*1 1 8rem/ );
+		expect( body ).toMatch( /min-width:\s*0/ );
+		expect( body ).toMatch( /container-type:\s*inline-size/ );
+	} );
+
+	test( 'the value scales with the body between 16px and 24px', () => {
+		expect( ruleBody( css, '.mhmui-stat-card__value' ) ).toMatch(
+			/font-size:\s*clamp\(\s*16px,\s*14cqi,\s*24px\s*\)/
+		);
+	} );
+} );

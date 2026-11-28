@@ -13,7 +13,7 @@ describe( 'createFormatter', () => {
 		} );
 
 		it( 'falls back to right_space placement, matching CurrencyHelper', () => {
-			expect( fmtMoney( 12, '₺' ) ).toBe( '12,00 ₺' );
+			expect( fmtMoney( 12, '₺' ) ).toBe( '12,00 ₺' );
 		} );
 	} );
 
@@ -69,9 +69,9 @@ describe( 'createFormatter', () => {
 
 		it.each( [
 			[ 'left', '₺1.234,50' ],
-			[ 'left_space', '₺ 1.234,50' ],
+			[ 'left_space', '₺ 1.234,50' ],
 			[ 'right', '1.234,50₺' ],
-			[ 'right_space', '1.234,50 ₺' ],
+			[ 'right_space', '1.234,50 ₺' ],
 		] )( 'places the symbol for %s', ( position, expected ) => {
 			expect( build( position ).fmtMoney( 1234.5, '₺' ) ).toBe(
 				expected
@@ -80,9 +80,21 @@ describe( 'createFormatter', () => {
 
 		it( 'falls back to right_space for an unknown position', () => {
 			expect( build( 'sideways' ).fmtMoney( 1234.5, '₺' ) ).toBe(
-				'1.234,50 ₺'
+				'1.234,50 ₺'
 			);
 		} );
+
+		/* 0.27.5 (rentiva-dev 2026-11-28): a plain space let the symbol fall
+		 * to its own line in a narrow card. WooCommerce's own price format
+		 * (get_woocommerce_price_format(), 11.3.0) puts &nbsp; there. */
+		it.each( [ 'left_space', 'right_space' ] )(
+			'%s joins symbol and number with a no-break space, as wc_price() does',
+			( position ) => {
+				const out = build( position ).fmtMoney( 152050, '₺' );
+				expect( out ).toContain( ' ' );
+				expect( out ).not.toContain( ' ' );
+			}
+		);
 	} );
 
 	it( 'does not read any global — two formatters stay independent', () => {
