@@ -867,8 +867,10 @@ h1.mhmui-page-header__title.mhmui-page-header__title {
 /* DetailLayout (0.15.0). Wraps below ~800px of container: main basis 420px +
    aside basis 360px + gap. min-width: 0 so an unbroken IBAN/URL cannot grow a
    column's basis and force the wrap early. The sticky top is the 32px admin
-   bar; at <= 782px the bar is 46px, but the columns are already stacked there
-   and sticky has no effect -- so a fixed 32px is enough. */
+   bar. At <= 782px the columns are stacked and the aside does not pin at all
+   (below): stacked there is nothing to pin beside, and an aside placed BEFORE
+   main stayed sticky and covered what scrolled under it (rentiva-dev
+   2026-11-26). So the 46px narrow admin bar never needs its own offset. */
 .mhmui-detail-layout {
 	display: flex;
 	flex-wrap: wrap;
@@ -894,6 +896,19 @@ h1.mhmui-page-header__title.mhmui-page-header__title {
 	   and focus landing there is not scrolled into view. It scrolls itself. */
 	max-height: calc( 100vh - 32px - 2 * var( --mhmui-space-4 ) );
 	overflow-y: auto;
+	/* Above what scrolls under it. Where the columns stack at a viewport
+	   above 782px (a narrow container), the pinned aside overlaps main, and
+	   a positioned box there -- `.mhmui-table-wrap` since 0.27.3 -- would
+	   paint over it without this. */
+	z-index: 1;
+}
+/* After the base rule on purpose: same selector, so order is the override. */
+@media ( max-width: 782px ) {
+	.mhmui-detail-layout__aside {
+		position: static;
+		max-height: none;
+		overflow-y: visible;
+	}
 }
 .mhmui-detail-layout .mhmui-widget {
 	margin-top: 0;
@@ -1205,7 +1220,13 @@ h1.mhmui-page-header__title.mhmui-page-header__title {
 	border-radius: var( --mhmui-radius );
 	overflow: hidden;
 }
+/* position: relative makes the scroll box the containing block of what is
+   absolutely positioned inside it -- WP core's `.screen-reader-text` in a
+   header cell above all. Without it that text is placed against the page,
+   past the box, and a table wider than the screen scrolled the whole page
+   sideways (rentiva-dev 2026-11-28: 360px scrollX 45). */
 .mhmui-table-wrap {
+	position: relative;
 	overflow-x: auto;
 }
 .mhmui-table-wrap--stack {

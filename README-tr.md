@@ -216,7 +216,7 @@ da bu tek yanlış cümle yüzünden taşıdı.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.27.2', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.27.3', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 `bootstrap.php`'yi doğrudan require etmek `MHMUICORE_VERSION`'ı anında tanımlar
@@ -721,7 +721,7 @@ parite kapısı eşitlik arar, uyumluluk değil.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.27.2', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.27.3', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 🔴 Sürüm dizesi **elle yazılır** (kayıt, herhangi bir bootstrap yüklenmeden önce koşar) ve
@@ -1128,6 +1128,29 @@ oluşan `back.label` bağlantı çizmez. Rol adı olmayan bir `tone`'da (PHP onu
 `sanitize_html_class()`'tan geçirir), PHP ikizinin metin beklediği yerde düğüm
 ya da boş olmayan liste verildiğinde, ya da metin olarak 1e15 ve üstü bir
 ondalık sayıda (farklı yazılır) hâlâ ayrışabilirler.
+
+### Geniş tablolar ve yığılmış ayrıntı yan sütunu (0.27.3)
+
+- **`DataTable` kaydırma kutusu:** `.mhmui-table-wrap` artık
+  `position: relative`; içinde mutlak konumlanan şey -- başlık hücresindeki WP
+  çekirdeğinin `.screen-reader-text`'i -- kaydırma kutusunun içinde kalır.
+  Ekrandan geniş bir tablo önceden bütün sayfayı yatay kaydırıyordu (360px'te
+  45px ölçüldü). Tüketici için iki sonuç: hücre içindeki kendi mutlak konumlu
+  öğesi (konumlu atası olmayan bir açılır menü) artık o da kutunun içinde kalır
+  -- sayfanın üstüne değil, kutuyla birlikte kırpılır ya da kayar; ona portal
+  ya da konumlu bir çapa verin. Kutu artık konumlu katmanda boyanır; kendinden
+  önce gelen katmansız bir sticky ya da relative öğenin üstüne çıkar.
+- **`DetailLayout`:** 782px ve altında yan sütun artık sabitlenmez
+  (`position: static`, görünüm yüksekliği sınırı yok). Yığılmış düzende ana
+  sütundan önce konan yan sütun yapışık kalıyor ve altından kayanı örtüyordu.
+  782px üstünde yan sütun hâlâ sabitlenir ve artık `z-index: 1` taşır; altındaki
+  tablo onun üstüne boyanmaz. Tüketicinin yerel `position: static` yaması
+  kaldırılabilir.
+- **Bilinen sınır:** 782px üstünde de kapsayıcı yaklaşık 800px'ten darsa
+  (katlanmış menü, AdminShell kenar çubuğu) sütunlar yığılır; yan sütun orada
+  hâlâ sabitlenir. `DetailLayout`'un kendisi yan sütunu her zaman ana sütundan
+  sonra basar; bu yalnız yan sütunu öne koyan elle yazılmış işaretlemede çıkar.
+- Yükleyici servis eder, yani ikisi de yeniden derlemeden görünür.
 
 ### PageHeader ikiz uçları ve sayı başlık hücreleri (0.27.2)
 
