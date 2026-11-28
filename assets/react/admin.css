@@ -1523,25 +1523,45 @@ h1.mhmui-page-header__title.mhmui-page-header__title {
 		row-gap: 6px;
 		padding: 14px 16px;
 	}
+	/* overflow-wrap + min-width (0.27.4): an unbroken value (an e-mail with
+	   no hyphen, a URL) breaks inside the card. Without them it overflowed
+	   its cell by 118px at 320px and the whole stacked card scrolled
+	   sideways (break-ui 2026-11-28) -- the one thing stacking is for. */
 	.mhmui-table--stack tbody td,
 	.mhmui-table--stack tbody th {
 		display: flex;
 		justify-content: space-between;
 		gap: 12px;
 		grid-column: 2;
+		min-width: 0;
 		padding: 0;
 		text-align: end;
+		overflow-wrap: anywhere;
 	}
 	/* Value rows run the full card width (Narrow artboard); the title cell
 	   stays beside the checkbox. */
 	.mhmui-table--stack tbody td:not( .mhmui-table__select ):not( .mhmui-table__primary ) {
 		grid-column: 1 / -1;
 	}
+	/* overflow-wrap: normal (0.27.4): the cell's `anywhere` is for the value;
+	   inherited by the label it split "IBAN" into "IBA / N" at 320px. The
+	   label still wraps between words. */
 	.mhmui-table--stack td[data-label]::before {
 		content: attr( data-label );
 		color: var( --mhmui-text-secondary );
 		font-size: 13px;
 		text-align: start;
+		overflow-wrap: normal;
+	}
+	/* Same reset for a figure and a status pill (Fable 0.27.4): with the
+	   cell's `anywhere` a squeezed "₺1.284.950,00" could split between
+	   digits and a pill mid-word. No nowrap, so a value with a space still
+	   wraps there; one with no break point ("₺12.345.678.901,99" has none)
+	   overflows rather than split -- a split amount is misread. Long codes
+	   and ids do not go in a number cell. */
+	.mhmui-table--stack tbody td.mhmui-table__num,
+	.mhmui-table--stack tbody .mhmui-status {
+		overflow-wrap: normal;
 	}
 	.mhmui-table--stack tbody .mhmui-table__select {
 		grid-column: 1;
@@ -1554,6 +1574,13 @@ h1.mhmui-page-header__title.mhmui-page-header__title {
 	.mhmui-table--stack tbody .mhmui-table__actions {
 		display: block;
 		text-align: start;
+	}
+	/* The title sits beside the checkbox whatever the cell order (0.27.4).
+	   Placed by order, a labelled cell written before it (Rentiva Pro's
+	   "Request" column) took row 2 at full width and pushed the title to
+	   row 3, leaving the checkbox alone on row 1. */
+	.mhmui-table--stack tbody .mhmui-table__primary {
+		grid-row: 1;
 	}
 	.mhmui-table--stack tbody .mhmui-table__select::before {
 		content: none;

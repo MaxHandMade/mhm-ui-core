@@ -1695,4 +1695,46 @@ describe( 'DataTable (0.19.0)', () => {
 	test( 'the scroll box contains its absolutely positioned descendants', () => {
 		expect( ruleBody( css, '.mhmui-table-wrap' ) ).toMatch( /position:\s*relative/ );
 	} );
+
+	/* 0.27.4 (break-ui 2026-11-28): an unbroken value in a stacked cell (an
+	 * e-mail with no hyphen) overflowed it by 118px at 320px and the stacked
+	 * card scrolled sideways. Every body cell may break anywhere and shrink. */
+	test( 'stacked body cells break long unbroken values and may shrink (0.27.4)', () => {
+		const decls = {};
+		postcss.parse( stack.replace( /^\}/, '' ) ).walkRules( ( rule ) => {
+			if (
+				rule.selectors.includes( '.mhmui-table--stack tbody td' ) &&
+				rule.selectors.includes( '.mhmui-table--stack tbody th' )
+			) {
+				rule.walkDecls( ( d ) => {
+					decls[ d.prop ] = d.value;
+				} );
+			}
+		} );
+		expect( decls[ 'overflow-wrap' ] ).toBe( 'anywhere' );
+		expect( decls[ 'min-width' ] ).toBe( '0' );
+		// The label must not inherit it: "IBAN" split into "IBA / N".
+		expect(
+			ruleBody( stack, '.mhmui-table--stack td[data-label]::before' )
+		).toMatch( /overflow-wrap:\s*normal/ );
+		// Nor a figure or a pill: a squeezed amount split between digits.
+		let reset = '';
+		postcss.parse( stack.replace( /^\}/, '' ) ).walkRules( ( rule ) => {
+			if (
+				rule.selectors.includes( '.mhmui-table--stack tbody td.mhmui-table__num' ) &&
+				rule.selectors.includes( '.mhmui-table--stack tbody .mhmui-status' )
+			) {
+				reset = rule.toString();
+			}
+		} );
+		expect( reset ).toMatch( /overflow-wrap:\s*normal/ );
+	} );
+
+	/* 0.27.4: placed by order, a labelled cell written before the title took
+	 * row 2 and the title fell to row 3 (Rentiva Pro's payout table). */
+	test( 'the stacked title cell is pinned to the checkbox row (0.27.4)', () => {
+		expect(
+			ruleBody( stack, '.mhmui-table--stack tbody .mhmui-table__primary' )
+		).toMatch( /grid-row:\s*1\s*;/ );
+	} );
 } );
