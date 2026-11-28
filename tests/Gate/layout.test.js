@@ -1768,6 +1768,26 @@ describe( 'DataTable (0.19.0)', () => {
 } );
 
 /*
+ * 0.28.1 (break-ui #4): in the inline DetailList the label and the value
+ * share a flex row, and the value breaks anywhere, so a long value took the
+ * row and the label shrank to its narrowest -- "E-Mail-Adresse" to 42px in
+ * three lines at 320px. The label keeps its own width up to half the row and
+ * breaks between words; only a single word wider than half breaks inside.
+ */
+describe( 'Inline DetailList keeps its label whole (0.28.1)', () => {
+	const css = read( 'admin.css' );
+	const LABEL = '.mhmui-detail-list--inline .mhmui-detail-list__label';
+
+	test( 'the label does not shrink, is capped at half the row, breaks only a too-long word', () => {
+		const body = ruleBody( css, LABEL );
+		expect( body ).not.toBeNull();
+		expect( body ).toMatch( /flex:\s*0 0 auto\s*;/ );
+		expect( body ).toMatch( /max-width:\s*50%\s*;/ );
+		expect( body ).toMatch( /overflow-wrap:\s*break-word\s*;/ );
+	} );
+} );
+
+/*
  * 0.27.5 (rentiva-dev 2026-11-28): at 390px the two-column grid gave a card
  * body of 94px and "152.050,00 ₺" needed 118px, so the value overflowed by
  * 24px (the symbol fell to its own line). With the no-break space alone it

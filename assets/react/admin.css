@@ -866,6 +866,15 @@ h1.mhmui-page-header__title.mhmui-page-header__title {
 	margin: 0;
 	text-align: end;
 }
+/* The label keeps its width (0.28.1). The value breaks anywhere, so a long
+   one took the row and the label shrank to its narrowest: "E-Mail-Adresse"
+   fell to 42px in three lines at 320px (break-ui 2026-11-28). Up to half the
+   row, wrapping between words; only one word wider than that breaks. */
+.mhmui-detail-list--inline .mhmui-detail-list__label {
+	flex: 0 0 auto;
+	max-width: 50%;
+	overflow-wrap: break-word;
+}
 .mhmui-detail-list__mark {
 	display: inline-block;
 	width: 8px;
