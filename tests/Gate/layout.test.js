@@ -1769,21 +1769,38 @@ describe( 'DataTable (0.19.0)', () => {
 
 /*
  * 0.28.1 (break-ui #4): in the inline DetailList the label and the value
- * share a flex row, and the value breaks anywhere, so a long value took the
+ * shared a flex row, and the value breaks anywhere, so a long value took the
  * row and the label shrank to its narrowest -- "E-Mail-Adresse" to 42px in
- * three lines at 320px. The label keeps its own width up to half the row and
- * breaks between words; only a single word wider than half breaks inside.
+ * two lines at 320px. A 50% cap on the label (the first fix) wrapped a long
+ * label beside a short value for nothing (Fable). Now a two-track grid: both
+ * tracks start at 0 and share the free space up to their max-content.
  */
-describe( 'Inline DetailList keeps its label whole (0.28.1)', () => {
+describe( 'Inline DetailList shares the row fairly (0.28.1)', () => {
 	const css = read( 'admin.css' );
+	const ITEM = '.mhmui-detail-list--inline .mhmui-detail-list__item';
 	const LABEL = '.mhmui-detail-list--inline .mhmui-detail-list__label';
 
-	test( 'the label does not shrink, is capped at half the row, breaks only a too-long word', () => {
+	test( 'the item is a two-track grid, both tracks minmax( 0, auto ), pushed apart', () => {
+		const body = ruleBody( css, ITEM );
+		expect( body ).toMatch( /display:\s*grid\s*;/ );
+		expect( body ).toMatch(
+			/grid-template-columns:\s*minmax\(\s*0,\s*auto\s*\)\s+minmax\(\s*0,\s*auto\s*\)\s*;/
+		);
+		expect( body ).toMatch( /justify-content:\s*space-between\s*;/ );
+	} );
+
+	test( 'the label breaks only a word too wide for its track, and has no width cap', () => {
 		const body = ruleBody( css, LABEL );
-		expect( body ).not.toBeNull();
-		expect( body ).toMatch( /flex:\s*0 0 auto\s*;/ );
-		expect( body ).toMatch( /max-width:\s*50%\s*;/ );
 		expect( body ).toMatch( /overflow-wrap:\s*break-word\s*;/ );
+		expect( body ).not.toMatch( /max-width|flex:/ );
+	} );
+
+	// ruleBody() reads the first matching rule only: a later rule for the
+	// same selector, or one inside @media, would override unseen.
+	test( 'each of the two selectors is set by exactly one rule', () => {
+		const all = rules( css );
+		expect( all.filter( ( [ sel ] ) => sel === ITEM ) ).toHaveLength( 1 );
+		expect( all.filter( ( [ sel ] ) => sel === LABEL ) ).toHaveLength( 1 );
 	} );
 } );
 

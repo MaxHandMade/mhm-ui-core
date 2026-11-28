@@ -1248,18 +1248,26 @@ role name (PHP runs it through `sanitize_html_class()`), a node or a
 non-empty list where the PHP twin takes text, or a float of 1e15 or more
 as text (spelled differently).
 
-### Inline DetailList labels stay whole (0.28.1)
+### Inline DetailList shares the row fairly (0.28.1)
 
-- **`DetailList layout="inline"` keeps the label's own width**, up to half
-  the row. The value breaks anywhere, so a long value (an e-mail, a URL)
-  took the row and the label shrank to its narrowest: at 320px
-  "E-Mail-Adresse" drew 42px wide in two lines and "IP address" 42px. Now
-  both are one line (80px, 54px); measured in Chrome at 320–1280px in
-  English and German, nothing overflows.
-- A label longer than half the row wraps between words; a single word
-  longer than that breaks inside it. The value gets the rest of the row.
-- The stacked layout (default) is unchanged. Served by the loader, so it
-  shows without a rebuild.
+- **`DetailList layout="inline"` draws each pair as a two-track grid**
+  (`minmax( 0, auto ) minmax( 0, auto )`), not a flex row. Both sides keep
+  their natural width when it fits, and the free space is shared equally
+  when it does not. As a flex row a long value (an e-mail, a URL) took the
+  row and the label shrank to its narrowest: at 320px "E-Mail-Adresse" drew
+  42px wide in two lines; now one line, 80px.
+- A long label next to a short value ("0", "—") keeps its line as before;
+  a label too long for the row wraps between words, and a single word too
+  wide for its track breaks inside it (as a flex row one overflowed the
+  row, by 92px at 160px).
+- Measured in Chrome at 320–1280px, English and German, and right-to-left:
+  nothing overflows or overlaps. At 160px (320px at 200% zoom) a label
+  beside a long value gets half the row and may break inside a word.
+- The `.mhmui-detail-list__item` of the inline layout is no longer a flex
+  container: a consumer rule that relied on `flex` there (`order`,
+  `flex-grow` on its children) no longer applies. The stacked layout
+  (default) is unchanged. Served by the loader, so it shows without a
+  rebuild.
 
 ### A stack table that does not fit stacks (0.28.0)
 

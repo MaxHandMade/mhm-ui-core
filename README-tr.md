@@ -1130,18 +1130,25 @@ oluşan `back.label` bağlantı çizmez. Rol adı olmayan bir `tone`'da (PHP onu
 ya da boş olmayan liste verildiğinde, ya da metin olarak 1e15 ve üstü bir
 ondalık sayıda (farklı yazılır) hâlâ ayrışabilirler.
 
-### Satır içi DetailList etiketi bütün kalır (0.28.1)
+### Satır içi DetailList satırı adil paylaşır (0.28.1)
 
-- **`DetailList layout="inline"` etiketin kendi genişliğini korur**, en çok
-  satırın yarısına kadar. Değer her yerden bölünebildiği için uzun bir
-  değer (e-posta, adres) satırı alıyor, etiket en dar hâline iniyordu:
-  320px'te "E-Mail-Adresse" 42px genişlikte iki satır, "IP address" 42px.
-  Artık ikisi de tek satır (80px, 54px); Chrome'da 320–1280px, İngilizce ve
-  Almanca ölçüldü, taşma yok.
-- Satırın yarısından uzun etiket kelime arasından kırılır; ondan uzun tek
-  bir kelime kendi içinden bölünür. Değer satırın kalanını alır.
-- Yığılmış düzen (varsayılan) değişmedi. Yükleyiciyle gelir, yeniden
-  derleme gerekmez.
+- **`DetailList layout="inline"` her çifti iki izli bir ızgarada çizer**
+  (`minmax( 0, auto ) minmax( 0, auto )`), esnek satırda değil. Sığdığında
+  iki taraf da doğal genişliğini korur, sığmadığında boş alan eşit
+  paylaşılır. Esnek satırda uzun bir değer (e-posta, adres) satırı alıyor,
+  etiket en dar hâline iniyordu: 320px'te "E-Mail-Adresse" 42px genişlikte
+  iki satır; artık tek satır, 80px.
+- Kısa bir değerin ("0", "—") yanındaki uzun etiket eskisi gibi satırını
+  korur; satırdan uzun etiket kelime arasından kırılır, izine sığmayan tek
+  bir kelime kendi içinden bölünür (esnek satırda satırı taşırıyordu,
+  160px'te 92px).
+- Chrome'da 320–1280px, İngilizce, Almanca ve sağdan sola ölçüldü: taşma ve
+  örtüşme yok. 160px'te (320px'te %200 yakınlaştırma) uzun bir değerin
+  yanındaki etiket satırın yarısını alır ve kelime içinden kırılabilir.
+- Satır içi düzenin `.mhmui-detail-list__item`'ı artık esnek kap değil:
+  orada `flex`'e dayanan tüketici kuralı (çocuklarda `order`, `flex-grow`)
+  artık uygulanmaz. Yığılmış düzen (varsayılan) değişmedi. Yükleyiciyle
+  gelir, yeniden derleme gerekmez.
 
 ### Sığmayan yığın tablosu yığılır (0.28.0)
 

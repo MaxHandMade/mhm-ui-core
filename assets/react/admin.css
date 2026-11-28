@@ -857,8 +857,16 @@ h1.mhmui-page-header__title.mhmui-page-header__title {
 	flex-direction: column;
 	gap: var( --mhmui-space-2 );
 }
+/* A two-track grid (0.28.1), not a flex row. Both tracks start at 0 and
+   share the free space equally up to their own max-content, so each side
+   keeps its natural width when it fits and a long one never squeezes the
+   other to its narrowest. As a flex row a long value (it breaks anywhere)
+   took the row: "E-Mail-Adresse" fell to 42px in two lines at 320px
+   (break-ui 2026-11-28). A first fix capped the label at 50% and wrapped a
+   long label beside a short value ("0") for nothing (Fable 0.28.1). */
 .mhmui-detail-list--inline .mhmui-detail-list__item {
-	display: flex;
+	display: grid;
+	grid-template-columns: minmax( 0, auto ) minmax( 0, auto );
 	justify-content: space-between;
 	gap: var( --mhmui-space-3 );
 }
@@ -866,13 +874,10 @@ h1.mhmui-page-header__title.mhmui-page-header__title {
 	margin: 0;
 	text-align: end;
 }
-/* The label keeps its width (0.28.1). The value breaks anywhere, so a long
-   one took the row and the label shrank to its narrowest: "E-Mail-Adresse"
-   fell to 42px in three lines at 320px (break-ui 2026-11-28). Up to half the
-   row, wrapping between words; only one word wider than that breaks. */
+/* The label wraps between words; a single word wider than its track breaks
+   inside it instead of overflowing the row (as a flex row one did, by 92px
+   at 160px). */
 .mhmui-detail-list--inline .mhmui-detail-list__label {
-	flex: 0 0 auto;
-	max-width: 50%;
 	overflow-wrap: break-word;
 }
 .mhmui-detail-list__mark {
