@@ -1253,7 +1253,7 @@ as text (spelled differently).
   `left_space` and `right_space`, as WooCommerce's own price format does
   (`&nbsp;`, `get_woocommerce_price_format()`). It used a plain space, so a
   narrow card wrapped the symbol onto its own line. A consumer test that
-  compares the output with a plain-space string needs ` ` there.
+  compares the output with a plain-space string needs a U+00A0 there.
 - **A narrow `StatCard` keeps its value inside.** The card wraps: when the
   body cannot keep `8rem` beside the icon, it takes its own line under it,
   and the value scales with the body (`clamp( 16px, 14cqi, 24px )`, 24px from
@@ -1261,6 +1261,13 @@ as text (spelled differently).
   body 94px and "152.050,00 ₺" overflowed it by 24px (44px with the no-break
   space alone); now 0 from 320px to 1920px. Wide cards (1280px and up with
   four columns) look as before. Applies to the PHP twin too (same markup).
+- **No symbol, no separator:** `fmtMoney( n, '' )` (or `null` / `undefined`)
+  prints the amount alone in every position.
+- **Outside a `StatsGrid`** (a flex row item with no width, inline-block,
+  float, `fit-content`) a card is as wide as a 24px value needs: the body
+  carries `contain-intrinsic-inline-size: var( --mhmui-card-min )`.
+- **Not covered:** the front-end card (`front.css`) is a one-column grid with
+  a fixed `1.75rem` value; this change is admin-only.
 - Served by the loader, so both show without a rebuild.
 
 ### Stacked table cards: long values and the title row (0.27.4)

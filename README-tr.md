@@ -1135,7 +1135,7 @@ ondalık sayıda (farklı yazılır) hâlâ ayrışabilirler.
   `left_space` ve `right_space` için, WooCommerce'in kendi fiyat biçimi gibi
   (`&nbsp;`, `get_woocommerce_price_format()`). Düz boşluk kullanıyordu; dar
   kartta simge kendi satırına düşüyordu. Çıktıyı düz boşluklu bir dizeyle
-  karşılaştıran tüketici testi orada ` ` ister.
+  karşılaştıran tüketici testi orada U+00A0 ister.
 - **Dar `StatCard` değeri içinde tutar.** Kart sarılır: gövde simgenin
   yanında `8rem` tutamazsa simgenin altında kendi satırına geçer, değer de
   gövdeyle birlikte ölçeklenir (`clamp( 16px, 14cqi, 24px )`; 172px gövdeden
@@ -1144,6 +1144,14 @@ ondalık sayıda (farklı yazılır) hâlâ ayrışabilirler.
   44px); şimdi 320px'ten 1920px'e 0. Geniş kartlar (dört sütunda 1280px ve
   üstü) eskisi gibi görünür. Aynı işaretleme olduğu için PHP ikizine de
   uygulanır.
+- **Simge yoksa ayırıcı da yok:** `fmtMoney( n, '' )` (ya da `null` /
+  `undefined`) her konumda yalnız tutarı basar.
+- **`StatsGrid` dışında** (genişliği verilmemiş flex satır öğesi,
+  inline-block, float, `fit-content`) kart 24px'lik değerin istediği kadar
+  geniştir: gövde `contain-intrinsic-inline-size: var( --mhmui-card-min )`
+  taşır.
+- **Kapsam dışı:** ön yüz kartı (`front.css`) sabit `1.75rem` değerli tek
+  sütunlu bir ızgaradır; bu değişiklik yalnız admin içindir.
 - Yükleyiciden servis edilir; ikisi de yeniden derlemeden görünür.
 
 ### Yığılmış tablo kartları: uzun değerler ve başlık satırı (0.27.4)
