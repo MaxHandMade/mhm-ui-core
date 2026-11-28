@@ -1147,12 +1147,18 @@ ondalık sayıda (farklı yazılır) hâlâ ayrışabilirler.
   tüketicinin paketinde `^0.28` ister; **yalnız yükleyiciyle gelmez.**
 - `admin.css` yığılmış bloğu `--no-fit` için kural kural,
   `:where( .mhmui-table-wrap--no-fit )` altında tekrarlar; her seçicinin
-  özgüllüğü ikiziyle aynı kalır: yığılmış bir kuralı yenen tüketici kuralı
-  onu yine yener. Bir kapı testi iki bloğu birebir eşit tutar.
+  özgüllüğü ikiziyle aynı kalır: yığılmış bir kuralı yenen koşulsuz
+  tüketici kuralı onu yine yener. Bir kapı testi iki bloğu birebir eşit tutar.
+- **Göç -- tüketicinin kendi `@container mhmui-table (max-width: 40rem)`
+  bloğu `--no-fit`'e uygulanmaz.** Kendi kart tasarımı yalnız 40rem altında
+  görünür; 40rem ile 64rem arasında o tablo kit'in genel kartını alır.
+  `^0.28`'e geçerken bloğu `.mhmui-table-wrap--no-fit` altında da tekrarlayın
+  (kit gibi, özgüllüğü korumak için `:where()` ile). Rentiva Pro'nun
+  `payouts.css`'inde böyle bir blok var.
 - `layout="scroll"` (varsayılan) değişmedi: ölçmez, yığılmaz.
-- `offsetWidth` ve `clientWidth` ile ölçülür: içeriğiyle büyüyen bir
-  ebeveynin (`min-width: auto` olan flex/grid öğesi) içindeki tablo hep
-  "sığar" ve sayfayı eskisi gibi kaydırır; o ebeveyne `min-width: 0` verin.
+- **Yeniden ölçülmez:** `DataTable` yeniden çizilmeden büyüyen hücre içeriği
+  (boyutsuz görsel, kendi state'i olan çocuk, geç yüklenen yazı tipi) ancak
+  bir sonraki çizimde ya da genişlik değişince yeniden ölçülür.
 
 ### Dar StatCard'da uzun tutar (0.27.5)
 

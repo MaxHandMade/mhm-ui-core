@@ -1266,13 +1266,18 @@ as text (spelled differently).
   **it is not served by the loader alone.**
 - `admin.css` repeats the stacked block for `--no-fit`, rule for rule, under
   `:where( .mhmui-table-wrap--no-fit )`, so each selector keeps its twin's
-  specificity: a consumer override that beat a stacked rule still beats it.
-  A gate test keeps the two blocks identical.
+  specificity: an unconditional consumer rule that beat a stacked rule still
+  beats it. A gate test keeps the two blocks identical.
+- **Migration -- a consumer's own `@container mhmui-table (max-width: 40rem)`
+  block does not apply to `--no-fit`.** Its stacked card design shows below
+  40rem only; between 40rem and 64rem such a table gets the kit's generic
+  cards. Repeat the block under `.mhmui-table-wrap--no-fit` (as the kit
+  does, with `:where()` to keep specificity) when moving to `^0.28`.
+  Rentiva Pro's `payouts.css` has one.
 - `layout="scroll"` (the default) is unchanged: it never measures or stacks.
-- Measured with `offsetWidth` and `clientWidth`: a table inside a parent
-  that grows with its content (a flex or grid item with `min-width: auto`)
-  always "fits" and scrolls the page as before; give that parent
-  `min-width: 0`.
+- **Not re-measured:** a cell whose content grows without `DataTable`
+  re-rendering (an image with no size, a child with its own state, a late
+  web font) is measured again only at the next render or width change.
 
 ### Long money values in a narrow StatCard (0.27.5)
 
