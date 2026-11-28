@@ -1253,11 +1253,21 @@ as text (spelled differently).
   so what is absolutely positioned inside it -- WP core's
   `.screen-reader-text` in a header cell -- stays inside the scroll box. A
   table wider than the screen used to scroll the whole page sideways (45px
-  measured at 360px).
+  measured at 360px). Two consequences for a consumer: an absolutely
+  positioned element of its own in a cell (a dropdown with no positioned
+  ancestor) now stays inside the box too -- clipped or scrolled with it, not
+  drawn over the page -- so give it a portal or a positioned anchor; and the
+  box now paints in the positioned layer, above an unlayered sticky or
+  relative element that comes before it.
 - **`DetailLayout`:** at 782px and below the aside no longer pins
   (`position: static`, no viewport cap). Stacked, an aside placed before
-  main stayed sticky and covered what scrolled under it. Above 782px nothing
-  changes. A consumer's local `position: static` patch can go.
+  main stayed sticky and covered what scrolled under it. Above 782px the
+  aside still pins and now has `z-index: 1`, so a table under it does not
+  paint over it. A consumer's local `position: static` patch can go.
+- **Known limit:** above 782px the columns also stack when the container is
+  narrower than about 800px (a folded menu, an AdminShell sidebar); the
+  aside still pins there. `DetailLayout` itself always draws the aside after
+  main, so this only bites hand-written markup that puts the aside first.
 - Served by the loader, so both show without a rebuild.
 
 ### PageHeader twin edges and number head cells (0.27.2)

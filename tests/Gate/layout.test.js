@@ -591,6 +591,24 @@ describe( 'vertical rhythm is owned by the page shell (0.14.0)', () => {
 		expect( body ).toMatch( /overflow-y:\s*visible/ );
 	} );
 
+	/** Fable 0.27.3: the narrow rule overrides by ORDER (same selector), so a
+	 * move above the base rule would leave the text test green and the
+	 * override dead. And since the table scroll box is positioned, the pinned
+	 * aside needs its own layer, or a table under it paints over it where the
+	 * columns stack above 782px. */
+	test( 'the narrow aside rule comes after the base rule; the pinned aside has a layer', () => {
+		const at = [];
+		postcss.parse( admin ).walkRules( '.mhmui-detail-layout__aside', ( rule ) => {
+			at.push( { media: rule.parent.type === 'atrule', offset: rule.source.start.offset, rule } );
+		} );
+		const base = at.find( ( r ) => ! r.media );
+		const narrow = at.find( ( r ) => r.media );
+		expect( base ).toBeDefined();
+		expect( narrow ).toBeDefined();
+		expect( narrow.offset ).toBeGreaterThan( base.offset );
+		expect( base.rule.toString() ).toMatch( /z-index:\s*1(?!\d)/ );
+	} );
+
 	test( 'ConfirmButton targets are at least 44px (WCAG 2.2 2.5.8 asks 24; the kit asks 44)', () => {
 		const body = ruleBody(
 			admin,

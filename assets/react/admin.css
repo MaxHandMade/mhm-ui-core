@@ -896,7 +896,13 @@ h1.mhmui-page-header__title.mhmui-page-header__title {
 	   and focus landing there is not scrolled into view. It scrolls itself. */
 	max-height: calc( 100vh - 32px - 2 * var( --mhmui-space-4 ) );
 	overflow-y: auto;
+	/* Above what scrolls under it. Where the columns stack at a viewport
+	   above 782px (a narrow container), the pinned aside overlaps main, and
+	   a positioned box there -- `.mhmui-table-wrap` since 0.27.3 -- would
+	   paint over it without this. */
+	z-index: 1;
 }
+/* After the base rule on purpose: same selector, so order is the override. */
 @media ( max-width: 782px ) {
 	.mhmui-detail-layout__aside {
 		position: static;
