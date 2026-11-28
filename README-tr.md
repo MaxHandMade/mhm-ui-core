@@ -216,7 +216,7 @@ da bu tek yanlış cümle yüzünden taşıdı.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.28.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.28.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 `bootstrap.php`'yi doğrudan require etmek `MHMUICORE_VERSION`'ı anında tanımlar
@@ -721,7 +721,7 @@ parite kapısı eşitlik arar, uyumluluk değil.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.28.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.28.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 🔴 Sürüm dizesi **elle yazılır** (kayıt, herhangi bir bootstrap yüklenmeden önce koşar) ve
@@ -1129,6 +1129,19 @@ oluşan `back.label` bağlantı çizmez. Rol adı olmayan bir `tone`'da (PHP onu
 `sanitize_html_class()`'tan geçirir), PHP ikizinin metin beklediği yerde düğüm
 ya da boş olmayan liste verildiğinde, ya da metin olarak 1e15 ve üstü bir
 ondalık sayıda (farklı yazılır) hâlâ ayrışabilirler.
+
+### Satır içi DetailList etiketi bütün kalır (0.28.1)
+
+- **`DetailList layout="inline"` etiketin kendi genişliğini korur**, en çok
+  satırın yarısına kadar. Değer her yerden bölünebildiği için uzun bir
+  değer (e-posta, adres) satırı alıyor, etiket en dar hâline iniyordu:
+  320px'te "E-Mail-Adresse" 42px genişlikte iki satır, "IP address" 42px.
+  Artık ikisi de tek satır (80px, 54px); Chrome'da 320–1280px, İngilizce ve
+  Almanca ölçüldü, taşma yok.
+- Satırın yarısından uzun etiket kelime arasından kırılır; ondan uzun tek
+  bir kelime kendi içinden bölünür. Değer satırın kalanını alır.
+- Yığılmış düzen (varsayılan) değişmedi. Yükleyiciyle gelir, yeniden
+  derleme gerekmez.
 
 ### Sığmayan yığın tablosu yığılır (0.28.0)
 

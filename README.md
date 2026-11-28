@@ -22,7 +22,7 @@ A consuming plugin `require_once`s `vendor/mhm/ui-core/register.php` from its
 main file and registers its own copy:
 
 ```php
-mhmuicore_register( '0.28.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.28.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 At `plugins_loaded` priority 0 the highest registered version boots; the rest
@@ -432,7 +432,7 @@ build from.
 
 ```php
 require_once __DIR__ . '/vendor/mhm/ui-core/register.php';
-mhmuicore_register( '0.28.0', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
+mhmuicore_register( '0.28.1', __DIR__ . '/vendor/mhm/ui-core/bootstrap.php' );
 ```
 
 Requiring `bootstrap.php` directly defines `MHMUICORE_VERSION` immediately, which
@@ -1247,6 +1247,19 @@ spaces) draws no link. They can still differ on a `tone` that is not a
 role name (PHP runs it through `sanitize_html_class()`), a node or a
 non-empty list where the PHP twin takes text, or a float of 1e15 or more
 as text (spelled differently).
+
+### Inline DetailList labels stay whole (0.28.1)
+
+- **`DetailList layout="inline"` keeps the label's own width**, up to half
+  the row. The value breaks anywhere, so a long value (an e-mail, a URL)
+  took the row and the label shrank to its narrowest: at 320px
+  "E-Mail-Adresse" drew 42px wide in two lines and "IP address" 42px. Now
+  both are one line (80px, 54px); measured in Chrome at 320–1280px in
+  English and German, nothing overflows.
+- A label longer than half the row wraps between words; a single word
+  longer than that breaks inside it. The value gets the rest of the row.
+- The stacked layout (default) is unchanged. Served by the loader, so it
+  shows without a rebuild.
 
 ### A stack table that does not fit stacks (0.28.0)
 
