@@ -1255,8 +1255,9 @@ as text (spelled differently).
   whole stacked card scrolled sideways. A consumer's own `overflow-wrap`
   patch on stacked cells can go. Labels (`data-label`), number cells
   (`.mhmui-table__num`) and status pills keep `overflow-wrap: normal`, so
-  they never split mid-word or between digits. The wide (scroll) layout is
-  unchanged.
+  they never split mid-word or between digits; a figure too wide for the
+  card overflows instead, so do not put a long code or id in a
+  `.mhmui-table__num` cell. The wide (scroll) layout is unchanged.
 - **The title cell sits beside the checkbox whatever the cell order.**
   `.mhmui-table__primary` is pinned to the card's first row. Placed by
   order, a labelled cell written before it took row 2 and pushed the title

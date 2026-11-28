@@ -1555,8 +1555,10 @@ h1.mhmui-page-header__title.mhmui-page-header__title {
 	}
 	/* Same reset for a figure and a status pill (Fable 0.27.4): with the
 	   cell's `anywhere` a squeezed "₺1.284.950,00" could split between
-	   digits and a pill mid-word. No nowrap: a very long figure may still
-	   wrap at its own break points rather than overflow. */
+	   digits and a pill mid-word. No nowrap, so a value with a space still
+	   wraps there; one with no break point ("₺12.345.678.901,99" has none)
+	   overflows rather than split -- a split amount is misread. Long codes
+	   and ids do not go in a number cell. */
 	.mhmui-table--stack tbody td.mhmui-table__num,
 	.mhmui-table--stack tbody .mhmui-status {
 		overflow-wrap: normal;

@@ -1137,8 +1137,10 @@ ondalık sayıda (farklı yazılır) hâlâ ayrışabilirler.
   yığılmış kart yana kayıyordu. Tüketicinin yığılmış hücrelere yazdığı kendi
   `overflow-wrap` yaması kaldırılabilir. Etiketler (`data-label`), sayı
   hücreleri (`.mhmui-table__num`) ve durum hapları `overflow-wrap: normal`
-  kalır; kelime ortasından ya da rakamlar arasından bölünmezler. Geniş
-  (kaydırmalı) düzen değişmedi.
+  kalır; kelime ortasından ya da rakamlar arasından bölünmezler. Karta
+  sığmayan bir sayı bölünmek yerine taşar; bu yüzden uzun bir kodu ya da
+  kimliği `.mhmui-table__num` hücresine koyma. Geniş (kaydırmalı) düzen
+  değişmedi.
 - **Başlık hücresi, hücre sırası ne olursa olsun checkbox'ın yanındadır.**
   `.mhmui-table__primary` kartın ilk satırına sabitlendi. Sıraya göre
   yerleşince ondan önce yazılmış etiketli bir hücre 2. satırı alıyor, başlığı
